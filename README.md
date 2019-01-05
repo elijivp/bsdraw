@@ -46,6 +46,23 @@ Left to right, up to down (SCALING=4, Postmask(PM_LINELEFTBOTTOM)):
 * DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_LINDOWNCROSS),
 * DrawGraph(GT_DOTS, Postmask(PM_PSEUDOCIRCLE)), DrawGraph(GT_LINTERP, Postmask(PM_LINELEFT)), DrawGraph(GT_LINDOWNCROSS, Postmask(PM_LINELEFT))
 
+### Overlays
+Fragment shaders compiled like additional functions and mixed with drawed data.
+```
+for (unsigned int i=0; i<drawscount; i++)
+{
+  QImage  img(img_path_normal);
+  IOverlay* ovl = new OImageStretched(&img, IOverlaySimpleImage::IC_AUTO, false);
+  ovl->setSlice(i != 1? 0.25f : 0.0f);
+  draws[i]->ovlPushBack(ovl);
+  draws[i]->ovlPushBack(new OGridRegular(OGridRegular::REGULAR_HORZ, CR_RELATIVE, 0.05, 0.05, linestyle_greydark(5,1,0),-1));
+  draws[i]->ovlPushBack(new OGridRegular(OGridRegular::REGULAR_VERT, CR_RELATIVE, 0.05, 0.05, linestyle_greydark(5,1,0),-1));
+  draws[i]->ovlPushBack(new OGridDecart(CR_RELATIVE, 0.05, 0.5, 0.1, 0.1, 3));
+}
+```
+
+![overlays](/demoimages/overlays.png)
+
 #### INCLUDES (without overlays):
 1. Required core files:
 bsdraw/core/bsqdraw.cpp;

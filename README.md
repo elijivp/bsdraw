@@ -23,13 +23,14 @@ disposed SAMPLES(1st portion), SAMPLES(2nd portion)...
 
 ## Usage
 It is difficult to describe all the characteristics, so:
-1. Build&Run example from _example_ folder
+1. Build&Run example from __example__ folder
 2. Choose test, remember _testname_
 3. Draw creation: find section called _testname_ in MainWindow constructor
 4. Obvious methods in MainWindow class: generateData, changePalette
 5. Overlays creation: find section called _buttonname_ in MainWindow method createOverlaySTD
 
 ![demo1](/demoimages/demo1.png)
+
 Left to right, up to down: 
 DrawIntensity, DrawDomain, DrawRecorder, 
 DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_LINDOWNCROSS),
@@ -39,6 +40,7 @@ DrawGraph(GT_DOTS, dotsize=1, weight=0.5), DrawGraph(GT_LINTERP, dotsize=1, weig
 That technology is designed to solve 2 problems: resize and posteffects
 
 ![demo2](/demoimages/demo2.png)
+
 Left to right, up to down (SCALING=4, Postmask(PM_LINELEFTBOTTOM)): 
 DrawIntensity, DrawDomain, DrawRecorder, 
 DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_LINDOWNCROSS),
@@ -85,7 +87,6 @@ bsdraw/overlays/bsinteractive.cpp & .h;
 bsdraw/overlays/bscontour.cpp & .h;
 bsdraw/overlays/bsimage.cpp & .h
     
-
 ### Future:
 * vertical draws: graph and recorder
 * texture atlas for text

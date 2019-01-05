@@ -418,7 +418,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       for (unsigned int i=0; i<drawscount; i++)
       {
         QImage  img(img_path_normal);
-//        IOverlay* ovl = new OImageOriginal(&img, IOverlaySimpleImage::IC_AUTO, false, CR_RELATIVE, 0.0f, 0.0f);
         IOverlay* ovl = new OImageStretched(&img, IOverlaySimpleImage::IC_AUTO, false);
         ovl->setSlice(i != 1? 0.25f : 0.0f);
         draws[i]->ovlPushBack(ovl);

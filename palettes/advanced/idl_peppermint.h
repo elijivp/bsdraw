@@ -1,0 +1,41 @@
+#ifndef _IDL_PEPPERMINT_H
+#define _IDL_PEPPERMINT_H
+#include "../bstexpalette.h"
+const unsigned int colors_idl_peppermint[] = {
+                                              0x00000000, 0x00500000, 0x00a00000, 0x00f00000, 0x00000050, 0x00500050, 0x00a00050, 0x00f00050, 
+                                              0x000000a0, 0x005000a0, 0x00a000a0, 0x00f000a0, 0x000000f0, 0x005000f0, 0x00a000f0, 0x00f000f0, 
+                                              0x00001000, 0x00501000, 0x00a01000, 0x00f01000, 0x00001050, 0x00501050, 0x00a01050, 0x00f01050, 
+                                              0x000010a0, 0x005010a0, 0x00a010a0, 0x00f010a0, 0x000010f0, 0x005010f0, 0x00a010f0, 0x00f010f0, 
+                                              0x00002000, 0x00502000, 0x00a02000, 0x00f02000, 0x00002050, 0x00502050, 0x00a02050, 0x00f02050, 
+                                              0x000020a0, 0x005020a0, 0x00a020a0, 0x00f020a0, 0x000020f0, 0x005020f0, 0x00a020f0, 0x00f020f0, 
+                                              0x00003000, 0x00503000, 0x00a03000, 0x00f03000, 0x00003050, 0x00503050, 0x00a03050, 0x00f03050, 
+                                              0x000030a0, 0x005030a0, 0x00a030a0, 0x00f030a0, 0x000030f0, 0x005030f0, 0x00a030f0, 0x00f030f0, 
+                                              0x00004000, 0x00504000, 0x00a04000, 0x00f04000, 0x00004050, 0x00504050, 0x00a04050, 0x00f04050, 
+                                              0x000040a0, 0x005040a0, 0x00a040a0, 0x00f040a0, 0x000040f0, 0x005040f0, 0x00a040f0, 0x00f040f0, 
+                                              0x00005000, 0x00505000, 0x00a05000, 0x00f05000, 0x00005050, 0x00505050, 0x00a05050, 0x00f05050, 
+                                              0x000050a0, 0x005050a0, 0x00a050a0, 0x00f050a0, 0x000050f0, 0x005050f0, 0x00a050f0, 0x00f050f0, 
+                                              0x00006000, 0x00506000, 0x00a06000, 0x00f06000, 0x00006050, 0x00506050, 0x00a06050, 0x00f06050, 
+                                              0x000060a0, 0x005060a0, 0x00a060a0, 0x00f060a0, 0x000060f0, 0x005060f0, 0x00a060f0, 0x00f060f0, 
+                                              0x00007000, 0x00507000, 0x00a07000, 0x00f07000, 0x00007050, 0x00507050, 0x00a07050, 0x00f07050, 
+                                              0x000070a0, 0x005070a0, 0x00a070a0, 0x00f070a0, 0x000070f0, 0x005070f0, 0x00a070f0, 0x00f070f0, 
+                                              0x00008000, 0x00508000, 0x00a08000, 0x00f08000, 0x00008050, 0x00508050, 0x00a08050, 0x00f08050, 
+                                              0x000080a0, 0x005080a0, 0x00a080a0, 0x00f080a0, 0x000080f0, 0x005080f0, 0x00a080f0, 0x00f080f0, 
+                                              0x00009000, 0x00509000, 0x00a09000, 0x00f09000, 0x00009050, 0x00509050, 0x00a09050, 0x00f09050, 
+                                              0x000090a0, 0x005090a0, 0x00a090a0, 0x00f090a0, 0x000090f0, 0x005090f0, 0x00a090f0, 0x00f090f0, 
+                                              0x0000a000, 0x0050a000, 0x00a0a000, 0x00f0a000, 0x0000a050, 0x0050a050, 0x00a0a050, 0x00f0a050, 
+                                              0x0000a0a0, 0x0050a0a0, 0x00a0a0a0, 0x00f0a0a0, 0x0000a0f0, 0x0050a0f0, 0x00a0a0f0, 0x00f0a0f0, 
+                                              0x0000b000, 0x0050b000, 0x00a0b000, 0x00f0b000, 0x0000b050, 0x0050b050, 0x00a0b050, 0x00f0b050, 
+                                              0x0000b0a0, 0x0050b0a0, 0x00a0b0a0, 0x00f0b0a0, 0x0000b0f0, 0x0050b0f0, 0x00a0b0f0, 0x00f0b0f0, 
+                                              0x0000c000, 0x0050c000, 0x00a0c000, 0x00f0c000, 0x0000c050, 0x0050c050, 0x00a0c050, 0x00f0c050, 
+                                              0x0000c0a0, 0x0050c0a0, 0x00a0c0a0, 0x00f0c0a0, 0x0000c0f0, 0x0050c0f0, 0x00a0c0f0, 0x00f0c0f0, 
+                                              0x0000d000, 0x0050d000, 0x00a0d000, 0x00f0d000, 0x0000d050, 0x0050d050, 0x00a0d050, 0x00f0d050, 
+                                              0x0000d0a0, 0x0050d0a0, 0x00a0d0a0, 0x00f0d0a0, 0x0000d0f0, 0x0050d0f0, 0x00a0d0f0, 0x00f0d0f0, 
+                                              0x0000e000, 0x0050e000, 0x00a0e000, 0x00f0e000, 0x0000e050, 0x0050e050, 0x00a0e050, 0x00f0e050, 
+                                              0x0000e0a0, 0x0050e0a0, 0x00a0e0a0, 0x00f0e0a0, 0x0000e0f0, 0x0050e0f0, 0x00a0e0f0, 0x00f0e0f0, 
+                                              0x0000f000, 0x0050f000, 0x00a0f000, 0x00f0f000, 0x0000f050, 0x0050f050, 0x00a0f050, 0x00f0f050, 
+                                              0x0000f0a0, 0x0050f0a0, 0x00a0f0a0, 0x00f0f0a0, 0x0000f0f0, 0x0050f0f0, 0x00a0f0f0, 0x00f0f0f0
+};
+const PaletteConstFWD<sizeof(colors_idl_peppermint) / sizeof(unsigned int)> palette_idl_peppermint(colors_idl_peppermint);
+const PaletteConstBWD<sizeof(colors_idl_peppermint) / sizeof(unsigned int)> palette_idl_peppermint_inv(colors_idl_peppermint);
+typedef PaletteConstFWD<sizeof(colors_idl_peppermint) / sizeof(unsigned int)> palette_idl_peppermint_t;
+#endif // _IDL_PEPPERMINT_H

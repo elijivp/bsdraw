@@ -1,0 +1,41 @@
+#ifndef _IDL_LINEARGNWH_H
+#define _IDL_LINEARGNWH_H
+#include "../bstexpalette.h"
+const unsigned int colors_idl_linearGnWh[] = {
+                                              0x00000200, 0x00000300, 0x00000400, 0x00000500, 0x00000500, 0x00000600, 0x00000700, 0x00000800, 
+                                              0x00000900, 0x00000a00, 0x00000b00, 0x00000c00, 0x00000d00, 0x00000e00, 0x00000f00, 0x00001000, 
+                                              0x00001100, 0x00001200, 0x00001300, 0x00001400, 0x00001500, 0x00001600, 0x00001700, 0x00001800, 
+                                              0x00001900, 0x00001a00, 0x00001b00, 0x00001c00, 0x00001d00, 0x00001e00, 0x00001f00, 0x00002000, 
+                                              0x00002100, 0x00002200, 0x00002300, 0x00002400, 0x00002500, 0x00002600, 0x00002700, 0x00002800, 
+                                              0x00002900, 0x00002a00, 0x00002b00, 0x00002c00, 0x00002d00, 0x00002e00, 0x00002f00, 0x00003000, 
+                                              0x00003100, 0x00003200, 0x00003300, 0x00003400, 0x00003500, 0x00003600, 0x00003700, 0x00003800, 
+                                              0x00003900, 0x00003a00, 0x00003b00, 0x00003c00, 0x00003d00, 0x00003e00, 0x00003f00, 0x00004000, 
+                                              0x00004100, 0x00004200, 0x00004300, 0x00004400, 0x00004500, 0x00004600, 0x00004700, 0x00004800, 
+                                              0x00004900, 0x00004a00, 0x00004b00, 0x00004c00, 0x00004d00, 0x00004e00, 0x00004f00, 0x00005000, 
+                                              0x00005100, 0x00005200, 0x00005300, 0x00005400, 0x00005500, 0x00005600, 0x00005700, 0x00005800, 
+                                              0x00005900, 0x00005a00, 0x00005b00, 0x00005c00, 0x00005d00, 0x00005e00, 0x00005f00, 0x00006000, 
+                                              0x00006100, 0x00006201, 0x00006303, 0x00006405, 0x00006506, 0x00006608, 0x00006709, 0x0000680b, 
+                                              0x0000690d, 0x00006a0e, 0x00006b10, 0x00006c11, 0x00006d13, 0x00006e15, 0x00006f16, 0x00007018, 
+                                              0x00007119, 0x0000721b, 0x0000731d, 0x0000741e, 0x00007520, 0x00007621, 0x00007723, 0x00007825, 
+                                              0x00007926, 0x00007a28, 0x00007b2a, 0x00007c2b, 0x00007d2d, 0x00007e2e, 0x00007f30, 0x00008032, 
+                                              0x00008133, 0x00008235, 0x00008336, 0x00008438, 0x0000853a, 0x0000863b, 0x0000873d, 0x0000883e, 
+                                              0x00008940, 0x00008a42, 0x00008b43, 0x00008c45, 0x00008d46, 0x00008e48, 0x00008f4a, 0x0000904b, 
+                                              0x0000914d, 0x0000924e, 0x00009350, 0x00009452, 0x00009553, 0x00009655, 0x00009757, 0x00009858, 
+                                              0x0000995a, 0x00009a5b, 0x00009b5d, 0x00009c5f, 0x00009d60, 0x00009e62, 0x00009f63, 0x0000a065, 
+                                              0x0000a167, 0x0000a268, 0x0000a36a, 0x0000a46b, 0x0000a56d, 0x0000a66f, 0x0000a770, 0x0000a872, 
+                                              0x0000a973, 0x0000aa75, 0x0000ab77, 0x0000ac78, 0x0000ad7a, 0x0000ae7b, 0x0000af7d, 0x0000b07f, 
+                                              0x0000b180, 0x0000b282, 0x0000b384, 0x0000b485, 0x0000b587, 0x0002b688, 0x0006b78a, 0x0009b88c, 
+                                              0x000db98d, 0x0010ba8f, 0x0013bb90, 0x0017bc92, 0x001abd94, 0x001ebe95, 0x0021bf97, 0x0025c098, 
+                                              0x0028c19a, 0x002bc29c, 0x002fc39d, 0x0032c49f, 0x0036c5a0, 0x0039c6a2, 0x003dc7a4, 0x0040c8a5, 
+                                              0x0043c9a7, 0x0047caa8, 0x004acbaa, 0x004eccac, 0x0051cdad, 0x0055ceaf, 0x0058cfb1, 0x005bd0b2, 
+                                              0x005fd1b4, 0x0062d2b5, 0x0066d3b7, 0x0069d4b9, 0x006dd5ba, 0x0070d6bc, 0x0073d7bd, 0x0077d8bf, 
+                                              0x007ad9c1, 0x007edac2, 0x0081dbc4, 0x0085dcc5, 0x0088ddc7, 0x008bdec9, 0x008fdfca, 0x0092e0cc, 
+                                              0x0096e1cd, 0x0099e2cf, 0x009de3d1, 0x00a0e4d2, 0x00a3e5d4, 0x00a7e6d5, 0x00aae7d7, 0x00aee8d9, 
+                                              0x00b1e9da, 0x00b5eadc, 0x00b8ebde, 0x00bbecdf, 0x00bfede1, 0x00c2eee2, 0x00c6efe4, 0x00c9f0e6, 
+                                              0x00cdf1e7, 0x00d0f2e9, 0x00d3f3ea, 0x00d7f4ec, 0x00daf5ee, 0x00def6ef, 0x00e1f7f1, 0x00e5f7f2, 
+                                              0x00e8f8f4, 0x00ebf9f6, 0x00effaf7, 0x00f2fbf9, 0x00f6fcfa, 0x00f9fdfc, 0x00fdfefe, 0x00ffffff
+};
+const PaletteConstFWD<sizeof(colors_idl_linearGnWh) / sizeof(unsigned int)> palette_idl_linearGnWh(colors_idl_linearGnWh);
+const PaletteConstBWD<sizeof(colors_idl_linearGnWh) / sizeof(unsigned int)> palette_idl_linearGnWh_inv(colors_idl_linearGnWh);
+typedef PaletteConstFWD<sizeof(colors_idl_linearGnWh) / sizeof(unsigned int)> palette_idl_linearGnWh_t;
+#endif // _IDL_LINEARGNWH_H

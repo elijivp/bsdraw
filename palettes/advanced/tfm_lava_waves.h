@@ -1,0 +1,41 @@
+#ifndef _TFM_LAVA_WAVES_H
+#define _TFM_LAVA_WAVES_H
+#include "../bstexpalette.h"
+const unsigned int colors_tfm_lava_waves[] = {
+                                              0x00826d81, 0x0085847d, 0x0088957a, 0x008b9f77, 0x008e9f74, 0x00919671, 0x0094856e, 0x00976f6b, 
+                                              0x009a5668, 0x009d4065, 0x00a02e62, 0x00a3245f, 0x00a6235c, 0x00a92b59, 0x00ac3c56, 0x00af5253, 
+                                              0x00b26a50, 0x00b5814d, 0x00b8934a, 0x00ba9e47, 0x00bd9f44, 0x00c09842, 0x00c3883f, 0x00c5723c, 
+                                              0x00c85a3a, 0x00ca4237, 0x00cd3035, 0x00cf2532, 0x00d22230, 0x00d42a2d, 0x00d7392b, 0x00d94f29, 
+                                              0x00db6726, 0x00dd7e24, 0x00df9122, 0x00e19d20, 0x00e3a01e, 0x00e5991c, 0x00e78a1a, 0x00e97518, 
+                                              0x00eb5d16, 0x00ec4515, 0x00ee3213, 0x00f02511, 0x00f12210, 0x00f2280e, 0x00f4370d, 0x00f54c0c, 
+                                              0x00f6640a, 0x00f87b09, 0x00f98f08, 0x00fa9c07, 0x00fba006, 0x00fb9b05, 0x00fc8c04, 0x00fd7803, 
+                                              0x00fe6003, 0x00fe4802, 0x00ff3402, 0x00ff2701, 0x00ff2201, 0x00ff2700, 0x00ff3400, 0x00ff4900, 
+                                              0x00ff6000, 0x00ff7800, 0x00ff8d00, 0x00ff9b00, 0x00ffa000, 0x00ff9c01, 0x00ff8f01, 0x00fe7b02, 
+                                              0x00fe6302, 0x00fd4b03, 0x00fc3603, 0x00fb2804, 0x00fb2205, 0x00fa2606, 0x00f93207, 0x00f84608, 
+                                              0x00f65d09, 0x00f5750a, 0x00f48b0b, 0x00f3990d, 0x00f1a00e, 0x00f09d10, 0x00ee9111, 0x00ed7e13, 
+                                              0x00eb6614, 0x00e94e16, 0x00e73918, 0x00e5291a, 0x00e4221c, 0x00e2251e, 0x00df3020, 0x00dd4322, 
+                                              0x00db5a24, 0x00d97226, 0x00d78828, 0x00d4982b, 0x00d2a02d, 0x00d09e2f, 0x00cd9332, 0x00cb8134, 
+                                              0x00c86937, 0x00c6513a, 0x00c33b3c, 0x00c02b3f, 0x00bd2342, 0x00bb2444, 0x00b82e47, 0x00b5404a, 
+                                              0x00b2574d, 0x00af6f50, 0x00ad8653, 0x00aa9656, 0x00a79f58, 0x00a49f5b, 0x00a1955e, 0x009e8361, 
+                                              0x009b6d65, 0x00985468, 0x00943e6b, 0x00912d6e, 0x008e2371, 0x008b2374, 0x00882c77, 0x00853d7a, 
+                                              0x0082547d, 0x007f6c80, 0x007c8384, 0x00799587, 0x00759e8a, 0x00729f8d, 0x006f9790, 0x006c8693, 
+                                              0x00697096, 0x00665799, 0x0063409c, 0x00602e9f, 0x005d24a2, 0x005a23a5, 0x00572ba8, 0x00543bab, 
+                                              0x005151ae, 0x004e69b1, 0x004b80b4, 0x004993b7, 0x00469eba, 0x0043a0bc, 0x004098bf, 0x003e88c2, 
+                                              0x003b73c5, 0x00385bc7, 0x003643ca, 0x003330cc, 0x003125cf, 0x002e22d1, 0x002c29d4, 0x002a38d6, 
+                                              0x00274ed8, 0x002566da, 0x00237ddd, 0x002191df, 0x001f9de1, 0x001da0e3, 0x001b9ae5, 0x00198be7, 
+                                              0x001776e9, 0x00155eea, 0x001446ec, 0x001232ee, 0x001126ef, 0x000f22f1, 0x000e28f2, 0x000c36f4, 
+                                              0x000b4bf5, 0x000a63f6, 0x00097af7, 0x00088ef8, 0x00069cf9, 0x0006a0fa, 0x00059bfb, 0x00048dfc, 
+                                              0x000379fd, 0x000261fd, 0x000249fe, 0x000135ff, 0x000127ff, 0x000122ff, 0x000026ff, 0x000034ff, 
+                                              0x000048ff, 0x00005fff, 0x000078ff, 0x00008cff, 0x00009aff, 0x0001a0ff, 0x00019cff, 0x00018fff, 
+                                              0x00027cfe, 0x000264fe, 0x00034cfd, 0x000437fc, 0x000428fc, 0x000522fb, 0x000625fa, 0x000732f9, 
+                                              0x000845f8, 0x00095cf7, 0x000b75f5, 0x000c8af4, 0x000d99f3, 0x000fa0f1, 0x00109df0, 0x001292ee, 
+                                              0x00137fed, 0x001567eb, 0x00174fe9, 0x001939e7, 0x001a2ae6, 0x001c22e4, 0x001e24e2, 0x00202fe0, 
+                                              0x002242dd, 0x002559db, 0x002771d9, 0x002987d7, 0x002b97d5, 0x002e9fd2, 0x00309ed0, 0x003393cd, 
+                                              0x003581cb, 0x00386ac8, 0x003a52c6, 0x003d3cc3, 0x00402bc0, 0x004223be, 0x004524bb, 0x00482eb8, 
+                                              0x004b3fb5, 0x004d56b2, 0x00506eaf, 0x005385ac, 0x005696aa, 0x00599fa7, 0x005c9fa4, 0x005f95a1, 
+                                              0x0062849e, 0x00656e9a, 0x00685597, 0x006b3f94, 0x006e2d91, 0x0071238e, 0x0075238b, 0x00782c88
+};
+const PaletteConstFWD<sizeof(colors_tfm_lava_waves) / sizeof(unsigned int)> palette_tfm_lava_waves(colors_tfm_lava_waves);
+const PaletteConstBWD<sizeof(colors_tfm_lava_waves) / sizeof(unsigned int)> palette_tfm_lava_waves_inv(colors_tfm_lava_waves);
+typedef PaletteConstFWD<sizeof(colors_tfm_lava_waves) / sizeof(unsigned int)> palette_tfm_lava_waves_t;
+#endif // _TFM_LAVA_WAVES_H

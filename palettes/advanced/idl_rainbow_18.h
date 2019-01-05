@@ -1,0 +1,41 @@
+#ifndef _IDL_RAINBOW_18_H
+#define _IDL_RAINBOW_18_H
+#include "../bstexpalette.h"
+const unsigned int colors_idl_rainbow_18[] = {
+                                              0x00960096, 0x00960096, 0x00960096, 0x00960096, 0x00960096, 0x00960096, 0x00960096, 0x00960096, 
+                                              0x00960096, 0x00960096, 0x00960096, 0x00960096, 0x00960096, 0x00960096, 0x00960096, 0x00960096, 
+                                              0x00c800c8, 0x00c800c8, 0x00c800c8, 0x00c800c8, 0x00c800c8, 0x00c800c8, 0x00c800c8, 0x00c800c8, 
+                                              0x00c800c8, 0x00c800c8, 0x00c800c8, 0x00c800c8, 0x00c800c8, 0x00c800c8, 0x00c800c8, 0x00c800c8, 
+                                              0x00966464, 0x00966464, 0x00966464, 0x00966464, 0x00966464, 0x00966464, 0x00966464, 0x00966464, 
+                                              0x00966464, 0x00966464, 0x00966464, 0x00966464, 0x00966464, 0x00966464, 0x00966464, 0x00966464, 
+                                              0x00c86464, 0x00c86464, 0x00c86464, 0x00c86464, 0x00c86464, 0x00c86464, 0x00c86464, 0x00c86464, 
+                                              0x00c86464, 0x00c86464, 0x00c86464, 0x00c86464, 0x00c86464, 0x00c86464, 0x00c86464, 0x00c86464, 
+                                              0x00ff6464, 0x00ff6464, 0x00ff6464, 0x00ff6464, 0x00ff6464, 0x00ff6464, 0x00ff6464, 0x00ff6464, 
+                                              0x00ff6464, 0x00ff6464, 0x00ff6464, 0x00ff6464, 0x00ff6464, 0x00ff6464, 0x00ff6464, 0x00ff6464, 
+                                              0x00008c00, 0x00008c00, 0x00008c00, 0x00008c00, 0x00008c00, 0x00008c00, 0x00008c00, 0x00008c00, 
+                                              0x00008c00, 0x00008c00, 0x00008c00, 0x00008c00, 0x00008c00, 0x00008c00, 0x00008c00, 0x00008c00, 
+                                              0x0000aa96, 0x0000aa96, 0x0000aa96, 0x0000aa96, 0x0000aa96, 0x0000aa96, 0x0000aa96, 0x0000aa96, 
+                                              0x0000aa96, 0x0000aa96, 0x0000aa96, 0x0000aa96, 0x0000aa96, 0x0000aa96, 0x0000aa96, 0x0000aa96, 
+                                              0x0000c8c8, 0x0000c8c8, 0x0000c8c8, 0x0000c8c8, 0x0000c8c8, 0x0000c8c8, 0x0000c8c8, 0x0000c8c8, 
+                                              0x0000c8c8, 0x0000c8c8, 0x0000c8c8, 0x0000c8c8, 0x0000c8c8, 0x0000c8c8, 0x0000c8c8, 0x0000c8c8, 
+                                              0x0000c896, 0x0000c896, 0x0000c896, 0x0000c896, 0x0000c896, 0x0000c896, 0x0000c896, 0x0000c896, 
+                                              0x0000c896, 0x0000c896, 0x0000c896, 0x0000c896, 0x0000c896, 0x0000c896, 0x0000c896, 0x0000c896, 
+                                              0x0078ffc8, 0x0078ffc8, 0x0078ffc8, 0x0078ffc8, 0x0078ffc8, 0x0078ffc8, 0x0078ffc8, 0x0078ffc8, 
+                                              0x0078ffc8, 0x0078ffc8, 0x0078ffc8, 0x0078ffc8, 0x0078ffc8, 0x0078ffc8, 0x0078ffc8, 0x0078ffc8, 
+                                              0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 
+                                              0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 
+                                              0x0000c8ff, 0x0000c8ff, 0x0000c8ff, 0x0000c8ff, 0x0000c8ff, 0x0000c8ff, 0x0000c8ff, 0x0000c8ff, 
+                                              0x0000c8ff, 0x0000c8ff, 0x0000c8ff, 0x0000c8ff, 0x0000c8ff, 0x0000c8ff, 0x0000c8ff, 0x0000c8ff, 
+                                              0x0000a0ff, 0x0000a0ff, 0x0000a0ff, 0x0000a0ff, 0x0000a0ff, 0x0000a0ff, 0x0000a0ff, 0x0000a0ff, 
+                                              0x0000a0ff, 0x0000a0ff, 0x0000a0ff, 0x0000a0ff, 0x0000a0ff, 0x0000a0ff, 0x0000a0ff, 0x0000a0ff, 
+                                              0x00007dff, 0x00007dff, 0x00007dff, 0x00007dff, 0x00007dff, 0x00007dff, 0x00007dff, 0x00007dff, 
+                                              0x00007dff, 0x00007dff, 0x00007dff, 0x00007dff, 0x00007dff, 0x00007dff, 0x00007dff, 0x00007dff, 
+                                              0x006432c8, 0x006432c8, 0x006432c8, 0x006432c8, 0x006432c8, 0x006432c8, 0x006432c8, 0x006432c8, 
+                                              0x006432c8, 0x006432c8, 0x006432c8, 0x006432c8, 0x006432c8, 0x006432c8, 0x006432c8, 0x006432c8, 
+                                              0x004b32af, 0x004b32af, 0x004b32af, 0x004b32af, 0x004b32af, 0x004b32af, 0x004b32af, 0x004b32af, 
+                                              0x004b32af, 0x004b32af, 0x004b32af, 0x004b32af, 0x004b32af, 0x004b32af, 0x004b32af, 0x004b32af
+};
+const PaletteConstFWD<sizeof(colors_idl_rainbow_18) / sizeof(unsigned int)> palette_idl_rainbow_18(colors_idl_rainbow_18);
+const PaletteConstBWD<sizeof(colors_idl_rainbow_18) / sizeof(unsigned int)> palette_idl_rainbow_18_inv(colors_idl_rainbow_18);
+typedef PaletteConstFWD<sizeof(colors_idl_rainbow_18) / sizeof(unsigned int)> palette_idl_rainbow_18_t;
+#endif // _IDL_RAINBOW_18_H

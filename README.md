@@ -1,4 +1,4 @@
-# BSDRAW
+## BSDRAW
 Source code for 4 principal types of graphs, drawed by fragment and vertex shaders.
 
 * Technology: Qt widgets, inherits QOpenGLWidget class.
@@ -9,7 +9,7 @@ Source code for 4 principal types of graphs, drawed by fragment and vertex shade
 All shaders in bsdraw are compatible with glsl 130, but by default BSGLSLVER is not set. So
 if you have any issues, add DEFINES+=BSGLSLVER=130 in your .pro file.
 
-## Simple example:
+### Simple example:
 ```
 DrawQWidget* pDraw = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(graphopts_t::GT_LINTERP, 0.0f, 0x77777777, 1, 0.5f), DrawGraph::DC_DOWNBASE);
 pDraw->setDataPalette(&palette_gnu_latte);
@@ -21,7 +21,7 @@ disposed SAMPLES(1st portion), SAMPLES(2nd portion)...
 
 ![simple](/demoimages/simple.png)
 
-## Usage
+### Usage
 It is difficult to describe all the characteristics, so:
 1. Build&Run example from __example__ folder
 2. Choose test, remember _testname_
@@ -32,21 +32,21 @@ It is difficult to describe all the characteristics, so:
 ![demo1](/demoimages/demo1.png)
 
 Left to right, up to down: 
-DrawIntensity, DrawDomain, DrawRecorder, 
-DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_LINDOWNCROSS),
-DrawGraph(GT_DOTS, dotsize=1, weight=0.5), DrawGraph(GT_LINTERP, dotsize=1, weight=0.5), DrawGraph(GT_LINDOWNCROSS, dotsize=1, weight=0.5)
+* DrawIntensity, DrawDomain, DrawRecorder, 
+* DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_LINDOWNCROSS),
+* DrawGraph(GT_DOTS, dotsize=1, weight=0.5), DrawGraph(GT_LINTERP, dotsize=1, weight=0.5), DrawGraph(GT_LINDOWNCROSS, dotsize=1, weight=0.5)
 
-## Scaling
+### Scaling
 That technology is designed to solve 2 problems: resize and posteffects
 
 ![demo2](/demoimages/demo2.png)
 
 Left to right, up to down (SCALING=4, Postmask(PM_LINELEFTBOTTOM)): 
-DrawIntensity, DrawDomain, DrawRecorder, 
-DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_LINDOWNCROSS),
-DrawGraph(GT_DOTS, Postmask(PM_PSEUDOCIRCLE)), DrawGraph(GT_LINTERP, Postmask(PM_LINELEFT)), DrawGraph(GT_LINDOWNCROSS, Postmask(PM_LINELEFT))
+* DrawIntensity, DrawDomain, DrawRecorder, 
+* DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_LINDOWNCROSS),
+* DrawGraph(GT_DOTS, Postmask(PM_PSEUDOCIRCLE)), DrawGraph(GT_LINTERP, Postmask(PM_LINELEFT)), DrawGraph(GT_LINDOWNCROSS, Postmask(PM_LINELEFT))
 
-### INCLUDES (without overlays):
+#### INCLUDES (without overlays):
 1. Required core files:
 bsdraw/core/bsqdraw.cpp;
 bsdraw/core/bsqdraw.h;
@@ -70,7 +70,7 @@ bsdraw/palettes/bspalettes_adv.h;
 bsdraw/palettes/bspalettes_rgb.h;
 bsdraw/palettes/bspalettes_std.h
 
-### INCLUDES for overlays:
+#### INCLUDES for overlays:
 bsdraw/core/bsoverlay.cpp;
 bsdraw/core/sheigen/bsshgencolor.cpp;
 bsdraw/core/sheigen/bsshgenmain.cpp;
@@ -87,7 +87,7 @@ bsdraw/overlays/bsinteractive.cpp & .h;
 bsdraw/overlays/bscontour.cpp & .h;
 bsdraw/overlays/bsimage.cpp & .h
     
-### Future:
+#### Future:
 * vertical draws: graph and recorder
 * texture atlas for text
-* dekart axes with labels
+* axes with text marking

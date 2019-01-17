@@ -229,12 +229,15 @@ void FshMainGenerator::goto_func_end(const DPostmask &fsp)
   {
     m_offset += msprintf(&m_to[m_offset],  "%s" SHNL
                                           "result = mix(result, ppb_color, ppb_sfp[1] * ppb_sfp[0] * ppb_in + ppb_sfp[2] * (1.0 - ppb_sfp[0])*ppb_in );" SHNL,
-                      fsp.postmask == DPostmask::PM_LINELEFT?    "float ppb_in = step(ppb_rect.x, ppb_sfp[3]);" :
-                      fsp.postmask == DPostmask::PM_LINEBOTTOM?  "float ppb_in = step(ppb_rect.y, ppb_sfp[3]);" :
-                      fsp.postmask == DPostmask::PM_LINELEFTBOTTOM?      "float ppb_in = sign(step(ppb_rect.x, ppb_sfp[3])+step(ppb_rect.y, ppb_sfp[3]));" : 
-                      fsp.postmask == DPostmask::PM_CONTOUR?     "float ppb_in = sign(step(ppb_rect.x, ppb_sfp[3]) + step(ppb_rect.y, ppb_sfp[3])"
-                                                                        " + step(ppb_rect[2] - ppb_rect.x, ppb_sfp[3]) + step(ppb_rect[3] - ppb_rect.y, ppb_sfp[3]));" :
-                      fsp.postmask == DPostmask::PM_PSEUDOCIRCLE?    "vec2 _ppb_pos = vec2(abs(0.5 - float(ppb_rect.x)/ppb_rect[2]), abs(0.5 - float(ppb_rect.y)/ppb_rect[3]));"
+                      fsp.postmask == DPostmask::PM_LINELEFT?         "float ppb_in = step(ppb_rect.x, ppb_sfp[3]);" :
+                      fsp.postmask == DPostmask::PM_LINERIGHT?        "float ppb_in = step(ppb_rect[2] - ppb_rect.x, ppb_sfp[3]);" :
+                      fsp.postmask == DPostmask::PM_LINEBOTTOM?       "float ppb_in = step(ppb_rect.y, ppb_sfp[3]);" :
+                      fsp.postmask == DPostmask::PM_LINETOP?          "float ppb_in = step(ppb_rect[3] - ppb_rect.y, ppb_sfp[3]);" :
+                      fsp.postmask == DPostmask::PM_LINELEFTBOTTOM?   "float ppb_in = sign(step(ppb_rect.x, ppb_sfp[3])+step(ppb_rect.y, ppb_sfp[3]));" : 
+                      fsp.postmask == DPostmask::PM_LINERIGHTBOTTOM?  "float ppb_in = sign(step(ppb_rect[2] - ppb_rect.x, ppb_sfp[3])+step(ppb_rect.y, ppb_sfp[3]));" : 
+                      fsp.postmask == DPostmask::PM_CONTOUR?          "float ppb_in = sign(step(ppb_rect.x, ppb_sfp[3]) + step(ppb_rect.y, ppb_sfp[3])"
+                                                                      " + step(ppb_rect[2] - ppb_rect.x, ppb_sfp[3]) + step(ppb_rect[3] - ppb_rect.y, ppb_sfp[3]));" :
+                      fsp.postmask == DPostmask::PM_PSEUDOCIRCLE?     "vec2 _ppb_pos = vec2(abs(0.5 - float(ppb_rect.x)/ppb_rect[2]), abs(0.5 - float(ppb_rect.y)/ppb_rect[3]));"
                                                                         "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
 //                                                                        "float ppb_in = smoothstep((ppb_sfp[3]*0.1 + 0.2)*(ppb_sfp[3]*0.1 + 0.2), 0.7*0.7, _ppb_d2);"
                                                                         "float ppb_in = smoothstep(0.25*0.25, (0.66 - ppb_sfp[3]*0.05)*(0.66 - ppb_sfp[3]*0.05), _ppb_d2);"

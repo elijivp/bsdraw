@@ -263,7 +263,7 @@ public:
   }
   int             ovlPushBack(IOverlay* povl, int ovlroot, bool owner=true)
   {
-    if (m_overlaysCount == OVLLIMIT || ovlroot <= 0 || ovlroot > m_overlaysCount) return -1;
+    if (m_overlaysCount == OVLLIMIT || ovlroot <= 0 || ovlroot > (int)m_overlaysCount) return -1;
     _ovlSet(m_overlaysCount, povl, owner, true, ovlroot-1);
     m_bitmaskPendingChanges |= PC_INIT; innerUpdate(RD_BYOVL_ADDREMOVE);
     return ++m_overlaysCount;

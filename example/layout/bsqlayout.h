@@ -43,7 +43,7 @@ enum    _BS_LAYTYPE {   _BS_BOXED_LAYOUT, _BS_NONBOXED_LAYOUT, _BS_NOLAYOUT };
 #define BS_START_LAYOUT_HMAX_VMAX(boxlayouttype)          BS_START_LAYOUT(boxlayouttype)  _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
 #define BS_STRETCH                          _bs_active->addStretch(1);
-#if QT_VERSION >= 0x050c00
+#if QT_VERSION >= 0x050b00
 #define BS_CHEAT_VMIN
 #else
 #define BS_CHEAT_VMIN                       _bs_pWidget->setContentsMargins(0, -10, 0, -10);

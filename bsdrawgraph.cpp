@@ -22,12 +22,12 @@ public:
   virtual int           portionMeshType() const{  return PMT_FORCE1D; }
   virtual unsigned int  shvertex_pendingSize() const { return VshMainGenerator1D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const { return VshMainGenerator1D()(to); }
-  virtual unsigned int  shfragment_pendingSize(unsigned int ovlscount) const { return 1600 + FshMainGenerator::basePendingSize(ovlscount); }
+  virtual unsigned int  shfragment_pendingSize(unsigned int ovlscount) const { return 1800 + FshMainGenerator::basePendingSize(ovlscount); }
   virtual unsigned int  shfragment_store(const DPostmask& fsp, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
     FshMainGenerator fmg(to, ovlscount, ovlsinfo);
     float specopc = graphopts.specopc > 1.0f? 1.0f : graphopts.specopc < 0.0f? 0.0f : graphopts.specopc;
-    fmg.cfloatvar("specopc", specopc);
+    fmg.cfloatvar("specopc", 1.0f - specopc);
     fmg.goto_func_begin(fsp);
     {
       if (graphopts.backcolor != 0xFFFFFFFF)
@@ -41,44 +41,67 @@ public:
       fmg.push("float resultmix = 0.0;" SHNL);
       fmg.push("int   resultvalue = 0;" SHNL);
       
-      const char shgraph_formixwell_dots[] = 
-                                        "for (int i=0; i<countPortions; i++)" SHNL
-                                        "{" SHNL
-                                          "int   IVALUE = int(getValue1D(i, fcoords.x)*(ibounds_noscaled.y - 1));" SHNL
-                                          "float MIXWELL = step(distance(vec2(icoords), vec2(icoords.x, IVALUE)), 0.0);" SHNL
-          
-                                          "ppb_sfp[0] = ppb_sfp[0]*(1.0 - MIXWELL) + MIXWELL;" SHNL;
-          
-      const char shgraph_formixwell_linterp[] = 
-                                          "vec3  fx_around = vec3(float(max(fcoords.x * ibounds_noscaled.x,1) - 1) / ibounds_noscaled.x, fcoords.x, float(min(fcoords.x * ibounds_noscaled.x, ibounds_noscaled.x-1)  + 1)/ibounds_noscaled.x);" SHNL
-                                          "for (int i=0; i<countPortions; i++)" SHNL
-                                          "{" SHNL
-                                            "ivec3 ify_around = ivec3(vec3(getValue1D(i, fx_around[0]), getValue1D(i, fx_around[1]), getValue1D(i, fx_around[2])) * (ibounds_noscaled.y - 1));" SHNL
-                                            "float fmix_prev = (1 - step(0.5, float(abs(icoords.y - ify_around[1]))));" SHNL
-                                            "fmix_prev += (1.0 - specopc)*clamp(float(icoords.y - ify_around[0])/(ify_around[1] - ify_around[0]), 0.0, 1.0) * (1 - step(float(ify_around[1]), float(ify_around[0]))) * (1 - step(float(ify_around[1]), float(icoords.y)));" SHNL
-                                            "fmix_prev += (1.0 - specopc)*clamp(float(ify_around[0] - icoords.y)/(ify_around[0] - ify_around[1]), 0.0, 1.0) * (1 - step(float(ify_around[0]), float(ify_around[1]))) * step(float(ify_around[1]), float(icoords.y));" SHNL
-                                            "float fmix_next = (1 - step(0.5, float(abs(ify_around[1] - icoords.y))));" SHNL
-                                            "fmix_next += (1.0 - specopc)*(1 - clamp(float(icoords.y - ify_around[1])/(ify_around[2] - ify_around[1]), 0.0, 1.0)) * (1 - step(float(ify_around[1]), float(ify_around[2]))) * (1 - step(float(ify_around[1]), float(icoords.y)));" SHNL
-                                            "fmix_next += (1.0 - specopc)*(1 - clamp(float(ify_around[1] - icoords.y)/(ify_around[1] - ify_around[2]), 0.0, 1.0)) * (1 - step(float(ify_around[2]), float(ify_around[1]))) * (step(float(ify_around[1]), float(icoords.y)));" SHNL
-                                            
-                                            "int    IVALUE = ify_around[1];" SHNL
-                                            "float  MIXWELL = clamp(fmix_prev + fmix_next,0.0,1.0);" SHNL
-          
-                                            "ppb_sfp[0] = ppb_sfp[0]*(1.0 - sign(MIXWELL)) + sign(MIXWELL);" SHNL;
+      if (graphopts.graphtype == graphopts_t::GT_DOTS)
+      {
+        fmg.push( "for (int i=0; i<countPortions; i++)" SHNL
+                  "{" SHNL
+                    "int   IVALUE = int(getValue1D(i, fcoords.x)*(ibounds_noscaled.y - 1));" SHNL
+                    "float MIXWELL = step(distance(vec2(icoords), vec2(icoords.x, IVALUE)), 0.0);" SHNL
+                    "ppb_sfp[0] = ppb_sfp[0]*(1.0 - MIXWELL) + MIXWELL;" SHNL
+                  );
+      }
+      else if (graphopts.graphtype == graphopts_t::GT_LINTERP || graphopts.graphtype == graphopts_t::GT_LINTERPSMOOTH)
+      {
+        fmg.push( "vec3  fx_around = vec3(float(max(fcoords.x * ibounds_noscaled.x,1) - 1) / ibounds_noscaled.x, fcoords.x, float(min(fcoords.x * ibounds_noscaled.x, ibounds_noscaled.x-1)  + 1)/ibounds_noscaled.x);" SHNL
+                  "for (int i=0; i<countPortions; i++)" SHNL
+                  "{" SHNL         
+                    "ivec3 ify_around = ivec3(vec3(getValue1D(i, fx_around[0]), getValue1D(i, fx_around[1]), getValue1D(i, fx_around[2])) * (ibounds_noscaled.y - 1));" SHNL
+                    "float fhit = sign(icoords.y - ify_around[1]);" SHNL
+                  );
+        if (graphopts.graphtype == graphopts_t::GT_LINTERP)
+          fmg.push( "float fmix_prev = clamp(float(icoords.y - ify_around[0])/(ify_around[1] - ify_around[0]), 0.0, 1.0);" SHNL
+                    "fmix_prev = fmix_prev*(1 - step(float(ify_around[1]), float(ify_around[0]))) * (1.0 - step(0.0, fhit))   +   fmix_prev*(1 - step(float(ify_around[0]), float(ify_around[1]))) * (1.0 - step(fhit, 0.0));" SHNL
+                    "float fmix_next = 1.0 - clamp(float(icoords.y - ify_around[1])/(ify_around[2] - ify_around[1]), 0.0, 1.0);" SHNL
+                    "fmix_next = fmix_next*(1 - step(float(ify_around[1]), float(ify_around[2]))) * (1.0 - step(0.0, fhit))   +   fmix_next*(1 - step(float(ify_around[2]), float(ify_around[1]))) * (1.0 - step(fhit, 0.0));" SHNL
+                    );
+        else if (graphopts.graphtype == graphopts_t::GT_LINTERPSMOOTH)
+          fmg.push( "float fmix_prev = smoothstep(float(ify_around[0]), float(ify_around[1]), float(icoords.y));" SHNL
+                    "fmix_prev = fmix_prev*(1 - step(float(ify_around[1]), float(ify_around[0]))) * (1.0 - step(0.0, fhit))   +   fmix_prev*(1 - step(float(ify_around[0]), float(ify_around[1]))) * (1.0 - step(fhit, 0.0));" SHNL
+                    "float fmix_next = smoothstep(float(ify_around[2]), float(ify_around[1]), float(icoords.y));" SHNL
+                    "fmix_next = fmix_next*(1 - step(float(ify_around[1]), float(ify_around[2]))) * (1.0 - step(0.0, fhit))   +   fmix_next*(1 - step(float(ify_around[2]), float(ify_around[1]))) * (1.0 - step(fhit, 0.0));" SHNL
+                    );
+        
+        fmg.push( "fhit = 1.0 - abs(fhit);" SHNL
+                  "float  MIXWELL = max(fhit, specopc*max(fmix_prev, fmix_next));" SHNL
+//                  "int    IVALUE = int(mix(mix(ify_around[0], ify_around[1], fmix_prev)*(1.0-step(fmix_prev,fmix_next)) + mix(ify_around[2], ify_around[1], fmix_next)*(1.0 - step(fmix_next,fmix_prev)), ify_around[1], fhit));" SHNL
+                  "int    IVALUE = int(mix(mix(ify_around[0], ify_around[1], fmix_prev)*step(fmix_next,fmix_prev) + mix(ify_around[2], ify_around[1], fmix_next)*(1.0 - step(fmix_next,fmix_prev)), ify_around[1], fhit));" SHNL
+                  "ppb_sfp[0] = ppb_sfp[0]*(1.0 - sign(MIXWELL)) + sign(MIXWELL);" SHNL
+                 );
+      }
+      else if (graphopts.graphtype == graphopts_t::GT_LINDOWN || graphopts.graphtype == graphopts_t::GT_LINDOWNCROSS)
+      {
+        fmg.push(   "for (int i=0; i<countPortions; i++)" SHNL
+                    "{" SHNL
+                      "int IVALUE = int(getValue1D(i, fcoords.x) * (ibounds_noscaled.y - 1));" SHNL
+                      "float bmix = step(float(icoords.y), float(IVALUE));" SHNL
+                      "float MIXWELL = clamp(mix(specopc, bmix, step(float(IVALUE), float(icoords.y))), 0.0, 1.0);" SHNL
+                      "ppb_sfp[0] = ppb_sfp[0]*(1.0 - bmix) + bmix;" SHNL
+                      "ppb_rect.ga = ivec2(mix(ppb_rect.ga, ivec2(floor(fcoords.y*ibounds.y + 0.49), IVALUE*chnl_vert_scaling + chnl_vert_scaling-1), bmix));" SHNL
+                    );
+      }
       
-      const char shgraph_formixwell_lindown[] = 
-                                            "for (int i=0; i<countPortions; i++)" SHNL
-                                            "{" SHNL
-                                              "int IVALUE = int(getValue1D(i, fcoords.x) * (ibounds_noscaled.y - 1));" SHNL
-                                              "float bmix = step(float(icoords.y), float(IVALUE));" SHNL
-                                              "float MIXWELL = clamp(mix(1.0 - specopc, bmix, step(float(IVALUE), float(icoords.y))), 0.0, 1.0);" SHNL
-          
-                                              "ppb_sfp[0] = ppb_sfp[0]*(1.0 - bmix) + bmix;" SHNL
-                                              "ppb_rect.ga = ivec2(mix(ppb_rect.ga, ivec2(floor(fcoords.y*ibounds.y + 0.49), IVALUE*chnl_vert_scaling + chnl_vert_scaling-1), bmix));" SHNL;
-          
-      const char*   lfmixes[] = { shgraph_formixwell_dots, shgraph_formixwell_linterp, shgraph_formixwell_lindown, shgraph_formixwell_lindown };
       
-      fmg.push(lfmixes[(int)graphopts.graphtype]);
+      {
+        const char*   descaling[] = { "float descaler = 1.0;",
+                                      "float descaler = 1.0 - abs(sign( int(mod(floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2));",
+                                      "float descaler = 1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2) / (chnl_horz_scaling/2.0));",
+                                      "float descaler = 1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2) / (chnl_horz_scaling/4.0));",
+                                      "float descaler = 1.0/abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2));"
+                                    };
+        int descaling_idx = int(graphopts.descaling) > sizeof(descaling)/sizeof(const char*)? 0 : int(graphopts.descaling);
+        fmg.push(descaling[descaling_idx]);
+        fmg.push("MIXWELL = MIXWELL * descaler;");
+      }
     
       if (graphopts.dotsize > 0)
       {
@@ -100,6 +123,7 @@ public:
                     "}" SHNL
                   "}" SHNL);
       }
+      
       
       {
         float base = colorizer[0];

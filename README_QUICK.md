@@ -1,45 +1,19 @@
-#include "MainWindow.h"
+## BSDRAW QUICKSTART
 
-#include "../bsdrawgraph.h"
-#include "../bsdrawintensity.h"
-#include "../palettes/bspalettes_adv.h"
-#include <stdlib.h>   // for rand()
-#include <qmath.h>    // for qFastSin()
-#include <QVBoxLayout>
-#include <QHBoxLayout>
+This quickstart example you can find on __simpleexample__ project in corresponding folder
 
-MainWindow::MainWindow(QWidget *parent)
-  : QMainWindow(parent)
-{
-  QBoxLayout* pMainLayout = new QHBoxLayout();
-  
-  const unsigned int COUNT_SAMPLES = 256;
+![quickstart](/demoimages/quickstart.png)
+
+First, you must include _bsdrawgraph.h_ for DrawGraph (inherits DrawQWidget) class and _palettes/bspalettes_adv.h_ for palettes
+
+```
+	const unsigned int COUNT_SAMPLES = 256;
   const unsigned int COUNT_PORTIONS = 1;
-//  pDraw = new DrawGraph(samples);
-//  pDraw = new DrawIntensity(samples/16, 16);
-  float arr_random[COUNT_SAMPLES*COUNT_PORTIONS];
-  for (unsigned int i=0; i<COUNT_SAMPLES*COUNT_PORTIONS; i++)
-    arr_random[i] = rand()/float(RAND_MAX);
-  
-  float arr_sin[COUNT_SAMPLES*COUNT_PORTIONS];
-  for (unsigned int i=0; i<COUNT_SAMPLES*COUNT_PORTIONS; i++)
-    arr_sin[i] = (qFastSin((float(i%COUNT_SAMPLES)/COUNT_SAMPLES)*2*M_PI) + 1)/2.0f;
-  
-  float arr_peaks[COUNT_SAMPLES*COUNT_PORTIONS];
-  for (unsigned int i=0; i<COUNT_SAMPLES*COUNT_PORTIONS; i++)
-  {
-    arr_peaks[i] = arr_random[i]*arr_random[i]*arr_random[i];
-    arr_peaks[i] = arr_peaks[i] > 0.2f && arr_peaks[i] < 0.7f? arr_peaks[i]/5.0 : arr_peaks[i];
-  }
-  
-  float arr_pseudonormal[COUNT_SAMPLES*COUNT_PORTIONS];
-  for (unsigned int i=0; i<COUNT_SAMPLES*COUNT_PORTIONS; i++)
-    arr_pseudonormal[i] = i%2 == 0? (arr_random[i]/1.25f + 0.1f) : (arr_random[i]/2.0f + 0.25f);
-
-  
-  QVBoxLayout* pLayout;
-  pLayout = new QVBoxLayout();
-  pMainLayout->addLayout(pLayout);
+	float arr_random[COUNT_SAMPLES*COUNT_PORTIONS]; 	// init somewhere
+  float arr_sin[COUNT_SAMPLES*COUNT_PORTIONS];			// init somewhere
+  float arr_peaks[COUNT_SAMPLES*COUNT_PORTIONS];		// init somewhere
+  float arr_pseudonormal[COUNT_SAMPLES*COUNT_PORTIONS];	// init somewhere
+    
   {
     /// 1
     DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES, COUNT_PORTIONS, graphopts_t(graphopts_t::GT_LINTERP), DrawGraph::DC_DOWNBASE);
@@ -70,9 +44,6 @@ MainWindow::MainWindow(QWidget *parent)
     pLayout->addWidget(pDraw);
   }
   
-  ///////////////////////////////////////////////
-  pLayout = new QVBoxLayout();
-  pMainLayout->addLayout(pLayout);
   {
     /// 5
     DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t(graphopts_t::GT_LINTERP, 0.0f, 0xFFFFFFFF, 0, 0.0f, graphopts_t::DS_TRIANGLE2), DrawGraph::DC_OFF, 0.5f, -1.0f);
@@ -107,9 +78,6 @@ MainWindow::MainWindow(QWidget *parent)
     pLayout->addWidget(pDraw);
   }
   
-  ///////////////////////////////////////////////
-  pLayout = new QVBoxLayout();
-  pMainLayout->addLayout(pLayout);
   {
     /// 9
     DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t(graphopts_t::GT_LINTERP, 0.0f, 0xFFFFFFFF, 0, 0.0f, graphopts_t::DS_TRIANGLE), DrawGraph::DC_DOWNBASE);
@@ -138,14 +106,22 @@ MainWindow::MainWindow(QWidget *parent)
     pDraw->setData(arr_pseudonormal);
     pLayout->addWidget(pDraw);
   }
-  
-  {
-    QWidget *central = new QWidget();
-    central->setLayout(pMainLayout);
-    this->setCentralWidget(central);
-  }
-}
+```
 
-MainWindow::~MainWindow()
-{
-}
+### Minimal required includes:
+
+```
+SOURCES += 
+    ../bsdrawgraph.cpp \
+    ../bsdrawintensity.cpp \
+    ../core/bsqdraw.cpp \
+    ../core/sheigen/bsshgenmain.cpp
+
+HEADERS  +=
+    ../bsdrawgraph.h \
+    ../core/bsdraw.h \
+    ../core/bsidrawcore.h \
+    ../core/bsqdraw.h \
+    ../core/sheigen/bsshgenmain.h
+```
+

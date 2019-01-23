@@ -331,7 +331,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
       {
-        graphopts_t               gopts(gts[i], i == 0? c == dccount-1? 1.0f : 0.3f : 0.0f, c == 1? 0xFFFFFFFF : 0x00999999, i != 2? 0 : 2, 0.5f);
+        graphopts_t               gopts(gts[i], i == 0? c == dccount-1? 0.4f : 0.3f : 0.0f, c == 1? 0xFFFFFFFF : 0x00999999, i != 2? 0 : 2, 0.5f);
         DrawGraph::DOWNCOLORIZE   dclr = c == 0 ? DrawGraph::DC_OFF : c == 1? DrawGraph::DC_OFF : DrawGraph::DC_DOWNBASE;
         if (MW_TEST == DRAW_GRAPHS)
           draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gopts, dclr);
@@ -1055,6 +1055,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
             BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_BOX, 1)
               BSAUTO_TEXT_ADD(tr("Ban update from:"), 0, Qt::AlignLeft);
+              BS_STRETCH
               BSFieldSetup banbtns[] = { 
                 BSFieldSetup(tr("data"),      &fntSTD, BTF_BANUPDATEDATA, 0, btnMinWidth, btnMaxWidth),
                 BSFieldSetup(tr("settings"),   &fntSTD, BTF_BANUPDATESETS, 0, btnMinWidth, btnMaxWidth),

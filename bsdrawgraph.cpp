@@ -113,7 +113,7 @@ public:
                                       "MIXWELL = MIXWELL * (1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2) / (chnl_horz_scaling/4.0)));",
                                       "MIXWELL = MIXWELL * (1.0/abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2)));"
                                     };
-        if (int(graphopts.descaling) < sizeof(descaling)/sizeof(const char*))
+        if ((unsigned int)graphopts.descaling < sizeof(descaling)/sizeof(const char*))
           fmg.push(descaling[int(graphopts.descaling)]);
       }
     

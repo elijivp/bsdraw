@@ -8,7 +8,7 @@
 */
 
 
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)3
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)7
 #ifndef MW_TEST_NOCHOOSE_DEFAULT
 #include <QInputDialog>
 #endif

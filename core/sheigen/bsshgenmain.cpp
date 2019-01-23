@@ -203,9 +203,9 @@ void FshMainGenerator::goto_func_begin(const DPostmask& fsp)
                                     "float ovMix = 0.0;" SHNL
                                     "ivec2 ibounds_noscaled = ivec2(chnl_horz_count, chnl_vert_count);" SHNL
                                     "ivec2 ibounds = ibounds_noscaled * ivec2(chnl_horz_scaling, chnl_vert_scaling);" SHNL
-                                    "vec2  normCoord = (coords.xy + 1.0) * 0.5;" SHNL
+                                    "vec2  normCoord = coords.xy*0.5 + 0.5;" SHNL
                                     "vec2  fcoords = rotate(normCoord.xy);" SHNL
-                                    "ivec2 icoords = ivec2(floor(fcoords * vec2(ibounds_noscaled)));" SHNL
+                                    "ivec2 icoords = ivec2(fcoords * vec2(ibounds_noscaled));" SHNL
                                     "vec3  result = vec3(0.0,0.0,0.0);" SHNL;
   
   memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;

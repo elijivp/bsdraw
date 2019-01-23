@@ -120,7 +120,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     graphopts_t  gopts[] = { graphopts_t(graphopts_t::GT_DOTS, 0.0f), 
                              graphopts_t(graphopts_t::GT_LINTERP, 0.0f), 
-                             graphopts_t(graphopts_t::GT_LINDOWNCROSS, 0.0f)
+                             graphopts_t(graphopts_t::GT_LINDOWN_CROSSMAX, 0.0f)
                            };
     
     for (unsigned int i=0; i<sizeof(gopts)/sizeof(graphopts_t); i++)
@@ -164,7 +164,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     graphopts_t  gopts[] = { graphopts_t(graphopts_t::GT_DOTS, 0.0f), 
                              graphopts_t(graphopts_t::GT_LINTERP, 0.0f), 
-                             graphopts_t(graphopts_t::GT_LINDOWNCROSS, 0.0f)
+                             graphopts_t(graphopts_t::GT_LINDOWN_CROSSMAX, 0.0f)
                            };
     
     for (unsigned int i=0; i<sizeof(gopts)/sizeof(graphopts_t); i++)
@@ -240,20 +240,27 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   }
   else if (MW_TEST == DRAW_GRAPH_PIXELATION)   /// pixelation
   {
-    sigtype = ST_PEAK;
+//    sigtype = ST_PEAK;
+    sigtype = ST_MOVE;
     SAMPLES = 100;
     MAXLINES = 20;
-    PORTIONS = 2;
+    PORTIONS = 3;
     PRECREATE(4, 1);
     syncscaling = 10;
-    graphopts_t gts[] = { {graphopts_t::GT_LINDOWN, 0.0f}, {graphopts_t::GT_LINDOWN, 0.0f}, {graphopts_t::GT_LINDOWNCROSS, 0.0f}, {graphopts_t::GT_LINTERP, 0.8f} };
-    DPostmask fsp[] = {   DPostmask(DPostmask::PM_LINELEFTBOTTOM, DPostmask::PO_EMPTY, 0, 0.3,0.3,0.3), 
-                          DPostmask(DPostmask::PM_LINELEFT, DPostmask::PO_ALL, 4, 0.0,0.0,0.0), 
+    graphopts_t gts[] = { {graphopts_t::GT_LINDOWN, 0.5f}, {graphopts_t::GT_LINDOWN_CROSSMIN, 0.5f}, {graphopts_t::GT_LINDOWN_CROSSMAX, 0.5f}, {graphopts_t::GT_LINTERP, 0.8f} };
+    DPostmask fsp[] = {   DPostmask(DPostmask::PM_LINELEFT, DPostmask::PO_ALL, 0, 0.3,0.3,0.3), 
+                          DPostmask(DPostmask::PM_CONTOUR, DPostmask::PO_SIGNAL, 0, 0.3,0.3,0.3), 
                           DPostmask(DPostmask::PM_LINELEFTBOTTOM, DPostmask::PO_ALL, 0, 0.3,0.3,0.3), 
                           DPostmask(DPostmask::PM_PSEUDOCIRCLE, DPostmask::PO_ALL, 0, 0.1,0.1,0.1)
                            };
+//    DPostmask fsp[] = {   DPostmask(DPostmask::PM_CONTOUR, DPostmask::PO_ALL, 0, 0.3,0.3,0.3), 
+//                          DPostmask(DPostmask::PM_CONTOUR, DPostmask::PO_ALL, 0, 0.3,0.3,0.3), 
+//                          DPostmask(DPostmask::PM_CONTOUR, DPostmask::PO_ALL, 0, 0.3,0.3,0.3), 
+//                          DPostmask(DPostmask::PM_PSEUDOCIRCLE, DPostmask::PO_ALL, 0, 0.1,0.1,0.1)
+//                           };
     for (unsigned int i=0; i<drawscount; i++)
     {
+//      gts[i].descaling = graphopts_t::DE_CENTER;
       draws[i] = new DrawGraph(SAMPLES, PORTIONS, gts[i], DrawGraph::DC_OFF, 1.0, -0.5);
       draws[i]->setPostMask(fsp[i]);
     }
@@ -320,7 +327,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     MAXLINES = 1;
     PORTIONS = 2;
     PRECREATE(3, 3);
-    graphopts_t::GRAPHTYPE gts[] = { graphopts_t::GT_LINDOWNCROSS, graphopts_t::GT_LINTERP, graphopts_t::GT_DOTS };
+    graphopts_t::GRAPHTYPE gts[] = { graphopts_t::GT_LINDOWN_CROSSMAX, graphopts_t::GT_LINTERP, graphopts_t::GT_DOTS };
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
       {

@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent)
   QBoxLayout* pMainLayout = new QHBoxLayout();
   
   const unsigned int COUNT_SAMPLES = 256;
-  const unsigned int COUNT_PORTIONS = 1;
+  const unsigned int COUNT_PORTIONS = 2;
 //  pDraw = new DrawGraph(samples);
 //  pDraw = new DrawIntensity(samples/16, 16);
   float arr_random[COUNT_SAMPLES*COUNT_PORTIONS];
@@ -63,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent)
   }
   {
     /// 4
-    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/8, COUNT_PORTIONS, graphopts_t(graphopts_t::GT_LINDOWNCROSS), DrawGraph::DC_OFF, 0.5f, -1.0f);
+    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/8, COUNT_PORTIONS, graphopts_t(graphopts_t::GT_LINDOWN_CROSSMIN), DrawGraph::DC_OFF, 0.5f, -1.0f);
     pDraw->setPostMask(DPostmask(DPostmask::PM_LINETOP, DPostmask::PO_SIGNAL, 1, 1.0f,1.0f,1.0f));
     pDraw->setDataPalette(&palette_gnu_latte);
     pDraw->setData(arr_peaks);
@@ -100,7 +100,7 @@ MainWindow::MainWindow(QWidget *parent)
   }
   {
     /// 8
-    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/16, COUNT_PORTIONS, graphopts_t(graphopts_t::GT_LINDOWNCROSS), DrawGraph::DC_DOWNBASE);
+    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/16, COUNT_PORTIONS, graphopts_t(graphopts_t::GT_LINDOWN_CROSSMIN), DrawGraph::DC_DOWNBASE);
     pDraw->setPostMask(DPostmask(DPostmask::PM_CONTOUR, DPostmask::PO_SIGNAL, 0, 1.0f,1.0f,1.0f));
     pDraw->setDataPalette(&palette_gnu_latte);
     pDraw->setData(arr_peaks);
@@ -126,14 +126,14 @@ MainWindow::MainWindow(QWidget *parent)
   }
   {
     /// 11
-    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t(graphopts_t::GT_LINDOWNCROSS, graphopts_t::DE_TRIANGLE), DrawGraph::DC_OFF);
+    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t(graphopts_t::GT_LINDOWN_CROSSMIN, graphopts_t::DE_TRIANGLE), DrawGraph::DC_OFF);
     pDraw->setDataPalette(&palette_gnu_latte);
     pDraw->setData(arr_peaks);
     pLayout->addWidget(pDraw);
   }
   {
     /// 12
-    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t(graphopts_t::GT_LINDOWNCROSS, graphopts_t::DE_CENTER), DrawGraph::DC_DOWNBASE);
+    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t(graphopts_t::GT_LINDOWN_CROSSMIN, graphopts_t::DE_CENTER), DrawGraph::DC_DOWNBASE);
     pDraw->setDataPalette(&palette_gnu_latte);
     pDraw->setData(arr_pseudonormal);
     pLayout->addWidget(pDraw);

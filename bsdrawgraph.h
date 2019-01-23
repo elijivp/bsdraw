@@ -5,7 +5,7 @@
 
 struct  graphopts_t
 {
-  enum  GRAPHTYPE { GT_DOTS, GT_LINTERP, GT_LINTERPSMOOTH, GT_LINDOWN, GT_LINDOWNCROSS };
+  enum  GRAPHTYPE { GT_DOTS, GT_LINTERP, GT_LINTERPSMOOTH, GT_LINDOWN, GT_LINDOWN_CROSSMAX, GT_LINDOWN_CROSSMIN };
   GRAPHTYPE     graphtype;
   float         specopc;
   unsigned int  backcolor;

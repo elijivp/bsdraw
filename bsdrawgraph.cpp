@@ -31,22 +31,21 @@ public:
     fmg.goto_func_begin(fsp);
     {
       if (graphopts.backcolor != 0xFFFFFFFF)
-      {
         fmg.ccolor("colorFon", graphopts.backcolor);
-      }
       else
         fmg.push("vec3 colorFon = texture(texPalette, vec2(0.0, 0.0)).rgb;" SHNL);
       
       fmg.push("result = vec3(0.0, 0.0, 0.0);" SHNL);
-      fmg.push("float resultmix = 0.0;" SHNL);
-      fmg.push("int   resultvalue = 0;" SHNL);
+      fmg.push("float fonmix = 0.0;" SHNL);
+      if (graphopts.graphtype == graphopts_t::GT_LINDOWN || graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMAX || graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMIN)
+        fmg.push("vec3 neib = vec3(0.0, ibounds.y, 0.0);" SHNL);
       
       if (graphopts.graphtype == graphopts_t::GT_DOTS)
       {
         fmg.push( "for (int i=0; i<countPortions; i++)" SHNL
                   "{" SHNL
-                    "int   IVALUE = int(getValue1D(i, fcoords.x)*(ibounds_noscaled.y - 1));" SHNL
-                    "float MIXWELL = step(distance(vec2(icoords), vec2(icoords.x, IVALUE)), 0.0);" SHNL
+                    "float VALUE = floor(getValue1D(i, fcoords.x)*(ibounds_noscaled.y-1));" SHNL
+                    "float MIXWELL = step(distance(vec2(icoords), vec2(icoords.x, VALUE)), 0.0);" SHNL
                     "ppb_sfp[0] = ppb_sfp[0]*(1.0 - MIXWELL) + MIXWELL;" SHNL
                   );
       }
@@ -74,33 +73,48 @@ public:
         fmg.push( "fhit = 1.0 - abs(fhit);" SHNL
                   "float  MIXWELL = max(fhit, specopc*max(fmix_prev, fmix_next));" SHNL
 //                  "int    IVALUE = int(mix(mix(ify_around[0], ify_around[1], fmix_prev)*(1.0-step(fmix_prev,fmix_next)) + mix(ify_around[2], ify_around[1], fmix_next)*(1.0 - step(fmix_next,fmix_prev)), ify_around[1], fhit));" SHNL
-                  "int    IVALUE = int(mix(mix(ify_around[0], ify_around[1], fmix_prev)*step(fmix_next,fmix_prev) + mix(ify_around[2], ify_around[1], fmix_next)*(1.0 - step(fmix_next,fmix_prev)), ify_around[1], fhit));" SHNL
+                  "float  VALUE = floor(mix(mix(ify_around[0], ify_around[1], fmix_prev)*step(fmix_next,fmix_prev) + mix(ify_around[2], ify_around[1], fmix_next)*(1.0 - step(fmix_next,fmix_prev)), ify_around[1], fhit));" SHNL
                   "ppb_sfp[0] = ppb_sfp[0]*(1.0 - sign(MIXWELL)) + sign(MIXWELL);" SHNL
                  );
       }
-      else if (graphopts.graphtype == graphopts_t::GT_LINDOWN || graphopts.graphtype == graphopts_t::GT_LINDOWNCROSS)
+      else if (graphopts.graphtype == graphopts_t::GT_LINDOWN || graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMAX || graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMIN)
       {
         fmg.push(   "for (int i=0; i<countPortions; i++)" SHNL
                     "{" SHNL
-                      "int IVALUE = int(getValue1D(i, fcoords.x) * (ibounds_noscaled.y - 1));" SHNL
-                      "float bmix = step(float(icoords.y), float(IVALUE));" SHNL
-                      "float MIXWELL = clamp(mix(specopc, bmix, step(float(IVALUE), float(icoords.y))), 0.0, 1.0);" SHNL
-                      "ppb_sfp[0] = ppb_sfp[0]*(1.0 - bmix) + bmix;" SHNL
-                      "ppb_rect.ga = ivec2(mix(ppb_rect.ga, ivec2(floor(fcoords.y*ibounds.y + 0.49), IVALUE*chnl_vert_scaling + chnl_vert_scaling-1), bmix));" SHNL
+                      "float VALUE = getValue1D(i, fcoords.x)*(ibounds_noscaled.y-1);" SHNL
+                      "float bmix = step(float(icoords.y), floor(VALUE));" SHNL
+                      "neib = vec3( mix(neib[0], VALUE, step(neib[0], VALUE)*(1.0-bmix)), mix(neib[1], VALUE, step(VALUE, neib[1])*bmix), max(neib[2], VALUE) );" SHNL
+                      "float MIXWELL = mix(specopc, bmix, step(floor(VALUE), float(icoords.y)));" SHNL
                     );
+        
+        if (graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMAX)
+          fmg.push( "MIXWELL = MIXWELL*step(neib[2], VALUE);" SHNL
+                    "bmix = sign(MIXWELL);"
+                    "fonmix = fonmix*(1.0-bmix);"
+                    );
+        
+        else if (graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMIN)
+          fmg.push( "MIXWELL = MIXWELL*step(floor(VALUE), neib[1])*step(neib[0], VALUE);" SHNL
+                    "bmix = sign(MIXWELL);"
+                    );
+        
+        fmg.push( "VALUE = floor(VALUE);" SHNL
+                  "ppb_sfp[0] = ppb_sfp[0]*(1.0 - bmix) + bmix;" SHNL
+                  "ppb_rect.ga = ivec2(mix(ppb_rect.ga, ivec2(floor(fcoords.y*ibounds.y + 0.49), floor(VALUE*chnl_vert_scaling) + chnl_vert_scaling-1), bmix));" SHNL
+                  );
       }
       
       
+      if (graphopts.descaling != graphopts_t::DE_NONE)
       {
-        const char*   descaling[] = { "float descaler = 1.0;",
-                                      "float descaler = 1.0 - abs(sign( int(mod(floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2));",
-                                      "float descaler = 1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2) / (chnl_horz_scaling/2.0));",
-                                      "float descaler = 1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2) / (chnl_horz_scaling/4.0));",
-                                      "float descaler = 1.0/abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2));"
+        const char*   descaling[] = { "",
+                                      "MIXWELL = MIXWELL * (1.0 - abs(sign( int(mod(floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2)));",
+                                      "MIXWELL = MIXWELL * (1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2) / (chnl_horz_scaling/2.0)));",
+                                      "MIXWELL = MIXWELL * (1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2) / (chnl_horz_scaling/4.0)));",
+                                      "MIXWELL = MIXWELL * (1.0/abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2)));"
                                     };
-        int descaling_idx = int(graphopts.descaling) > sizeof(descaling)/sizeof(const char*)? 0 : int(graphopts.descaling);
-        fmg.push(descaling[descaling_idx]);
-        fmg.push("MIXWELL = MIXWELL * descaler;");
+        if (int(graphopts.descaling) < sizeof(descaling)/sizeof(const char*))
+          fmg.push(descaling[int(graphopts.descaling)]);
       }
     
       if (graphopts.dotsize > 0)
@@ -114,9 +128,9 @@ public:
           fmg.cfloatvar("dist_opc", 1.0f);
         fmg.push(   "for (int j=-dist_limit; j<=dist_limit; j++)" SHNL
                     "{" SHNL
-                      "int CVALUE = int(getValue1D(i, float(fcoords.x*ibounds_noscaled.x + j) / ibounds_noscaled.x) * (ibounds_noscaled.y - 1));" SHNL
+                      "float CVALUE = floor(getValue1D(i, float(fcoords.x*ibounds_noscaled.x + j) / ibounds_noscaled.x) * (ibounds_noscaled.y - 1));" SHNL
                       "float fdist_weight = dist_opc*(dist_limit - distance(vec2(icoords), vec2(icoords.x + j, CVALUE))) / float(dist_limit);" SHNL
-                      "IVALUE = int(mix(CVALUE, IVALUE, step(fdist_weight, MIXWELL)));" SHNL
+                      "VALUE = floor(mix(CVALUE, VALUE, step(fdist_weight, MIXWELL)));" SHNL
 //                      "MIXWELL = max(MIXWELL, fdist_weight);" SHNL
                       "MIXWELL = mix(mix(fdist_weight, fdist_weight*2.0, step(0.4*dotweight, fdist_weight)), MIXWELL, step(fdist_weight, MIXWELL));" SHNL
 //                      "MIXWELL = max(MIXWELL, mix(fdist_weight, 1.0, step(fdist_weight, dotweight)));" SHNL
@@ -135,24 +149,18 @@ public:
         fmg.cfloatvar("pcStep", step);
       }
       if (dc == DrawGraph::DC_OFF)            fmg.push("float portionColor = pcBase +  pcStep*(1.0 - float(countPortions-i)/float(countPortions));" SHNL);
-      else if (dc == DrawGraph::DC_DOWNBASE)  fmg.push("float portionColor = (pcBase +  pcStep*(1.0 - float(countPortions-i)/float(countPortions)))*float(IVALUE)/ibounds_noscaled.y;" SHNL);
-      else if (dc == DrawGraph::DC_DOWNNEXT)  fmg.push("float portionColor = pcBase +  pcStep*(1.0 - float(countPortions-i)/float(countPortions)) *float(IVALUE)/ibounds_noscaled.y;" SHNL);
+      else if (dc == DrawGraph::DC_DOWNBASE)  fmg.push("float portionColor = (pcBase +  pcStep*(1.0 - float(countPortions-i)/float(countPortions)))*VALUE/ibounds_noscaled.y;" SHNL);
+      else if (dc == DrawGraph::DC_DOWNNEXT)  fmg.push("float portionColor = pcBase +  pcStep*(1.0 - float(countPortions-i)/float(countPortions))*VALUE/ibounds_noscaled.y;" SHNL);
       
-      fmg.push( "vec3  colorGraph = texture(texPalette, vec2(clamp(portionColor, 0.0, 1.0), 0.0)).rgb;" SHNL );
-      
-      if (graphopts.graphtype == graphopts_t::GT_LINDOWNCROSS)
-        fmg.push( "result = mix(result, colorGraph, (1-step(MIXWELL,0.0)) * step(float(resultvalue), float(IVALUE)));" SHNL );
-      else
-        fmg.push( "result = mix(result, colorGraph, (1-step(MIXWELL,0)));" SHNL );
-
+      fmg.push(   "vec3  colorGraph = texture(texPalette, vec2(clamp(portionColor, 0.0, 1.0), 0.0)).rgb;" SHNL );
       fmg.push(   
-                  "resultmix = max(resultmix, MIXWELL);" SHNL
-                  "resultvalue = max(resultvalue, IVALUE);" SHNL
-//                  "ovMix = mix(ovMix, MIXWELL, 1 - step(MIXWELL, 0.0));" SHNL //"ovMix = ovMix + MIXWELL;"
-                  "ovMix = max(ovMix, (1.0 - step(MIXWELL, 0.0))*fcoords.y);"
-                "}" SHNL); // for)
-      
-      fmg.push(   "result = mix(colorFon, result, resultmix);" SHNL );
+                  "fonmix = mix(fonmix, MIXWELL, 1.0 - step(MIXWELL,0.0));" SHNL
+                  "MIXWELL = 1.0 - step(MIXWELL,0.0);" SHNL
+                  "result = mix(result, colorGraph, MIXWELL);" SHNL
+                  "ovMix = max(ovMix, MIXWELL*fcoords.y);" SHNL
+                "}" SHNL // for
+                "result = mix(colorFon, result, fonmix);" SHNL
+      );
     }
     fmg.goto_func_end(fsp);
     return fmg.written();

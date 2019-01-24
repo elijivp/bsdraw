@@ -32,6 +32,7 @@ template <> inline void _bs_unzip_dimms(const OVLCoordsDimmsLinked* d, _bs_unzip
 class FshTraceGenerator
 {
   int                                 m_overlay;
+  bool                                m_rotated;
   const char*                         m_writebase;
   char* const                         m_to;
   int                                 m_offset;
@@ -48,7 +49,7 @@ class FshTraceGenerator
 public:
   enum  OCG_INCLUDE_BITS  {  OINC_NONE=0, OINC_GETVALUE=1, OINC_RANDOM=2/*OINC_BOUNDS=4  */};
 public:
-  FshTraceGenerator(const AbstractOverlay::uniforms_t& ufms, int overlay, char* deststring, int ocg_include_bits = 0);
+  FshTraceGenerator(const AbstractOverlay::uniforms_t& ufms, bool rotated, int overlay, char* deststring, int ocg_include_bits = 0);
   int  written() const { return m_offset; }
 private:
   void  _gtb(bool followRotate);

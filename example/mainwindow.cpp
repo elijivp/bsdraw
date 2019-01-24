@@ -398,7 +398,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 1;
     syncscaling = 0;
     PRECREATE(5, 1);
-    ORIENTATION orients[] = { OR_LRBT, OR_TBRL, OR_TBLR, OR_BTRL, OR_BTLR };
+    ORIENTATION orients[] = { OR_LRBT, OR_TBLR, OR_BTRL, OR_BTLR, OR_TBRL };
     for (unsigned int i=0; i<drawscount; i++)
     {
       draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(graphopts_t::GT_LINTERPSMOOTH, 0.0, 0x00111111), DrawGraph::DC_OFF, 1.0, -0.5);

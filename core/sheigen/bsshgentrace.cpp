@@ -19,8 +19,8 @@ static const char* glsl_types[] = { "float", "vec2", "vec3", "vec4",
 
 extern int msprintf(char* to, const char* format, ...);
 
-FshTraceGenerator::FshTraceGenerator(const AbstractOverlay::uniforms_t &ufms, int overlay, char *deststring, int ocg_include_bits): 
-  m_overlay(overlay),
+FshTraceGenerator::FshTraceGenerator(const AbstractOverlay::uniforms_t &ufms, bool rotated, int overlay, char *deststring, int ocg_include_bits): 
+  m_overlay(overlay), m_rotated(rotated),
   m_writebase(deststring), m_to(deststring), m_offset(0), 
   m_pixingsctr(0), m_relingsctr(0), m_maths(0), m_paramsctr(0), m_prmmemoryiter(0)
 {

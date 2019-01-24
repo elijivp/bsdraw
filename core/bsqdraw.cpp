@@ -544,10 +544,6 @@ void DrawQWidget::paintGL()
     
     if (m_matrixSwitchAB)
     {
-//      glViewport(width() - (m_matrixDimmB*m_scalingWidth) - m_cttrLeft, 0 + m_cttrTop, 
-//                 m_matrixDimmB*m_scalingWidth,
-//                 m_matrixDimmA*m_scalingHeight
-//                 );
       glViewport(0 + m_cttrLeft, height() - (m_matrixDimmA*m_scalingHeight) - m_cttrTop, 
                  m_matrixDimmB*m_scalingWidth,
                  m_matrixDimmA*m_scalingHeight
@@ -614,9 +610,11 @@ QSize DrawQWidget::sizeHint() const
 
 void  DrawQWidget::store_crd_clk(OVL_REACTION oreact, unsigned int x, unsigned int y)
 {
-  if (x < m_cttrLeft + m_matrixDimmA*m_scalingWidth && y < m_cttrTop + m_matrixDimmB*m_scalingHeight)
+  const unsigned int& dimmWidth = m_matrixSwitchAB? m_matrixDimmB : m_matrixDimmA;
+  const unsigned int& dimmHeight = m_matrixSwitchAB? m_matrixDimmA : m_matrixDimmB;
+  if (x < m_cttrLeft + dimmWidth*m_scalingWidth && y < m_cttrTop + dimmHeight*m_scalingHeight)
   {
-    float dataptr[] = { float(x - m_cttrLeft) / (m_matrixDimmA*m_scalingWidth), 1.0f - float(y  - m_cttrTop) / (m_matrixDimmB*m_scalingHeight) };
+    float dataptr[] = { float(x - m_cttrLeft) / (dimmWidth*m_scalingWidth), 1.0f - float(y - m_cttrTop) / (dimmHeight*m_scalingHeight) };
     bool doStop = false, doUpdate = false;
     for (int i=int(m_overlaysCount)-1; i>=0; i--)
     {

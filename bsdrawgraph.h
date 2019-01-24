@@ -31,7 +31,7 @@ public:
   DrawGraph(unsigned int samples, unsigned int graphs=1, DOWNCOLORIZE downcolorize=DC_OFF, float colorize_base=1.0f, float colorize_step=-1.0f);
   DrawGraph(unsigned int samples, unsigned int graphs, graphopts_t graphopts, DOWNCOLORIZE downcolorize=DC_OFF, float colorize_base=1.0f, float colorize_step=-1.0f);
 protected:
-  virtual unsigned int    portionSize()const{  return m_matrixWidth; }
+  virtual unsigned int    portionSize()const{  return m_matrixDimmA; }
   virtual DATADIMMUSAGE   getDataDimmUsage() const { return DDU_1D; }
   void                    resizeGL(int w, int h);
 };

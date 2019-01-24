@@ -19,7 +19,9 @@ struct  contrast_t
   float   contrast, offset;   /// k*x + b
   contrast_t(float c=1, float o=0): contrast(c), offset(o){}
 };
-enum  ORIENTATION       { OR_LRBT=0, OR_RLBT, OR_LRTB, OR_RLTB };
+enum  ORIENTATION       { OR_LRBT=0,  OR_RLBT,  OR_LRTB,  OR_RLTB,    // order for +4 work
+                          OR_TBLR,    OR_BTLR,  OR_TBRL,  OR_BTRL 
+                        };
 //enum  INTERPOLATION     { IT_NONE, IT_STATIC, IT_DATALINE, IT_NEAREST  };
 
 inline  void  _bsdraw_update_kb(const bounds_t& bnd, const contrast_t& cnt, float* k, float *b)
@@ -46,13 +48,14 @@ protected:
   
   float*                m_matrixData;
   float*                m_matrixDataCached;
-  unsigned int          m_matrixWidth;
-  unsigned int          m_matrixHeight;
+  unsigned int          m_matrixDimmA;
+  unsigned int          m_matrixDimmB;
+  bool                  m_matrixSwitchAB;
   
-  unsigned int          m_matrixScWidth;
-  unsigned int          m_matrixScHeight;
-  unsigned int          m_matrixMinScWidth, m_matrixMaxScWidth;
-  unsigned int          m_matrixMinScHeight, m_matrixMaxScHeight;
+  unsigned int          m_matrixScA;
+  unsigned int          m_matrixScB;
+  unsigned int          m_matrixMinScA, m_matrixMaxScA;
+  unsigned int          m_matrixMinScB, m_matrixMaxScB;
   bool                  m_isSyncedSc;
 protected:
   const IPalette*       m_ppal;
@@ -127,8 +130,9 @@ protected:
   };
   OverlayEmpty          m_overlaySingleEmpty;
 public:
-  DrawCore(unsigned int portions, ORIENTATION orient): m_portionSize(0), m_countPortions(portions), m_orient(orient), m_interpPal(false), m_matrixData(nullptr), m_matrixDataCached(nullptr), m_matrixScWidth(1), m_matrixScHeight(1),
-    m_matrixMinScWidth(1), m_matrixMaxScWidth(0), m_matrixMinScHeight(1), m_matrixMaxScHeight(0), m_isSyncedSc(false),
+  DrawCore(unsigned int portions, ORIENTATION orient): m_portionSize(0), m_countPortions(portions), m_orient(orient), m_interpPal(false), m_matrixData(nullptr), m_matrixDataCached(nullptr), 
+    m_matrixSwitchAB(orient > OR_RLTB), m_matrixScA(1), m_matrixScB(1),
+    m_matrixMinScA(1), m_matrixMaxScA(0), m_matrixMinScB(1), m_matrixMaxScB(0), m_isSyncedSc(false),
     m_ppal(nullptr), m_ppaldiscretise(false), m_clearbypalette(true), 
     m_dataDomains(nullptr), m_dataDomainsFastFree(true),
     m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
@@ -162,35 +166,35 @@ public:
   void                  setContrast(const contrast_t& c){ m_contrast = c; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA; innerUpdate(RD_BYSETTINGS); }
   contrast_t            contrast()const{ return m_contrast; }
 public:
-  void                  setScalingLimitsH(unsigned int scmin, unsigned int scmax=0){  m_matrixMinScWidth = scmin < 1? 1 : scmin; m_matrixMaxScWidth = scmax; m_isSyncedSc = false; clampScalingManually(); pendResize(false); }
-  void                  setScalingLimitsV(unsigned int scmin, unsigned int scmax=0){  m_matrixMinScHeight = scmin < 1? 1 : scmin; m_matrixMaxScHeight = scmax; m_isSyncedSc = false; clampScalingManually(); pendResize(false); }
-  void                  setScalingLimitsSynced(unsigned int scmin, unsigned int scmax=0){  m_isSyncedSc = true; m_matrixMinScWidth = m_matrixMinScHeight = scmin < 1? 1 : scmin; m_matrixMaxScWidth = m_matrixMaxScHeight = scmax; clampScalingManually(); pendResize(false); }
+  void                  setScalingLimitsH(unsigned int scmin, unsigned int scmax=0){  m_matrixMinScA = scmin < 1? 1 : scmin; m_matrixMaxScA = scmax; m_isSyncedSc = false; clampScalingManually(); pendResize(false); }
+  void                  setScalingLimitsV(unsigned int scmin, unsigned int scmax=0){  m_matrixMinScB = scmin < 1? 1 : scmin; m_matrixMaxScB = scmax; m_isSyncedSc = false; clampScalingManually(); pendResize(false); }
+  void                  setScalingLimitsSynced(unsigned int scmin, unsigned int scmax=0){  m_isSyncedSc = true; m_matrixMinScA = m_matrixMinScB = scmin < 1? 1 : scmin; m_matrixMaxScA = m_matrixMaxScB = scmax; clampScalingManually(); pendResize(false); }
   
-  void                  scalingLimitsH(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_matrixMinScWidth;  if (scmax) *scmax = m_matrixMaxScWidth; }
-  void                  scalingLimitsV(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_matrixMinScHeight;  if (scmax) *scmax = m_matrixMaxScHeight; }
+  void                  scalingLimitsH(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_matrixMinScA;  if (scmax) *scmax = m_matrixMaxScA; }
+  void                  scalingLimitsV(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_matrixMinScB;  if (scmax) *scmax = m_matrixMaxScB; }
 protected:
   void                  clampScaling()
   {
-    if (m_matrixScWidth < m_matrixMinScWidth) m_matrixScWidth = m_matrixMinScWidth;
-    if (m_matrixMaxScWidth && m_matrixScWidth > m_matrixMaxScWidth) m_matrixScWidth = m_matrixMaxScWidth;
-    if (m_matrixScHeight < m_matrixMinScHeight) m_matrixScHeight = m_matrixMinScHeight;
-    if (m_matrixMaxScHeight && m_matrixScHeight > m_matrixMaxScHeight)  m_matrixScHeight = m_matrixMaxScHeight;
+    if (m_matrixScA < m_matrixMinScA) m_matrixScA = m_matrixMinScA;
+    if (m_matrixMaxScA && m_matrixScA > m_matrixMaxScA) m_matrixScA = m_matrixMaxScA;
+    if (m_matrixScB < m_matrixMinScB) m_matrixScB = m_matrixMinScB;
+    if (m_matrixMaxScB && m_matrixScB > m_matrixMaxScB)  m_matrixScB = m_matrixMaxScB;
     
     if (m_isSyncedSc)
     {
-      if (m_matrixScHeight > m_matrixScWidth || (getDataDimmUsage() != DDU_2D && getDataDimmUsage() != DDU_DD)) m_matrixScHeight = m_matrixScWidth;
-      else m_matrixScWidth = m_matrixScHeight;
+      if (m_matrixScB > m_matrixScA || (getDataDimmUsage() != DDU_2D && getDataDimmUsage() != DDU_DD)) m_matrixScB = m_matrixScA;
+      else m_matrixScA = m_matrixScB;
     }
   }
 private:
   void                  clampScalingManually()
   {
-    unsigned int old_matrixScHeight = m_matrixScHeight;
+    unsigned int old_matrixScHeight = m_matrixScB;
     clampScaling();
-    if (m_matrixScHeight != old_matrixScHeight && (getDataDimmUsage() == DDU_1D))
+    if (m_matrixScB != old_matrixScHeight && (getDataDimmUsage() == DDU_1D))
     {
-      float coeff = float(old_matrixScHeight) / m_matrixScHeight; 
-      m_matrixHeight = (unsigned int)(m_matrixHeight*coeff + 0.5f);
+      float coeff = float(old_matrixScHeight) / m_matrixScB; 
+      m_matrixDimmB = (unsigned int)(m_matrixDimmB*coeff + 0.5f);
     }
   }
 public:
@@ -249,6 +253,13 @@ public:
   void  setOrientation(ORIENTATION orient)
   { 
     m_orient = orient;
+    m_matrixSwitchAB = orient > OR_RLTB;
+    m_bitmaskPendingChanges |= PC_INIT; innerUpdate(RD_BYSETTINGS);
+  }
+  void  setRotated(bool r)
+  {
+    m_orient = (ORIENTATION)((int)m_orient + (m_orient > OR_RLTB? ( r? 0 : -4 ) : ( r? 4 : 0 )));
+    m_matrixSwitchAB = r;
     m_bitmaskPendingChanges |= PC_INIT; innerUpdate(RD_BYSETTINGS);
   }
   ORIENTATION     orientation() const { return m_orient; }

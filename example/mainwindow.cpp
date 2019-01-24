@@ -390,6 +390,29 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         draws[i] = new DrawGraph(SAMPLES, 1, graphopts_t(graphopts_t::GT_DOTS));
     }
   }
+  else if (MW_TEST == VERTICAL)
+  {
+    SAMPLES = 400;
+    MAXLINES = 400;
+    PORTIONS = 1;
+    syncscaling = 0;
+    PRECREATE(3, 1);
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+      if (i < 2)
+        draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(graphopts_t::GT_LINTERPSMOOTH, 0.0, 0x00111111), DrawGraph::DC_OFF, 1.0, -0.5);
+      else
+        draws[i] = new DrawRecorder(SAMPLES, MAXLINES, 1000, PORTIONS);
+      if (i != 0)
+        draws[i]->setRotated(true);
+      
+//      draws[i]->setScalingLimitsSynced(1,1);
+//      draws[i]->setScalingLimitsH(1,1);
+//      draws[i]->setScalingLimitsV(1,1);
+//      draws[i]->setFixedSize(QSize(SAMPLES, MAXLINES));
+    }
+    sigtype = ST_SIN;
+  }
   
   
   
@@ -1250,7 +1273,7 @@ void MainWindow::changeMargins(int value)
 
 #include <qmath.h>
 
-static float my_hiperb(float x, float){ return 1.0f / x; }
+static float my_hiperb(float x, float mov){ return 1.0f/x - 0.25f + mov*0.5f; }
 static float my_sinxx(float x, float mov){ return qFastSin(x*(1+mov))/(x); }
 static float my_xx(float x, float mov){ return x*x/(100 + 1000*mov); }
 static float my_tanhx(float x, float mov){ return tanh(x/(20*(mov+0.05f)))/5.0; }

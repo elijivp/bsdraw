@@ -40,11 +40,16 @@ DrawQWidget::~DrawQWidget()
     delete []m_fshmem;
 }
 
-inline const char*  fragment_rotateNone(){  return  "vec2 rotate(vec2 coords){ return coords; }"; }
-inline const char*  fragment_rotateHorz(){  return  "vec2 rotate(vec2 coords){ coords.x = 1.0-coords.x; return coords; }"; }
-inline const char*  fragment_rotateVert(){  return  "vec2 rotate(vec2 coords){ coords.y = 1.0-coords.y; return coords; }"; }
-inline const char*  fragment_rotateFull(){  return  "vec2 rotate(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords; }"; }
-
+//OR_LRBT=0,  OR_RLBT,  OR_LRTB,  OR_RLTB
+//OR_TBLR,    OR_BTLR,  OR_TBRL,  OR_BTRL 
+inline const char*  fragment_rotateLRBT(){  return  "vec2 rotate(vec2 coords){ return coords; }"; }
+inline const char*  fragment_rotateRLBT(){  return  "vec2 rotate(vec2 coords){ coords.x = 1.0-coords.x; return coords; }"; }
+inline const char*  fragment_rotateLRTB(){  return  "vec2 rotate(vec2 coords){ coords.y = 1.0-coords.y; return coords; }"; }
+inline const char*  fragment_rotateRLTB(){  return  "vec2 rotate(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords; }"; }
+inline const char*  fragment_rotateTBLR(){  return  "vec2 rotate(vec2 coords){ return coords.yx; }"; }
+inline const char*  fragment_rotateBTLR(){  return  "vec2 rotate(vec2 coords){ coords.x = 1.0-coords.x; return coords.yx; }"; }
+inline const char*  fragment_rotateTBRL(){  return  "vec2 rotate(vec2 coords){ coords.y = 1.0-coords.y; return coords.yx; }"; }
+inline const char*  fragment_rotateBTRL(){  return  "vec2 rotate(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords.yx; }"; }
 
 inline const char*  fastpaced_settings(char* tmpbuf, unsigned int ovl)
 {
@@ -171,7 +176,10 @@ void DrawQWidget::applyHardPendings()
       qDebug()<<"Fragment0 failure!";
     
     {
-      const char* pfragment_rotate_enumed[] = { fragment_rotateNone(), fragment_rotateHorz(), fragment_rotateVert(), fragment_rotateFull() };
+      const char* pfragment_rotate_enumed[] = { 
+        fragment_rotateLRBT(), fragment_rotateRLBT(), fragment_rotateLRTB(), fragment_rotateRLTB(),
+        fragment_rotateTBLR(), fragment_rotateBTLR(), fragment_rotateTBRL(), fragment_rotateBTRL()
+      };
       m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, pfragment_rotate_enumed[m_orient]);
     }
     
@@ -309,20 +317,20 @@ void DrawQWidget::paintGL()
       if (havePendOn(PC_DATA) || havePendOn(PC_SIZE))
       {
         DATADIMMUSAGE ddu = this->getDataDimmUsage();
-        GLsizei dataWidth = m_matrixWidth;
-        GLsizei dataHeight = m_matrixHeight;
+        GLsizei dataDimmA = m_matrixDimmA;
+        GLsizei dataDimmB = m_matrixDimmB;
         if (ddu == DDU_1D || ddu == DDU_DD)
         {
-          dataHeight = 1;
-          dataWidth = m_portionSize;
+          dataDimmB = 1;
+          dataDimmA = m_portionSize;
         }
         if (havePendOn(PC_DATA) || ddu == DDU_15D)
         {
-          unsigned int total = dataWidth*dataHeight*m_countPortions;
+          unsigned int total = dataDimmA*dataDimmB*m_countPortions;
           for (unsigned int i=0; i<total; i++)
             m_matrixDataCached[i] = m_matrixData[i] * m_loc_k + m_loc_b;
         }
-        glTexImage2D(   GL_TEXTURE_2D, 0, GL_RED, dataWidth, dataHeight*m_countPortions, 0, GL_RED, GL_FLOAT, m_matrixDataCached);
+        glTexImage2D(   GL_TEXTURE_2D, 0, GL_RED, dataDimmA, dataDimmB*m_countPortions, 0, GL_RED, GL_FLOAT, m_matrixDataCached);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_interpPal? GL_LINEAR : GL_NEAREST);  // GL_LINEAR
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_interpPal? GL_LINEAR : GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // GL_CLAMP_TO_EDGE
@@ -351,8 +359,8 @@ void DrawQWidget::paintGL()
       
       if (havePendOn(PC_DOMAIN))
       {
-        float* dataDomainsCached=m_dataDomainsFastFree? m_dataDomains : new float[m_matrixWidth*m_matrixHeight];
-        for (unsigned int i=0; i<m_matrixWidth*m_matrixHeight; i++)
+        float* dataDomainsCached=m_dataDomainsFastFree? m_dataDomains : new float[m_matrixDimmA*m_matrixDimmB];
+        for (unsigned int i=0; i<m_matrixDimmA*m_matrixDimmB; i++)
           dataDomainsCached[i] = m_dataDomains[i] / (m_portionSize+1);
         
         glTexImage2D(   GL_TEXTURE_2D, 0, 
@@ -361,7 +369,7 @@ void DrawQWidget::paintGL()
 #elif QT_VERSION >= 0x040000
                         GL_RED, 
 #endif
-                        m_matrixWidth, m_matrixHeight, 0, GL_RED, GL_FLOAT, dataDomainsCached);
+                        m_matrixDimmA, m_matrixDimmB, 0, GL_RED, GL_FLOAT, dataDomainsCached);
 //          glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -386,10 +394,10 @@ void DrawQWidget::paintGL()
     
     if (havePendOn(PC_SIZE))
     {
-      if ((loc = m_locations[SF_CHNL_HORZ]) != -1)                m_ShaderProgram.setUniformValue(loc, m_matrixWidth);
-      if ((loc = m_locations[SF_CHNL_VERT]) != -1)                m_ShaderProgram.setUniformValue(loc, m_matrixHeight);
-      if ((loc = m_locations[SF_CHNL_HORZSCALING]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixScWidth);
-      if ((loc = m_locations[SF_CHNL_VERTSCALING]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixScHeight);
+      if ((loc = m_locations[SF_CHNL_HORZ]) != -1)                m_ShaderProgram.setUniformValue(loc, m_matrixDimmA);
+      if ((loc = m_locations[SF_CHNL_VERT]) != -1)                m_ShaderProgram.setUniformValue(loc, m_matrixDimmB);
+      if ((loc = m_locations[SF_CHNL_HORZSCALING]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixScA);
+      if ((loc = m_locations[SF_CHNL_VERTSCALING]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixScB);
     }
     
     if (havePendOn(PC_PARAMS))
@@ -530,9 +538,9 @@ void DrawQWidget::paintGL()
     m_ShaderProgram.enableAttributeArray(0);
     m_ShaderProgram.setAttributeArray(0, GL_FLOAT, m_SurfaceVertex, 2);
     
-    glViewport(0 + m_cttrLeft, height() - (m_matrixHeight*m_matrixScHeight) - m_cttrTop, 
-               m_matrixWidth*m_matrixScWidth,
-               m_matrixHeight*m_matrixScHeight
+    glViewport(0 + m_cttrLeft, height() - (m_matrixDimmB*m_matrixScB) - m_cttrTop, 
+               m_matrixDimmA*m_matrixScA,
+               m_matrixDimmB*m_matrixScB
                );
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     m_ShaderProgram.disableAttributeArray(0);
@@ -561,18 +569,18 @@ void DrawQWidget::innerResize()
 QSize DrawQWidget::minimumSizeHint() const
 {
   return QSize(
-        m_matrixWidth*m_matrixMinScWidth + m_cttrLeft + m_cttrRight,
-        (getDataDimmUsage() == DDU_1D? 1 : m_matrixHeight)*m_matrixMinScHeight + m_cttrTop + m_cttrBottom
-        //            ((getDataDimmUsage() != DDU_2D && getDataDimmUsage() != DDU_DD)? 1 : m_matrixHeight)*m_matrixMinScHeight + m_cttrTop + m_cttrBottom
+        m_matrixDimmA*m_matrixMinScA + m_cttrLeft + m_cttrRight,
+        (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*m_matrixMinScB + m_cttrTop + m_cttrBottom
+        //            ((getDataDimmUsage() != DDU_2D && getDataDimmUsage() != DDU_DD)? 1 : m_matrixDimmB)*m_matrixMinScB + m_cttrTop + m_cttrBottom
         );
 }
 
 QSize DrawQWidget::sizeHint() const
 { 
   return QSize(
-        m_matrixWidth*m_matrixScWidth + m_cttrLeft + m_cttrRight, 
-        //            ((getDataDimmUsage() != DDU_2D && getDataDimmUsage() != DDU_DD)? 1 : m_matrixHeight)*m_matrixScHeight + m_cttrTop + m_cttrBottom
-        (getDataDimmUsage() == DDU_1D? 1 : m_matrixHeight)*m_matrixScHeight + m_cttrTop + m_cttrBottom
+        m_matrixDimmA*m_matrixScA + m_cttrLeft + m_cttrRight, 
+        //            ((getDataDimmUsage() != DDU_2D && getDataDimmUsage() != DDU_DD)? 1 : m_matrixDimmB)*m_matrixScB + m_cttrTop + m_cttrBottom
+        (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*m_matrixScB + m_cttrTop + m_cttrBottom
         );
 }
 
@@ -580,9 +588,9 @@ QSize DrawQWidget::sizeHint() const
 
 void  DrawQWidget::store_crd_clk(OVL_REACTION oreact, unsigned int x, unsigned int y)
 {
-  if (x < m_cttrLeft + m_matrixWidth*m_matrixScWidth && y < m_cttrTop + m_matrixHeight*m_matrixScHeight)
+  if (x < m_cttrLeft + m_matrixDimmA*m_matrixScA && y < m_cttrTop + m_matrixDimmB*m_matrixScB)
   {
-    float dataptr[] = { float(x - m_cttrLeft) / (m_matrixWidth*m_matrixScWidth), 1.0f - float(y  - m_cttrTop) / (m_matrixHeight*m_matrixScHeight) };
+    float dataptr[] = { float(x - m_cttrLeft) / (m_matrixDimmA*m_matrixScA), 1.0f - float(y  - m_cttrTop) / (m_matrixDimmB*m_matrixScB) };
     bool doStop = false, doUpdate = false;
     for (int i=int(m_overlaysCount)-1; i>=0; i--)
     {

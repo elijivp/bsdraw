@@ -170,11 +170,11 @@ public:
 
 void DrawGraph::reConstructor(unsigned int samples)
 {
-  m_matrixWidth = samples;
-  m_matrixHeight = 1;
+  m_matrixDimmA = samples;
+  m_matrixDimmB = 1;
   m_portionSize = samples;
   deployMemory();
-  m_matrixScHeight = 1;
+  m_matrixScB = 1;
 }
 
 /// m_countPortions === graphs
@@ -187,10 +187,10 @@ void DrawGraph::resizeGL(int w, int h)
 {
   w -= m_cttrLeft + m_cttrRight;
   h -= m_cttrTop + m_cttrBottom;
-  m_matrixScWidth = (unsigned int)w <= m_matrixWidth? 1 : (w / m_matrixWidth);
+  m_matrixScA = (unsigned int)w <= m_matrixDimmA? 1 : (w / m_matrixDimmA);
   clampScaling();
-  m_matrixHeight = h / m_matrixScHeight;
-  if (m_matrixHeight == 0) m_matrixHeight = 1;
+  m_matrixDimmB = h / m_matrixScB;
+  if (m_matrixDimmB == 0) m_matrixDimmB = 1;
   pendResize(true);
 }
 
@@ -281,10 +281,10 @@ void DrawGraphMoveEx::fillMatrix()
 
 void DrawGraphMoveEx::slideLmHeight(int pp)
 {
-  if (m_matrixLmSize < m_matrixWidth)
+  if (m_matrixLmSize < m_matrixDimmA)
     m_stopped = 0;
   else
-    m_stopped = ((float)pp/m_matrixLmSize)*(m_matrixLmSize - m_matrixWidth);
+    m_stopped = ((float)pp/m_matrixLmSize)*(m_matrixLmSize - m_matrixDimmA);
   fillMatrix();
   DrawQWidget::vmanUpData();
 }

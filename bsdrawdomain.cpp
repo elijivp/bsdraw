@@ -123,9 +123,9 @@ void DIDomain::excludePixel(int r, int c)
 DrawDomain::DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, bool isBckgrndDomain, ORIENTATION orient, bool holdmemorytilltheend): 
   DrawQWidget(new SheiGeneratorBright(isBckgrndDomain? SheiGeneratorBright::DS_DOMSTD : SheiGeneratorBright::DS_DOMBLACK), portions, orient)
 {
-  m_matrixWidth = samplesHorz;
-  m_matrixHeight = samplesVert;
-  unsigned int total = m_matrixWidth*m_matrixHeight;
+  m_matrixDimmA = samplesHorz;
+  m_matrixDimmB = samplesVert;
+  unsigned int total = m_matrixDimmA*m_matrixDimmB;
   deployMemory(total*m_countPortions);
   m_portionSize = 1;
   
@@ -133,15 +133,15 @@ DrawDomain::DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsig
   memset(m_dataDomains, 0, total*sizeof(float));
   m_dataDomainsFastFree = !holdmemorytilltheend;
   
-  m_domain._init(m_matrixWidth, m_matrixHeight, isBckgrndDomain, &m_portionSize, m_dataDomains);
+  m_domain._init(m_matrixDimmA, m_matrixDimmB, isBckgrndDomain, &m_portionSize, m_dataDomains);
 }
 
 DrawDomain::DrawDomain(const DIDomain &cpy, unsigned int portions, ORIENTATION orient, bool holdmemorytilltheend): 
   DrawQWidget(new SheiGeneratorBright(cpy.isBackgroundDomain()? SheiGeneratorBright::DS_DOMSTD : SheiGeneratorBright::DS_DOMBLACK), portions, orient)
 {
-  m_matrixWidth = cpy.m_width;
-  m_matrixHeight = cpy.m_height;
-  unsigned int total = m_matrixWidth*m_matrixHeight;
+  m_matrixDimmA = cpy.m_width;
+  m_matrixDimmB = cpy.m_height;
+  unsigned int total = m_matrixDimmA*m_matrixDimmB;
   deployMemory(total*m_countPortions);
   
   m_dataDomains = new float[total];
@@ -149,7 +149,7 @@ DrawDomain::DrawDomain(const DIDomain &cpy, unsigned int portions, ORIENTATION o
   m_portionSize = *cpy.m_count;
   m_dataDomainsFastFree = !holdmemorytilltheend;
  
-  m_domain._init(m_matrixWidth, m_matrixHeight, cpy.isBackgroundDomain(), &m_portionSize, m_dataDomains);
+  m_domain._init(m_matrixDimmA, m_matrixDimmB, cpy.isBackgroundDomain(), &m_portionSize, m_dataDomains);
 }
 
 DrawDomain::~DrawDomain()
@@ -177,8 +177,8 @@ void DrawDomain::resizeGL(int w, int h)
 {
   w -= m_cttrLeft + m_cttrRight;
   h -= m_cttrTop + m_cttrBottom;
-  m_matrixScWidth = (unsigned int)w <= m_matrixWidth? 1 : (w / m_matrixWidth);
-  m_matrixScHeight = (unsigned int)h <= m_matrixHeight? 1 : (h / m_matrixHeight);
+  m_matrixScA = (unsigned int)w <= m_matrixDimmA? 1 : (w / m_matrixDimmA);
+  m_matrixScB = (unsigned int)h <= m_matrixDimmB? 1 : (h / m_matrixDimmB);
   clampScaling();
   pendResize(true);
 }

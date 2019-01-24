@@ -209,8 +209,9 @@ void FshMainGenerator::goto_func_begin(const DPostmask& fsp)
   
   memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
   
-  m_offset += msprintf(&m_to[m_offset], "ivec2 ibounds = ibounds_noscaled * ivec2(%s);",
-                       m_rotated? "scaling_vert, scaling_horz" : "scaling_horz, scaling_vert");
+//  m_offset += msprintf(&m_to[m_offset], "ivec2 ibounds = ibounds_noscaled * ivec2(%s);",
+//                       m_rotated? "scaling_vert, scaling_horz" : "scaling_horz, scaling_vert");
+  m_offset += msprintf(&m_to[m_offset], "ivec2 ibounds = ibounds_noscaled * ivec2(scaling_horz, scaling_vert);");
   
   m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = vec3(%F,%F,%F);" SHNL
                                         "vec4   ppb_sfp   = vec4(0.0, %F, %F, %F);" SHNL    /// ppban, ppoutsignal, 

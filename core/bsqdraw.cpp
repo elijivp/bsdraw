@@ -400,8 +400,8 @@ void DrawQWidget::paintGL()
     {
       if ((loc = m_locations[SF_DIMM_A]) != -1)                   m_ShaderProgram.setUniformValue(loc, m_matrixDimmA);
       if ((loc = m_locations[SF_DIMM_B]) != -1)                   m_ShaderProgram.setUniformValue(loc, m_matrixDimmB);
-      if ((loc = m_locations[SF_CHNL_HORZSCALING]) != -1)         m_ShaderProgram.setUniformValue(loc, m_scalingWidth);
-      if ((loc = m_locations[SF_CHNL_VERTSCALING]) != -1)         m_ShaderProgram.setUniformValue(loc, m_scalingHeight);
+      if ((loc = m_locations[SF_CHNL_HORZSCALING]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixSwitchAB? m_scalingHeight : m_scalingWidth);
+      if ((loc = m_locations[SF_CHNL_VERTSCALING]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixSwitchAB? m_scalingWidth : m_scalingHeight);
     }
     
     if (havePendOn(PC_PARAMS))

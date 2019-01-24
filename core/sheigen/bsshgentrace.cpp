@@ -19,8 +19,8 @@ static const char* glsl_types[] = { "float", "vec2", "vec3", "vec4",
 
 extern int msprintf(char* to, const char* format, ...);
 
-FshTraceGenerator::FshTraceGenerator(const AbstractOverlay::uniforms_t &ufms, bool rotated, int overlay, char *deststring, int ocg_include_bits): 
-  m_overlay(overlay), m_rotated(rotated),
+FshTraceGenerator::FshTraceGenerator(const AbstractOverlay::uniforms_t &ufms, int overlay, char *deststring, int ocg_include_bits): 
+  m_overlay(overlay),
   m_writebase(deststring), m_to(deststring), m_offset(0), 
   m_pixingsctr(0), m_relingsctr(0), m_maths(0), m_paramsctr(0), m_prmmemoryiter(0)
 {
@@ -89,7 +89,7 @@ void FshTraceGenerator::_gtb(bool followRotate)
     static const char _overboundsF[] =    "ivec2 ibounds = ivec2(datadimm_a, datadimm_b) * ivec2(scaling_horz, scaling_vert);" SHNL
                                           "ivec2 icoords = ivec2(floor(coords * ibounds + vec2(0.49, 0.49)));" SHNL;
     
-//    followRotate = false;
+    followRotate = true;
     if (followRotate){      memcpy(&m_to[m_offset], _overboundsT, sizeof(_overboundsT)-1); m_offset += sizeof(_overboundsT) - 1; }
     else        {           memcpy(&m_to[m_offset], _overboundsF, sizeof(_overboundsF)-1); m_offset += sizeof(_overboundsF) - 1; }
   }

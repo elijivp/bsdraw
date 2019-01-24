@@ -13,8 +13,14 @@ void DrawIntensity::resizeGL(int w, int h)
 {
   w -= m_cttrLeft + m_cttrRight;
   h -= m_cttrTop + m_cttrBottom;
-  m_matrixScA = (unsigned int)w <= m_matrixDimmA? 1 : (w / m_matrixDimmA);
-  m_matrixScB = (unsigned int)h <= m_matrixDimmB? 1 : (h / m_matrixDimmB);
+  
+  unsigned int& scalingA = m_matrixSwitchAB? m_scalingHeight : m_scalingWidth;
+  unsigned int& scalingB = m_matrixSwitchAB? m_scalingWidth : m_scalingHeight;
+  int& sizeA = m_matrixSwitchAB? h : w;
+  int& sizeB = m_matrixSwitchAB? w : h;
+  
+  scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
+  scalingB = (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB);
   clampScaling();
   pendResize(true);
 }

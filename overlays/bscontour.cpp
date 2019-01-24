@@ -2,12 +2,12 @@
 #include "../core/sheigen/bsshgentrace.h"
 
 static const char* contour_constants0 = 
-//    "ivec2 ibounds_noscaled = ivec2(chnl_horz_count, chnl_vert_count);"
+//    "ivec2 ibounds_noscaled = ivec2(datadimm_a, datadimm_b);"
     "vec2 fcoords = rotate(coords);";
 //    "ivec2 inormed = ivec2(floor(rotate(coords) * ibounds_noscaled));";
 
 static const char* contour_constants1 = 
-    "ivec2 ibounds_noscaled = ivec2(chnl_horz_count, chnl_vert_count);"
+    "ivec2 ibounds_noscaled = ivec2(datadimm_a, datadimm_b);"
     "ivec2 inoscaled = ivec2(floor(rotate(coords) * ibounds_noscaled));"
     "ivec2 iscaled = ivec2(floor(rotate(coords) * ibounds));"
     "ivec2 borders[8];"
@@ -50,7 +50,7 @@ int OContour::fshTrace(int overlay, char *to) const
                   "_insvar[1] = step(bnd.x, _densvar)*step(_densvar, bnd.y);"
 //                  "_densvar = (inoscaled.x + 0.49)*abs(borders[i].y)/ibounds_noscaled.x + (inoscaled.y + 0.49)*abs(borders[i].x)/ibounds_noscaled.y;"
 //                  "_insvar[2] = mix(_densvar, 0.0, abs(borders[i].x)*abs(borders[i].y));"
-//                  "_densvar = mix(float(chnl_horz_scaling*abs(borders[i].y) + chnl_vert_scaling*abs(borders[i].x)), 1.0, abs(borders[i].x)*abs(borders[i].y));"
+//                  "_densvar = mix(float(scaling_horz*abs(borders[i].y) + scaling_vert*abs(borders[i].x)), 1.0, abs(borders[i].x)*abs(borders[i].y));"
   //                "result = mix(result, vec3(1, _insvar[0], _densvar), _insvar[1]*_insvar[2] );"
                   
                   "result = mix(result, vec3(_insvar[0]*_insvar[1], 0, 1), step(result[0], _insvar[0]*_insvar[1]) );"    /// trace not finished

@@ -28,7 +28,7 @@ public:
   virtual   unsigned int  shvertex_pendingSize() const =0;
   virtual   unsigned int  shvertex_store(char* to) const =0;
   virtual   unsigned int  shfragment_pendingSize(unsigned int ovlscount) const =0;
-  virtual   unsigned int  shfragment_store(const DPostmask&, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const =0;
+  virtual   unsigned int  shfragment_store(const DPostmask&, bool rotated, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const =0;
   
 public:
   enum      { PMT_PSEUDO2D, PMT_FORCE1D }; /// PORTION_MESH_TYPE
@@ -42,7 +42,7 @@ class DrawQWidget: public QOpenGLWidget, protected QOpenGLFunctions, public Draw
   Q_OBJECT
   enum  SHEIFIELD  {  SF_DATA, SF_PALETTE, 
                       SF_DOMAIN, SF_PORTIONSIZE, 
-                      SF_COUNTPORTIONS, SF_CHNL_HORZ, SF_CHNL_VERT, SF_CHNL_HORZSCALING, SF_CHNL_VERTSCALING,
+                      SF_COUNTPORTIONS, SF_DIMM_A, SF_DIMM_B, SF_CHNL_HORZSCALING, SF_CHNL_VERTSCALING,
   //                    SF_BOUNDS,
   //                    SF_CONTRAST,
                       _SF_COUNT

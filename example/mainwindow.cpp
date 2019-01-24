@@ -62,6 +62,7 @@ enum LAYOUT_WEIGHT{ LW_1, LW_0111, LW_1000, LW_012, LW_1110 }
 enum SPEED_TIMER { SP_STOP=0, SP_ONCE=1, SP_SLOWEST=1000, SP_SLOW=300, SP_FAST=40, SP_FASTEST=20 }
                   sp = SP_SLOW;
 
+
 /// images for Overlays: sprite, foreground, background
 static const char* img_path_mikey = "../example/mikey.jpg";  /// 1920x816
 static const char* img_path_sprite =  "../example/snowflakewhite.png";
@@ -390,28 +391,46 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         draws[i] = new DrawGraph(SAMPLES, 1, graphopts_t(graphopts_t::GT_DOTS));
     }
   }
+  else if (MW_TEST == ORIENTS)
+  {
+    SAMPLES = 400;
+    MAXLINES = 200;
+    PORTIONS = 1;
+    syncscaling = 0;
+    PRECREATE(5, 1);
+    ORIENTATION orients[] = { OR_LRBT, OR_TBRL, OR_TBLR, OR_BTRL, OR_BTLR };
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(graphopts_t::GT_LINTERPSMOOTH, 0.0, 0x00111111), DrawGraph::DC_OFF, 1.0, -0.5);
+      draws[i]->setOrientation(orients[i]);
+    }
+    sigtype = ST_MOVE;
+  }
   else if (MW_TEST == VERTICAL)
   {
     SAMPLES = 400;
-    MAXLINES = 400;
+    MAXLINES = 200;
     PORTIONS = 1;
     syncscaling = 0;
     PRECREATE(3, 1);
     for (unsigned int i=0; i<drawscount; i++)
     {
-      if (i < 2)
-        draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(graphopts_t::GT_LINTERPSMOOTH, 0.0, 0x00111111), DrawGraph::DC_OFF, 1.0, -0.5);
-      else
-        draws[i] = new DrawRecorder(SAMPLES, MAXLINES, 1000, PORTIONS);
-      if (i != 0)
-        draws[i]->setRotated(true);
-      
+//      if (i < 2)
+        draws[i] = new DrawGraph(i == 2? SAMPLES/8 : SAMPLES, PORTIONS, graphopts_t(graphopts_t::GT_LINTERPSMOOTH, 0.0, 0x00111111), DrawGraph::DC_OFF, 1.0, -0.5);
+        if (i == 2)
+          draws[i]->setScalingLimitsH(8,8);
+//      else
+//        draws[i] = new DrawRecorder(SAMPLES, MAXLINES, 1000, PORTIONS);
+//      if (i != 0)
+//        draws[i]->setRotated(true);
+        if (i != 0)
+          draws[i]->setOrientation(OR_TBLR);
 //      draws[i]->setScalingLimitsSynced(1,1);
 //      draws[i]->setScalingLimitsH(1,1);
 //      draws[i]->setScalingLimitsV(1,1);
 //      draws[i]->setFixedSize(QSize(SAMPLES, MAXLINES));
     }
-    sigtype = ST_SIN;
+    sigtype = ST_MOVE;
   }
   
   
@@ -1178,6 +1197,16 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 draws[i]->setFixedHeight(40);
               BSADD(draws[i])
             }
+          BS_STOP;
+        }
+        else if (MW_TEST == ORIENTS)
+        {
+          BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
+            BSADD(draws[0])
+            BS_START_FRAME_H_HMAX_VMAX(BS_FRAME_PANEL, 2)
+              for (unsigned int i=1; i<drawscount; i++)
+                BSADD(draws[i])
+            BS_STOP
           BS_STOP;
         }
         else

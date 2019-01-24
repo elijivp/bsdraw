@@ -157,17 +157,17 @@ unsigned int FshMainGenerator::basePendingSize(unsigned int ovlscount)
   return 1750 + ovlscount*540;
 }
 
-FshMainGenerator::FshMainGenerator(char *deststring, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]): 
-  m_writebase(deststring), m_to(deststring), m_offset(0), m_ovlscount(ovlscount), m_ovls(ovlsinfo)
+FshMainGenerator::FshMainGenerator(char *deststring, bool rotated, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]): 
+  m_writebase(deststring), m_to(deststring), m_offset(0), m_rotated(rotated), m_ovlscount(ovlscount), m_ovls(ovlsinfo)
 {
 #ifdef BSGLSLVER
   m_offset += msprintf(&m_to[m_offset],  "#version %d" SHNL, BSGLSLVER);
 #endif
   static const char fsh_base[] =  "uniform highp sampler2D  texData;" SHNL
-                                  "uniform highp int        chnl_horz_count;" SHNL
-                                  "uniform highp int        chnl_vert_count;" SHNL
-                                  "uniform highp int        chnl_horz_scaling;" SHNL
-                                  "uniform highp int        chnl_vert_scaling;" SHNL
+                                  "uniform highp int        datadimm_a;" SHNL
+                                  "uniform highp int        datadimm_b;" SHNL
+                                  "uniform highp int        scaling_horz;" SHNL
+                                  "uniform highp int        scaling_vert;" SHNL
                                   "uniform highp int        countPortions;" SHNL
                                   "uniform highp sampler2D  texPalette;" SHNL
 //                                  "uniform highp vec2       bounds;" SHNL
@@ -201,8 +201,7 @@ void FshMainGenerator::goto_func_begin(const DPostmask& fsp)
                                     "vec4  loc_f4_sets;" SHNL
                                     "ivec2 loc_i2_pos;" SHNL
                                     "float ovMix = 0.0;" SHNL
-                                    "ivec2 ibounds_noscaled = ivec2(chnl_horz_count, chnl_vert_count);" SHNL
-                                    "ivec2 ibounds = ibounds_noscaled * ivec2(chnl_horz_scaling, chnl_vert_scaling);" SHNL
+                                    "ivec2 ibounds_noscaled = ivec2(datadimm_a, datadimm_b);" SHNL
                                     "vec2  normCoord = coords.xy*0.5 + 0.5;" SHNL
                                     "vec2  fcoords = rotate(normCoord.xy);" SHNL
                                     "ivec2 icoords = ivec2(fcoords * vec2(ibounds_noscaled));" SHNL
@@ -210,10 +209,12 @@ void FshMainGenerator::goto_func_begin(const DPostmask& fsp)
   
   memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
   
+  m_offset += msprintf(&m_to[m_offset], "ivec2 ibounds = ibounds_noscaled * ivec2(%s);",
+                       m_rotated? "scaling_vert, scaling_horz" : "scaling_horz, scaling_vert");
   
   m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = vec3(%F,%F,%F);" SHNL
                                         "vec4   ppb_sfp   = vec4(0.0, %F, %F, %F);" SHNL    /// ppban, ppoutsignal, 
-                                        "ivec4  ppb_rect  = ivec4(int(mod(floor(fcoords.x*float(ibounds.x) + 0.49), float(chnl_horz_scaling))),\n\tint(mod(floor(fcoords.y*float(ibounds.y) + 0.49), float(chnl_vert_scaling))),\n\tchnl_horz_scaling-1, chnl_vert_scaling-1);" SHNL, 
+                                        "ivec4  ppb_rect  = ivec4(int(mod(floor(fcoords.x*float(ibounds.x) + 0.49), float(scaling_horz))),\n\tint(mod(floor(fcoords.y*float(ibounds.y) + 0.49), float(scaling_vert))),scaling_horz-1, scaling_vert-1);" SHNL, 
                                         fsp.r, fsp.g, fsp.b,
                                         fsp.over & 1? 1.0f : 0.0f, fsp.over & 2? 1.0f : 0.0f, (float)fsp.weight );
 

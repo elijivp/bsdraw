@@ -1982,8 +1982,8 @@ void MainWindow::changeSpeedUpdate_Once()
 
 void  MainWindow::changeFeatures(int id)
 {
-  ORIENTATION invHorz[] = {  OR_RLBT, OR_LRBT, OR_RLTB, OR_LRTB  };
-  ORIENTATION invVert[] = {  OR_LRTB, OR_RLTB, OR_LRBT, OR_RLBT};
+  ORIENTATION invHorz[] = {  OR_RLBT, OR_LRBT, OR_RLTB, OR_LRTB, OR_TBRL, OR_BTRL, OR_TBLR, OR_BTLR  };
+  ORIENTATION invVert[] = {  OR_LRTB, OR_RLTB, OR_LRBT, OR_RLBT, OR_BTLR, OR_TBLR, OR_BTRL, OR_TBRL  };
   for (unsigned int i=0; i<drawscount; i++)
   {
     if (id == BTF_CLEAR)          draws[i]->clearData();

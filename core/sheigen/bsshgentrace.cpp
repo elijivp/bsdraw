@@ -32,8 +32,8 @@ FshTraceGenerator::FshTraceGenerator(const AbstractOverlay::uniforms_t &ufms, in
 #endif
   static const char _overstart[] = "uniform highp int  datadimm_a;"  SHNL
                                    "uniform highp int  datadimm_b;"  SHNL
-                                   "uniform highp int  scaling_horz;" SHNL
-                                   "uniform highp int  scaling_vert;" SHNL
+                                   "uniform highp int  scaling_a;" SHNL
+                                   "uniform highp int  scaling_b;" SHNL
                                    "vec3 insider(int i, ivec2 ifromvec);" SHNL
                                    "vec2 rotate(vec2 coords);\n";
   
@@ -82,11 +82,13 @@ FshTraceGenerator::FshTraceGenerator(const AbstractOverlay::uniforms_t &ufms, in
 
 void FshTraceGenerator::_gtb(bool followRotate)
 {
-  m_offset += msprintf(&m_to[m_offset], "vec4 overlayTrace%d(in vec2 coords, in float density, in ivec2 mastercoords, out ivec2 selfposition){" SHNL, m_overlay);
+  m_offset += msprintf(&m_to[m_offset], "vec4 overlayTrace%d(in vec2 coords, in float density, in ivec2 mastercoords, out ivec2 selfposition){" SHNL
+                                        "ivec2 iscaling = ivec2(scaling_a, scaling_b);"
+                                      , m_overlay);
   {
-    static const char _overboundsT[] =    "ivec2 ibounds = ivec2(datadimm_a, datadimm_b) * ivec2(scaling_horz, scaling_vert);" SHNL
+    static const char _overboundsT[] =    "ivec2 ibounds = ivec2(datadimm_a, datadimm_b) * iscaling;" SHNL
                                           "ivec2 icoords = ivec2(floor(rotate(coords) * ibounds + vec2(0.49,0.49)));" SHNL;
-    static const char _overboundsF[] =    "ivec2 ibounds = ivec2(datadimm_a, datadimm_b) * ivec2(scaling_horz, scaling_vert);" SHNL
+    static const char _overboundsF[] =    "ivec2 ibounds = ivec2(datadimm_a, datadimm_b) * iscaling;" SHNL
                                           "ivec2 icoords = ivec2(floor(coords * ibounds + vec2(0.49, 0.49)));" SHNL;
     
     followRotate = true;
@@ -192,10 +194,10 @@ int FshTraceGenerator::add_movecs_pixing(COORDINATION con)
 {
   if (con == CR_SAME) return -1;
   static const char* coordination[] = {  /// CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
-                                         "ivec2 movecs_pixing%d = ivec2(scaling_horz, scaling_vert);" SHNL,
+                                         "ivec2 movecs_pixing%d = iscaling;" SHNL,
                                          "ivec2 movecs_pixing%d = ibounds;" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(scaling_horz, ibounds.y);" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(ibounds.x, scaling_vert);" SHNL,
+                                         "ivec2 movecs_pixing%d = ivec2(iscaling.x, ibounds.y);" SHNL,
+                                         "ivec2 movecs_pixing%d = ivec2(ibounds.x, iscaling.y);" SHNL,
                                          
                                          ///  CR_ABSOLUTE_NOSCALED, CR_RELATIVE_NOSCALED, CR_XABS_YREL_NOSCALED, CR_XREL_YABS_NOSCALED
                                          "ivec2 movecs_pixing%d = ivec2(1, 1);" SHNL,
@@ -204,16 +206,16 @@ int FshTraceGenerator::add_movecs_pixing(COORDINATION con)
                                          "ivec2 movecs_pixing%d = ivec2(datadimm_a, 1);" SHNL,
                                          
                                          ///  CR_XABS_YABS_NOSCALED_SCALED, CR_XABS_YABS_SCALED_NOSCALED, CR_XREL_YREL_NOSCALED_SCALED, CR_XREL_YREL_SCALED_NOSCALED, 
-                                         "ivec2 movecs_pixing%d = ivec2(1, scaling_vert);" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(scaling_horz, 1);" SHNL,
+                                         "ivec2 movecs_pixing%d = ivec2(1, iscaling.y);" SHNL,
+                                         "ivec2 movecs_pixing%d = ivec2(iscaling.x, 1);" SHNL,
                                          "ivec2 movecs_pixing%d = ivec2(datadimm_a, ibounds.y);" SHNL,
                                          "ivec2 movecs_pixing%d = ivec2(ibounds.x, datadimm_b);" SHNL,
                                          
                                          /// CR_XABS_YREL_NOSCALED_SCALED, CR_XABS_YREL_SCALED_NOSCALED, CR_XREL_YABS_NOSCALED_SCALED, CR_XREL_YABS_SCALED_NOSCALED,
                                          "ivec2 movecs_pixing%d = ivec2(1, ibounds.y);" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(scaling_horz, datadimm_b);" SHNL,
+                                         "ivec2 movecs_pixing%d = ivec2(iscaling.x, datadimm_b);" SHNL,
                                          "ivec2 movecs_pixing%d = ivec2(ibounds.x, 1);" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(datadimm_a, scaling_vert);" SHNL
+                                         "ivec2 movecs_pixing%d = ivec2(datadimm_a, iscaling.y);" SHNL
                                       } ;
   m_offset += msprintf(&m_to[m_offset], coordination[(int)con], m_pixingsctr);
   return m_pixingsctr++;
@@ -231,21 +233,21 @@ int FshTraceGenerator::add_movecs_rel(COORDINATION con)
                                          
                                          ///  CR_ABSOLUTE_NOSCALED, CR_RELATIVE_NOSCALED, CR_XABS_YREL_NOSCALED, CR_XREL_YABS_NOSCALED
                                          "vec2 movecs_rel_%d = vec2(ibounds);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(scaling_horz, scaling_vert);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(ibounds.x, scaling_vert);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(scaling_horz, ibounds.y);" SHNL,
+                                         "vec2 movecs_rel_%d = vec2(iscaling.x, iscaling.y);" SHNL,
+                                         "vec2 movecs_rel_%d = vec2(ibounds.x, iscaling.y);" SHNL,
+                                         "vec2 movecs_rel_%d = vec2(iscaling.x, ibounds.y);" SHNL,
                                          
                                          ///  CR_XABS_YABS_NOSCALED_SCALED, CR_XABS_YABS_SCALED_NOSCALED, CR_XREL_YREL_NOSCALED_SCALED, CR_XREL_YREL_SCALED_NOSCALED, 
                                          "vec2 movecs_rel_%d = vec2(datadimm_a, ibounds.y);" SHNL,
                                          "vec2 movecs_rel_%d = vec2(ibounds.x, datadimm_b);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(1, scaling_vert);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(scaling_horz, 1);" SHNL,
+                                         "vec2 movecs_rel_%d = vec2(1, iscaling.y);" SHNL,
+                                         "vec2 movecs_rel_%d = vec2(iscaling.x, 1);" SHNL,
                                          
                                          /// CR_XABS_YREL_NOSCALED_SCALED, CR_XABS_YREL_SCALED_NOSCALED, CR_XREL_YABS_NOSCALED_SCALED, CR_XREL_YABS_SCALED_NOSCALED,
                                          "vec2 movecs_rel_%d = vec2(ibounds.x, 1);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(datadimm_a, scaling_vert);" SHNL,
+                                         "vec2 movecs_rel_%d = vec2(datadimm_a, iscaling.y);" SHNL,
                                          "vec2 movecs_rel_%d = vec2(1, ibounds.y);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(scaling_horz, datadimm_b);" SHNL
+                                         "vec2 movecs_rel_%d = vec2(iscaling.x, datadimm_b);" SHNL
                                       } ;
   m_offset += msprintf(&m_to[m_offset], coordination[(int)con], m_relingsctr);
   return m_relingsctr++;

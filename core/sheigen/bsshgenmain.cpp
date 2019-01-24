@@ -166,19 +166,15 @@ FshMainGenerator::FshMainGenerator(char *deststring, bool rotated, unsigned int 
   static const char fsh_base[] =  "uniform highp sampler2D  texData;" SHNL
                                   "uniform highp int        datadimm_a;" SHNL
                                   "uniform highp int        datadimm_b;" SHNL
-                                  "uniform highp int        scaling_horz;" SHNL
-                                  "uniform highp int        scaling_vert;" SHNL
+                                  "uniform highp int        scaling_a;" SHNL
+                                  "uniform highp int        scaling_b;" SHNL
                                   "uniform highp int        countPortions;" SHNL
                                   "uniform highp sampler2D  texPalette;" SHNL
-//                                  "uniform highp vec2       bounds;" SHNL
-//                                  "uniform highp vec2       contrast;" SHNL
                                   "in highp vec2            coords;" SHNL
 //                                  "varying  vec4            fragColor;" SHNL
                                   "vec2 rotate(vec2 coords);" SHNL
-//                                  "float getValue1D(in int portion, in float x){  return (texture(texData, vec2(x, float(portion)/(countPortions-1))).r - bounds.x)/(bounds.y-bounds.x)*contrast.x + contrast.y; }" SHNL
-//                                  "float getValue2D(in int portion, in vec2  x){  return (texture(texData, vec2(x.x, float(x.y + portion)/(countPortions))).r - bounds.x)/(bounds.y-bounds.x)*contrast.x + contrast.y; }" SHNL;
-                                  "float getValue1D(in int portion, in float x){  \n\treturn texture(texData, vec2(x, float(portion)/(float(countPortions)-1.0))).r; }" SHNL
-                                  "float getValue2D(in int portion, in vec2  x){  \n\treturn texture(texData, vec2(x.x, float(x.y + float(portion))/float(countPortions))).r; }" SHNL
+                                  "float getValue1D(in int portion, in float x){  return texture(texData, vec2(x, float(portion)/(float(countPortions)-1.0))).r; }" SHNL
+                                  "float getValue2D(in int portion, in vec2  x){  return texture(texData, vec2(x.x, float(x.y + float(portion))/float(countPortions))).r; }" SHNL
                                   "vec3 insider(int i, ivec2 ifromvec) {\n\tfloat scaled01 = float(i - ifromvec[0])/float(ifromvec[1] - sign(float(ifromvec[1])));\n\treturn vec3( step(0.0, scaled01)*(1.0-step(1.001, scaled01)), scaled01, sign(ifromvec[1])*ifromvec[1]); }" SHNL;
 
   memcpy(&m_to[m_offset], fsh_base, sizeof(fsh_base) - 1);  m_offset += sizeof(fsh_base) - 1;
@@ -201,21 +197,18 @@ void FshMainGenerator::goto_func_begin(const DPostmask& fsp)
                                     "vec4  loc_f4_sets;" SHNL
                                     "ivec2 loc_i2_pos;" SHNL
                                     "float ovMix = 0.0;" SHNL
+                                    "ivec2 iscaling = ivec2(scaling_a, scaling_b);" SHNL
                                     "ivec2 ibounds_noscaled = ivec2(datadimm_a, datadimm_b);" SHNL
+                                    "ivec2 ibounds = ibounds_noscaled * iscaling;" SHNL
                                     "vec2  normCoord = coords.xy*0.5 + 0.5;" SHNL
                                     "vec2  fcoords = rotate(normCoord.xy);" SHNL
                                     "ivec2 icoords = ivec2(fcoords * vec2(ibounds_noscaled));" SHNL
                                     "vec3  result = vec3(0.0,0.0,0.0);" SHNL;
-  
   memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
-  
-//  m_offset += msprintf(&m_to[m_offset], "ivec2 ibounds = ibounds_noscaled * ivec2(%s);",
-//                       m_rotated? "scaling_vert, scaling_horz" : "scaling_horz, scaling_vert");
-  m_offset += msprintf(&m_to[m_offset], "ivec2 ibounds = ibounds_noscaled * ivec2(scaling_horz, scaling_vert);");
   
   m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = vec3(%F,%F,%F);" SHNL
                                         "vec4   ppb_sfp   = vec4(0.0, %F, %F, %F);" SHNL    /// ppban, ppoutsignal, 
-                                        "ivec4  ppb_rect  = ivec4(int(mod(floor(fcoords.x*float(ibounds.x) + 0.49), float(scaling_horz))),\n\tint(mod(floor(fcoords.y*float(ibounds.y) + 0.49), float(scaling_vert))),scaling_horz-1, scaling_vert-1);" SHNL, 
+                                        "ivec4  ppb_rect  = ivec4(int(mod(floor(fcoords.x*float(ibounds.x) + 0.49), float(iscaling.x))),\n\tint(mod(floor(fcoords.y*float(ibounds.y) + 0.49), float(iscaling.y))),iscaling.x-1, iscaling.y-1);" SHNL, 
                                         fsp.r, fsp.g, fsp.b,
                                         fsp.over & 1? 1.0f : 0.0f, fsp.over & 2? 1.0f : 0.0f, (float)fsp.weight );
 

@@ -50,7 +50,7 @@ int OContour::fshTrace(int overlay, char *to) const
                   "_insvar[1] = step(bnd.x, _densvar)*step(_densvar, bnd.y);"
 //                  "_densvar = (inoscaled.x + 0.49)*abs(borders[i].y)/ibounds_noscaled.x + (inoscaled.y + 0.49)*abs(borders[i].x)/ibounds_noscaled.y;"
 //                  "_insvar[2] = mix(_densvar, 0.0, abs(borders[i].x)*abs(borders[i].y));"
-//                  "_densvar = mix(float(scaling_horz*abs(borders[i].y) + scaling_vert*abs(borders[i].x)), 1.0, abs(borders[i].x)*abs(borders[i].y));"
+//                  "_densvar = mix(float(iscaling.x*abs(borders[i].y) + iscaling.y*abs(borders[i].x)), 1.0, abs(borders[i].x)*abs(borders[i].y));"
   //                "result = mix(result, vec3(1, _insvar[0], _densvar), _insvar[1]*_insvar[2] );"
                   
                   "result = mix(result, vec3(_insvar[0]*_insvar[1], 0, 1), step(result[0], _insvar[0]*_insvar[1]) );"    /// trace not finished

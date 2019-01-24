@@ -13,8 +13,8 @@ const char*   DrawQWidget::vardesc(SHEIFIELD sf)
   if (sf == SF_COUNTPORTIONS)       return "countPortions";
   if (sf == SF_DIMM_A)              return "datadimm_a";
   if (sf == SF_DIMM_B)              return "datadimm_b";
-  if (sf == SF_CHNL_HORZSCALING)    return "scaling_horz";
-  if (sf == SF_CHNL_VERTSCALING)    return "scaling_vert";
+  if (sf == SF_CHNL_HORZSCALING)    return "scaling_a";
+  if (sf == SF_CHNL_VERTSCALING)    return "scaling_b";
   return nullptr;
 }
 

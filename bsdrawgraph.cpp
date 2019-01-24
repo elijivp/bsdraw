@@ -100,7 +100,7 @@ public:
         
         fmg.push( "VALUE = floor(VALUE);" SHNL
                   "ppb_sfp[0] = ppb_sfp[0]*(1.0 - bmix) + bmix;" SHNL
-                  "ppb_rect.ga = ivec2(mix(ppb_rect.ga, ivec2(floor(fcoords.y*ibounds.y + 0.49), floor(VALUE*scaling_vert) + scaling_vert-1), bmix));" SHNL
+                  "ppb_rect.ga = ivec2(mix(ppb_rect.ga, ivec2(floor(fcoords.y*ibounds.y + 0.49), floor(VALUE*iscaling.y) + iscaling.y-1), bmix));" SHNL
                   );
       }
       
@@ -108,10 +108,10 @@ public:
       if (graphopts.descaling != graphopts_t::DE_NONE)
       {
         const char*   descaling[] = { "",
-                                      "MIXWELL = MIXWELL * (1.0 - abs(sign( int(mod(floor(fcoords.x*ibounds.x + 0.49), scaling_horz)) - scaling_horz/2)));",
-                                      "MIXWELL = MIXWELL * (1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), scaling_horz)) - scaling_horz/2) / (scaling_horz/2.0)));",
-                                      "MIXWELL = MIXWELL * (1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), scaling_horz)) - scaling_horz/2) / (scaling_horz/4.0)));",
-                                      "MIXWELL = MIXWELL * (1.0/abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), scaling_horz)) - scaling_horz/2)));"
+                                      "MIXWELL = MIXWELL * (1.0 - abs(sign( int(mod(floor(fcoords.x*ibounds.x + 0.49), iscaling.x)) - iscaling.x/2)));",
+                                      "MIXWELL = MIXWELL * (1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), iscaling.x)) - iscaling.x/2) / (iscaling.x/2.0)));",
+                                      "MIXWELL = MIXWELL * (1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), iscaling.x)) - iscaling.x/2) / (iscaling.x/4.0)));",
+                                      "MIXWELL = MIXWELL * (1.0/abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), iscaling.x)) - iscaling.x/2)));"
                                     };
         if ((unsigned int)graphopts.descaling < sizeof(descaling)/sizeof(const char*))
           fmg.push(descaling[int(graphopts.descaling)]);

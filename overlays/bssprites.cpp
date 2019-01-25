@@ -37,7 +37,7 @@ void OSprites::update()
 int OSprites::fshTrace(int overlay, char *to) const
 { 
   FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_RANDOM);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, false);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
   {
     ocg.var_const_fixed("spritescount", (int)m_count);
     ocg.var_fixed("base_size", (int)(m_dmti.w*m_sm), (int)(m_dmti.h*m_sm));

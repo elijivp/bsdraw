@@ -80,20 +80,18 @@ FshTraceGenerator::FshTraceGenerator(const AbstractOverlay::uniforms_t &ufms, in
   }
 }
 
-void FshTraceGenerator::_gtb(bool followRotate)
+void FshTraceGenerator::_gtb(ROTATION followRotate)
 {
   m_offset += msprintf(&m_to[m_offset], "vec4 overlayTrace%d(in vec2 coords, in float density, in ivec2 mastercoords, out ivec2 selfposition){" SHNL
-                                        "ivec2 iscaling = ivec2(scaling_a, scaling_b);"
+                                        "ivec2 iscaling = ivec2(scaling_a, scaling_b);" SHNL
+                                        "ivec2 ibounds = ivec2(datadimm_a, datadimm_b) * iscaling;" SHNL
                                       , m_overlay);
   {
-    static const char _overboundsT[] =    "ivec2 ibounds = ivec2(datadimm_a, datadimm_b) * iscaling;" SHNL
-                                          "ivec2 icoords = ivec2(floor(rotate(coords) * ibounds + vec2(0.49,0.49)));" SHNL;
-    static const char _overboundsF[] =    "ivec2 ibounds = ivec2(datadimm_a, datadimm_b) * iscaling;" SHNL
-                                          "ivec2 icoords = ivec2(floor(coords * ibounds + vec2(0.49, 0.49)));" SHNL;
-    
-    followRotate = true;
-    if (followRotate){      memcpy(&m_to[m_offset], _overboundsT, sizeof(_overboundsT)-1); m_offset += sizeof(_overboundsT) - 1; }
-    else        {           memcpy(&m_to[m_offset], _overboundsF, sizeof(_overboundsF)-1); m_offset += sizeof(_overboundsF) - 1; }
+    m_offset += msprintf(&m_to[m_offset], "ivec2 icoords = ivec2(floor(%s*ibounds + vec2(0.49,0.49)));" SHNL,
+                         followRotate == ROT_FOLLOW? "rotate(coords)" : 
+                         followRotate == ROT_HORZ? "coords.xy" : 
+                         followRotate == ROT_VERT? "coords.yx" : 
+                                                   "vec2(0.0,0.0)");
   }
 
   static const char _vars[] =             "vec3 result=vec3(0.0,0.0,0.0);" SHNL
@@ -113,6 +111,10 @@ void FshTraceGenerator::_gtb_coords(const _bs_unzip_t &bsu)
     else if (bsu.type == 2)
     {
       m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr++);
+    }
+    else if (bsu.type == 3)
+    {
+      m_offset += msprintf(&m_to[m_offset], "rotate(opm%D_%D)", m_overlay, m_paramsctr++);
     }
     m_offset += msprintf(&m_to[m_offset],  " * movecs_pixing%d) + vec2(0.49,0.49)));" SHNL, coordspixing);
     m_offset += msprintf(&m_to[m_offset],  "ioffset = ioffset + mastercoords;" SHNL);

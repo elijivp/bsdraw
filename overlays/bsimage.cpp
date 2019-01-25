@@ -59,7 +59,7 @@ OImageOriginal::OImageOriginal(QImage *image, IMAGECONVERT icvt, bool autorotate
 int OImageOriginal::fshTrace(int overlay, char *to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, false);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
   {
     ocg.goto_normed();
     ocg.push("_densvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1.0 - step(float(idimms2.x), float(inormed.x)))*(1.0 - step(float(idimms2.y), float(inormed.y)));");
@@ -97,7 +97,7 @@ OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, bool autorota
 int OImageStretched::fshTrace(int overlay, char *to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, false);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
   {
     ocg.goto_normed();
     ocg.push("_densvar = 1.0;");

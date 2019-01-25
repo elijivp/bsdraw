@@ -46,10 +46,6 @@ inline const char*  fragment_rotateLRBT(){  return  "vec2 rotate(vec2 coords){ r
 inline const char*  fragment_rotateRLBT(){  return  "vec2 rotate(vec2 coords){ coords.x = 1.0-coords.x; return coords; }"; }
 inline const char*  fragment_rotateLRTB(){  return  "vec2 rotate(vec2 coords){ coords.y = 1.0-coords.y; return coords; }"; }
 inline const char*  fragment_rotateRLTB(){  return  "vec2 rotate(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords; }"; }
-//inline const char*  fragment_rotateTBLR(){  return  "vec2 rotate(vec2 coords){ return coords.yx; }"; }
-//inline const char*  fragment_rotateBTLR(){  return  "vec2 rotate(vec2 coords){ coords.x = 1.0-coords.x; return coords.yx; }"; }
-//inline const char*  fragment_rotateTBRL(){  return  "vec2 rotate(vec2 coords){ coords.y = 1.0-coords.y; return coords.yx; }"; }
-//inline const char*  fragment_rotateBTRL(){  return  "vec2 rotate(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords.yx; }"; }
 inline const char*  fragment_rotateTBLR(){  return  "vec2 rotate(vec2 coords){ coords.y = 1.0-coords.y; return coords.yx; }"; }
 inline const char*  fragment_rotateBTLR(){  return  "vec2 rotate(vec2 coords){ return coords.yx; }"; }
 inline const char*  fragment_rotateTBRL(){  return  "vec2 rotate(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords.yx; }"; }
@@ -282,6 +278,7 @@ void DrawQWidget::initializeGL()
   glGenTextures(1, &m_texAll[HT_PAL]);  /// palette
   glGenTextures(1, &m_texAll[HT_DMN]);  /// domain
   applyHardPendings();
+  
   m_bitmaskPendingChanges |= PC_SIZE | PC_DATA | PC_PARAMS | PC_PARAMSOVL; 
 //  qDebug("GL: initialized. %04x", m_bitmaskPendingChanges);
 }

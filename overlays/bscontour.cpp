@@ -29,7 +29,7 @@ OContour::OContour(float from, float to, const linestyle_t &kls, bool noscaled_c
 int OContour::fshTrace(int overlay, char *to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, true);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
   {
     ocg.var_const_fixed("bnd", m_from, m_to);
     ocg.push( contour_constants1 );
@@ -74,7 +74,7 @@ OContourPal::OContourPal(float from, float to, const IPalette* ipal, bool discre
 int OContourPal::fshTrace(int overlay, char *to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, true);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
   {
     ocg.var_const_fixed("bnd", m_from, m_to);
     ocg.push( contour_constants1 );
@@ -114,7 +114,7 @@ OCover::OCover(float from, float to, int inversive_algo, COVER_OTHER_PORTIONS co
 int OCover::fshTrace(int overlay, char *to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, true);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
   {
     ocg.var_const_fixed("bnd", m_from, m_to);
     ocg.var_const_fixed("cover", m_cover_r, m_cover_g, m_cover_b);
@@ -156,7 +156,7 @@ OSlice::OSlice(float cover, int inversive_algo): IOverlaySimple(inversive_algo),
 int OSlice::fshTrace(int overlay, char *to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, true);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
   {
     ocg.var_const_fixed("clr", m_slice_r, m_slice_g, m_slice_b);
     ocg.push( "result = clr;" );

@@ -407,7 +407,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     sigtype = ST_MOVE;
   }
   else if (MW_TEST == VERTICAL)
-  {
+  {    
     SAMPLES = 400;
     MAXLINES = 200;
     PORTIONS = 1;

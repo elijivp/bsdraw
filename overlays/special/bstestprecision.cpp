@@ -12,7 +12,7 @@ OTestPrecision::OTestPrecision(): IOverlaySimple(),
 int OTestPrecision::fshTrace(int overlay, char *to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, false);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
   {
 //    int rel = ocg.add_movecs_pixing(CR_ABSOLUTE_NOSCALED);
 //    float pts[][2] = {  {0.0, 0.0}, {}  }

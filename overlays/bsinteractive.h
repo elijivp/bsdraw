@@ -3,7 +3,7 @@
 
 #include "../core/bsoverlay.h"
 
-class OActivePoint: public IOverlaySimple, public OVLCoordsDynamic, public OVLDimmsOff
+class OActivePoint: public IOverlaySimple, public OVLCoordsDynamicClick, public OVLDimmsOff
 {
 public:
   OActivePoint(COORDINATION cn, float center_x, float center_y);

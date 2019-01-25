@@ -15,6 +15,7 @@ void _bs_unzip_coords(const Coords* c, _bs_unzip_t* rslt);
 template <> inline void _bs_unzip_coords(const OVLCoordsOff*, _bs_unzip_t* rslt){ rslt->type = 0; }
 template <> inline void _bs_unzip_coords(const OVLCoordsStatic* c, _bs_unzip_t* rslt){ rslt->type = 1; rslt->cr = c->getCoordination(); c->getCoordinates(&rslt->ffs[0], &rslt->ffs[1]); }
 template <> inline void _bs_unzip_coords(const OVLCoordsDynamic* c, _bs_unzip_t* rslt){ rslt->type = 2; rslt->cr = c->getCoordination(); }
+template <> inline void _bs_unzip_coords(const OVLCoordsDynamicClick* c, _bs_unzip_t* rslt){ rslt->type = 3; rslt->cr = c->getCoordination(); }
 template <> inline void _bs_unzip_coords(const OVLCoordsDimmsLinked* c, _bs_unzip_t* rslt){ rslt->type = 2; rslt->cr = c->getCoordination(); }
 
 template <class Dimms>
@@ -50,13 +51,15 @@ public:
 public:
   FshTraceGenerator(const AbstractOverlay::uniforms_t& ufms, int overlay, char* deststring, int ocg_include_bits = 0);
   int  written() const { return m_offset; }
+  
+  enum  ROTATION { ROT_FOLLOW, ROT_HORZ, ROT_VERT, ROT_NONE };
 private:
-  void  _gtb(bool followRotate);
+  void  _gtb(ROTATION followRotate);
   void  _gtb_coords(const _bs_unzip_t& bsu);
   void  _gtb_dimms(const _bs_unzip_t& bsu);
 public:
   template <class Coords, class Dimms>
-  void  goto_func_begin(const Coords* coords, const Dimms* dimms, bool followRotate = false)
+  void  goto_func_begin(const Coords* coords, const Dimms* dimms, ROTATION followRotate = ROT_FOLLOW)
   {
     _gtb(followRotate);
     {

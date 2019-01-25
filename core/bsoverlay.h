@@ -121,6 +121,13 @@ public:
   typedef   OVLCoordsDynamic  coords_type_t;
 };
 
+class OVLCoordsDynamicClick: public OVLCoordsDynamic, virtual protected AbstractOverlay
+{
+public:
+  OVLCoordsDynamicClick(): OVLCoordsDynamic(CR_RELATIVE, 0.0, 0.0){}
+  typedef   OVLCoordsDynamicClick  coords_type_t;
+};
+
 
 ////////////////////////////////////////////////////////
 

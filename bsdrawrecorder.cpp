@@ -5,9 +5,9 @@
 DrawRecorder::DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory, unsigned int portions, ORIENTATION orient, unsigned int resizeLimit): DrawQWidget(new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient),
   m_stopped(0), m_memory(portions, samplesHorz, linesMemory), m_resizelim(resizeLimit)
 {
-  m_matrixWidth = samplesHorz;
-  m_matrixHeight = linesStart;
-  m_portionSize = m_matrixWidth;
+  m_matrixDimmA = samplesHorz;
+  m_matrixDimmB = linesStart;
+  m_portionSize = m_matrixDimmA;
   deployMemory(m_countPortions*m_portionSize*m_resizelim);
   m_matrixLmSize = linesMemory;
 }
@@ -36,11 +36,11 @@ void DrawRecorder::clearData()
 {  
   m_memory.onClearData();
   for (unsigned int p = 0; p < m_countPortions; ++p)
-    for (unsigned int i = 0; i < m_matrixHeight; ++i)
+    for (unsigned int i = 0; i < m_matrixDimmB; ++i)
     {
-      for (unsigned int j = 0; j < m_matrixWidth; ++j)
+      for (unsigned int j = 0; j < m_matrixDimmA; ++j)
       {
-        m_matrixData[p*m_matrixHeight*m_matrixWidth + i*m_matrixWidth + j] = 0;
+        m_matrixData[p*m_matrixDimmB*m_matrixDimmA + i*m_matrixDimmA + j] = 0;
       }
     }
   DrawQWidget::vmanUpData();  // clearData?
@@ -50,12 +50,18 @@ void DrawRecorder::resizeGL(int w, int h)
 {
   w -= m_cttrLeft + m_cttrRight;
   h -= m_cttrTop + m_cttrBottom;
-  m_matrixScWidth = (unsigned int)w <= m_matrixWidth? 1 : (w / m_matrixWidth);
+  
+  unsigned int& scalingA = m_matrixSwitchAB? m_scalingHeight : m_scalingWidth;
+  unsigned int& scalingB = m_matrixSwitchAB? m_scalingWidth : m_scalingHeight;
+  int& sizeA = m_matrixSwitchAB? h : w;
+  int& sizeB = m_matrixSwitchAB? w : h;
+  
+  scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
   clampScaling();
-  unsigned int old_matrixHeight = m_matrixHeight;
-  m_matrixHeight = h / m_matrixScHeight;
-  if (m_matrixHeight > m_resizelim) m_matrixHeight = m_resizelim;
-  if (m_matrixHeight > old_matrixHeight || (m_matrixHeight < old_matrixHeight && (m_countPortions > 1)))
+  unsigned int old_dimmB = m_matrixDimmB;
+  m_matrixDimmB = sizeB / scalingB;
+  if (m_matrixDimmB > m_resizelim) m_matrixDimmB = m_resizelim;
+  if (m_matrixDimmB > old_dimmB  || (m_matrixDimmB < old_dimmB  && (m_countPortions > 1)))
     fillMatrix();
   pendResize(true);
 }
@@ -63,13 +69,13 @@ void DrawRecorder::resizeGL(int w, int h)
 void DrawRecorder::fillMatrix()
 {
   for (unsigned int p = 0; p < m_countPortions; ++p)
-    for (unsigned int i = 0; i < m_matrixHeight; ++i)
+    for (unsigned int i = 0; i < m_matrixDimmB; ++i)
     {
-      if (m_memory.onFillData(p, i + m_stopped, &m_matrixData[p*m_matrixHeight*m_matrixWidth +  i*m_matrixWidth]) == false)
+      if (m_memory.onFillData(p, i + m_stopped, &m_matrixData[p*m_matrixDimmB*m_matrixDimmA +  i*m_matrixDimmA]) == false)
       {
-        for (unsigned int j = 0; j < m_matrixWidth; ++j)
+        for (unsigned int j = 0; j < m_matrixDimmA; ++j)
         {
-          m_matrixData[p*m_matrixHeight*m_matrixWidth + i*m_matrixWidth + j] = 0;
+          m_matrixData[p*m_matrixDimmB*m_matrixDimmA + i*m_matrixDimmA + j] = 0;
         }
       }
     }
@@ -77,10 +83,10 @@ void DrawRecorder::fillMatrix()
 
 void DrawRecorder::slideLmHeight(int pp)
 {
-  if (m_matrixLmSize < m_matrixHeight*m_matrixScHeight)
+  if (m_matrixLmSize < m_matrixDimmB*(m_matrixSwitchAB? m_scalingWidth : m_scalingHeight))
     m_stopped = 0;
   else
-    m_stopped = ((float)pp/m_matrixLmSize)*(m_matrixLmSize - m_matrixHeight*m_matrixScHeight);
+    m_stopped = ((float)pp/m_matrixLmSize)*(m_matrixLmSize - m_matrixDimmB*(m_matrixSwitchAB? m_scalingWidth : m_scalingHeight));
   fillMatrix();
   DrawQWidget::vmanUpData();
 }

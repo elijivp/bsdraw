@@ -45,7 +45,7 @@ OToons::OToons(COORDINATION cr, float diameter, float border, const linestyle_t 
 int OToons::fshTrace(int overlay, char *to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, false);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.push( "int diameter = idimms1;" );

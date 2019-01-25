@@ -23,9 +23,9 @@ public:
   virtual unsigned int  shvertex_pendingSize() const { return VshMainGenerator1D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const { return VshMainGenerator1D()(to); }
   virtual unsigned int  shfragment_pendingSize(unsigned int ovlscount) const { return 1800 + FshMainGenerator::basePendingSize(ovlscount); }
-  virtual unsigned int  shfragment_store(const DPostmask& fsp, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
+  virtual unsigned int  shfragment_store(const DPostmask& fsp, bool rotated, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
-    FshMainGenerator fmg(to, ovlscount, ovlsinfo);
+    FshMainGenerator fmg(to, rotated, ovlscount, ovlsinfo);
     float specopc = graphopts.specopc > 1.0f? 1.0f : graphopts.specopc < 0.0f? 0.0f : graphopts.specopc;
     fmg.cfloatvar("specopc", 1.0f - specopc);
     fmg.goto_func_begin(fsp);
@@ -100,7 +100,7 @@ public:
         
         fmg.push( "VALUE = floor(VALUE);" SHNL
                   "ppb_sfp[0] = ppb_sfp[0]*(1.0 - bmix) + bmix;" SHNL
-                  "ppb_rect.ga = ivec2(mix(ppb_rect.ga, ivec2(floor(fcoords.y*ibounds.y + 0.49), floor(VALUE*chnl_vert_scaling) + chnl_vert_scaling-1), bmix));" SHNL
+                  "ppb_rect.ga = ivec2(mix(ppb_rect.ga, ivec2(floor(fcoords.y*ibounds.y + 0.49), floor(VALUE*iscaling.y) + iscaling.y-1), bmix));" SHNL
                   );
       }
       
@@ -108,10 +108,10 @@ public:
       if (graphopts.descaling != graphopts_t::DE_NONE)
       {
         const char*   descaling[] = { "",
-                                      "MIXWELL = MIXWELL * (1.0 - abs(sign( int(mod(floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2)));",
-                                      "MIXWELL = MIXWELL * (1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2) / (chnl_horz_scaling/2.0)));",
-                                      "MIXWELL = MIXWELL * (1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2) / (chnl_horz_scaling/4.0)));",
-                                      "MIXWELL = MIXWELL * (1.0/abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), chnl_horz_scaling)) - chnl_horz_scaling/2)));"
+                                      "MIXWELL = MIXWELL * (1.0 - abs(sign( int(mod(floor(fcoords.x*ibounds.x + 0.49), iscaling.x)) - iscaling.x/2)));",
+                                      "MIXWELL = MIXWELL * (1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), iscaling.x)) - iscaling.x/2) / (iscaling.x/2.0)));",
+                                      "MIXWELL = MIXWELL * (1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), iscaling.x)) - iscaling.x/2) / (iscaling.x/4.0)));",
+                                      "MIXWELL = MIXWELL * (1.0/abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), iscaling.x)) - iscaling.x/2)));"
                                     };
         if ((unsigned int)graphopts.descaling < sizeof(descaling)/sizeof(const char*))
           fmg.push(descaling[int(graphopts.descaling)]);
@@ -170,11 +170,14 @@ public:
 
 void DrawGraph::reConstructor(unsigned int samples)
 {
-  m_matrixWidth = samples;
-  m_matrixHeight = 1;
+  m_matrixDimmA = samples;
+  m_matrixDimmB = 1;
   m_portionSize = samples;
   deployMemory();
-  m_matrixScHeight = 1;
+  if (m_matrixSwitchAB)
+    m_scalingWidth = 1;
+  else
+    m_scalingHeight = 1;
 }
 
 /// m_countPortions === graphs
@@ -187,10 +190,16 @@ void DrawGraph::resizeGL(int w, int h)
 {
   w -= m_cttrLeft + m_cttrRight;
   h -= m_cttrTop + m_cttrBottom;
-  m_matrixScWidth = (unsigned int)w <= m_matrixWidth? 1 : (w / m_matrixWidth);
+  
+  unsigned int& scalingA = m_matrixSwitchAB? m_scalingHeight : m_scalingWidth;
+  unsigned int& scalingB = m_matrixSwitchAB? m_scalingWidth : m_scalingHeight;
+  int& sizeA = m_matrixSwitchAB? h : w;
+  int& sizeB = m_matrixSwitchAB? w : h;
+  
+  scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
   clampScaling();
-  m_matrixHeight = h / m_matrixScHeight;
-  if (m_matrixHeight == 0) m_matrixHeight = 1;
+  m_matrixDimmB = sizeB / scalingB;
+  if (m_matrixDimmB == 0) m_matrixDimmB = 1;
   pendResize(true);
 }
 
@@ -281,10 +290,10 @@ void DrawGraphMoveEx::fillMatrix()
 
 void DrawGraphMoveEx::slideLmHeight(int pp)
 {
-  if (m_matrixLmSize < m_matrixWidth)
+  if (m_matrixLmSize < m_matrixDimmA)
     m_stopped = 0;
   else
-    m_stopped = ((float)pp/m_matrixLmSize)*(m_matrixLmSize - m_matrixWidth);
+    m_stopped = ((float)pp/m_matrixLmSize)*(m_matrixLmSize - m_matrixDimmA);
   fillMatrix();
   DrawQWidget::vmanUpData();
 }

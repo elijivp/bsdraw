@@ -121,7 +121,6 @@ public:
   typedef   OVLCoordsDynamic  coords_type_t;
 };
 
-
 ////////////////////////////////////////////////////////
 
 

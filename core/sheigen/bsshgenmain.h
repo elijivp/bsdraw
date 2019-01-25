@@ -22,13 +22,14 @@ class FshMainGenerator
   const char*                         m_writebase;
   char* const                         m_to;
   int                                 m_offset;
+  bool                                m_rotated;
   
   unsigned int                        m_ovlscount;
   const ovlfraginfo_t*                m_ovls;
 public:
   static unsigned int basePendingSize(unsigned int ovlscount);
 public:
-  FshMainGenerator(char* deststring, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]);
+  FshMainGenerator(char* deststring, bool rotated, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]);
   unsigned int  written() const { return m_offset; }
 public:
   void  goto_func_begin(const DPostmask &fsp);

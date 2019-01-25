@@ -50,15 +50,16 @@ public:
 public:
   FshTraceGenerator(const AbstractOverlay::uniforms_t& ufms, int overlay, char* deststring, int ocg_include_bits = 0);
   int  written() const { return m_offset; }
+//  enum  ROTATION { ROT_FOLLOW, ROT_HORZ, ROT_VERT, ROT_NONE };
 private:
-  void  _gtb(bool followRotate);
+  void  _gtb();
   void  _gtb_coords(const _bs_unzip_t& bsu);
   void  _gtb_dimms(const _bs_unzip_t& bsu);
 public:
   template <class Coords, class Dimms>
-  void  goto_func_begin(const Coords* coords, const Dimms* dimms, bool followRotate = false)
+  void  goto_func_begin(const Coords* coords, const Dimms* dimms)
   {
-    _gtb(followRotate);
+    _gtb();
     {
       _bs_unzip_t cu;
       _bs_unzip_coords(coords, &cu);

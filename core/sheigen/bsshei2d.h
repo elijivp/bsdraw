@@ -17,9 +17,9 @@ public:
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
   virtual unsigned int  shfragment_pendingSize(unsigned int ovlscount) const { return FshMainGenerator::basePendingSize(ovlscount); }
-  virtual unsigned int  shfragment_store(const DPostmask& fsp, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
+  virtual unsigned int  shfragment_store(const DPostmask& fsp, bool rotated, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
-    FshMainGenerator fmg(to, ovlscount, ovlsinfo);
+    FshMainGenerator fmg(to, rotated, ovlscount, ovlsinfo);
 
     if (dsup != DS_NONE)
       fmg.push( "uniform highp sampler2D domainarr;"

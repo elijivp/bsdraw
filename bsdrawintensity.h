@@ -8,7 +8,7 @@ class DrawIntensity: public DrawQWidget
 public:
   DrawIntensity(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions=1, ORIENTATION orient=OR_LRBT);
 protected:
-  virtual unsigned int    portionSize()const{ return m_matrixWidth*m_matrixHeight; }
+  virtual unsigned int    portionSize()const{ return m_matrixDimmA*m_matrixDimmB; }
   virtual DATADIMMUSAGE   getDataDimmUsage() const { return DDU_2D; }
   virtual void            resizeGL(int w, int h);
 };

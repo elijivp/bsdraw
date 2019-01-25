@@ -157,28 +157,24 @@ unsigned int FshMainGenerator::basePendingSize(unsigned int ovlscount)
   return 1750 + ovlscount*540;
 }
 
-FshMainGenerator::FshMainGenerator(char *deststring, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]): 
-  m_writebase(deststring), m_to(deststring), m_offset(0), m_ovlscount(ovlscount), m_ovls(ovlsinfo)
+FshMainGenerator::FshMainGenerator(char *deststring, bool rotated, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]): 
+  m_writebase(deststring), m_to(deststring), m_offset(0), m_rotated(rotated), m_ovlscount(ovlscount), m_ovls(ovlsinfo)
 {
 #ifdef BSGLSLVER
   m_offset += msprintf(&m_to[m_offset],  "#version %d" SHNL, BSGLSLVER);
 #endif
   static const char fsh_base[] =  "uniform highp sampler2D  texData;" SHNL
-                                  "uniform highp int        chnl_horz_count;" SHNL
-                                  "uniform highp int        chnl_vert_count;" SHNL
-                                  "uniform highp int        chnl_horz_scaling;" SHNL
-                                  "uniform highp int        chnl_vert_scaling;" SHNL
+                                  "uniform highp int        datadimm_a;" SHNL
+                                  "uniform highp int        datadimm_b;" SHNL
+                                  "uniform highp int        scaling_a;" SHNL
+                                  "uniform highp int        scaling_b;" SHNL
                                   "uniform highp int        countPortions;" SHNL
                                   "uniform highp sampler2D  texPalette;" SHNL
-//                                  "uniform highp vec2       bounds;" SHNL
-//                                  "uniform highp vec2       contrast;" SHNL
                                   "in highp vec2            coords;" SHNL
 //                                  "varying  vec4            fragColor;" SHNL
                                   "vec2 rotate(vec2 coords);" SHNL
-//                                  "float getValue1D(in int portion, in float x){  return (texture(texData, vec2(x, float(portion)/(countPortions-1))).r - bounds.x)/(bounds.y-bounds.x)*contrast.x + contrast.y; }" SHNL
-//                                  "float getValue2D(in int portion, in vec2  x){  return (texture(texData, vec2(x.x, float(x.y + portion)/(countPortions))).r - bounds.x)/(bounds.y-bounds.x)*contrast.x + contrast.y; }" SHNL;
-                                  "float getValue1D(in int portion, in float x){  \n\treturn texture(texData, vec2(x, float(portion)/(float(countPortions)-1.0))).r; }" SHNL
-                                  "float getValue2D(in int portion, in vec2  x){  \n\treturn texture(texData, vec2(x.x, float(x.y + float(portion))/float(countPortions))).r; }" SHNL
+                                  "float getValue1D(in int portion, in float x){  return texture(texData, vec2(x, float(portion)/(float(countPortions)-1.0))).r; }" SHNL
+                                  "float getValue2D(in int portion, in vec2  x){  return texture(texData, vec2(x.x, float(x.y + float(portion))/float(countPortions))).r; }" SHNL
                                   "vec3 insider(int i, ivec2 ifromvec) {\n\tfloat scaled01 = float(i - ifromvec[0])/float(ifromvec[1] - sign(float(ifromvec[1])));\n\treturn vec3( step(0.0, scaled01)*(1.0-step(1.001, scaled01)), scaled01, sign(ifromvec[1])*ifromvec[1]); }" SHNL;
 
   memcpy(&m_to[m_offset], fsh_base, sizeof(fsh_base) - 1);  m_offset += sizeof(fsh_base) - 1;
@@ -186,7 +182,7 @@ FshMainGenerator::FshMainGenerator(char *deststring, unsigned int ovlscount, ovl
   for (unsigned int i=0; i<m_ovlscount; i++)
   {
     m_offset += msprintf(&m_to[m_offset],  "uniform highp vec4 ovl_exsettings%D;" SHNL
-                                          "vec4 overlayTrace%d(in vec2 coords, in float density, in ivec2 mastercoords, out ivec2 shapeself);" SHNL
+                                          "vec4 overlayTrace%d(in vec4 coords, in float density, in ivec2 mastercoords, out ivec2 shapeself);" SHNL
                                           "vec3 overlayColor%d(in vec4 trace, in vec3 color);" SHNL,
                         i+1, i+1, i+1);
   }
@@ -201,19 +197,18 @@ void FshMainGenerator::goto_func_begin(const DPostmask& fsp)
                                     "vec4  loc_f4_sets;" SHNL
                                     "ivec2 loc_i2_pos;" SHNL
                                     "float ovMix = 0.0;" SHNL
-                                    "ivec2 ibounds_noscaled = ivec2(chnl_horz_count, chnl_vert_count);" SHNL
-                                    "ivec2 ibounds = ibounds_noscaled * ivec2(chnl_horz_scaling, chnl_vert_scaling);" SHNL
-                                    "vec2  normCoord = coords.xy*0.5 + 0.5;" SHNL
-                                    "vec2  fcoords = rotate(normCoord.xy);" SHNL
+                                    "ivec2 iscaling = ivec2(scaling_a, scaling_b);" SHNL
+                                    "ivec2 ibounds_noscaled = ivec2(datadimm_a, datadimm_b);" SHNL
+                                    "ivec2 ibounds = ibounds_noscaled * iscaling;" SHNL
+                                    "vec2  fcoords = rotate(coords.xy*0.5 + 0.5);" SHNL
+                                    "vec4  ocoords = vec4(coords.xy*0.5 + 0.5, fcoords);" SHNL
                                     "ivec2 icoords = ivec2(fcoords * vec2(ibounds_noscaled));" SHNL
                                     "vec3  result = vec3(0.0,0.0,0.0);" SHNL;
-  
   memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
-  
   
   m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = vec3(%F,%F,%F);" SHNL
                                         "vec4   ppb_sfp   = vec4(0.0, %F, %F, %F);" SHNL    /// ppban, ppoutsignal, 
-                                        "ivec4  ppb_rect  = ivec4(int(mod(floor(fcoords.x*float(ibounds.x) + 0.49), float(chnl_horz_scaling))),\n\tint(mod(floor(fcoords.y*float(ibounds.y) + 0.49), float(chnl_vert_scaling))),\n\tchnl_horz_scaling-1, chnl_vert_scaling-1);" SHNL, 
+                                        "ivec4  ppb_rect  = ivec4(int(mod(floor(fcoords.x*float(ibounds.x) + 0.49), float(iscaling.x))),\n\tint(mod(floor(fcoords.y*float(ibounds.y) + 0.49), float(iscaling.y))),iscaling.x-1, iscaling.y-1);" SHNL, 
                                         fsp.r, fsp.g, fsp.b,
                                         fsp.over & 1? 1.0f : 0.0f, fsp.over & 2? 1.0f : 0.0f, (float)fsp.weight );
 
@@ -251,7 +246,7 @@ void FshMainGenerator::goto_func_end(const DPostmask &fsp)
       m_offset += msprintf(&m_to[m_offset],  "loc_f4_sets = ovl_exsettings%D;" SHNL
                                             "loc_i2_pos = ivec2(0,0);" SHNL
                                             "if (step(1.0, loc_f4_sets[0]) != 1){" SHNL
-                                              "ovTrace = overlayTrace%d(normCoord, loc_f4_sets[1], ovl_position%d, loc_i2_pos);" SHNL
+                                              "ovTrace = overlayTrace%d(ocoords, loc_f4_sets[1], ovl_position%d, loc_i2_pos);" SHNL
                                               "if (sign(ovTrace[3]) != 0.0 && step(ovMix, loc_f4_sets[2]) == 1.0) result = mix(result, overlayColor%d(ovTrace, result), 1.0 - loc_f4_sets[0]);" SHNL 
                                             "}" SHNL
                                             "ivec2 ovl_position%d = loc_i2_pos;" SHNL,
@@ -262,7 +257,7 @@ void FshMainGenerator::goto_func_end(const DPostmask &fsp)
       m_offset += msprintf(&m_to[m_offset],  "loc_f4_sets = ovl_exsettings%D;" SHNL
                                             "loc_i2_pos = ivec2(0,0);" SHNL
                                             "if (step(1.0, loc_f4_sets[0]) != 1){" SHNL
-                                              "ovTrace = overlayTrace%d(normCoord, loc_f4_sets[1], ivec2(0,0), loc_i2_pos);" SHNL
+                                              "ovTrace = overlayTrace%d(ocoords, loc_f4_sets[1], ivec2(0,0), loc_i2_pos);" SHNL
                                               "if (sign(ovTrace[3]) != 0.0 && step(ovMix, loc_f4_sets[2]) == 1.0) result = mix(result, overlayColor%d(ovTrace, result), 1.0 - loc_f4_sets[0]);" SHNL
                                             "}" SHNL
                                             "ivec2 ovl_position%d = loc_i2_pos;" SHNL,

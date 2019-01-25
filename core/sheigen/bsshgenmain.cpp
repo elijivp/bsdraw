@@ -182,7 +182,7 @@ FshMainGenerator::FshMainGenerator(char *deststring, bool rotated, unsigned int 
   for (unsigned int i=0; i<m_ovlscount; i++)
   {
     m_offset += msprintf(&m_to[m_offset],  "uniform highp vec4 ovl_exsettings%D;" SHNL
-                                          "vec4 overlayTrace%d(in vec2 coords, in float density, in ivec2 mastercoords, out ivec2 shapeself);" SHNL
+                                          "vec4 overlayTrace%d(in vec4 coords, in float density, in ivec2 mastercoords, out ivec2 shapeself);" SHNL
                                           "vec3 overlayColor%d(in vec4 trace, in vec3 color);" SHNL,
                         i+1, i+1, i+1);
   }
@@ -200,8 +200,8 @@ void FshMainGenerator::goto_func_begin(const DPostmask& fsp)
                                     "ivec2 iscaling = ivec2(scaling_a, scaling_b);" SHNL
                                     "ivec2 ibounds_noscaled = ivec2(datadimm_a, datadimm_b);" SHNL
                                     "ivec2 ibounds = ibounds_noscaled * iscaling;" SHNL
-                                    "vec2  normCoord = coords.xy*0.5 + 0.5;" SHNL
-                                    "vec2  fcoords = rotate(normCoord.xy);" SHNL
+                                    "vec2  fcoords = rotate(coords.xy*0.5 + 0.5);" SHNL
+                                    "vec4  ocoords = vec4(coords.xy*0.5 + 0.5, fcoords);" SHNL
                                     "ivec2 icoords = ivec2(fcoords * vec2(ibounds_noscaled));" SHNL
                                     "vec3  result = vec3(0.0,0.0,0.0);" SHNL;
   memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
@@ -246,7 +246,7 @@ void FshMainGenerator::goto_func_end(const DPostmask &fsp)
       m_offset += msprintf(&m_to[m_offset],  "loc_f4_sets = ovl_exsettings%D;" SHNL
                                             "loc_i2_pos = ivec2(0,0);" SHNL
                                             "if (step(1.0, loc_f4_sets[0]) != 1){" SHNL
-                                              "ovTrace = overlayTrace%d(normCoord, loc_f4_sets[1], ovl_position%d, loc_i2_pos);" SHNL
+                                              "ovTrace = overlayTrace%d(ocoords, loc_f4_sets[1], ovl_position%d, loc_i2_pos);" SHNL
                                               "if (sign(ovTrace[3]) != 0.0 && step(ovMix, loc_f4_sets[2]) == 1.0) result = mix(result, overlayColor%d(ovTrace, result), 1.0 - loc_f4_sets[0]);" SHNL 
                                             "}" SHNL
                                             "ivec2 ovl_position%d = loc_i2_pos;" SHNL,
@@ -257,7 +257,7 @@ void FshMainGenerator::goto_func_end(const DPostmask &fsp)
       m_offset += msprintf(&m_to[m_offset],  "loc_f4_sets = ovl_exsettings%D;" SHNL
                                             "loc_i2_pos = ivec2(0,0);" SHNL
                                             "if (step(1.0, loc_f4_sets[0]) != 1){" SHNL
-                                              "ovTrace = overlayTrace%d(normCoord, loc_f4_sets[1], ivec2(0,0), loc_i2_pos);" SHNL
+                                              "ovTrace = overlayTrace%d(ocoords, loc_f4_sets[1], ivec2(0,0), loc_i2_pos);" SHNL
                                               "if (sign(ovTrace[3]) != 0.0 && step(ovMix, loc_f4_sets[2]) == 1.0) result = mix(result, overlayColor%d(ovTrace, result), 1.0 - loc_f4_sets[0]);" SHNL
                                             "}" SHNL
                                             "ivec2 ovl_position%d = loc_i2_pos;" SHNL,

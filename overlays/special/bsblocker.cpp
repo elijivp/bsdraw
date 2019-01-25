@@ -21,7 +21,7 @@ void    OBlocker::setUnlocked(bool unlocked)
 int OBlocker::fshTrace(int overlay, char *to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.param_alias("blockstate");
     ocg.push( "result = vec3(0.8, 0.8, 0.8);" );

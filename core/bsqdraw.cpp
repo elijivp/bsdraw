@@ -51,6 +51,17 @@ inline const char*  fragment_rotateBTLR(){  return  "vec2 rotate(vec2 coords){ r
 inline const char*  fragment_rotateTBRL(){  return  "vec2 rotate(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords.yx; }"; }
 inline const char*  fragment_rotateBTRL(){  return  "vec2 rotate(vec2 coords){ coords.x = 1.0-coords.x; return coords.yx; }"; }
 
+inline float*   ccode_swap(float* arr){ float t=arr[0]; arr[0] = arr[1]; arr[1] = t; return arr;   }
+inline float*  ccode_rotateLRBT(float *arr){  return  arr; }
+inline float*  ccode_rotateRLBT(float *arr){  arr[0] = 1.0f - arr[0]; return arr; }
+inline float*  ccode_rotateLRTB(float *arr){  arr[1] = 1.0f - arr[1]; return arr; }
+inline float*  ccode_rotateRLTB(float *arr){  arr[0] = 1.0f - arr[0]; arr[1] = 1.0f - arr[1]; return arr; }
+inline float*  ccode_rotateTBLR(float *arr){  arr[1] = 1.0f - arr[1]; return ccode_swap(arr); }
+inline float*  ccode_rotateBTLR(float *arr){  return ccode_swap(arr); }
+inline float*  ccode_rotateTBRL(float *arr){  arr[0] = 1.0f - arr[0]; arr[1] = 1.0f - arr[1]; return ccode_swap(arr); }
+inline float*  ccode_rotateBTRL(float *arr){  arr[0] = 1.0f - arr[0]; return ccode_swap(arr); }
+
+
 inline const char*  fastpaced_settings(char* tmpbuf, unsigned int ovl)
 {
   /// EQuals: srintf(_tempvd, "ovl_exsettings%d", i + 1);
@@ -612,10 +623,18 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION oreact, unsigned int x, unsigned i
   if (x < m_cttrLeft + dimmWidth*m_scalingWidth && y < m_cttrTop + dimmHeight*m_scalingHeight)
   {
     float dataptr[] = { float(x - m_cttrLeft) / (dimmWidth*m_scalingWidth), 1.0f - float(y - m_cttrTop) / (dimmHeight*m_scalingHeight) };
+//    qDebug()<<"Before: "<<dataptr[0]<<dataptr[1];
+    float* (*pfns[])(float*) = {  ccode_rotateLRBT, ccode_rotateRLBT, ccode_rotateLRTB, ccode_rotateRLTB,
+                                  ccode_rotateTBLR, ccode_rotateBTLR, ccode_rotateTBRL, ccode_rotateBTRL
+                               };
+    float* rslt = (*pfns[m_orient])(dataptr);
+//    float* rslt = dataptr;
+//    qDebug()<<"Aftere: "<<dataptr[0]<<dataptr[1];
+    
     bool doStop = false, doUpdate = false;
     for (int i=int(m_overlaysCount)-1; i>=0; i--)
     {
-      if (m_overlays[i].povl->overlayReaction(oreact, dataptr, &doStop))
+      if (m_overlays[i].povl->overlayReaction(oreact, rslt, &doStop))
       {
         m_overlays[i].upcount++;
         doUpdate = true;
@@ -876,7 +895,7 @@ extern int msprintf(char* to, const char* format, ...);
 
 int DrawCore::OverlayEmpty::fshTrace(int overlay, char* to) const
 {
-  return msprintf(to, "vec4 overlayTrace%d(in vec2 coords, in float density, in ivec2 mastercoords, out ivec2 selfposition){ return vec4(0.0,0.0,0.0,0.0); }\n", overlay);
+  return msprintf(to, "vec4 overlayTrace%d(in vec4 coords, in float density, in ivec2 mastercoords, out ivec2 selfposition){ return vec4(0.0,0.0,0.0,0.0); }\n", overlay);
 }
 
 int DrawCore::OverlayEmpty::fshColor(int overlay, char* to) const

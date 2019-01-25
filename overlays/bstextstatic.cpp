@@ -39,7 +39,7 @@ OSimpleImage::~OSimpleImage()
 int OSimpleImage::fshTrace(int overlay, char *to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.var_const_fixed("rect_size", (int)dmti.w, (int)dmti.h);

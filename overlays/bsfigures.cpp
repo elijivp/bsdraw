@@ -16,7 +16,7 @@ OFPoint::OFPoint(OVLCoordsStatic* pcoords, float offset_x, float offset_y, const
 int   OFPoint::fshTrace(int overlay, char* to) const
 {
   FshTraceGenerator ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.var_const_fixed("pointcolor", r, g, b);
@@ -46,7 +46,7 @@ OFCircle::OFCircle(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, 
 int   OFCircle::fshTrace(int overlay, char* to) const
 {
   FshTraceGenerator ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.var_const_static(DT_1F, "b = 1.0");
@@ -87,7 +87,7 @@ OFSquare::OFSquare(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, 
 int OFSquare::fshTrace(int overlay, char *to) const
 {
   FshTraceGenerator ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.trace_square_lb_begin("idimms1");
@@ -127,7 +127,7 @@ OFSquareCC::OFSquareCC(float fillopacity, OVLCoordsStatic* pcoords, float offset
 int OFSquareCC::fshTrace(int overlay, char *to) const
 {
   FshTraceGenerator ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.trace_square_cc_begin("idimms1");
@@ -167,7 +167,7 @@ OFTriangle::OFTriangle(ORIENT orientation, float fillopacity, OVLCoordsStatic *p
 int OFTriangle::fshTrace(int overlay, char *to) const
 {
   FshTraceGenerator ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.trace_triangle_cc_begin("idimms1");
@@ -225,7 +225,7 @@ OFLine::OFLine(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float e
 int   OFLine::fshTrace(int overlay, char* to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr, FshTraceGenerator::ROT_FOLLOW);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   {
     ocg.goto_normed();
     if (m_lt == -1)
@@ -289,7 +289,7 @@ OFArrow::OFArrow(OVLCoordsStatic* pcoords, float offset_arrow_x, float offset_ar
 int   OFArrow::fshTrace(int overlay, char* to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr, FshTraceGenerator::ROT_FOLLOW);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   
   ocg.var_fixed("endpoint", m_param1, m_param2);
   int arrow_pixing = ocg.add_movecs_pixing(CR_RELATIVE_NOSCALED);
@@ -343,7 +343,7 @@ OFCross::OFCross(OVLCoordsStatic *pcoords, float offset_x, float offset_y, COORD
 int OFCross::fshTrace(int overlay, char *to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.var_fixed("cs_gap", m_gap);
@@ -377,7 +377,7 @@ OFFactor::OFFactor(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COO
 int   OFFactor::fshTrace(int overlay, char* to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.var_fixed("gap", m_gap, m_gap);

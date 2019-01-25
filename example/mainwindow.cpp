@@ -397,8 +397,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     MAXLINES = 200;
     PORTIONS = 1;
     syncscaling = 0;
-    PRECREATE(5, 1);
-    ORIENTATION orients[] = { OR_LRBT, OR_TBLR, OR_BTRL, OR_BTLR, OR_TBRL };
+    PRECREATE(6, 1);
+    ORIENTATION orients[] = { OR_LRBT, OR_TBLR, OR_BTRL, OR_BTLR, OR_TBRL, OR_RLTB };
     for (unsigned int i=0; i<drawscount; i++)
     {
       draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(graphopts_t::GT_LINTERPSMOOTH, 0.0, 0x00111111), DrawGraph::DC_OFF, 1.0, -0.5);
@@ -1204,9 +1204,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
             BSADD(draws[0])
             BS_START_FRAME_H_HMAX_VMAX(BS_FRAME_PANEL, 2)
-              for (unsigned int i=1; i<drawscount; i++)
+              for (unsigned int i=1; i<drawscount-1; i++)
                 BSADD(draws[i])
             BS_STOP
+            BSADD(draws[drawscount-1])
           BS_STOP;
         }
         else

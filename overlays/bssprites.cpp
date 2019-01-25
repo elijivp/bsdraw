@@ -37,7 +37,7 @@ void OSprites::update()
 int OSprites::fshTrace(int overlay, char *to) const
 { 
   FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_RANDOM);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.var_const_fixed("spritescount", (int)m_count);
     ocg.var_fixed("base_size", (int)(m_dmti.w*m_sm), (int)(m_dmti.h*m_sm));
@@ -63,7 +63,7 @@ int OSprites::fshTrace(int overlay, char *to) const
                 
                 "ivec2 inormed = icoords - ivec2(_insvar.xy);"
                 "_densvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1.0-step(rect_size.x, float(inormed.x)))*(1.0-step(rect_size.y, float(inormed.y)));"
-                "vec2  tcoords = rotate(inormed/vec2(rect_size.x-1, rect_size.y-1));");
+                "vec2  tcoords = inormed/vec2(rect_size.x-1, rect_size.y-1);");
       
       ocg.push("vec4 pixel = texture(");  ocg.param_get(); ocg.push(", vec2(tcoords.x, 1.0 - tcoords.y));");
       ocg.push("result = mix(result, pixel.rgb, _densvar*pixel.a);"

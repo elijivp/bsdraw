@@ -2,12 +2,12 @@
 #include "../core/sheigen/bsshgentrace.h"
 
 OActivePoint::OActivePoint(COORDINATION cn, float center_x, float center_y): IOverlaySimple(),
-  OVLCoordsDynamicClick(), OVLDimmsOff(){}
+  OVLCoordsDynamic(cn, center_x, center_y), OVLDimmsOff(){}
 
 int   OActivePoint::fshTrace(int overlay, char* to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr, FshTraceGenerator::ROT_HORZ);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   ocg.goto_normed();
   ocg.goto_func_end(false);
   return ocg.written();
@@ -57,7 +57,7 @@ void OActiveRandom::update()
 int   OActiveRandom::fshTrace(int overlay, char* to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr, FshTraceGenerator::ROT_FOLLOW);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   ocg.goto_normed();
   ocg.param_alias("myseed");
   ocg.push("float r1 = fract(sin(dot(myseed.xy, vec2(12.9898, 78.233)))*43758.5453123);");

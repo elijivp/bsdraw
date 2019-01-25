@@ -13,7 +13,7 @@ OPTFill::OPTFill(const linestyle_t& kls): IOverlaySimple(),
 int OPTFill::fshTrace(int overlay, char *to) const
 { 
   FshTraceGenerator  ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, FshTraceGenerator::ROT_FOLLOW);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   ocg.goto_normed();
   ocg.var_fixed("clr", m_fill.r, m_fill.g, m_fill.b);
   ocg.push("result = clr; mixwell = step(distance(vec2(inormed), vec2(0.0,0.0)), 1.0);");

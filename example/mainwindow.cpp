@@ -408,27 +408,24 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   }
   else if (MW_TEST == VERTICAL)
   {    
-    SAMPLES = 400;
+    SAMPLES = 600;
     MAXLINES = 200;
-    PORTIONS = 1;
-    syncscaling = 0;
-    PRECREATE(3, 1);
+    PORTIONS = 2;
+    PRECREATE(4, 1);
+    draws[0] = new DrawGraph(SAMPLES/8, PORTIONS, graphopts_t(graphopts_t::GT_LINDOWN, 0.0f), DrawGraph::DC_OFF, 1.0, -0.5);
+    draws[0]->setScalingLimitsH(8,8);
+    draws[0]->setPostMask(DPostmask(DPostmask::PM_CONTOUR, DPostmask::PO_SIGNAL, 0, 0.3f,0.3f,0.3f));
+    
+    draws[1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(graphopts_t::GT_LINTERP, 0.0f), DrawGraph::DC_OFF, 1.0, -0.5);
+    
+    draws[2] = new DrawRecorder(SAMPLES, MAXLINES, 1000, PORTIONS);
+    
+    draws[3] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(graphopts_t::GT_LINDOWN_CROSSMIN, 0.0f), DrawGraph::DC_OFF, 1.0, -1.0);
+    
     for (unsigned int i=0; i<drawscount; i++)
     {
-//      if (i < 2)
-        draws[i] = new DrawGraph(i == 2? SAMPLES/8 : SAMPLES, PORTIONS, graphopts_t(graphopts_t::GT_LINTERPSMOOTH, 0.0, 0x00111111), DrawGraph::DC_OFF, 1.0, -0.5);
-        if (i == 2)
-          draws[i]->setScalingLimitsH(8,8);
-//      else
-//        draws[i] = new DrawRecorder(SAMPLES, MAXLINES, 1000, PORTIONS);
-//      if (i != 0)
-//        draws[i]->setRotated(true);
-        if (i != 0)
-          draws[i]->setOrientation(OR_TBLR);
-//      draws[i]->setScalingLimitsSynced(1,1);
-//      draws[i]->setScalingLimitsH(1,1);
-//      draws[i]->setScalingLimitsV(1,1);
-//      draws[i]->setFixedSize(QSize(SAMPLES, MAXLINES));
+      draws[i]->setMinimumWidth(MAXLINES);
+      draws[i]->setOrientation(i != 3? OR_TBLR : OR_TBRL);
     }
     sigtype = ST_MOVE;
   }
@@ -1210,6 +1207,13 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             BSADD(draws[drawscount-1])
           BS_STOP;
         }
+        else if (MW_TEST == VERTICAL)
+        {
+          BS_START_FRAME_H_HMAX_VMAX(BS_FRAME_PANEL, 2)
+            for (unsigned int i=0; i<drawscount; i++)
+              BSADD(draws[i])
+          BS_STOP;
+        }
         else
         {
           QScrollBar* qsb = MW_TEST == DRAW_GRAPHS_MOVE? new QScrollBar(Qt::Vertical) : nullptr;
@@ -1401,14 +1405,14 @@ void MainWindow::generateData()
       {
         #pragma omp for
         for (int i=0; i<DSAMPLES; i++)
-          testbuf[i] = (qFastSin((float(i)/DSAMPLES + fmov01samples)*2*M_PI) + 1)/2.0f;
+          testbuf[i] = (qFastSin((float(i)/DSAMPLES - fmov01samples)*2*M_PI) + 1)/2.0f;
         break;
       }
       case ST_MANYSIN:
       {
         #pragma omp for
         for (int i=0; i<DSAMPLES; i++)
-          testbuf[i] = (qFastSin((float(i*10)/DSAMPLES + fmov01samples)*2*M_PI) + 1)/2.0f;
+          testbuf[i] = (qFastSin((float(i*10)/DSAMPLES - fmov01samples)*2*M_PI) + 1)/2.0f;
         break;
       }
       case ST_RAND:
@@ -1557,7 +1561,7 @@ void MainWindow::generateData()
         int sp = spi[sigtype - (int)ST_10];
         #pragma omp for
         for (int i=0; i<DSAMPLES; i++)
-          testbuf[i] = ((g_movX2 + portion*5 + i)%sp) / float(sp - 1);
+          testbuf[DSAMPLES - i - 1] = ((g_movX2 + portion*5 + i)%sp) / float(sp - 1);
   //        testbuf[i] = (int(i + fmov01samples*DSAMPLES)%sp) / float(sp - 1);
         break;
       }

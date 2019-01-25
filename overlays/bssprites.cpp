@@ -53,15 +53,15 @@ int OSprites::fshTrace(int overlay, char *to) const
       /// randomer[0] = size => velocity => ampliture
       /// randomer[1] & randomer[2] = just start x,y position
       ocg.push( "randomer = texture(");  ocg.param_mem(texrandomer); ocg.push(", vec2(float(i)/float(spritescount), 0.0)).rgba;");
-      ocg.push( "ivec2 rect_size = ivec2(base_size*(0.3+0.7*randomer[0]));"
-                "_insvar.xy = vec2(cos(counter*(0.3 + 1.0/(0.3+randomer[0]))/(2.0*3.1415))*5*(0.6 - 0.5*(1.0 - randomer[0]))*(-1.0 + 2.0*mod(i, 2)), 0.5-counter*(0.5 + 3*randomer[0]));"
-                "_insvar.x = _insvar.x + randomer[1]*ibounds.x;"
-                "_insvar.y = mod(_insvar.y + (1.0-randomer[2])*ibounds.y, ibounds.y);"
+      ocg.push( "ivec2 rect_size = ivec2(base_size*(randomer[0]*0.7+0.3));"
+                "_insvar.xy = vec2(cos(counter*(0.3 + 1.0/(0.3+randomer[0]))/(2.0*3.1415))*5*((randomer[0] - 1.0)*0.5 + 0.6)*(2.0*mod(i, 2) - 1.0), 0.5-counter*(randomer[0]*3.0 + 0.5));"
+                "_insvar.x = randomer[1]*ibounds.x + _insvar.x;"
+                "_insvar.y = mod((1.0-randomer[2])*ibounds.y + _insvar.y, ibounds.y);"
                 
                 /// (1.0-step(moveto[3], 1.0))*
-                "_insvar.x = _insvar.x + (1.0-step(moveto[3], 0.0))*(counter - moveto[2])*(distance(vec2(moveto.x, 1.0 - moveto.y), vec2(_insvar.xy/ibounds)))*(1 - 2*step(moveto.x, _insvar.x/ibounds.x))*(1.0+1.5*randomer[0]);"
+                "_insvar.x = _insvar.x + (1.0-step(moveto[3], 0.0))*(counter - moveto[2])*(distance(vec2(moveto.x, 1.0 - moveto.y), vec2(_insvar.xy/ibounds)))*(1.0 - 2.0*step(moveto.x, _insvar.x/ibounds.x))*(randomer[0]*1.5+1.0);"
                 
-                "ivec2 inormed = icoords - ivec2(_insvar.xy);"
+                "ivec2 inormed = icoords - ivec2(_insvar.x, ibounds.y - _insvar.y);"
                 "_densvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1.0-step(rect_size.x, float(inormed.x)))*(1.0-step(rect_size.y, float(inormed.y)));"
                 "vec2  tcoords = inormed/vec2(rect_size.x-1, rect_size.y-1);");
       

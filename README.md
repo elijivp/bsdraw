@@ -33,8 +33,8 @@ It is difficult to describe all the characteristics, so:
 
 Left to right, up to down: 
 * DrawIntensity, DrawDomain, DrawRecorder, 
-* DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_LINDOWNCROSS),
-* DrawGraph(GT_DOTS, dotsize=1, weight=0.5), DrawGraph(GT_LINTERP, dotsize=1, weight=0.5), DrawGraph(GT_LINDOWNCROSS, dotsize=1, weight=0.5)
+* DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_LINDOWN_CROSSMAX),
+* DrawGraph(GT_DOTS, dotsize=1, weight=0.5), DrawGraph(GT_LINTERP, dotsize=1, weight=0.5), DrawGraph(GT_LINDOWN_CROSSMAX, dotsize=1, weight=0.5)
 
 ### Scaling
 That technology is designed to solve 2 problems: resize and posteffects
@@ -43,8 +43,8 @@ That technology is designed to solve 2 problems: resize and posteffects
 
 Left to right, up to down (SCALING=4, Postmask(PM_LINELEFTBOTTOM)): 
 * DrawIntensity, DrawDomain, DrawRecorder, 
-* DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_LINDOWNCROSS),
-* DrawGraph(GT_DOTS, Postmask(PM_PSEUDOCIRCLE)), DrawGraph(GT_LINTERP, Postmask(PM_LINELEFT)), DrawGraph(GT_LINDOWNCROSS, Postmask(PM_LINELEFT))
+* DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_LINDOWN_CROSSMAX),
+* DrawGraph(GT_DOTS, Postmask(PM_PSEUDOCIRCLE)), DrawGraph(GT_LINTERP, Postmask(PM_LINELEFT)), DrawGraph(GT_LINDOWN_CROSSMAX, Postmask(PM_LINELEFT))
 
 ### Overlays
 Fragment shaders compiled like additional functions and mixed with drawed data.
@@ -62,6 +62,18 @@ for (unsigned int i=0; i<drawscount; i++)
 ```
 
 ![overlays](/demoimages/overlays.png)
+
+### Vertical draws released
+```
+ORIENTATION orients[] = { OR_LRBT, OR_TBLR, OR_BTRL, OR_BTLR, OR_TBRL, OR_RLTB };
+for (unsigned int i=0; i<drawscount; i++)
+{
+  draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(graphopts_t::GT_LINTERPSMOOTH, 0.0, 0x00111111), DrawGraph::DC_OFF, 1.0, -0.5);
+  draws[i]->setOrientation(orients[i]);
+}
+```
+
+![vertical](/demoimages/vertical.png)
 
 #### INCLUDES (without overlays):
 1. Required core files:

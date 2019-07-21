@@ -12,12 +12,14 @@ protected:
   float   m_seed[2];
 };
 
-class OActiveCursor: public OActivePoint
+class OActiveCursor: public IOverlaySimple, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
-  OActiveCursor();
+  OActiveCursor(bool linkToScaledCenter=false);
 protected:
+  virtual int   fshTrace(int overlay, char* to) const;
   virtual bool  overlayReaction(OVL_REACTION, const void *dataptr, bool*);
+  bool  m_linked;
 };
 
 //////////////////////////////////

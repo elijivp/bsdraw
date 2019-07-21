@@ -93,3 +93,16 @@ void QPaletteBox::setInverted(bool inverted)
     emit  currentIndexChanged(currentIndex());
   }
 }
+
+//////////////////////////////////////////////////////////////////////
+
+QPaletteBoxSg::QPaletteBoxSg(QWidget* parent): QPaletteBox (parent)
+{
+  QObject::connect(this, SIGNAL(currentIndexChanged(int)), this, SLOT(_redirChanged(int)));
+}
+
+void QPaletteBoxSg::_redirChanged(int idx)
+{
+  Q_D(QPaletteBox);
+  emit currentChanged(d->bInverted? ppalettes_adv_inv[idx] : ppalettes_adv[idx]);
+}

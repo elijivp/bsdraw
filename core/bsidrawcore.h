@@ -3,16 +3,29 @@
 
 /// Technical header
 
+inline int bscolor3fToint(float r, float g, float b)
+{
+  return (int(b*255)<<16) + (int(g*255)<<8) + int(r*255);
+}
+
+inline void bsintTocolor3f(int clr, float rgb[])
+{
+  int b = (clr >> 16) & 0xFF, g = (clr >> 8) & 0xFF, r = (clr) & 0xFF;
+  rgb[0] = b/255.0f;    rgb[1] = g/255.0f;    rgb[2] = r/255.0f;
+}
+
 struct  DPostmask
 {
-  enum DPMASK  {  PM_NONE, PM_LINELEFT, PM_LINERIGHT, PM_LINEBOTTOM, PM_LINETOP, PM_LINELEFTBOTTOM, PM_LINERIGHTBOTTOM, PM_CONTOUR, PM_PSEUDOCIRCLE  };
-  DPMASK      postmask;
-  enum DPOVER  {  PO_OFF=0, PO_SIGNAL=1, PO_EMPTY=2, PO_ALL=3 };
-  DPOVER      over;
-  int         weight;
-  float       r, g, b;
-  DPostmask(DPMASK mask, DPOVER over_, int weight_, float r_, float g_, float b_): 
-    postmask(mask), over(over_), weight(weight_), r(r_), g(g_), b(b_) {}
+  enum DPMASK   {  PM_NONE, PM_LINELEFT, PM_LINERIGHT, PM_LINEBOTTOM, PM_LINETOP, PM_LINELEFTBOTTOM, PM_LINERIGHTBOTTOM, PM_CONTOUR, PM_PSEUDOCIRCLE  };
+  DPMASK        postmask;
+  enum DPOVER   {  PO_OFF=0, PO_SIGNAL=1, PO_EMPTY=2, PO_ALL=3 };
+  DPOVER        over;
+  int           weight;
+  int           color;
+  DPostmask(DPMASK mask, DPOVER over_, int weight_, float r_, float g_, float b_):
+  postmask(mask), over(over_), weight(weight_) { color = bscolor3fToint(r_, g_, b_); }
+  DPostmask(DPMASK mask, DPOVER over_, int weight_, int color_):
+  postmask(mask), over(over_), weight(weight_), color(color_){}
 };
 
 enum  DTYPE { /// Trace/simple shader datatypes
@@ -254,6 +267,7 @@ private:
 public:
   void  setOpacity(float opacity){ m_opacity = opacity; updateParameter(false); } /// 0 for invisible
   float getOpacity() const { return m_opacity; }
+  bool  opaque() const {  return m_opacity >= 1.0f; }
   void  setDensity(float density){ m_density = density; updateParameter(false); }
   float getDensity() const { return m_density; }
   void  setSlice(float value) { m_slice = value;  updateParameter(false); }

@@ -18,16 +18,30 @@ int   OActivePoint::fshTrace(int overlay, char* to) const
 
 /********************************************************************************************************************************************/
 /********************************************************************************************************************************************/
+OActiveCursor::OActiveCursor(bool linkToScaledCenter): IOverlaySimple(),
+  OVLCoordsDynamic(CR_RELATIVE, 0.5, 0.5), OVLDimmsOff(), m_linked(linkToScaledCenter) {}
 
-OActiveCursor::OActiveCursor(): OActivePoint(CR_RELATIVE, 0.5f, 0.5f)
+int   OActiveCursor::fshTrace(int overlay, char* to) const
 {
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
+//  if (m_linked)
+//    ocg.push("ioffset = ivec2(ioffset/iscaling)*iscaling + iscaling/2;");
+  if (m_linked)
+    ocg.push(
+              "ioffset = clamp(ioffset, ivec2(0,0), ibounds-ivec2(1,1));"     /// autoclamp
+              "ioffset = ivec2(ioffset/iscaling)*iscaling + iscaling/2;"
+             );
+  ocg.goto_normed();
+  ocg.goto_func_end(false);
+  return ocg.written();
 }
 
 bool OActiveCursor::overlayReaction(OVL_REACTION oreact, const void* dataptr, bool*)
 {
   if (oreact == OR_LMPRESS || oreact == OR_LMMOVE)
   {
-    setCoordinates(((float*)dataptr)[0], ((float*)dataptr)[1]);
+    setCoordinates(((const float*)dataptr)[0], ((const float*)dataptr)[1]);
     return true;
   }
   return false;

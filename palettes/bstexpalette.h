@@ -9,6 +9,8 @@ class PaletteSTD: public IPalette
 protected:
   unsigned int palbuf[maxCount];
 public:
+  enum  { size = maxCount };
+public:
   virtual void    getPalette(const void** clrarr, unsigned int* count, unsigned int* format) const
   {
     *clrarr = (const void*)&palbuf;
@@ -16,17 +18,19 @@ public:
     *format = FMT_UNSIGNED_BYTE;
   }
   virtual unsigned int  firstColor() const {  return palbuf[0];  }
+  unsigned int    operator[](int i) const {  return palbuf[i]; }
+  unsigned int&   operator[](int i) {  return palbuf[i]; }
+  unsigned int    count() const {  return size; }
 public:
-  enum  { size = maxCount };
   PaletteSTD(){}
   template <int otherMaxCount>
   PaletteSTD(const PaletteSTD<otherMaxCount>& cpy){  int minimax = maxCount > otherMaxCount? otherMaxCount : maxCount; for (int i=0; i<minimax; i++)  palbuf[i] = cpy.palbuf[i]; }
   template <int otherMaxCount>
-  PaletteSTD(const PaletteSTD<otherMaxCount>& cpy, unsigned int otherfirstcolor): PaletteSTD(cpy){  palbuf[0] = otherfirstcolor;  }
-//  PaletteSTD(const PaletteSTD<maxCount>& cpy, unsigned int firstcolor){  for (int i=1; i<maxCount; i++)  palbuf[i] = cpy.palbuf[i]; palbuf[0] = firstcolor; }
-//  PaletteSTD(const PaletteSTD<maxCount>& cpy){  for (int i=0; i<maxCount; i++)  palbuf[i] = cpy.palbuf[i]; }
-//  PaletteSTD(const PaletteSTD<maxCount>& cpy, unsigned int firstcolor){  for (int i=1; i<maxCount; i++)  palbuf[i] = cpy.palbuf[i]; palbuf[0] = firstcolor; }
+  PaletteSTD(const PaletteSTD<otherMaxCount>& cpy, unsigned int otherfirstcolor)
+  {  int minimax = maxCount > otherMaxCount? otherMaxCount : maxCount; for (int i=1; i<minimax; i++)  palbuf[i] = cpy.palbuf[i];  palbuf[0] = otherfirstcolor;  }
 };
+
+
 
 template<int maxCount>
 class PaletteConstFWD: public PaletteSTD<maxCount>

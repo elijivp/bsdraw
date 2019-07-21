@@ -17,6 +17,9 @@ OGridRegular::OGridRegular(RISK gr, COORDINATION cn, float startchannel, float s
 {
 }
 
+//#define OGRID_SYMMETRY "+0.49f"
+//#define OGRID_SYMMETRY ""
+
 int OGridRegular::fshTrace(int overlay, char *to) const
 {
   if (m_stepsize == 0)  return -1;    
@@ -59,7 +62,7 @@ int OGridRegular::fshTrace(int overlay, char *to) const
       if (m_babsheight)
       {
         int sh = (int)(m_specheight/2) + 1;
-        ocg.var_fixed("grid_height", sh == 0? 1 : sh/* + (1 - (sh % 2))*/);
+        ocg.var_fixed("grid_height", sh == 0? 1.0f : float(sh));
         pixing_height = ocg.add_movecs_pixing(CR_ABSOLUTE_NOSCALED);
       }
       else
@@ -74,7 +77,7 @@ int OGridRegular::fshTrace(int overlay, char *to) const
       else {                          ocg.push_cs_rel_x("grid_step", relstep); ocg.movecs_pix_y("grid_height", pixing_height); ocg.var_static(DT_1F, "crossed = inormed.x/float(ibounds.x-1)"); }
       
       ocg.push( "int optiid = int(floor(abs(crossed)/grid_step + 0.49));"
-                "vec2 offset = vec2(grid_step * optiid, -(grid_step * optiid));" );
+                "vec2 offset = vec2((grid_step * optiid), -(grid_step * optiid));" );
       
       if (m_gridtype == EGO_RISK_H) { ocg.pop_cs_rel_y("offset"); ocg.trace_2linehorz_c("grid_height", nullptr, "offset[0]", "(1.0 - step(float(grid_limit), float(optiid)))"); ocg.trace_2linehorz_c("grid_height", nullptr, "offset[1]", "(1.0 - step(float(grid_limit), float(optiid)))"); }
       else                          { ocg.pop_cs_rel_x("offset"); ocg.trace_2linevert_c("grid_height", nullptr, "offset[0]", "(1.0 - step(float(grid_limit), float(optiid)))"); ocg.trace_2linevert_c("grid_height", nullptr, "offset[1]", "(1.0 - step(float(grid_limit), float(optiid)))"); }

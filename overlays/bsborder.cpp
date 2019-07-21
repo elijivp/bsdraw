@@ -4,7 +4,7 @@
 bool  AbstractBorder::overlayReaction(OVL_REACTION, const void *dataptr, bool* doStop)
 {
   if (m_banclicks)
-    *doStop = clickBanned(((float*)dataptr)[0], ((float*)dataptr)[1]);
+    *doStop = clickBanned(((const float*)dataptr)[0], ((const float*)dataptr)[1]);
   return m_banclicks;
 }
 

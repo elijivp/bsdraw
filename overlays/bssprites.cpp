@@ -53,12 +53,11 @@ int OSprites::fshTrace(int overlay, char *to) const
       /// randomer[0] = size => velocity => ampliture
       /// randomer[1] & randomer[2] = just start x,y position
       ocg.push( "randomer = texture(");  ocg.param_mem(texrandomer); ocg.push(", vec2(float(i)/float(spritescount), 0.0)).rgba;");
-      ocg.push( "ivec2 rect_size = ivec2(base_size*(randomer[0]*0.7+0.3));"
-                "_insvar.xy = vec2(cos(counter*(0.3 + 1.0/(0.3+randomer[0]))/(2.0*3.1415))*5*((randomer[0] - 1.0)*0.5 + 0.6)*(2.0*mod(i, 2) - 1.0), 0.5-counter*(randomer[0]*3.0 + 0.5));"
+      ocg.push( "ivec2 rect_size = ivec2(base_size*(mix(0.3 + randomer[0]*0.4, 1.0, step(0.99, randomer[0]))));"
+                "_insvar.xy = vec2(cos(counter*(0.3 + 1.0/(0.3+randomer[0]))/(2.0*3.1415))*5*((randomer[0] - 1.0)*0.5 + 0.6)*(2.0*mod(i, 2) - 1.0), counter*(randomer[0]*2.0 + 1.2));"
                 "_insvar.x = randomer[1]*ibounds.x + _insvar.x;"
-                "_insvar.y = mod((1.0-randomer[2])*ibounds.y + _insvar.y, ibounds.y);"
+                "_insvar.y = mod((1.0-randomer[2])*ibounds.y - _insvar.y, ibounds.y + rect_size.y);"
                 
-                /// (1.0-step(moveto[3], 1.0))*
                 "_insvar.x = _insvar.x + (1.0-step(moveto[3], 0.0))*(counter - moveto[2])*(distance(vec2(moveto.x, 1.0 - moveto.y), vec2(_insvar.xy/ibounds)))*(1.0 - 2.0*step(moveto.x, _insvar.x/ibounds.x))*(randomer[0]*1.5+1.0);"
                 
                 "ivec2 inormed = icoords - ivec2(_insvar.x, ibounds.y - _insvar.y);"
@@ -79,8 +78,8 @@ bool OSprites::overlayReaction(OVL_REACTION oreact, const void* dataptr, bool*)
 {
   if (oreact == OR_LMPRESS)
   {
-    m_click[0] = ((float*)dataptr)[0];
-    m_click[1] = ((float*)dataptr)[1];
+    m_click[0] = ((const float*)dataptr)[0];
+    m_click[1] = ((const float*)dataptr)[1];
     m_click[2] = float(m_counter);
     m_click[3] = 1.0f;
     return true;

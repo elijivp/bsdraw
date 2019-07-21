@@ -206,10 +206,17 @@ void FshMainGenerator::goto_func_begin(const DPostmask& fsp)
                                     "vec3  result = vec3(0.0,0.0,0.0);" SHNL;
   memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
   
+  float rgb[3];
+  bsintTocolor3f(fsp.color, rgb);
+  
   m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = vec3(%F,%F,%F);" SHNL
                                         "vec4   ppb_sfp   = vec4(0.0, %F, %F, %F);" SHNL    /// ppban, ppoutsignal, 
-                                        "ivec4  ppb_rect  = ivec4(int(mod(floor(fcoords.x*float(ibounds.x) + 0.49), float(iscaling.x))),\n\tint(mod(floor(fcoords.y*float(ibounds.y) + 0.49), float(iscaling.y))),iscaling.x-1, iscaling.y-1);" SHNL, 
-                                        fsp.r, fsp.g, fsp.b,
+//                                        "ivec4  ppb_rect  = ivec4(int(mod(floor(fcoords.x*float(ibounds.x) + 0.49), float(iscaling.x))),\n\tint(mod(floor(fcoords.y*float(ibounds.y) + 0.49), float(iscaling.y))),iscaling.x-1, iscaling.y-1);" SHNL, 
+                                        "ivec4  ppb_rect  = ivec4("
+                                           "int(mod(fcoords.x*(ibounds.x), float(iscaling.x))),\n\t"
+                                           "int(mod(fcoords.y*(ibounds.y), float(iscaling.y))),"
+                                           "iscaling.x-1, iscaling.y-1);" SHNL, 
+                                        rgb[2], rgb[1], rgb[0],
                                         fsp.over & 1? 1.0f : 0.0f, fsp.over & 2? 1.0f : 0.0f, (float)fsp.weight );
 
   
@@ -277,6 +284,12 @@ void FshMainGenerator::push(const char *text)
   while (*text != '\0')
     m_to[m_offset++] = *text++;
 }
+
+//inline void push_const_podifier(char* strstart, int* offset)
+//{
+//  static const char fsh_const_modifier[] = "const ";
+//  memcpy(&strstart[*offset], fsh_const_modifier, sizeof(fsh_const_modifier) - 1); *offset += sizeof(fsh_const_modifier) - 1;
+//}
 
 void FshMainGenerator::cfloatvar(const char *name, float value)
 {

@@ -22,7 +22,6 @@ struct  contrast_t
 enum  ORIENTATION       { OR_LRBT=0,  OR_RLBT,  OR_LRTB,  OR_RLTB,    // order for +4 work
                           OR_TBLR,    OR_BTLR,  OR_TBRL,  OR_BTRL 
                         };
-//enum  INTERPOLATION     { IT_NONE, IT_STATIC, IT_DATALINE, IT_NEAREST  };
 
 inline  void  _bsdraw_update_kb(const bounds_t& bnd, const contrast_t& cnt, float* k, float *b)
 {
@@ -44,13 +43,14 @@ protected:
   unsigned int          m_countPortions;      /// count of parallel drawings in one
   
   ORIENTATION           m_orient;
-  bool                  m_interpPal;
   
   float*                m_matrixData;
   float*                m_matrixDataCached;
   unsigned int          m_matrixDimmA;
   unsigned int          m_matrixDimmB;
   bool                  m_matrixSwitchAB;
+  
+  bool                  m_dataTextureInterp;
   
   unsigned int          m_scalingWidth;
   unsigned int          m_scalingHeight;
@@ -130,14 +130,18 @@ protected:
   };
   OverlayEmpty          m_overlaySingleEmpty;
 public:
-  DrawCore(unsigned int portions, ORIENTATION orient): m_portionSize(0), m_countPortions(portions), m_orient(orient), m_interpPal(false), m_matrixData(nullptr), m_matrixDataCached(nullptr), 
-    m_matrixSwitchAB(orient > OR_RLTB), m_scalingWidth(1), m_scalingHeight(1),
-    m_scalingWidthMin(1), m_scalingWidthMax(0), m_scalingHeightMin(1), m_scalingHeightMax(0), m_scalingIsSynced(false),
-    m_ppal(nullptr), m_ppaldiscretise(false), m_clearbypalette(true), 
-    m_dataDomains(nullptr), m_dataDomainsFastFree(true),
-    m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
-    m_postMask(DPostmask::PM_NONE, DPostmask::PO_OFF, 0, 0.0f, 0.0f, 0.0f),
-    m_overlaysCount(0)
+  DrawCore(unsigned int portions, ORIENTATION orient):  m_portionSize(0), m_countPortions(portions), m_orient(orient),
+                                                        m_matrixData(nullptr), m_matrixDataCached(nullptr),
+                                                        m_matrixSwitchAB(orient > OR_RLTB),
+                                                        m_dataTextureInterp(false),
+                                                        m_scalingWidth(1), m_scalingHeight(1),
+                                                        m_scalingWidthMin(1), m_scalingWidthMax(0),
+                                                        m_scalingHeightMin(1), m_scalingHeightMax(0), m_scalingIsSynced(false),
+                                                        m_ppal(nullptr), m_ppaldiscretise(false), m_clearbypalette(true), 
+                                                        m_dataDomains(nullptr), m_dataDomainsFastFree(true),
+                                                        m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
+                                                        m_postMask(DPostmask::PM_NONE, DPostmask::PO_OFF, 0, 0.0f, 0.0f, 0.0f),
+                                                        m_overlaysCount(0)
   {
     _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);
   }
@@ -158,18 +162,20 @@ public:
                     /// Access methods
   unsigned int          countPortions() const { return m_countPortions; }
   
-  void                  setBounds(const bounds_t& d){ m_bounds = d; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA; innerUpdate(RD_BYSETTINGS); }
-  void                  setBoundLow(float LL){ m_bounds.LL = LL; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA; innerUpdate(RD_BYSETTINGS); }
-  void                  setBoundHigh(float HL){ m_bounds.HL = HL; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA; innerUpdate(RD_BYSETTINGS); }
+  void                  setBounds(const bounds_t& d){ m_bounds = d; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
+  void                  setBoundLow(float LL){ m_bounds.LL = LL; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA;    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
+  void                  setBoundHigh(float HL){ m_bounds.HL = HL; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA;   if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
   bounds_t              bounds() const { return m_bounds; }
   
-  void                  setContrast(const contrast_t& c){ m_contrast = c; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA; innerUpdate(RD_BYSETTINGS); }
+  void                  setContrast(const contrast_t& c){ m_contrast = c; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
   contrast_t            contrast()const{ return m_contrast; }
 public:
   void                  setScalingLimitsH(unsigned int scmin, unsigned int scmax=0){  m_scalingWidthMin = scmin < 1? 1 : scmin; m_scalingWidthMax = scmax; m_scalingIsSynced = false; clampScalingManually(); pendResize(false); }
   void                  setScalingLimitsV(unsigned int scmin, unsigned int scmax=0){  m_scalingHeightMin = scmin < 1? 1 : scmin; m_scalingHeightMax = scmax; m_scalingIsSynced = false; clampScalingManually(); pendResize(false); }
   void                  setScalingLimitsSynced(unsigned int scmin, unsigned int scmax=0){  m_scalingIsSynced = true; m_scalingWidthMin = m_scalingHeightMin = scmin < 1? 1 : scmin; m_scalingWidthMax = m_scalingHeightMax = scmax; clampScalingManually(); pendResize(false); }
   
+  unsigned int          scalingH() const { return m_scalingWidth; }
+  unsigned int          scalingV() const { return m_scalingHeight; }
   void                  scalingLimitsH(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingWidthMin;  if (scmax) *scmax = m_scalingWidthMax; }
   void                  scalingLimitsV(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingHeightMin;  if (scmax) *scmax = m_scalingHeightMax; }
 protected:
@@ -193,21 +199,31 @@ private:
     clampScaling();
     if (m_scalingHeight != old_scaling  && (getDataDimmUsage() == DDU_1D))
     {
-      float coeff = float(old_scaling ) / m_scalingHeight; 
+      float coeff = float(old_scaling ) / m_scalingHeight;
       m_matrixDimmB = (unsigned int)(m_matrixDimmB*coeff + 0.5f);
     }
+  }
+public:
+  void  setDataTextureInterpolation(bool interp)
+  {
+    m_dataTextureInterp = interp;
+    m_bitmaskPendingChanges |= PC_DATA;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
 public:
   void  setDataPalette(const IPalette* ppal)
   {
     m_ppal = ppal;
-    m_bitmaskPendingChanges |= PC_PALETTE; innerUpdate(RD_BYSETTINGS);
+    m_bitmaskPendingChanges |= PC_PALETTE;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
   void  setDataPaletteDiscretion(bool d)
   {
     m_ppaldiscretise = d;
-    m_bitmaskPendingChanges |= PC_PALETTE; innerUpdate(RD_BYSETTINGS);
+    m_bitmaskPendingChanges |= PC_PALETTE;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
+  bool            paletteInterpolation()const { return m_dataTextureInterp; }
 public:
   /// 1. Data methods
   virtual void setData(const float* data)
@@ -216,7 +232,8 @@ public:
     for (unsigned int i=0; i<total; i++)
       m_matrixData[i] = data[i]; 
     
-    m_bitmaskPendingChanges |= PC_DATA; innerUpdate(RD_BYDATA);
+    m_bitmaskPendingChanges |= PC_DATA;
+    if (!autoUpdateBanned(RD_BYDATA))   callWidgetUpdate();
   }
   virtual void setData(const float* data, DataDecimator* decim)
   {
@@ -224,7 +241,8 @@ public:
       for (unsigned int i=0; i<m_portionSize; i++)
         m_matrixData[p*m_portionSize + i] = decim->decimate(data, m_portionSize, i, p);
     
-    m_bitmaskPendingChanges |= PC_DATA; innerUpdate(RD_BYDATA);
+    m_bitmaskPendingChanges |= PC_DATA;
+    if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();
   }
   virtual void fillData(float data)
   {
@@ -232,17 +250,19 @@ public:
     for (unsigned int i=0; i<total; i++)
       m_matrixData[i] = data; 
     
-    m_bitmaskPendingChanges |= PC_DATA; innerUpdate(RD_BYDATA);
+    m_bitmaskPendingChanges |= PC_DATA;
+    if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();
   }
   virtual void clearData()
   {
     unsigned int total = m_countPortions * m_portionSize;
     for (unsigned int i=0; i<total; i++)
       m_matrixData[i] = 0;
-    m_bitmaskPendingChanges |= PC_DATA; innerUpdate(RD_BYDATA);
+    m_bitmaskPendingChanges |= PC_DATA;
+    if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();
   }
 protected:
-  void  vmanUpData(){ m_bitmaskPendingChanges |= PC_DATA; innerUpdate(RD_BYDATA);  }
+  void  vmanUpData(){ m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();  }
   enum  DATADIMMUSAGE { DDU_2D, DDU_15D, DDU_1D, DDU_DD };
   virtual DATADIMMUSAGE   getDataDimmUsage() const =0;
 public:
@@ -254,29 +274,44 @@ public:
   { 
     m_orient = orient;
     m_matrixSwitchAB = orient > OR_RLTB;
-    m_bitmaskPendingChanges |= PC_INIT; innerUpdate(RD_BYSETTINGS);
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
-  void  setRotated(bool r)
+  ORIENTATION     orientation() const { return m_orient; }
+  void  setTransponed(bool r)
   {
     m_orient = (ORIENTATION)((int)m_orient + (m_orient > OR_RLTB? ( r? 0 : -4 ) : ( r? 4 : 0 )));
     m_matrixSwitchAB = r;
-    m_bitmaskPendingChanges |= PC_INIT; innerUpdate(RD_BYSETTINGS);
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
-  ORIENTATION     orientation() const { return m_orient; }
+  bool  transponed() const {  return m_matrixSwitchAB;  }
+  void  setMirroredHorz()
+  {
+    const ORIENTATION mh[] = { OR_RLBT, OR_LRBT, OR_RLTB, OR_LRTB, OR_TBRL, OR_BTRL, OR_TBLR, OR_BTLR };
+    setOrientation(mh[m_orient]);
+  }
+  void  setMirroredVert()
+  {
+    const ORIENTATION mv[] = { OR_LRTB, OR_RLTB, OR_LRBT, OR_RLBT, OR_BTLR, OR_TBLR, OR_BTRL, OR_TBRL };
+    setOrientation(mv[m_orient]);
+  }
 public:
   /// 3. Overlays
   int             ovlPushBack(IOverlay* povl, bool owner=true)
   {
     if (m_overlaysCount == OVLLIMIT) return -1;
     _ovlSet(m_overlaysCount, povl, owner, false, 0);
-    m_bitmaskPendingChanges |= PC_INIT; innerUpdate(RD_BYOVL_ADDREMOVE);
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ++m_overlaysCount;
   }
   int             ovlPushBack(IOverlay* povl, int ovlroot, bool owner=true)
   {
     if (m_overlaysCount == OVLLIMIT || ovlroot <= 0 || ovlroot > (int)m_overlaysCount) return -1;
     _ovlSet(m_overlaysCount, povl, owner, true, ovlroot-1);
-    m_bitmaskPendingChanges |= PC_INIT; innerUpdate(RD_BYOVL_ADDREMOVE);
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ++m_overlaysCount;
   }
   int             ovlReplace(int ovl, IOverlay* povl, bool owner, IOverlay** old=nullptr, bool followPrevRoot=true)
@@ -286,7 +321,8 @@ public:
     if (_ovlRemove(ovl, old) == false)
       return -1;
     _ovlSet(ovl, povl, owner, followPrevRoot & (prevroot.type == msstruct_t::MS_DRIVEN), prevroot.details.drivenid);
-    m_bitmaskPendingChanges |= PC_INIT; innerUpdate(RD_BYOVL_ADDREMOVE);
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ovl + 1;
   }
   int             ovlReplace(int ovl, IOverlay* povl, bool owner, IOverlay** old, int ovlroot)
@@ -296,7 +332,8 @@ public:
     if (_ovlRemove(ovl, old) == false)
       return -1;
     _ovlSet(ovl, povl, owner, true, ovlroot);
-    m_bitmaskPendingChanges |= PC_INIT; innerUpdate(RD_BYOVL_ADDREMOVE);
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ovl + 1;
   }
   IOverlay*       ovlRemove(int ovl)
@@ -305,7 +342,8 @@ public:
     IOverlay* result = nullptr;
     if (_ovlRemove(ovl, &result) == false)
       return nullptr;
-    m_bitmaskPendingChanges |= PC_INIT; innerUpdate(RD_BYOVL_ADDREMOVE);
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     if (ovl+1 == (int)m_overlaysCount)
       while (m_overlays[ovl--].povl == &m_overlaySingleEmpty)
         m_overlaysCount--;
@@ -324,14 +362,16 @@ public:
     if (_ovlRemove((int)m_overlaysCount - 1, &result))
     {
       m_overlaysCount--;
-      m_bitmaskPendingChanges |= PC_INIT; innerUpdate(RD_BYOVL_ADDREMOVE);
+      m_bitmaskPendingChanges |= PC_INIT;
+      if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     }
     return result;
   }
   void      ovlClearAll()
   {
     _ovlRemoveAll();
-    m_bitmaskPendingChanges |= PC_INIT; innerUpdate(RD_BYOVL_ADDREMOVE);
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
   }
 private:
   void _ovlSet(int idx, IOverlay* povl, bool owner, bool doRoot, int rootidx)
@@ -369,27 +409,28 @@ private:
     return true;
   }
 public:
-  /// 4. Optimized/Native interpolation or posteffect methods
-  void            setPaletteInterpolation(bool interp)
+  /// 4. Optimized/Native posteffect methods
+  void            setPostMask(const DPostmask& fsp)
   {
-//    bool dataup = (m_interpPal == IT_STATIC || interp == IT_STATIC) && m_interpPal != interp;
-    m_interpPal = interp;
-//    m_bitmaskPendingChanges |= dataup? PC_DATA : PC_PARAMS; innerUpdate(RD_BYSETTINGS);
-    m_bitmaskPendingChanges = PC_DATA; innerUpdate(RD_BYSETTINGS);
+    m_postMask = fsp;
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
-  bool            paletteInterpolation()const { return m_interpPal; }
-public:
-  void            setPostMask(const DPostmask& fsp){ m_postMask = fsp; m_bitmaskPendingChanges |= PC_INIT; innerUpdate(RD_BYSETTINGS); }
   DPostmask    postMask() const { return m_postMask; }
 protected:
   virtual void            overlayUpdate(int ovl, bool internal, bool noupdate, bool recreate)
   {
     m_overlays[ovl].upcount += recreate? 1001 : 1;
-    m_bitmaskPendingChanges |= (internal? PC_INIT : PC_PARAMSOVL); if (internal == true || (!internal && noupdate == false)) innerUpdate(RD_BYOVL_ACTIONS);
+    m_bitmaskPendingChanges |= (internal? PC_INIT : PC_PARAMSOVL);
+    if (internal == true || (!internal && noupdate == false))
+      if (!autoUpdateBanned(RD_BYOVL_ACTIONS))
+        callWidgetUpdate();
   }
   virtual void            innerOverlayRemove(int ovl)
   {
-    m_overlays[ovl]._reinit(&m_overlaySingleEmpty, 0); m_bitmaskPendingChanges |= PC_INIT;  innerUpdate(RD_BYOVL_ADDREMOVE);
+    m_overlays[ovl]._reinit(&m_overlaySingleEmpty, 0);
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
   }
   void                    _colorCvt(unsigned int clr)
   {
@@ -402,15 +443,15 @@ public:
   {
     m_clearbypalette = false;
     _colorCvt(clearcolor);
-    innerUpdate(RD_BYSETTINGS);
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
   void            setClearByPalette()
   {
     m_clearbypalette = true;
-    innerUpdate(RD_BYSETTINGS);
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
 protected:
-  virtual void    innerUpdate(REDRAWBY)=0;
+  virtual void    callWidgetUpdate()=0;
   virtual void    innerResize()=0;
 };
 

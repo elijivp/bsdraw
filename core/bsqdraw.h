@@ -72,14 +72,23 @@ public:
 public slots:
 //    void update();    /// inherited from QWidget!
 //    void repaint();   /// inherited from QWidget!
+  void    slot_setScalingH(int);
+  void    slot_setScalingV(int);
   void    slot_setBoundLow(float);
   void    slot_setBoundHigh(float);
   void    slot_setContrast(float k, float b);
+  void    slot_setContrastK(float);
+  void    slot_setContrastB(float);
+  void    slot_setDataTextureInterpolation(bool);
   void    slot_setDataPalette(const IPalette*);
+  void    slot_setDataPaletteDiscretion(bool);
   void    slot_setData(const float*);
   void    slot_setData(QVector<float>);
   void    slot_fillData(float);
   void    slot_clearData();
+  
+  void    slot_setMirroredHorz();
+  void    slot_setMirroredVert();
   
   void    slot_enableAutoUpdate(bool);
   void    slot_disableAutoUpdate(bool);
@@ -91,7 +100,7 @@ protected:
   void    initializeGL();
   void    paintGL();
 protected:
-  virtual void innerUpdate(REDRAWBY);
+  virtual void callWidgetUpdate();
   virtual void innerResize();
   virtual QSize minimumSizeHint() const;
   virtual QSize sizeHint() const;

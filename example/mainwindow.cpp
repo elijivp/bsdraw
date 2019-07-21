@@ -100,7 +100,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   else if (MW_TEST == DEMO_1) /// Demo 1
   {
     sigtype = ST_SINXX;
-    SAMPLES = 200;
+//    sigtype = ST_MANYSIN;
+    SAMPLES = 280;
     MAXLINES = 200;
     PORTIONS = 3;
     PRECREATE(3, 3);
@@ -132,7 +133,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     for (unsigned int i=0; i<sizeof(gopts)/sizeof(graphopts_t); i++)
     {
       gopts[i].dotsize = 1;
-      gopts[i].dotweight = 0.5f;
+      gopts[i].dotweight = 0.9f;
+      gopts[i].backcolor = 0x00777777;
       draws[3*i + 2] = new DrawGraph(SAMPLES, PORTIONS, gopts[i], DrawGraph::DC_DOWNBASE);
     }
   }
@@ -247,7 +249,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     MAXLINES = 20;
     PORTIONS = 3;
     PRECREATE(4, 1);
-    syncscaling = 10;
+    syncscaling = 7;
     graphopts_t gts[] = { {graphopts_t::GT_LINDOWN, 0.5f}, {graphopts_t::GT_LINDOWN_CROSSMIN, 0.5f}, {graphopts_t::GT_LINDOWN_CROSSMAX, 0.5f}, {graphopts_t::GT_LINTERP, 0.8f} };
     DPostmask fsp[] = {   DPostmask(DPostmask::PM_LINELEFT, DPostmask::PO_ALL, 0, 0.3,0.3,0.3), 
                           DPostmask(DPostmask::PM_CONTOUR, DPostmask::PO_SIGNAL, 0, 0.3,0.3,0.3), 
@@ -429,6 +431,40 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     }
     sigtype = ST_MOVE;
   }
+  else if (MW_TEST == LOAD1)
+  {
+    SAMPLES = 400;
+    MAXLINES = 160;
+    PORTIONS = 1;
+    syncscaling = 0;
+    PRECREATE(12, 4);
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+//      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(graphopts_t::GT_LINTERPSMOOTH, 0.0, 0x00111111), DrawGraph::DC_OFF, 1.0, -0.5);
+      draws[i] = new DrawGraphMove(SAMPLES, 1, PORTIONS, graphopts_t(graphopts_t::GT_LINTERPSMOOTH, 0.0, 0x00111111), DrawGraph::DC_OFF, 1.0, -0.5);
+    }
+    sigtype = ST_10;
+  }
+  else if (MW_TEST == SMOOTHS)
+  {
+    sigtype = ST_HIPERB;
+//    sigtype = ST_MANYSIN;
+    SAMPLES = 280;
+    MAXLINES = 200;
+    PORTIONS = 3;
+    PRECREATE(3, 3);
+    float smoothtest[] = { -0.5f, -0.3f, 0.0f,
+                           0.2f,  0.3f,  0.4f,
+                           0.6f,  0.8f,  1.0f
+                         };
+    graphopts_t  gopts(graphopts_t::GT_LINTERP, 0.0f, 0xFFFFFFFF, 0, 0.0f, graphopts_t::DE_NONE, 0.5f);
+    for (unsigned int c=0; c<dccount; c++)
+      for (unsigned int i=0; i<drcount; i++)
+      {
+        gopts.specsmooth = smoothtest[i*dccount + c];
+        draws[c*dccount + i] = new DrawGraph(SAMPLES, PORTIONS, gopts);
+      }
+  }
   
   
   
@@ -441,6 +477,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
       if (MW_TEST != ADV_PALETTES)
         draws[i]->setDataPalette(MW_TEST == DIFFERENT_PORTIONS? (const IPalette*)&paletteRGB : (const IPalette*)&palette_gnu_latte);
+//        draws[i]->setDataPalette(MW_TEST == DIFFERENT_PORTIONS? (const IPalette*)&paletteRGB : (const IPalette*)ppalettes_adv[12]);
       if (syncscaling > 0)
       {
         draws[i]->setScalingLimitsSynced(syncscaling);
@@ -458,6 +495,13 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         draws[i]->ovlPushBack(oimg);
         ovl_sprites = draws[i]->ovlPushBack(new OSprites(new QImage(img_path_sprite), OSprites::IC_AUTO, SAMPLES/4/*500*/, 0.2f));
         draws[i]->ovlPushBack(new OTextStatic("Press Me", CR_RELATIVE, 0.5f, 0.1f, 12, true));
+      }
+      else if (MW_TEST == DRAW_BRIGHT)
+      {
+        IOverlaySimpleImage* oimg = new OImageStretched(new QImage(img_path_normal), IOverlaySimpleImage::IC_BLOCKALPHA, false);
+        oimg->setSlice(0.35);
+        oimg->setOpacity(0.15);
+        draws[i]->ovlPushBack(oimg);
       }
     }
     if (MW_TEST == MAIN_DRAWS_WIDE)
@@ -482,7 +526,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     const unsigned int edMinWidth = 40, edMaxWidth = 40;
     const unsigned int sbUniWidth = 40;
     
-    QVBoxLayout *mainLayout = new QVBoxLayout();
+    QBoxLayout *mainLayout = new QHBoxLayout();
     mainLayout->setContentsMargins(0,0,0,0);
     mainLayout->setSpacing(0);
     
@@ -490,567 +534,565 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       int tabshow = 0;
       QSignalMapper*  featsMapper = new QSignalMapper(this);
       
-      BSLAYOUT_DECL(mainLayout)
-          
-      BS_START_LAYOUT(QHBoxLayout)
+      BS_INIT_FOR(mainLayout)
 //        BS_START_LAYOUT(QVBoxLayout)
-        BS_START_FRAME_V_HMIN_VMIN(BS_FRAME_BOX, 0)
+      BS_START_FRAME_V_HMIN_VMIN(BS_FRAME_BOX, 0)
+      {
+        QWidget* totalHideShow = BSWIDGET;
+      
+        QTabBar*  ptb = new QTabBar;
+        BSADD(ptb);
+        BS_START_STACK_HMAX_VMIN
+        QWidget* stackHideShow = BSWIDGET;
+        QObject::connect(ptb, SIGNAL(currentChanged(int)), (QStackedLayout*)_bs_active, SLOT(setCurrentIndex(int)));
+        QObject::connect(ptb, SIGNAL(currentChanged(int)), stackHideShow, SLOT(show()));
         {
-          QWidget* totalHideShow = BSWIDGET;
-        
-          QTabBar*  ptb = new QTabBar;
-          BSADD(ptb);
-          BS_START_STACK_HMAX_VMIN
-          QWidget* stackHideShow = BSWIDGET;
-          QObject::connect(ptb, SIGNAL(currentChanged(int)), (QStackedLayout*)_bs_active, SLOT(setCurrentIndex(int)));
-          QObject::connect(ptb, SIGNAL(currentChanged(int)), stackHideShow, SLOT(show()));
-          {
-            tabshow = ptb->addTab(tr("Data"));
-            BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-                int bfsmask = BFS_CHECKABLE | (MW_TEST == DRAW_BRIGHT_CLUSTER? BFS_DISABLED : 0);
-                BSFieldSetup sigs[] = { 
-                  BSFieldSetup(tr("Random"),  &fntSTD, ST_RAND, bfsmask,     btnMinWidth, btnMaxWidth),
-                  BSFieldSetup(tr("Normal"), &fntSTD, ST_GEN_NORM, bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup(tr("Peaks"),   &fntSTD, ST_PEAK,  bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup(tr("Peaks2"),   &fntSTD, ST_PEAK2,  bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup(tr("Peaks3"),   &fntSTD, ST_PEAK3,  bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup(tr("Move"),    &fntSTD, ST_MOVE, bfsmask,   btnMinWidth, btnMaxWidth),
-                  
-                  BSFieldSetup(tr("SinX"),   &fntSTD, ST_SIN,  bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup(tr("MSins"), &fntSTD, ST_MANYSIN,  bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup(tr("Hiperb"),   &fntSTD, ST_HIPERB, bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup(tr("SinX/X"),   &fntSTD, ST_SINXX, bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup(tr("X*X"),   &fntSTD, ST_XX, bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup(tr("tanhX"),   &fntSTD, ST_TANHX, bfsmask,   btnMinWidth, btnMaxWidth),
-                  
-                  BSFieldSetup("--0--",   &fntSTD, ST_ZERO, bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup("--1--",   &fntSTD, ST_ONE,  bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup("1-0-1",   &fntSTD, ST_ZOZ,  bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup("1-0--",   &fntSTD, ST_ZOO,  bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup("--0-1",   &fntSTD, ST_OOZ,  bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup("101010", &fntSTD, ST_OZOZO, bfsmask,   btnMinWidth, btnMaxWidth),
+          tabshow = ptb->addTab(tr("Data"));
+          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+            BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
+              int bfsmask = BFS_CHECKABLE | (MW_TEST == DRAW_BRIGHT_CLUSTER? BFS_DISABLED : 0);
+              BSFieldSetup sigs[] = { 
+                BSFieldSetup(tr("Random"),  &fntSTD, ST_RAND, bfsmask,     btnMinWidth, btnMaxWidth),
+                BSFieldSetup(tr("Normal"), &fntSTD, ST_GEN_NORM, bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup(tr("Peaks"),   &fntSTD, ST_PEAK,  bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup(tr("Peaks2"),   &fntSTD, ST_PEAK2,  bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup(tr("Peaks3"),   &fntSTD, ST_PEAK3,  bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup(tr("Move"),    &fntSTD, ST_MOVE, bfsmask,   btnMinWidth, btnMaxWidth),
+                
+                BSFieldSetup(tr("SinX"),   &fntSTD, ST_SIN,  bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup(tr("MSins"), &fntSTD, ST_MANYSIN,  bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup(tr("Hiperb"),   &fntSTD, ST_HIPERB, bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup(tr("SinX/X"),   &fntSTD, ST_SINXX, bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup(tr("X*X"),   &fntSTD, ST_XX, bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup(tr("tanhX"),   &fntSTD, ST_TANHX, bfsmask,   btnMinWidth, btnMaxWidth),
+                
+                BSFieldSetup("--0--",   &fntSTD, ST_ZERO, bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup("--1--",   &fntSTD, ST_ONE,  bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup("1-0-1",   &fntSTD, ST_ZOZ,  bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup("1-0--",   &fntSTD, ST_ZOO,  bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup("--0-1",   &fntSTD, ST_OOZ,  bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup("101010", &fntSTD, ST_OZOZO, bfsmask,   btnMinWidth, btnMaxWidth),
+            
+                BSFieldSetup(tr("Ramp"),   &fntSTD, ST_RAMP, bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup(tr("Step"), &fntSTD, ST_STEP, bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup("10",   &fntSTD, ST_10, bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup("100",   &fntSTD, ST_100,  bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup("1000",   &fntSTD, ST_1000,  bfsmask,   btnMinWidth, btnMaxWidth),
+                BSFieldSetup("10000",   &fntSTD, ST_10000,  bfsmask,   btnMinWidth, btnMaxWidth),
+              };
+              for (unsigned int i=0; i<sizeof(sigs)/sizeof(BSFieldSetup); i++)
+                if (sigs[i].mappedvalue == sigtype)
+                  sigs[i].flags |= BFS_CHECKED;
+              QButtonGroup* qbg = new QButtonGroup(this);
+              qbg->setExclusive(true);
               
-                  BSFieldSetup(tr("Ramp"),   &fntSTD, ST_RAMP, bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup(tr("Step"), &fntSTD, ST_STEP, bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup("10",   &fntSTD, ST_10, bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup("100",   &fntSTD, ST_100,  bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup("1000",   &fntSTD, ST_1000,  bfsmask,   btnMinWidth, btnMaxWidth),
-                  BSFieldSetup("10000",   &fntSTD, ST_10000,  bfsmask,   btnMinWidth, btnMaxWidth),
+              const unsigned int vsigs = 6; //sizeof(sigs)/sizeof(BSFieldSetup) / 3;
+              BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
+                for (unsigned int i=0; i<vsigs; i++)
+                  BSAUTO_BTN_ADDGROUPED(sigs[i], qbg, 0, Qt::AlignCenter);
+              BS_STOP
+              BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
+                for (unsigned int i=vsigs; i<vsigs*2; i++)
+                  BSAUTO_BTN_ADDGROUPED(sigs[i], qbg, 0, Qt::AlignCenter);
+              BS_STOP
+              BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
+                for (unsigned int i=vsigs*2; i<vsigs*3; i++)
+                  BSAUTO_BTN_ADDGROUPED(sigs[i], qbg, 0, Qt::AlignCenter);
+              BS_STOP
+              BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
+                for (unsigned int i=vsigs*3; i<sizeof(sigs)/sizeof(BSFieldSetup); i++)
+                  BSAUTO_BTN_ADDGROUPED(sigs[i], qbg, 0, Qt::AlignCenter);
+              BS_STOP
+              QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeSigtype(int)));
+            BS_STOP
+          
+            BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
+              BSAUTO_TEXT_ADD(tr("Data posttransform:"), 0, Qt::AlignHCenter);
+              BS_STRETCH
+              BSAUTO_TEXT_ADD(tr("k*x + b"), 0, Qt::AlignHCenter);
+              BS_STRETCH
+              BSFieldSetup sigeds[] = { 
+                BSFieldSetup(QString::number(sig_k, 'f', 1), &fntSTD, ED_SIGK, 0, edMinWidth, edMaxWidth),
+                BSFieldSetup(QString::number(sig_b, 'f', 1), &fntSTD, ED_SIGB, 0, edMinWidth, edMaxWidth),
+              };
+              QSignalMapper*  edMapper = new QSignalMapper(this);
+              for (unsigned int i=0; i<sizeof(sigeds) / sizeof(BSFieldSetup); i++)
+              {
+                BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                  BSAUTO_TEXT_ADD(i == 0 ? tr("k ="): tr("b ="));
+                  BSAUTO_EDIT_ADDMAPPED(sigeds[i], edMapper, 0, Qt::AlignRight);
+                BS_STOP
+              }
+              QObject::connect(edMapper, SIGNAL(mapped(int)), this, SLOT(changeFloats(int)));
+            BS_STOP
+            BS_STRETCH
+          BS_STOP
+          
+          ptb->addTab(tr("Color"));
+          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+            BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
+              BSAUTO_TEXT_ADD(tr("bspalettes_std.h:"), 0, Qt::AlignLeft);
+              QSignalMapper*  palMapper = new QSignalMapper(this);
+              const unsigned int btnsinrow = 4;
+              unsigned int palscount = sizeof(ppalettes_std)/sizeof(const IPalette*);
+              unsigned int rows= palscount / btnsinrow + (palscount % btnsinrow ? 1 : 0);
+              unsigned int palctr=0;
+              
+              const QString   stdPalNames[] = {  tr("Bk-Wh"),  tr("Gray"), tr("Gn-Ye"),   tr("Bu-Wh"),  tr("Bk-Rd-Wh"), tr("Bk-Bu-Wh"), tr("Bk-Gn-Wh"), tr("Bk-Gn-Ye-Wh"), tr("SomeBlue"), tr("Test2") };
+              
+              for (unsigned int i=0; i < rows && palctr < palscount; i++)
+              {
+                BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                    
+                BS_CHEAT_VMIN
+                  for (unsigned int j=0; j<btnsinrow && palctr < palscount; j++)
+                  {
+                    BSFieldSetup bfs(stdPalNames[palctr], &fntSTD, palctr, 0, btnMinWidth);
+                    BSAUTO_BTN_ADDMAPPED(bfs, palMapper);
+                    palctr++;
+                  }
+                BS_STOP
+              }
+              QObject::connect(palMapper, SIGNAL(mapped(int)), this, SLOT(changePaletteSTD(int)));
+              
+              BSAUTO_TEXT_ADD(tr("bspalettes_adv.h:"), 0, Qt::AlignLeft);
+              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_SUNKEN, 1)
+              {
+                BS_STRETCH
+                QPaletteBox*  qcb = new QPaletteBox;
+                QObject::connect(qcb, SIGNAL(currentIndexChanged(int)), this, SLOT(changePaletteADV(int)));
+                BSADD(qcb);
+                QCheckBox*  inv = new QCheckBox(tr("Inverted"));
+                QObject::connect(inv, SIGNAL(clicked(bool)), qcb, SLOT(setInverted(bool)));
+                BSADD(inv);
+                BS_STRETCH
+              }
+              BS_STOP
+              
+              BSAUTO_TEXT_ADD(tr("bspalettes_rgb.h:"), 0, Qt::AlignLeft);
+              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_SUNKEN, 1)
+              {
+                QSignalMapper*  palMapperRGB = new QSignalMapper(this);
+                bool  on2=true, on3=true;
+#if PORTIONS == 2
+                on3 = false;
+#elif PORTIONS == 3
+                on2 = false;
+#endif
+                BS_STRETCH
+                BSFieldSetup bfs[] = { BSFieldSetup("2 clr: ReGn", &fntSTD, 0, on2 == false? BFS_DISABLED : 0, btnMinWidth), 
+                                       BSFieldSetup("2 clr: ReBu", &fntSTD, 1, on2 == false? BFS_DISABLED : 0, btnMinWidth), 
+                                       BSFieldSetup("3 clr: RGB", &fntSTD, 2, on3 == false? BFS_DISABLED : 0, btnMinWidth), 
+                                     };
+                for (unsigned int j=0; j<sizeof(bfs)/sizeof(BSFieldSetup); j++)
+                  BSAUTO_BTN_ADDMAPPED(bfs[j], palMapperRGB);
+                BS_STRETCH
+                QObject::connect(palMapperRGB, SIGNAL(mapped(int)), this, SLOT(changePaletteRGB(int)));
+              }
+              BS_STOP
+            BS_STOP
+            
+            {
+              BSFieldSetup fseds[] = { 
+                BSFieldSetup("1.0", &fntSTD, ED_HIGH, 0, edMinWidth, edMaxWidth),
+                BSFieldSetup("0.0", &fntSTD, ED_LOW, 0, edMinWidth, edMaxWidth),
+                BSFieldSetup("1.0", &fntSTD, ED_CONTRAST, 0, edMinWidth, edMaxWidth),
+                BSFieldSetup("0.0", &fntSTD, ED_OFFSET, 0, edMinWidth, edMaxWidth),
+              };
+              QSignalMapper*  edMapper = new QSignalMapper(this);
+              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
+                BS_STRETCH
+                
+                lab = new QLabel(tr("setBounds:"));
+                BSADD(lab);
+                BS_START_LAYOUT(QHBoxLayout)
+                  for (int i=0; i<2; i++)
+                    BSAUTO_EDIT_ADDMAPPED(fseds[i], edMapper, 0, Qt::AlignRight);
+                BS_STOP
+                BS_STRETCH    
+                
+                lab = new QLabel(tr("setContrast:"));
+                BSADD(lab);
+                BS_START_LAYOUT(QHBoxLayout)
+                  for (int i=2; i<4; i++)
+                    BSAUTO_EDIT_ADDMAPPED(fseds[i], edMapper, 0, Qt::AlignRight);
+                BS_STOP
+                BS_STRETCH
+              BS_STOP
+              QObject::connect(edMapper, SIGNAL(mapped(int)), this, SLOT(changeFloats(int)));
+            } 
+            BS_STRETCH
+          BS_STOP
+
+          ptb->addTab(tr("Sizes"));
+          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+            BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
+              BSFieldSetup featbtns[] = { 
+                BSFieldSetup(tr("Mirror horz"), &fntSTD, BTF_INVHORZ, 0, btnMinWidth),
+                BSFieldSetup(tr("Mirror vert"), &fntSTD, BTF_INVVERT, 0, btnMinWidth),
+              };
+              BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                BS_CHEAT_VMIN
+                for (unsigned int i=0; i<sizeof(featbtns)/sizeof(BSFieldSetup); i++)
+                  BSAUTO_BTN_ADDMAPPED(featbtns[i], featsMapper);
+              BS_STOP
+            BS_STOP
+            BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
+            {
+              BSAUTO_TEXT_ADD(tr("setScalingLimits:"), 0, Qt::AlignLeft);
+              
+#define NEW_SPIN_ADDMAPPED(var, slot, ...)  { \
+                                    QSpinBox*   _sb = new QSpinBox(); \
+                                    _sb->setRange(0, 10); \
+                                    _sb->setUserData(0, new BSUOD_0(var)); \
+                                    BSADD(_sb, ##__VA_ARGS__); \
+                                    QObject::connect(_sb, SIGNAL(valueChanged(int)), this, slot); \
+                                  }
+//                BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_SUNKEN, 1)
+              BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                BS_STRETCH
+                BSAUTO_TEXT_ADD(tr("H.min:"));
+                NEW_SPIN_ADDMAPPED(SC_MIN_H, SLOT(changeScaling(int)), 0, Qt::AlignRight);
+                BSAUTO_TEXT_ADD(tr("H.max:"));
+                NEW_SPIN_ADDMAPPED(SC_MAX_H, SLOT(changeScaling(int)), 0, Qt::AlignRight);
+                BSAUTO_TEXT_ADD(tr("V.min:"));
+                NEW_SPIN_ADDMAPPED(SC_MIN_V, SLOT(changeScaling(int)), 0, Qt::AlignRight);
+                BSAUTO_TEXT_ADD(tr("V.max:"));
+                NEW_SPIN_ADDMAPPED(SC_MAX_V, SLOT(changeScaling(int)), 0, Qt::AlignRight);
+                BS_STRETCH
+              BS_STOP
+              BS_STRETCH
+            }
+            BS_STOP
+            BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
+            {
+              BS_STRETCH
+              BSAUTO_TEXT_ADD(tr("setContentMargins:"), 0, Qt::AlignLeft);
+              QSpinBox*   _sb = new QSpinBox();
+              BSADD(_sb, 0, Qt::AlignRight);
+              QObject::connect(_sb, SIGNAL(valueChanged(int)), this, SLOT(changeMargins(int)));
+              BS_STRETCH
+            }
+            BS_STOP
+            BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
+              BSFieldSetup extra[] = { 
+                BSFieldSetup(tr("Hide tab panel"), &fntSTD, 0, 0, btnMinWidth),
+                BSFieldSetup(tr("Hide all panel"), &fntSTD, 0, 0, btnMinWidth),
+              };
+              QWidget* pHiding[] = { stackHideShow, totalHideShow };
+              for (unsigned int i=0; i< sizeof(extra) / sizeof(BSFieldSetup); i++)
+              {
+                BSAUTO_BTN(QPushButton, _btn, extra[i]);
+                BSADD(_btn, 0, Qt::AlignCenter);
+                QObject::connect(_btn, SIGNAL(pressed()), pHiding[i], SLOT(hide()));
+              }
+            BS_STOP                
+            BS_STRETCH
+          BS_STOP
+          
+          ptb->addTab(tr("Overlays"));
+          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+            QTabBar*  ptb_ovl = new QTabBar;
+            BSADD(ptb_ovl);
+            BS_START_STACK_HMAX_VMIN
+              QObject::connect(ptb_ovl, SIGNAL(currentChanged(int)), (QStackedLayout*)_bs_active, SLOT(setCurrentIndex(int)));
+              
+              ptb_ovl->addTab(tr("Standard"));
+              BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+                QButtonGroup* ocrGroup = new QButtonGroup(this);
+                ocrGroup->setExclusive(true);
+                BSFieldSetup fseds[] = { 
+                  BSFieldSetup(tr("OFF"), &fntSTD, COS_OFF, BFS_CHECKED, btnMaxWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Dekart"), &fntSTD, COS_DEKART, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Grids"), &fntSTD, COS_GRIDS, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Grids+Axes"), &fntSTD, COS_GRIDSAXES, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Circular"), &fntSTD, COS_CIRCULAR, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Selector"), &fntSTD, COS_SELECTOR, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Drop Lines"), &fntSTD, COS_DROPLINES, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Cluster"), &fntSTD, COS_CLUSTER, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Followers"), &fntSTD, COS_FOLLOWERS, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Inside"), &fntSTD, COS_INSIDE, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("CoverL"), &fntSTD, COS_COVERL, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("CoverH"), &fntSTD, COS_COVERH, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Contour"), &fntSTD, COS_CONTOUR, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Sprite\nalpha opaque"), &fntSTD, COS_SPRITEALPHA, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Foreground\nstretchable"), &fntSTD, COS_FOREGROUND, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Background\nstatic"), &fntSTD, COS_BACKGROUND, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                 };
-                for (unsigned int i=0; i<sizeof(sigs)/sizeof(BSFieldSetup); i++)
-                  if (sigs[i].mappedvalue == sigtype)
-                    sigs[i].flags |= BFS_CHECKED;
+                
+                BS_FORFOR_P(3, l, lim, sizeof(fseds)/sizeof(BSFieldSetup)-1)
+                {
+                  BS_START_LAYOUT(QHBoxLayout)
+                    BS_CHEAT_VMIN
+                    for (int i=0; i < lim; i++)
+                    {
+//                        if (lim < 3 && i == 1)
+//                          BS_STRETCH
+                      BSAUTO_BTN_ADDGROUPED(fseds[1+l+i], ocrGroup);
+                    }
+                  BS_STOP   
+                }
+                BSAUTO_BTN_ADDGROUPED(fseds[0], ocrGroup, 0, Qt::AlignHCenter);
+                QObject::connect(ocrGroup, SIGNAL(buttonClicked(int)), this, SLOT(createOverlaySTD(int)));
+                
+                if (drawscount > 1)
+                {
+                  BSFieldSetup chbbs(tr("Sync interactive elements"), &fntSTD, 0, BFS_CHECKED);
+                  BSAUTO_BTN(QCheckBox, _chb, chbbs);
+                  _chb->setUserData(0, new BSUOD_0(chbbs.mappedvalue));
+                  QObject::connect(_chb, SIGNAL(clicked(bool)), this, SLOT(setOverlaySync(bool)));
+                  BSADD(_chb);
+                }
+                
+                BS_STRETCH
+              BS_STOP
+            
+              ptb_ovl->addTab(tr("Additional"));
+              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 2)
+                QButtonGroup* grForm = new QButtonGroup(this);
+                BS_START_FRAME_V_HMIN_VMAX(BS_FRAME_SUNKEN, 1)
+                  grForm->setExclusive(true);
+                  BSFieldSetup fseds[] = { 
+                    BSFieldSetup(tr("Circles"), &fntSTD, 0, BFS_CHECKED, btnMinWidth, btnMaxWidth),
+                    BSFieldSetup(tr("Triangles"), &fntSTD, 1, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                    BSFieldSetup(tr("Squares"), &fntSTD, 2, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                    BSFieldSetup(tr("Xses"), &fntSTD, 3, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                    BSFieldSetup(tr("Points"), &fntSTD, 4, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                    
+                  };
+                  for (unsigned int i=0; i<sizeof(fseds) / sizeof(BSFieldSetup); i++)
+                    BSAUTO_BTN_ADDGROUPED(fseds[i], grForm);
+                BS_STOP
+                
+                QButtonGroup* grCount = new QButtonGroup(this);
+                BS_START_FRAME_V_HMIN_VMAX(BS_FRAME_SUNKEN, 1)
+                  grCount->setExclusive(true);
+                  BSFieldSetup fseds[] = { 
+                    BSFieldSetup(tr("x3"), &fntSTD, 0, BFS_CHECKED, btnMinWidth, btnMaxWidth),
+                    BSFieldSetup(tr("1"), &fntSTD, 1, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                    BSFieldSetup(tr("5"), &fntSTD, 2, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                    BSFieldSetup(tr("10"), &fntSTD, 3, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  };
+                  for (unsigned int i=0; i<sizeof(fseds) / sizeof(BSFieldSetup); i++)
+                    BSAUTO_BTN_ADDGROUPED(fseds[i], grCount);
+                BS_STOP
+                    
+                BS_START_FRAME_V_HMIN_VMAX(BS_FRAME_SUNKEN, 1)
+                  BSFieldSetup add(tr("ADD"),  &fntSTD, 0, 0, btnMinWidth, btnMaxWidth);
+                  BSAUTO_BTN(QPushButton, _btn, add);
+                  _btn->setUserData(0, new BSUOD_2(grForm));
+                  _btn->setUserData(1, new BSUOD_2(grCount));
+                  BSADD(_btn, 0, Qt::AlignCenter);
+                  QObject::connect(_btn, SIGNAL(clicked(bool)), this, SLOT(createOverlayADD()));
+                BS_STOP
+              BS_STOP
+            
+            BS_STOP
+            BS_STRETCH
+          BS_STOP
+                
+          ptb->addTab(tr("OvlSets"));
+          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+              QSignalMapper*  ovlMapper = new QSignalMapper(this);
+              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
                 QButtonGroup* qbg = new QButtonGroup(this);
                 qbg->setExclusive(true);
-                
-                const unsigned int vsigs = 6; //sizeof(sigs)/sizeof(BSFieldSetup) / 3;
-                BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
-                  for (unsigned int i=0; i<vsigs; i++)
-                    BSAUTO_BTN_ADDGROUPED(sigs[i], qbg, 0, Qt::AlignCenter);
-                BS_STOP
-                BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
-                  for (unsigned int i=vsigs; i<vsigs*2; i++)
-                    BSAUTO_BTN_ADDGROUPED(sigs[i], qbg, 0, Qt::AlignCenter);
-                BS_STOP
-                BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
-                  for (unsigned int i=vsigs*2; i<vsigs*3; i++)
-                    BSAUTO_BTN_ADDGROUPED(sigs[i], qbg, 0, Qt::AlignCenter);
-                BS_STOP
-                BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
-                  for (unsigned int i=vsigs*3; i<sizeof(sigs)/sizeof(BSFieldSetup); i++)
-                    BSAUTO_BTN_ADDGROUPED(sigs[i], qbg, 0, Qt::AlignCenter);
-                BS_STOP
-                QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeSigtype(int)));
-              BS_STOP
-            
-              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-                BSAUTO_TEXT_ADD(tr("Data posttransform:"), 0, Qt::AlignHCenter);
-                BS_STRETCH
-                BSAUTO_TEXT_ADD(tr("k*x + b"), 0, Qt::AlignHCenter);
-                BS_STRETCH
-                BSFieldSetup sigeds[] = { 
-                  BSFieldSetup(QString::number(sig_k, 'f', 1), &fntSTD, ED_SIGK, 0, edMinWidth, edMaxWidth),
-                  BSFieldSetup(QString::number(sig_b, 'f', 1), &fntSTD, ED_SIGB, 0, edMinWidth, edMaxWidth),
-                };
-                QSignalMapper*  edMapper = new QSignalMapper(this);
-                for (unsigned int i=0; i<sizeof(sigeds) / sizeof(BSFieldSetup); i++)
-                {
-                  BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                    BSAUTO_TEXT_ADD(i == 0 ? tr("k ="): tr("b ="));
-                    BSAUTO_EDIT_ADDMAPPED(sigeds[i], edMapper, 0, Qt::AlignRight);
-                  BS_STOP
-                }
-                QObject::connect(edMapper, SIGNAL(mapped(int)), this, SLOT(changeFloats(int)));
-              BS_STOP
-              BS_STRETCH
-            BS_STOP
-            
-            ptb->addTab(tr("Color"));
-            BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-              BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
-                BSAUTO_TEXT_ADD(tr("bspalettes_std.h:"), 0, Qt::AlignLeft);
-                QSignalMapper*  palMapper = new QSignalMapper(this);
-                const unsigned int btnsinrow = 4;
-                unsigned int palscount = sizeof(ppalettes_std)/sizeof(const IPalette*);
-                unsigned int rows= palscount / btnsinrow + (palscount % btnsinrow ? 1 : 0);
-                unsigned int palctr=0;
-                
-                const QString   stdPalNames[] = {  tr("Bk-Wh"),  tr("Gray"), tr("Gn-Ye"),   tr("Bu-Wh"),  tr("Bk-Rd-Wh"), tr("Bk-Bu-Wh"), tr("Bk-Gn-Wh"), tr("Bk-Gn-Ye-Wh"), tr("SomeBlue"), tr("Test2") };
-                
-                for (unsigned int i=0; i < rows && palctr < palscount; i++)
-                {
-                  BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                      
-                  BS_CHEAT_VMIN
-                    for (unsigned int j=0; j<btnsinrow && palctr < palscount; j++)
-                    {
-                      BSFieldSetup bfs(stdPalNames[palctr], &fntSTD, palctr, 0, btnMinWidth);
-                      BSAUTO_BTN_ADDMAPPED(bfs, palMapper);
-                      palctr++;
-                    }
-                  BS_STOP
-                }
-                QObject::connect(palMapper, SIGNAL(mapped(int)), this, SLOT(changePaletteSTD(int)));
-                
-                BSAUTO_TEXT_ADD(tr("bspalettes_adv.h:"), 0, Qt::AlignLeft);
-                BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_SUNKEN, 1)
-                {
-                  BS_STRETCH
-                  QPaletteBox*  qcb = new QPaletteBox;
-                  QObject::connect(qcb, SIGNAL(currentIndexChanged(int)), this, SLOT(changePaletteADV(int)));
-                  BSADD(qcb);
-                  QCheckBox*  inv = new QCheckBox(tr("Inverted"));
-                  QObject::connect(inv, SIGNAL(clicked(bool)), qcb, SLOT(setInverted(bool)));
-                  BSADD(inv);
-                  BS_STRETCH
-                }
-                BS_STOP
-                
-                BSAUTO_TEXT_ADD(tr("bspalettes_rgb.h:"), 0, Qt::AlignLeft);
-                BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_SUNKEN, 1)
-                {
-                  QSignalMapper*  palMapperRGB = new QSignalMapper(this);
-                  bool  on2=true, on3=true;
-#if PORTIONS == 2
-                  on3 = false;
-#elif PORTIONS == 3
-                  on2 = false;
-#endif
-                  BS_STRETCH
-                  BSFieldSetup bfs[] = { BSFieldSetup("2 clr: ReGn", &fntSTD, 0, on2 == false? BFS_DISABLED : 0, btnMinWidth), 
-                                         BSFieldSetup("2 clr: ReBu", &fntSTD, 1, on2 == false? BFS_DISABLED : 0, btnMinWidth), 
-                                         BSFieldSetup("3 clr: RGB", &fntSTD, 2, on3 == false? BFS_DISABLED : 0, btnMinWidth), 
-                                       };
-                  for (unsigned int j=0; j<sizeof(bfs)/sizeof(BSFieldSetup); j++)
-                    BSAUTO_BTN_ADDMAPPED(bfs[j], palMapperRGB);
-                  BS_STRETCH
-                  QObject::connect(palMapperRGB, SIGNAL(mapped(int)), this, SLOT(changePaletteRGB(int)));
-                }
-                BS_STOP
+                for (unsigned int i=0; i<10; i++)
+                  BSAUTO_BTN_ADDGROUPED(BSFieldSetup(QString::number(i+1).toUtf8(), &fntSTD, i+1, i == 0? BFS_CHECKED : BFS_CHECKABLE, 30, 30), qbg, 0, Qt::AlignCenter);
+                active_ovl = 1;
+                QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeOVL(int)));
               BS_STOP
               
-              {
-                BSFieldSetup fseds[] = { 
-                  BSFieldSetup("1.0", &fntSTD, ED_HIGH, 0, edMinWidth, edMaxWidth),
-                  BSFieldSetup("0.0", &fntSTD, ED_LOW, 0, edMinWidth, edMaxWidth),
-                  BSFieldSetup("1.0", &fntSTD, ED_CONTRAST, 0, edMinWidth, edMaxWidth),
-                  BSFieldSetup("0.0", &fntSTD, ED_OFFSET, 0, edMinWidth, edMaxWidth),
-                };
-                QSignalMapper*  edMapper = new QSignalMapper(this);
-                BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-                  BS_STRETCH
-                  
-                  lab = new QLabel(tr("setBounds:"));
-                  BSADD(lab);
-                  BS_START_LAYOUT(QHBoxLayout)
-                    for (int i=0; i<2; i++)
-                      BSAUTO_EDIT_ADDMAPPED(fseds[i], edMapper, 0, Qt::AlignRight);
-                  BS_STOP
-                  BS_STRETCH    
-                  
-                  lab = new QLabel(tr("setContrast:"));
-                  BSADD(lab);
-                  BS_START_LAYOUT(QHBoxLayout)
-                    for (int i=2; i<4; i++)
-                      BSAUTO_EDIT_ADDMAPPED(fseds[i], edMapper, 0, Qt::AlignRight);
-                  BS_STOP
-                  BS_STRETCH
-                BS_STOP
-                QObject::connect(edMapper, SIGNAL(mapped(int)), this, SLOT(changeFloats(int)));
-              } 
-              BS_STRETCH
-            BS_STOP
-
-            ptb->addTab(tr("Sizes"));
-            BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-              BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
-                BSFieldSetup featbtns[] = { 
-                  BSFieldSetup(tr("Mirror horz"), &fntSTD, BTF_INVHORZ, 0, btnMinWidth),
-                  BSFieldSetup(tr("Mirror vert"), &fntSTD, BTF_INVVERT, 0, btnMinWidth),
-                };
-                BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                  BS_CHEAT_VMIN
-                  for (unsigned int i=0; i<sizeof(featbtns)/sizeof(BSFieldSetup); i++)
-                    BSAUTO_BTN_ADDMAPPED(featbtns[i], featsMapper);
-                BS_STOP
-              BS_STOP
-              BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
-              {
-                BSAUTO_TEXT_ADD(tr("setScalingLimits:"), 0, Qt::AlignLeft);
-                
-#define NEW_SPIN_ADDMAPPED(var, slot, ...)  { \
-                                      QSpinBox*   _sb = new QSpinBox(); \
-                                      _sb->setRange(0, 10); \
-                                      _sb->setUserData(0, new BSUOD_0(var)); \
-                                      BSADD(_sb, ##__VA_ARGS__); \
-                                      QObject::connect(_sb, SIGNAL(valueChanged(int)), this, slot); \
-                                    }
-//                BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_SUNKEN, 1)
-                BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                  BS_STRETCH
-                  BSAUTO_TEXT_ADD(tr("H.min:"));
-                  NEW_SPIN_ADDMAPPED(SC_MIN_H, SLOT(changeScaling(int)), 0, Qt::AlignRight);
-                  BSAUTO_TEXT_ADD(tr("H.max:"));
-                  NEW_SPIN_ADDMAPPED(SC_MAX_H, SLOT(changeScaling(int)), 0, Qt::AlignRight);
-                  BSAUTO_TEXT_ADD(tr("V.min:"));
-                  NEW_SPIN_ADDMAPPED(SC_MIN_V, SLOT(changeScaling(int)), 0, Qt::AlignRight);
-                  BSAUTO_TEXT_ADD(tr("V.max:"));
-                  NEW_SPIN_ADDMAPPED(SC_MAX_V, SLOT(changeScaling(int)), 0, Qt::AlignRight);
-                  BS_STRETCH
-                BS_STOP
-                BS_STRETCH
-              }
-              BS_STOP
-              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-              {
-                BS_STRETCH
-                BSAUTO_TEXT_ADD(tr("setContentMargins:"), 0, Qt::AlignLeft);
-                QSpinBox*   _sb = new QSpinBox();
-                BSADD(_sb, 0, Qt::AlignRight);
-                QObject::connect(_sb, SIGNAL(valueChanged(int)), this, SLOT(changeMargins(int)));
-                BS_STRETCH
-              }
-              BS_STOP
-              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-                BSFieldSetup extra[] = { 
-                  BSFieldSetup(tr("Hide tab panel"), &fntSTD, 0, 0, btnMinWidth),
-                  BSFieldSetup(tr("Hide all panel"), &fntSTD, 0, 0, btnMinWidth),
-                };
-                QWidget* pHiding[] = { stackHideShow, totalHideShow };
-                for (unsigned int i=0; i< sizeof(extra) / sizeof(BSFieldSetup); i++)
-                {
-                  BSAUTO_BTN(QPushButton, _btn, extra[i]);
-                  BSADD(_btn, 0, Qt::AlignCenter);
-                  QObject::connect(_btn, SIGNAL(pressed()), pHiding[i], SLOT(hide()));
-                }
-              BS_STOP                
-              BS_STRETCH
-            BS_STOP
-            
-            ptb->addTab(tr("Overlays"));
-            BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
               QTabBar*  ptb_ovl = new QTabBar;
               BSADD(ptb_ovl);
               BS_START_STACK_HMAX_VMIN
                 QObject::connect(ptb_ovl, SIGNAL(currentChanged(int)), (QStackedLayout*)_bs_active, SLOT(setCurrentIndex(int)));
-                
-                ptb_ovl->addTab(tr("Standard"));
+              
+                ptb_ovl->addTab(tr("Form"));
                 BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-                  QButtonGroup* ocrGroup = new QButtonGroup(this);
-                  ocrGroup->setExclusive(true);
-                  BSFieldSetup fseds[] = { 
-                    BSFieldSetup(tr("OFF"), &fntSTD, COS_OFF, BFS_CHECKED, btnMaxWidth, btnMaxWidth),
-                    BSFieldSetup(tr("Dekart"), &fntSTD, COS_DEKART, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    BSFieldSetup(tr("Grids"), &fntSTD, COS_GRIDS, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    BSFieldSetup(tr("Grids+Axes"), &fntSTD, COS_GRIDSAXES, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    BSFieldSetup(tr("Circular"), &fntSTD, COS_CIRCULAR, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    BSFieldSetup(tr("Selector"), &fntSTD, COS_SELECTOR, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    BSFieldSetup(tr("Drop Lines"), &fntSTD, COS_DROPLINES, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    BSFieldSetup(tr("Cluster"), &fntSTD, COS_CLUSTER, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    BSFieldSetup(tr("Followers"), &fntSTD, COS_FOLLOWERS, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    BSFieldSetup(tr("Inside"), &fntSTD, COS_INSIDE, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    BSFieldSetup(tr("CoverL"), &fntSTD, COS_COVERL, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    BSFieldSetup(tr("CoverH"), &fntSTD, COS_COVERH, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    BSFieldSetup(tr("Contour"), &fntSTD, COS_CONTOUR, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    BSFieldSetup(tr("Sprite\nalpha opaque"), &fntSTD, COS_SPRITEALPHA, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    BSFieldSetup(tr("Foreground\nstretchable"), &fntSTD, COS_FOREGROUND, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    BSFieldSetup(tr("Background\nstatic"), &fntSTD, COS_BACKGROUND, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                  };
+                  BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
+                    {
+                      BSAUTO_TEXT_ADD(tr("Weight:"));
+                      QSpinBox*   psb = new QSpinBox();
+                      psb->setRange(0, 10);
+                      BSADD(psb)
+                      QObject::connect(psb, SIGNAL(valueChanged(int)), this, SLOT(changeOVLWeight(int)));
+                    }
+
+                    BS_STRETCH
+                    
+                    BSFieldSetup spbs[] = {      BSFieldSetup(tr("Stroke:"), &fntSTD, 0, 0, sbUniWidth, sbUniWidth),
+                                                 BSFieldSetup(tr("Space:"), &fntSTD, 1, 0, sbUniWidth, sbUniWidth),
+                                                 BSFieldSetup(tr("Dot:"), &fntSTD, 2, 0, sbUniWidth, sbUniWidth),
+                                          };
+                    for (unsigned int i=0; i<sizeof(spbs)/sizeof(BSFieldSetup); i++)
+                    {
+                      BSAUTO_TEXT_ADD(spbs[i].defaultText, 0, Qt::AlignLeft);
+                      QSpinBox*   psb = new QSpinBox();
+                      BSAPPLY_FEATS(psb, spbs[i]);
+                      psb->setRange(0, 100);
+                      psb->setUserData(0, new BSUOD_0(spbs[i].mappedvalue));
+                      psb->setAccelerated(true);
+                      BSADD(psb, 0, Qt::AlignLeft)
+                      QObject::connect(psb, SIGNAL(valueChanged(int)), this, SLOT(changeOVLForm(int)));
+                    }
+                  BS_STOP
                   
-                  BS_FORFOR_P(3, l, lim, sizeof(fseds)/sizeof(BSFieldSetup)-1)
-                  {
-                    BS_START_LAYOUT(QHBoxLayout)
+                  BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
+                    BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                      BSAUTO_LBL_ADD(BSFieldSetup(tr("Opacity:")));
+                      QSlider* slider = new QSlider(Qt::Horizontal);
+                      slider->setRange(0,100);
+                      BSADD(slider);
+                      QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeOVLOpacity(int)));
+                    BS_STOP
+                    BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                      BSAUTO_LBL_ADD(BSFieldSetup(tr("Slice:")));
+                      QSlider* slider = new QSlider(Qt::Horizontal);
+                      slider->setRange(0,100);
+                      slider->setValue(100);
+                      BSADD(slider);
+                      QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeOVLSlice(int)));
+                    BS_STOP
+                  BS_STOP
+                BS_STOP
+                      
+                ptb_ovl->addTab(tr("Color"));
+                BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+                  BSAUTO_BTN_ADDMAPPED(BSFieldSetup(tr("Change Color"), &fntSTD, BTO_COLOR, 0, btnMinWidth, btnMaxWidth), ovlMapper, 0, Qt::AlignHCenter);
+                
+                  BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
+                    QButtonGroup* qbg = new QButtonGroup(this);
+                    qbg->setExclusive(true);
+                    BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
                       BS_CHEAT_VMIN
-                      for (int i=0; i < lim; i++)
-                      {
-//                        if (lim < 3 && i == 1)
-//                          BS_STRETCH
-                        BSAUTO_BTN_ADDGROUPED(fseds[1+l+i], ocrGroup);
-                      }
-                    BS_STOP   
-                  }
-                  BSAUTO_BTN_ADDGROUPED(fseds[0], ocrGroup, 0, Qt::AlignHCenter);
-                  QObject::connect(ocrGroup, SIGNAL(buttonClicked(int)), this, SLOT(createOverlaySTD(int)));
-                  
-                  if (drawscount > 1)
-                  {
-                    BSFieldSetup chbbs(tr("Sync interactive elements"), &fntSTD, 0, BFS_CHECKED);
-                    BSAUTO_BTN(QCheckBox, _chb, chbbs);
-                    _chb->setUserData(0, new BSUOD_0(chbbs.mappedvalue));
-                    QObject::connect(_chb, SIGNAL(clicked(bool)), this, SLOT(setOverlaySync(bool)));
-                    BSADD(_chb);
-                  }
-                  
+                      BSAUTO_BTN_ADDGROUPED(BSFieldSetup(tr("Noinvert"), &fntSTD, BTO_NOINV, BFS_CHECKED, btnMinWidth, btnMaxWidth), qbg);
+                      BSAUTO_BTN_ADDGROUPED(BSFieldSetup(tr("Invert1"), &fntSTD, BTO_INV1, BFS_CHECKABLE, btnMinWidth/2, btnMaxWidth), qbg);
+                      BSAUTO_BTN_ADDGROUPED(BSFieldSetup(tr("Invert2"), &fntSTD, BTO_INV2, BFS_CHECKABLE, btnMinWidth/2, btnMaxWidth), qbg);
+                    BS_STOP
+                    BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                      BS_CHEAT_VMIN
+                      BSAUTO_BTN_ADDGROUPED(BSFieldSetup(tr("Invert3"), &fntSTD, BTO_INV3, BFS_CHECKABLE, btnMinWidth/2, btnMaxWidth), qbg);
+                      BSAUTO_BTN_ADDGROUPED(BSFieldSetup(tr("Invert4"), &fntSTD, BTO_INV4, BFS_CHECKABLE, btnMinWidth/2, btnMaxWidth), qbg);
+                      BSAUTO_BTN_ADDGROUPED(BSFieldSetup(tr("Invert5"), &fntSTD, BTO_INV5, BFS_CHECKABLE, btnMinWidth/2, btnMaxWidth), qbg);
+                    BS_STOP
+                    QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeOVLFeatures(int)));
+                  BS_STOP
+//                    BS_STRETCH
+                BS_STOP
+                        
+                ptb_ovl->addTab(tr("Position"));
+                BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+                  QSignalMapper*  ovlposMapper = new QSignalMapper(this);
+                  BSAUTO_BTN_ADDMAPPED(BSFieldSetup("+1", &fntSTD, BTOP_UP, 0, btnMinWidth/2, btnMaxWidth), ovlposMapper, 0, Qt::AlignHCenter);
+                  BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                    BSAUTO_BTN_ADDMAPPED(BSFieldSetup("-1", &fntSTD, BTOP_LEFT, 0, btnMinWidth/2, btnMaxWidth), ovlposMapper);
+                    BSAUTO_BTN_ADDMAPPED(BSFieldSetup("+1", &fntSTD, BTOP_RIGHT, 0, btnMinWidth/2, btnMaxWidth), ovlposMapper);
+                  BS_STOP
+                  BSAUTO_BTN_ADDMAPPED(BSFieldSetup("-1", &fntSTD, BTOP_DOWN, 0, btnMinWidth/2, btnMaxWidth), ovlposMapper, 0, Qt::AlignHCenter);
+                  QObject::connect(ovlposMapper, SIGNAL(mapped(int)), this, SLOT(changeOVLPos(int)));
                   BS_STRETCH
                 BS_STOP
-              
-                ptb_ovl->addTab(tr("Additional"));
-                BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 2)
-                  QButtonGroup* grForm = new QButtonGroup(this);
-                  BS_START_FRAME_V_HMIN_VMAX(BS_FRAME_SUNKEN, 1)
-                    grForm->setExclusive(true);
-                    BSFieldSetup fseds[] = { 
-                      BSFieldSetup(tr("Circles"), &fntSTD, 0, BFS_CHECKED, btnMinWidth, btnMaxWidth),
-                      BSFieldSetup(tr("Triangles"), &fntSTD, 1, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                      BSFieldSetup(tr("Squares"), &fntSTD, 2, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                      BSFieldSetup(tr("Xses"), &fntSTD, 3, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                      BSFieldSetup(tr("Points"), &fntSTD, 4, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                      
-                    };
-                    for (unsigned int i=0; i<sizeof(fseds) / sizeof(BSFieldSetup); i++)
-                      BSAUTO_BTN_ADDGROUPED(fseds[i], grForm);
-                  BS_STOP
-                  
-                  QButtonGroup* grCount = new QButtonGroup(this);
-                  BS_START_FRAME_V_HMIN_VMAX(BS_FRAME_SUNKEN, 1)
-                    grCount->setExclusive(true);
-                    BSFieldSetup fseds[] = { 
-                      BSFieldSetup(tr("x3"), &fntSTD, 0, BFS_CHECKED, btnMinWidth, btnMaxWidth),
-                      BSFieldSetup(tr("1"), &fntSTD, 1, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                      BSFieldSetup(tr("5"), &fntSTD, 2, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                      BSFieldSetup(tr("10"), &fntSTD, 3, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                    };
-                    for (unsigned int i=0; i<sizeof(fseds) / sizeof(BSFieldSetup); i++)
-                      BSAUTO_BTN_ADDGROUPED(fseds[i], grCount);
-                  BS_STOP
-                      
-                  BS_START_FRAME_V_HMIN_VMAX(BS_FRAME_SUNKEN, 1)
-                    BSFieldSetup add(tr("ADD"),  &fntSTD, 0, 0, btnMinWidth, btnMaxWidth);
-                    BSAUTO_BTN(QPushButton, _btn, add);
-                    _btn->setUserData(0, new BSUOD_2(grForm));
-                    _btn->setUserData(1, new BSUOD_2(grCount));
-                    BSADD(_btn, 0, Qt::AlignCenter);
-                    QObject::connect(_btn, SIGNAL(clicked(bool)), this, SLOT(createOverlayADD()));
-                  BS_STOP
-                BS_STOP
-              
-              BS_STOP
-              BS_STRETCH
-            BS_STOP
-                  
-            ptb->addTab(tr("OvlSets"));
-            BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-                QSignalMapper*  ovlMapper = new QSignalMapper(this);
-                BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-                  QButtonGroup* qbg = new QButtonGroup(this);
-                  qbg->setExclusive(true);
-                  for (unsigned int i=0; i<10; i++)
-                    BSAUTO_BTN_ADDGROUPED(BSFieldSetup(QString::number(i+1).toUtf8(), &fntSTD, i+1, i == 0? BFS_CHECKED : BFS_CHECKABLE, 30, 30), qbg, 0, Qt::AlignCenter);
-                  active_ovl = 1;
-                  QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeOVL(int)));
-                BS_STOP
                 
-                QTabBar*  ptb_ovl = new QTabBar;
-                BSADD(ptb_ovl);
-                BS_START_STACK_HMAX_VMIN
-                  QObject::connect(ptb_ovl, SIGNAL(currentChanged(int)), (QStackedLayout*)_bs_active, SLOT(setCurrentIndex(int)));
-                
-                  ptb_ovl->addTab(tr("Form"));
-                  BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-                    BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-                      {
-                        BSAUTO_TEXT_ADD(tr("Weight:"));
-                        QSpinBox*   psb = new QSpinBox();
-                        psb->setRange(0, 10);
-                        BSADD(psb)
-                        QObject::connect(psb, SIGNAL(valueChanged(int)), this, SLOT(changeOVLWeight(int)));
-                      }
-
-                      BS_STRETCH
-                      
-                      BSFieldSetup spbs[] = {      BSFieldSetup(tr("Stroke:"), &fntSTD, 0, 0, sbUniWidth, sbUniWidth),
-                                                   BSFieldSetup(tr("Space:"), &fntSTD, 1, 0, sbUniWidth, sbUniWidth),
-                                                   BSFieldSetup(tr("Dot:"), &fntSTD, 2, 0, sbUniWidth, sbUniWidth),
-                                            };
-                      for (unsigned int i=0; i<sizeof(spbs)/sizeof(BSFieldSetup); i++)
-                      {
-                        BSAUTO_TEXT_ADD(spbs[i].defaultText, 0, Qt::AlignLeft);
-                        QSpinBox*   psb = new QSpinBox();
-                        BSAPPLY_FEATS(psb, spbs[i]);
-                        psb->setRange(0, 100);
-                        psb->setUserData(0, new BSUOD_0(spbs[i].mappedvalue));
-                        psb->setAccelerated(true);
-                        BSADD(psb, 0, Qt::AlignLeft)
-                        QObject::connect(psb, SIGNAL(valueChanged(int)), this, SLOT(changeOVLForm(int)));
-                      }
+                QString ftabs[] = { tr("Replace"), tr("Create") };
+                for (unsigned int t=0; t<sizeof(ftabs)/sizeof(const char*); t++)
+                {
+                  ptb_ovl->addTab(ftabs[t]);
+                  BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 2)
+                    BSFieldSetup forms1[] = { 
+                      BSFieldSetup(tr("Circle"),  &fntSTD, BTV_CIRCLE,  0,   btnMinWidth, btnMaxWidth),
+                      BSFieldSetup(tr("Square"),    &fntSTD, BTV_SQUARE,  0,   btnMinWidth, btnMaxWidth),
+                      BSFieldSetup(tr("Line horz"), &fntSTD, BTV_LINEHORZ,   0,   btnMinWidth, btnMaxWidth),
+                      BSFieldSetup(tr("Line vert"),  &fntSTD, BTV_LINEVERT,    0,   btnMinWidth, btnMaxWidth),
+                    };
+                    BSFieldSetup forms2[] = { 
+                      BSFieldSetup(tr("Visir"), &fntSTD, BTV_FACTOR,    0,   btnMinWidth, btnMaxWidth),
+                      BSFieldSetup(tr("Cross"), &fntSTD, BTV_CROSS,    0,   btnMinWidth, btnMaxWidth),
+                      BSFieldSetup(tr("Text"), &fntSTD, BTV_TEXT,    0,   btnMinWidth, btnMaxWidth),
+                      BSFieldSetup(tr("Border"), &fntSTD, BTV_BORDER,    0,   btnMinWidth, btnMaxWidth),
+                    };
+                    BSFieldSetup forms3[] = { 
+                      BSFieldSetup(tr("Remove"), &fntSTD, BTV_REMOVE,    0,   btnMinWidth, btnMaxWidth),
+                    };
+                    QButtonGroup* qbg = new QButtonGroup(this);
+                    qbg->setExclusive(true);
+                    BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_BOX, 1)
+                      for (unsigned int i=0; i<sizeof(forms1)/sizeof(BSFieldSetup); i++)
+                        BSAUTO_BTN_ADDGROUPED(forms1[i], qbg, 0, Qt::AlignCenter);
                     BS_STOP
-                    
-                    BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
-                      BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                        BSAUTO_LBL_ADD(BSFieldSetup(tr("Opacity:")));
-                        QSlider* slider = new QSlider(Qt::Horizontal);
-                        slider->setRange(0,100);
-                        BSADD(slider);
-                        QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeOVLOpacity(int)));
-                      BS_STOP
-                      BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                        BSAUTO_LBL_ADD(BSFieldSetup(tr("Slice:")));
-                        QSlider* slider = new QSlider(Qt::Horizontal);
-                        slider->setRange(0,100);
-                        slider->setValue(100);
-                        BSADD(slider);
-                        QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeOVLSlice(int)));
-                      BS_STOP
+                    BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_BOX, 1)
+                      for (unsigned int i=0; i<sizeof(forms2)/sizeof(BSFieldSetup); i++)
+                        BSAUTO_BTN_ADDGROUPED(forms2[i], qbg, 0, Qt::AlignCenter);
                     BS_STOP
-                  BS_STOP
                         
-                  ptb_ovl->addTab(tr("Color"));
-                  BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-                    BSAUTO_BTN_ADDMAPPED(BSFieldSetup(tr("Change Color"), &fntSTD, BTO_COLOR, 0, btnMinWidth, btnMaxWidth), ovlMapper, 0, Qt::AlignHCenter);
-                  
-                    BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
-                      QButtonGroup* qbg = new QButtonGroup(this);
-                      qbg->setExclusive(true);
-                      BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                        BS_CHEAT_VMIN
-                        BSAUTO_BTN_ADDGROUPED(BSFieldSetup(tr("Noinvert"), &fntSTD, BTO_NOINV, BFS_CHECKED, btnMinWidth, btnMaxWidth), qbg);
-                        BSAUTO_BTN_ADDGROUPED(BSFieldSetup(tr("Invert1"), &fntSTD, BTO_INV1, BFS_CHECKABLE, btnMinWidth/2, btnMaxWidth), qbg);
-                        BSAUTO_BTN_ADDGROUPED(BSFieldSetup(tr("Invert2"), &fntSTD, BTO_INV2, BFS_CHECKABLE, btnMinWidth/2, btnMaxWidth), qbg);
-                      BS_STOP
-                      BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                        BS_CHEAT_VMIN
-                        BSAUTO_BTN_ADDGROUPED(BSFieldSetup(tr("Invert3"), &fntSTD, BTO_INV3, BFS_CHECKABLE, btnMinWidth/2, btnMaxWidth), qbg);
-                        BSAUTO_BTN_ADDGROUPED(BSFieldSetup(tr("Invert4"), &fntSTD, BTO_INV4, BFS_CHECKABLE, btnMinWidth/2, btnMaxWidth), qbg);
-                        BSAUTO_BTN_ADDGROUPED(BSFieldSetup(tr("Invert5"), &fntSTD, BTO_INV5, BFS_CHECKABLE, btnMinWidth/2, btnMaxWidth), qbg);
-                      BS_STOP
-                      QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeOVLFeatures(int)));
-                    BS_STOP
-//                    BS_STRETCH
-                  BS_STOP
-                          
-                  ptb_ovl->addTab(tr("Position"));
-                  BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-                    QSignalMapper*  ovlposMapper = new QSignalMapper(this);
-                    BSAUTO_BTN_ADDMAPPED(BSFieldSetup("+1", &fntSTD, BTOP_UP, 0, btnMinWidth/2, btnMaxWidth), ovlposMapper, 0, Qt::AlignHCenter);
-                    BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                      BSAUTO_BTN_ADDMAPPED(BSFieldSetup("-1", &fntSTD, BTOP_LEFT, 0, btnMinWidth/2, btnMaxWidth), ovlposMapper);
-                      BSAUTO_BTN_ADDMAPPED(BSFieldSetup("+1", &fntSTD, BTOP_RIGHT, 0, btnMinWidth/2, btnMaxWidth), ovlposMapper);
-                    BS_STOP
-                    BSAUTO_BTN_ADDMAPPED(BSFieldSetup("-1", &fntSTD, BTOP_DOWN, 0, btnMinWidth/2, btnMaxWidth), ovlposMapper, 0, Qt::AlignHCenter);
-                    QObject::connect(ovlposMapper, SIGNAL(mapped(int)), this, SLOT(changeOVLPos(int)));
-                    BS_STRETCH
-                  BS_STOP
-                  
-                  QString ftabs[] = { tr("Replace"), tr("Create") };
-                  for (unsigned int t=0; t<sizeof(ftabs)/sizeof(const char*); t++)
-                  {
-                    ptb_ovl->addTab(ftabs[t]);
-                    BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 2)
-                      BSFieldSetup forms1[] = { 
-                        BSFieldSetup(tr("Circle"),  &fntSTD, BTV_CIRCLE,  0,   btnMinWidth, btnMaxWidth),
-                        BSFieldSetup(tr("Square"),    &fntSTD, BTV_SQUARE,  0,   btnMinWidth, btnMaxWidth),
-                        BSFieldSetup(tr("Line horz"), &fntSTD, BTV_LINEHORZ,   0,   btnMinWidth, btnMaxWidth),
-                        BSFieldSetup(tr("Line vert"),  &fntSTD, BTV_LINEVERT,    0,   btnMinWidth, btnMaxWidth),
-                      };
-                      BSFieldSetup forms2[] = { 
-                        BSFieldSetup(tr("Visir"), &fntSTD, BTV_FACTOR,    0,   btnMinWidth, btnMaxWidth),
-                        BSFieldSetup(tr("Cross"), &fntSTD, BTV_CROSS,    0,   btnMinWidth, btnMaxWidth),
-                        BSFieldSetup(tr("Text"), &fntSTD, BTV_TEXT,    0,   btnMinWidth, btnMaxWidth),
-                        BSFieldSetup(tr("Border"), &fntSTD, BTV_BORDER,    0,   btnMinWidth, btnMaxWidth),
-                      };
-                      BSFieldSetup forms3[] = { 
-                        BSFieldSetup(tr("Remove"), &fntSTD, BTV_REMOVE,    0,   btnMinWidth, btnMaxWidth),
-                      };
-                      QButtonGroup* qbg = new QButtonGroup(this);
-                      qbg->setExclusive(true);
+                    if (t == 0)
+                    {
                       BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_BOX, 1)
-                        for (unsigned int i=0; i<sizeof(forms1)/sizeof(BSFieldSetup); i++)
-                          BSAUTO_BTN_ADDGROUPED(forms1[i], qbg, 0, Qt::AlignCenter);
+//                        for (unsigned int i=0; i<sizeof(forms3)/sizeof(BSFieldSetup); i++)
+                        QPushButton* rmbtn = new QPushButton();
+                        BSDEPLOY_BTN(rmbtn, forms3[0]);
+                        rmbtn->setMinimumHeight(btnMinWidth);
+                        qbg->addButton(rmbtn, forms3[0].mappedvalue);
+                        BSADD(rmbtn, 0, Qt::AlignCenter);
                       BS_STOP
-                      BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_BOX, 1)
-                        for (unsigned int i=0; i<sizeof(forms2)/sizeof(BSFieldSetup); i++)
-                          BSAUTO_BTN_ADDGROUPED(forms2[i], qbg, 0, Qt::AlignCenter);
-                      BS_STOP
-                          
-                      if (t == 0)
-                      {
-                        BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_BOX, 1)
-  //                        for (unsigned int i=0; i<sizeof(forms3)/sizeof(BSFieldSetup); i++)
-                          QPushButton* rmbtn = new QPushButton();
-                          BSDEPLOY_BTN(rmbtn, forms3[0]);
-                          rmbtn->setMinimumHeight(btnMinWidth);
-                          qbg->addButton(rmbtn, forms3[0].mappedvalue);
-                          BSADD(rmbtn, 0, Qt::AlignCenter);
-                        BS_STOP
-                      }
-                      
-                      if (t == 0)
-                        QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(metaOVLReplace(int)));
-                      else if (t == 1)
-                        QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(metaOVLCreate(int)));
-                      
-                    BS_STOP
-                  }
-                BS_STOP
-                
-                BSAUTO_TEXT_ADD(tr("(settings are not saved between overlays here)"), 0, Qt::AlignHCenter);
+                    }
+                    
+                    if (t == 0)
+                      QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(metaOVLReplace(int)));
+                    else if (t == 1)
+                      QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(metaOVLCreate(int)));
+                    
+                  BS_STOP
+                }
+              BS_STOP
+              
+              BSAUTO_TEXT_ADD(tr("(settings are not saved between overlays here)"), 0, Qt::AlignHCenter);
 
-              BS_STRETCH
-              QObject::connect(ovlMapper, SIGNAL(mapped(int)), this, SLOT(changeOVLFeatures(int)));
-            BS_STOP
+            BS_STRETCH
+            QObject::connect(ovlMapper, SIGNAL(mapped(int)), this, SLOT(changeOVLFeatures(int)));
+          BS_STOP
 
-            
-            ptb->addTab(tr("Addit."));
-            BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-                BSAUTO_TEXT_ADD(tr("Interpolation (future):"), 0, Qt::AlignLeft);
-                BSFieldSetup interp[] = { 
-                  BSFieldSetup(tr("Off"),  &fntSTD, 0,  BFS_CHECKED,     btnMinWidth, btnMaxWidth),
-                  BSFieldSetup(tr("Static"),&fntSTD, 1,  BFS_CHECKABLE,   btnMinWidth, btnMaxWidth),
+          
+          ptb->addTab(tr("Addit."));
+          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+            BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
+              BSAUTO_TEXT_ADD(tr("Interpolation (future):"), 0, Qt::AlignLeft);
+              BSFieldSetup interp[] = { 
+                BSFieldSetup(tr("Off"),  &fntSTD, 0,  BFS_CHECKED,     btnMinWidth, btnMaxWidth),
+                BSFieldSetup(tr("Static"),&fntSTD, 1,  BFS_CHECKABLE,   btnMinWidth, btnMaxWidth),
 //                  BSFieldSetup(tr("Linear"), &fntSTD, IT_DATALINE,  BFS_CHECKABLE,   btnMinWidth, btnMaxWidth),
 //                  BSFieldSetup(tr("Nearest"), &fntSTD, IT_NEAREST,  BFS_CHECKABLE,   btnMinWidth, btnMaxWidth),
-                };
-                QButtonGroup* qbg = new QButtonGroup(this);
-                qbg->setExclusive(true);
-                
-                BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                  BS_CHEAT_VMIN
-                  for (unsigned int i=0; i<sizeof(interp)/sizeof(BSFieldSetup); i++)
-                    BSAUTO_BTN_ADDGROUPED(interp[i], qbg, 0, Qt::AlignCenter);
-                BS_STOP
-                QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeInterpolation(int)));
-              BS_STOP
+              };
+              QButtonGroup* qbg = new QButtonGroup(this);
+              qbg->setExclusive(true);
               
-              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-                {
-                  BSAUTO_TEXT_ADD(tr("Pick Cluster in Overlay tab"));
-                  BSFieldSetup test(tr("Change Palette"),  &fntSTD, 0, 0, btnMinWidth, btnMaxWidth);
-                  BSAUTO_BTN(QPushButton, _btn, test);
-                  BSADD(_btn, 0, Qt::AlignCenter);
-                  QObject::connect(_btn, SIGNAL(clicked(bool)), this, SLOT(changeClusterPalette()));
-                }
+              BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                BS_CHEAT_VMIN
+                for (unsigned int i=0; i<sizeof(interp)/sizeof(BSFieldSetup); i++)
+                  BSAUTO_BTN_ADDGROUPED(interp[i], qbg, 0, Qt::AlignCenter);
+              BS_STOP
+              QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeInterpolation(int)));
+            BS_STOP
+            
+            BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
+              {
+                BSAUTO_TEXT_ADD(tr("Pick Cluster in Overlay tab"));
+                BSFieldSetup test(tr("Change Palette"),  &fntSTD, 0, 0, btnMinWidth, btnMaxWidth);
+                BSAUTO_BTN(QPushButton, _btn, test);
+                BSADD(_btn, 0, Qt::AlignCenter);
+                QObject::connect(_btn, SIGNAL(clicked(bool)), this, SLOT(changeClusterPalette()));
+              }
 //                {
 //                  BSFieldSetup test2("TEST_TIMED",  &fntSTD, 0, BFS_CHECKABLE, btnMinWidth, btnMaxWidth);
 //                  BSAUTO_BTN(QPushButton, _btn, test2);
 //                  BSADD(_btn, 0, Qt::AlignCenter);
 //                }
-              BS_STOP
-              
-              BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
-                BSAUTO_BTN_ADDMAPPED(BSFieldSetup(tr("Remove last graph"), &fntSTD, BTF_DESTROYGRAPH, 0, btnMinWidth), featsMapper, 0, Qt::AlignCenter);
-              BS_STOP
-                  
+            BS_STOP
+            
+            BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
+              BSAUTO_BTN_ADDMAPPED(BSFieldSetup(tr("Remove last graph"), &fntSTD, BTF_DESTROYGRAPH, 0, btnMinWidth), featsMapper, 0, Qt::AlignCenter);
+            BS_STOP
+                
 //              BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
 //                BSAUTO_TEXT_ADD(tr("Overlay' images:"), 0, Qt::AlignLeft);
 //                QSignalMapper*  pathMapper = new QSignalMapper(this);
@@ -1062,191 +1104,189 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //                };
 //                QObject::connect(pathMapper, SIGNAL(mapped(int)), this, SLOT(changePaths(int)));
 //              BS_STOP
-                  
-              BS_STRETCH
-            BS_STOP
-
-            if (ovl_marks != -1)
-            {
-              ptb->addTab(tr("Marks"));
-              BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-                BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                  BSAUTO_LBL_ADD(BSFieldSetup(tr("State:")));
-                  QSlider* slider = new QSlider(Qt::Horizontal);
-                  slider->setRange(0,100);
-                  slider->setUserData(0, new BSUOD_0(MF_TCOLOR));
-                  BSADD(slider);
-                  QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeMarkData(int)));
-                BS_STOP
-                BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                  BSAUTO_LBL_ADD(BSFieldSetup(tr("Position:")));
-                  QSlider* slider = new QSlider(Qt::Horizontal);
-                  slider->setRange(0,100);
-                  slider->setUserData(0, new BSUOD_0(MF_POS));
-                  BSADD(slider);
-                  QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeMarkData(int)));
-                BS_STOP
-              BS_STOP
-            }
-          }
+                
+            BS_STRETCH
           BS_STOP
 
-          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-            BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_BOX, 1)
-              BSAUTO_TEXT_ADD(tr("Ban update from:"), 0, Qt::AlignLeft);
-              BS_STRETCH
-              BSFieldSetup banbtns[] = { 
-                BSFieldSetup(tr("data"),      &fntSTD, BTF_BANUPDATEDATA, 0, btnMinWidth, btnMaxWidth),
-                BSFieldSetup(tr("settings"),   &fntSTD, BTF_BANUPDATESETS, 0, btnMinWidth, btnMaxWidth),
-                BSFieldSetup(tr("overlays"),   &fntSTD, BTF_BANUPDATEOVERLAYS, 0, btnMinWidth, btnMaxWidth),
-              };
-              for (unsigned int i=0; i<sizeof(banbtns) / sizeof(BSFieldSetup); i++)
-              {
-                BSAUTO_BTN(QCheckBox, _chb, banbtns[i]);
-                _chb->setUserData(0, new BSUOD_0(banbtns[i].mappedvalue));
-                BSADD(_chb);
-                QObject::connect(_chb, SIGNAL(clicked(bool)), this, SLOT(changeBans(bool)));
-              }
+          if (ovl_marks != -1)
+          {
+            ptb->addTab(tr("Marks"));
+            BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+              BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                BSAUTO_LBL_ADD(BSFieldSetup(tr("State:")));
+                QSlider* slider = new QSlider(Qt::Horizontal);
+                slider->setRange(0,100);
+                slider->setUserData(0, new BSUOD_0(MF_TCOLOR));
+                BSADD(slider);
+                QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeMarkData(int)));
+              BS_STOP
+              BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                BSAUTO_LBL_ADD(BSFieldSetup(tr("Position:")));
+                QSlider* slider = new QSlider(Qt::Horizontal);
+                slider->setRange(0,100);
+                slider->setUserData(0, new BSUOD_0(MF_POS));
+                BSADD(slider);
+                QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeMarkData(int)));
+              BS_STOP
             BS_STOP
-                
+          }
+        }
+        BS_STOP
+
+        BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+          BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_BOX, 1)
+            BSAUTO_TEXT_ADD(tr("Ban update from:"), 0, Qt::AlignLeft);
+            BS_STRETCH
+            BSFieldSetup banbtns[] = { 
+              BSFieldSetup(tr("data"),      &fntSTD, BTF_BANUPDATEDATA, 0, btnMinWidth, btnMaxWidth),
+              BSFieldSetup(tr("settings"),   &fntSTD, BTF_BANUPDATESETS, 0, btnMinWidth, btnMaxWidth),
+              BSFieldSetup(tr("overlays"),   &fntSTD, BTF_BANUPDATEOVERLAYS, 0, btnMinWidth, btnMaxWidth),
+            };
+            for (unsigned int i=0; i<sizeof(banbtns) / sizeof(BSFieldSetup); i++)
+            {
+              BSAUTO_BTN(QCheckBox, _chb, banbtns[i]);
+              _chb->setUserData(0, new BSUOD_0(banbtns[i].mappedvalue));
+              BSADD(_chb);
+              QObject::connect(_chb, SIGNAL(clicked(bool)), this, SLOT(changeBans(bool)));
+            }
+          BS_STOP
+              
+          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_BOX, 1)
+          
+            BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+              BS_CHEAT_VMIN
+              BSAUTO_TEXT_ADD(tr("Refresh widget:"), 0, Qt::AlignLeft);
+              BS_STRETCH
+              BSFieldSetup bfs(tr("Once"),    &fntSTD, SP_ONCE, 0, btnMinWidth, btnMinWidth);
+              BSAUTO_BTN(QPushButton, _btn, bfs);
+              BSADD(_btn)
+              QObject::connect(_btn, SIGNAL(clicked(bool)), this, SLOT(changeSpeedUpdate_Once()));
+            BS_STOP
+          
+            QButtonGroup* qbg = new QButtonGroup(this);
+            BSFieldSetup upbtns[] = { 
+              BSFieldSetup(tr(">"),    &fntSTD, SP_SLOWEST, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
+              BSFieldSetup(tr(">>"),    &fntSTD, SP_SLOW, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
+              BSFieldSetup(tr(">>>"),  &fntSTD, SP_FAST, BFS_CHECKABLE, btnMinWidth, btnMinWidth), 
+              BSFieldSetup(tr(">>>>"),    &fntSTD, SP_FASTEST, BFS_CHECKABLE, btnMinWidth, btnMinWidth), 
+              BSFieldSetup(tr("Stop"),    &fntSTD, SP_STOP, BFS_CHECKED, btnMinWidth, btnMinWidth),
+            };
+            BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+              BS_CHEAT_VMIN
+              for (unsigned int i=0; i<sizeof(upbtns) / sizeof(BSFieldSetup); i++)
+                BSAUTO_BTN_ADDGROUPED(upbtns[i], qbg);
+            BS_STOP
+            QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeSpeedUpdate(int)));
+          BS_STOP
             BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_BOX, 1)
-            
               BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
                 BS_CHEAT_VMIN
-                BSAUTO_TEXT_ADD(tr("Refresh widget:"), 0, Qt::AlignLeft);
+                BSAUTO_TEXT_ADD(tr("Generate data:"), 0, Qt::AlignLeft);
                 BS_STRETCH
                 BSFieldSetup bfs(tr("Once"),    &fntSTD, SP_ONCE, 0, btnMinWidth, btnMinWidth);
                 BSAUTO_BTN(QPushButton, _btn, bfs);
                 BSADD(_btn)
-                QObject::connect(_btn, SIGNAL(clicked(bool)), this, SLOT(changeSpeedUpdate_Once()));
+                QObject::connect(_btn, SIGNAL(clicked(bool)), this, SLOT(changeSpeedData_Once()));
               BS_STOP
-            
-              QButtonGroup* qbg = new QButtonGroup(this);
-              BSFieldSetup upbtns[] = { 
+
+              BSFieldSetup rtsbtns[] = { 
                 BSFieldSetup(tr(">"),    &fntSTD, SP_SLOWEST, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
                 BSFieldSetup(tr(">>"),    &fntSTD, SP_SLOW, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
                 BSFieldSetup(tr(">>>"),  &fntSTD, SP_FAST, BFS_CHECKABLE, btnMinWidth, btnMinWidth), 
                 BSFieldSetup(tr(">>>>"),    &fntSTD, SP_FASTEST, BFS_CHECKABLE, btnMinWidth, btnMinWidth), 
-                BSFieldSetup(tr("Stop"),    &fntSTD, SP_STOP, BFS_CHECKED, btnMinWidth, btnMinWidth),
+                BSFieldSetup(tr("Stop"),    &fntSTD, SP_STOP, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
               };
+              for (unsigned int i=0; i<sizeof(rtsbtns) / sizeof(BSFieldSetup); i++)
+                if (rtsbtns[i].mappedvalue == sp)
+                  rtsbtns[i].flags |= BFS_CHECKED;
+              
+              QButtonGroup* qbg = new QButtonGroup(this);
               BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
                 BS_CHEAT_VMIN
-                for (unsigned int i=0; i<sizeof(upbtns) / sizeof(BSFieldSetup); i++)
-                  BSAUTO_BTN_ADDGROUPED(upbtns[i], qbg);
-              BS_STOP
-              QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeSpeedUpdate(int)));
-            BS_STOP
-              BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_BOX, 1)
-                BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                  BS_CHEAT_VMIN
-                  BSAUTO_TEXT_ADD(tr("Generate data:"), 0, Qt::AlignLeft);
-                  BS_STRETCH
-                  BSFieldSetup bfs(tr("Once"),    &fntSTD, SP_ONCE, 0, btnMinWidth, btnMinWidth);
-                  BSAUTO_BTN(QPushButton, _btn, bfs);
-                  BSADD(_btn)
-                  QObject::connect(_btn, SIGNAL(clicked(bool)), this, SLOT(changeSpeedData_Once()));
-                BS_STOP
-  
-                BSFieldSetup rtsbtns[] = { 
-                  BSFieldSetup(tr(">"),    &fntSTD, SP_SLOWEST, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
-                  BSFieldSetup(tr(">>"),    &fntSTD, SP_SLOW, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
-                  BSFieldSetup(tr(">>>"),  &fntSTD, SP_FAST, BFS_CHECKABLE, btnMinWidth, btnMinWidth), 
-                  BSFieldSetup(tr(">>>>"),    &fntSTD, SP_FASTEST, BFS_CHECKABLE, btnMinWidth, btnMinWidth), 
-                  BSFieldSetup(tr("Stop"),    &fntSTD, SP_STOP, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
-                };
                 for (unsigned int i=0; i<sizeof(rtsbtns) / sizeof(BSFieldSetup); i++)
-                  if (rtsbtns[i].mappedvalue == sp)
-                    rtsbtns[i].flags |= BFS_CHECKED;
-                
-                QButtonGroup* qbg = new QButtonGroup(this);
-                BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                  BS_CHEAT_VMIN
-                  for (unsigned int i=0; i<sizeof(rtsbtns) / sizeof(BSFieldSetup); i++)
-                    BSAUTO_BTN_ADDGROUPED(rtsbtns[i], qbg);
-                BS_STOP
-                QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeSpeedData(int)));
-                
-                BSAUTO_BTN_ADDMAPPED(BSFieldSetup(tr("Clear Data"), &fntSTD, BTF_CLEAR, btnMinWidth, btnMaxWidth), featsMapper);
+                  BSAUTO_BTN_ADDGROUPED(rtsbtns[i], qbg);
               BS_STOP
-          BS_STOP
-                
-          ptb->setCurrentIndex(tabshow);
-//          BS_STRETCH
-        }
-        BS_STOP
-  
-        if (MW_TEST == ADV_PALETTES)
-        {
-          BS_START_SCROLL_V_HMAX_VMAX
-            for (unsigned int i=0; i<drawscount; i++)
-            {
-              BSAUTO_TEXT_ADD(ppalettes_names[i]);
-              BSADD(draws[i]);
-            }
-          BS_STOP;
-        }
-        else if (MW_TEST == PROGRESS_BAR)
-        {
-          BS_START_FRAME_V_HMIN_VMIN(BS_FRAME_PANEL, 2)
-            for (unsigned int i=0; i<drawscount; i++)
-            {
-              if (i == drawscount - 1)
-                draws[i]->setFixedHeight(40);
-              BSADD(draws[i])
-            }
-          BS_STOP;
-        }
-        else if (MW_TEST == ORIENTS)
-        {
-          BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
-            BSADD(draws[0])
-            BS_START_FRAME_H_HMAX_VMAX(BS_FRAME_PANEL, 2)
-              for (unsigned int i=1; i<drawscount-1; i++)
-                BSADD(draws[i])
+              QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeSpeedData(int)));
+              
+              BSAUTO_BTN_ADDMAPPED(BSFieldSetup(tr("Clear Data"), &fntSTD, BTF_CLEAR, btnMinWidth, btnMaxWidth), featsMapper);
             BS_STOP
-            BSADD(draws[drawscount-1])
-          BS_STOP;
-        }
-        else if (MW_TEST == VERTICAL)
-        {
-          BS_START_FRAME_H_HMAX_VMAX(BS_FRAME_PANEL, 2)
-            for (unsigned int i=0; i<drawscount; i++)
-              BSADD(draws[i])
-          BS_STOP;
-        }
-        else
-        {
-          QScrollBar* qsb = MW_TEST == DRAW_GRAPHS_MOVE? new QScrollBar(Qt::Vertical) : nullptr;
-          BS_START_FRAME_H_HMAX_VMAX(BS_FRAME_PANEL, 2)
-            for (unsigned int i=0; i<dccount; i++)
-            {
-              if (MW_TEST == DRAW_RECORDER)
-                qsb = new QScrollBar();
-              BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
-              for (unsigned int j=0; j<drcount; j++)
-              {
-                if (i*drcount + j >= drawscount)
-                  break;
-                
-                int lwresult = 0;
-                if (lw == LW_1) lwresult = 1;
-                else if (lw == LW_1000) lwresult = j == 0? 1 : 0;
-                else if (lw == LW_0111) lwresult = j == 0? 0 : 1;
-                else if (lw == LW_012)  lwresult = j;
-                else if (lw == LW_1110) lwresult = j < 3? 1 : 0;
-    
-                if (qsb)
-                  draws[i*drcount + j]->connectScrollBar(qsb, false);
-                BSADD(draws[i*drcount + j], lwresult);
-              }
-              BS_STOP
-              if (i == dccount - 1 && qsb)
-                BSADD(qsb);
-            }
-          BS_STOP
-        }
+        BS_STOP
+              
+        ptb->setCurrentIndex(tabshow);
+//          BS_STRETCH
+      }
       BS_STOP
-      
+
+      if (MW_TEST == ADV_PALETTES)
+      {
+        BS_START_SCROLL_V_HMAX_VMAX
+          for (unsigned int i=0; i<drawscount; i++)
+          {
+            BSAUTO_TEXT_ADD(ppalettes_names[i]);
+            BSADD(draws[i]);
+          }
+        BS_STOP;
+      }
+      else if (MW_TEST == PROGRESS_BAR)
+      {
+        BS_START_FRAME_V_HMIN_VMIN(BS_FRAME_PANEL, 2)
+          for (unsigned int i=0; i<drawscount; i++)
+          {
+            if (i == drawscount - 1)
+              draws[i]->setFixedHeight(40);
+            BSADD(draws[i])
+          }
+        BS_STOP;
+      }
+      else if (MW_TEST == ORIENTS)
+      {
+        BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
+          BSADD(draws[0])
+          BS_START_FRAME_H_HMAX_VMAX(BS_FRAME_PANEL, 2)
+            for (unsigned int i=1; i<drawscount-1; i++)
+              BSADD(draws[i])
+          BS_STOP
+          BSADD(draws[drawscount-1])
+        BS_STOP;
+      }
+      else if (MW_TEST == VERTICAL)
+      {
+        BS_START_FRAME_H_HMAX_VMAX(BS_FRAME_PANEL, 2)
+          for (unsigned int i=0; i<drawscount; i++)
+            BSADD(draws[i])
+        BS_STOP;
+      }
+      else
+      {
+        QScrollBar* qsb = MW_TEST == DRAW_GRAPHS_MOVE? new QScrollBar(Qt::Vertical) : nullptr;
+        BS_START_FRAME_H_HMAX_VMAX(BS_FRAME_PANEL, 2)
+          for (unsigned int i=0; i<dccount; i++)
+          {
+            if (MW_TEST == DRAW_RECORDER)
+              qsb = new QScrollBar();
+            BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
+            for (unsigned int j=0; j<drcount; j++)
+            {
+              if (i*drcount + j >= drawscount)
+                break;
+              
+              int lwresult = 0;
+              if (lw == LW_1) lwresult = 1;
+              else if (lw == LW_1000) lwresult = j == 0? 1 : 0;
+              else if (lw == LW_0111) lwresult = j == 0? 0 : 1;
+              else if (lw == LW_012)  lwresult = j;
+              else if (lw == LW_1110) lwresult = j < 3? 1 : 0;
+  
+              if (qsb)
+                draws[i*drcount + j]->connectScrollBar(qsb, false);
+              BSADD(draws[i*drcount + j], lwresult);
+            }
+            BS_STOP
+            if (i == dccount - 1 && qsb)
+              BSADD(qsb);
+          }
+        BS_STOP
+      }
       QObject::connect(featsMapper, SIGNAL(mapped(int)), this, SLOT(changeFeatures(int)));
     }
     
@@ -2014,7 +2054,7 @@ void  MainWindow::changeFeatures(int id)
 void MainWindow::changeInterpolation(int sigid)
 {
   for (unsigned int i=0; i<drawscount; i++)
-    draws[i]->setPaletteInterpolation(sigid == 1);
+    draws[i]->setDataTextureInterpolation(sigid == 1);
 }
 
 void MainWindow::changeBans(bool banned)

@@ -295,7 +295,7 @@ void DrawQWidget::initializeGL()
 }
 
 void DrawQWidget::paintGL()
-{
+{ 
   glDisable(GL_DEPTH_TEST);
   {
 //    glDisable(GL_BLEND);
@@ -343,8 +343,8 @@ void DrawQWidget::paintGL()
             m_matrixDataCached[i] = m_matrixData[i] * m_loc_k + m_loc_b;
         }
         glTexImage2D(   GL_TEXTURE_2D, 0, GL_RED, dataDimmA, dataDimmB*m_countPortions, 0, GL_RED, GL_FLOAT, m_matrixDataCached);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_interpPal? GL_LINEAR : GL_NEAREST);  // GL_LINEAR
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_interpPal? GL_LINEAR : GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_dataTextureInterp? GL_LINEAR : GL_NEAREST);  // GL_LINEAR
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_dataTextureInterp? GL_LINEAR : GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // GL_CLAMP_TO_EDGE
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
       }
@@ -575,12 +575,13 @@ void DrawQWidget::paintGL()
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void DrawQWidget::innerUpdate(REDRAWBY redrawby)
+void DrawQWidget::callWidgetUpdate()
 {
-  if (!autoUpdateBanned(redrawby))
-  {
-    update();
-  }
+//  qDebug()<<"callWidgetUpdate called...";
+  QOpenGLWidget::update();
+//  setUpdatesEnabled(false);
+//  QOpenGLWidget::repaint();   /// better way: call banAutoUpdate for data, then explicitly call repaint in your GUI thread
+//  setUpdatesEnabled(true);
 }
 
 void DrawQWidget::innerResize()
@@ -646,7 +647,8 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION oreact, unsigned int x, unsigned i
     if (doUpdate)
     {
       m_bitmaskPendingChanges |= PC_PARAMSOVL;
-      innerUpdate(RD_BYOVL_ACTIONS);
+      if (!autoUpdateBanned(RD_BYOVL_ACTIONS))
+        callWidgetUpdate();
     }
   }
 }
@@ -707,14 +709,23 @@ void DrawQWidget::connectScrollBar(QScrollBar *qsb, bool staticView, bool setOri
   QObject::connect(qsb, SIGNAL(valueChanged(int)), this, SLOT(slideLmHeight(int)));
 }
 
+void DrawQWidget::slot_setScalingH(int s){  setScalingLimitsH(s, s); }
+void DrawQWidget::slot_setScalingV(int s){  setScalingLimitsV(s, s); }
 void DrawQWidget::slot_setBoundLow(float value){  setBoundLow(value); }
 void DrawQWidget::slot_setBoundHigh(float value){ setBoundHigh(value);  }
 void DrawQWidget::slot_setContrast(float k, float b){ setContrast(contrast_t(k, b));  }
+void DrawQWidget::slot_setContrastK(float k){ setContrast(contrast_t(k, m_contrast.offset));  }
+void DrawQWidget::slot_setContrastB(float b){ setContrast(contrast_t(m_contrast.contrast, b));  }
+void DrawQWidget::slot_setDataTextureInterpolation(bool d){ setDataTextureInterpolation(d); }
 void DrawQWidget::slot_setDataPalette(const IPalette* ppal){ setDataPalette(ppal); }
+void DrawQWidget::slot_setDataPaletteDiscretion(bool d){ setDataPaletteDiscretion(d); }
 void DrawQWidget::slot_setData(const float* data){ setData(data); }
 void DrawQWidget::slot_setData(QVector<float> data){ setData(data.constData()); }
 void DrawQWidget::slot_fillData(float data){ fillData(data); }
 void DrawQWidget::slot_clearData(){ clearData(); }
+
+void DrawQWidget::slot_setMirroredHorz(){ setMirroredHorz(); }
+void DrawQWidget::slot_setMirroredVert(){ setMirroredVert(); }
 
 void DrawQWidget::slot_enableAutoUpdate(bool enabled){  banAutoUpdate(!enabled); }
 void DrawQWidget::slot_disableAutoUpdate(bool disabled){  banAutoUpdate(disabled); }

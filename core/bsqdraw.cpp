@@ -342,7 +342,13 @@ void DrawQWidget::paintGL()
           for (unsigned int i=0; i<total; i++)
             m_matrixDataCached[i] = m_matrixData[i] * m_loc_k + m_loc_b;
         }
-        glTexImage2D(   GL_TEXTURE_2D, 0, GL_RED, dataDimmA, dataDimmB*m_countPortions, 0, GL_RED, GL_FLOAT, m_matrixDataCached);
+        glTexImage2D(   GL_TEXTURE_2D, 0, 
+#if QT_VERSION >= 0x050000
+                        GL_R32F, 
+#elif QT_VERSION >= 0x040000
+                        GL_RED, 
+#endif 
+                        dataDimmA, dataDimmB*m_countPortions, 0, GL_RED, GL_FLOAT, m_matrixDataCached);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_dataTextureInterp? GL_LINEAR : GL_NEAREST);  // GL_LINEAR
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_dataTextureInterp? GL_LINEAR : GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // GL_CLAMP_TO_EDGE

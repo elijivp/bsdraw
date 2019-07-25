@@ -7,80 +7,134 @@
 
 /// See example below
 
-enum    _BS_LAYTYPE {   _BS_BOXED_LAYOUT, _BS_NONBOXED_LAYOUT, _BS_NOLAYOUT };
+enum    _BS_LAYTYPE {   _BS_BOXED_LAYOUT, _BS_NONBOXED_LAYOUT, _BS_NOLAYOUT, _BS_EMPTY };
 
-#define _BS_LOCAL_(bs_enum) _BS_LAYTYPE _bs_boxed = bs_enum; \
-  Qt::Alignment           _bs_align_h; \
-  Qt::Alignment           _bs_align_v; \
-  if (bs_enum == _BS_BOXED_LAYOUT){ _bs_align_h = 0; _bs_align_v = 0; } \
-  QScrollArea*            _bs_topScroll = NULL;
+#define _BS_LOCAL_VARIABLES(bs_enum) \
+  _BS_LAYTYPE _bs_boxed   = bs_enum; \
+  Qt::Alignment           _bs_align_h(0), _bs_align_v(0); \
+  QScrollArea*            _bs_topScroll(NULL);
 
-#define BSLAYOUT_DECL(boxLayout) \
+#define BS_INIT_FOR(boxLayout) \
   QWidget*                _bs_pWidget = NULL; \
   QStack<QWidget*>        _bs_wStack; \
   QBoxLayout*             _bs_active = boxLayout; \
-  _BS_LOCAL_(_BS_BOXED_LAYOUT)
+  _BS_LOCAL_VARIABLES(_BS_BOXED_LAYOUT)
+
+#define BS_INIT_NOTCUTED(boxlayouttype) \
+  QWidget*                _bs_pWidget = NULL; \
+  QStack<QWidget*>        _bs_wStack; \
+  QBoxLayout*             _bs_active = new boxlayouttype(); \
+  _BS_LOCAL_VARIABLES(_BS_BOXED_LAYOUT)
+
+#define BS_INIT(boxlayouttype) \
+  QWidget*                _bs_pWidget = NULL; \
+  QStack<QWidget*>        _bs_wStack; \
+  QBoxLayout*             _bs_active = new boxlayouttype(); _bs_active->setContentsMargins(0,0,0,0); \
+  _BS_LOCAL_VARIABLES(_BS_BOXED_LAYOUT)
+
+#define BS_INIT_DERIVED(boxlayouttype) \
+  QWidget*                _bs_pWidget = this; \
+  QStack<QWidget*>        _bs_wStack; \
+  QBoxLayout*             _bs_active = new boxlayouttype(); _bs_active->setContentsMargins(0,0,0,0); \
+  this->setLayout(_bs_active); \
+  _BS_LOCAL_VARIABLES(_BS_BOXED_LAYOUT)
+
 
 #define BSWIDGET            _bs_pWidget
 #define BSLAYOUT            _bs_active
 
 #define BS_ALIGN_LEFT       _bs_align_h = Qt::AlignLeft;
 #define BS_ALIGN_RIGHT      _bs_align_h = Qt::AlignRight;
+#define BS_ALIGN_TOP        _bs_align_v = Qt::AlignTop;
+#define BS_ALIGN_BOTTOM     _bs_align_v = Qt::AlignBottom;
 #define BS_ALIGN_HCENTER    _bs_align_h = Qt::AlignHCenter;
 #define BS_ALIGN_NONE       _bs_align_h = 0;
+
+#define BS_NORESIZE        _bs_active->setSizeConstraint(QLayout::SetNoConstraint);
 
 #define BS_FRAME_BOX       QFrame::Box | QFrame::Plain
 #define BS_FRAME_PANEL     QFrame::Panel | QFrame::Raised
 #define BS_FRAME_SUNKEN    QFrame::Panel | QFrame::Sunken
 
-#define _BS_POP_            if (_bs_boxed == _BS_BOXED_LAYOUT) ((QBoxLayout*)_bs_active)->addWidget(_bs_pWidget, 0, _bs_align_h | _bs_align_v);   else   _bs_active->addWidget(_bs_pWidget);  _bs_pWidget = _bs_wStack.pop();
-#define BS_STOP             if (_bs_boxed == _BS_BOXED_LAYOUT || _bs_boxed == _BS_NONBOXED_LAYOUT) ((QWidget*)_bs_pWidget)->setLayout((QLayout*)_bs_active);    if (_bs_topScroll){  _bs_topScroll->setWidget(_bs_pWidget); _bs_pWidget = _bs_topScroll; } }  _BS_POP_
+#define _BS_POP            if (_bs_boxed == _BS_BOXED_LAYOUT) ((QBoxLayout*)_bs_active)->addWidget(_bs_pWidget, 0, _bs_align_h | _bs_align_v); else if (_bs_boxed != _BS_EMPTY) _bs_active->addWidget(_bs_pWidget);  _bs_pWidget = _bs_wStack.pop();
+#define BS_STOP            if (_bs_boxed == _BS_BOXED_LAYOUT || _bs_boxed == _BS_NONBOXED_LAYOUT) ((QWidget*)_bs_pWidget)->setLayout((QLayout*)_bs_active);    if (_bs_topScroll){  _bs_topScroll->setWidget(_bs_pWidget); _bs_pWidget = _bs_topScroll; } }  _BS_POP
 
-#define BS_START_LAYOUT(boxlayouttype)     _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QWidget; {   QBoxLayout*  _bs_active = new boxlayouttype();     _BS_LOCAL_(_BS_BOXED_LAYOUT)
-#define BS_START_LAYOUT_HMAX_VMIN(boxlayouttype)          BS_START_LAYOUT(boxlayouttype)  _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
-#define BS_START_LAYOUT_HMIN_VMIN(boxlayouttype)          BS_START_LAYOUT(boxlayouttype)  _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
-#define BS_START_LAYOUT_HMIN_VMAX(boxlayouttype)          BS_START_LAYOUT(boxlayouttype)  _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
-#define BS_START_LAYOUT_HMAX_VMAX(boxlayouttype)          BS_START_LAYOUT(boxlayouttype)  _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+#define BS_START_LAYOUT(boxlayouttype)     _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QWidget; {   QBoxLayout*  _bs_active = new boxlayouttype(); _bs_active->setContentsMargins(0,0,0,0); _BS_LOCAL_VARIABLES(_BS_BOXED_LAYOUT)
+#define BS_START_LAYOUT_HMAX_VMIN(boxlayouttype)                              BS_START_LAYOUT(boxlayouttype)  _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
+#define BS_START_LAYOUT_HMIN_VMIN(boxlayouttype)                              BS_START_LAYOUT(boxlayouttype)  _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+#define BS_START_LAYOUT_HMIN_VMAX(boxlayouttype)                              BS_START_LAYOUT(boxlayouttype)  _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
+#define BS_START_LAYOUT_HMAX_VMAX(boxlayouttype)                              BS_START_LAYOUT(boxlayouttype)  _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+
+#define BS_START_LAYOUT_IF(condition, bltypeTrue, bltypeFalse)  _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QWidget; { QBoxLayout*  _bs_active = condition? (QBoxLayout*)new bltypeTrue() : (QBoxLayout*)new bltypeFalse(); _bs_active->setContentsMargins(0,0,0,0); _BS_LOCAL_VARIABLES(_BS_BOXED_LAYOUT)
+#define BS_START_LAYOUT_IF_HMAX_VMIN(condition, bltypeTrue, bltypeFalse)      BS_START_LAYOUT_IF(condition, bltypeTrue, bltypeFalse)  _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
+#define BS_START_LAYOUT_IF_HMIN_VMIN(condition, bltypeTrue, bltypeFalse)      BS_START_LAYOUT_IF(condition, bltypeTrue, bltypeFalse)  _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+#define BS_START_LAYOUT_IF_HMIN_VMAX(condition, bltypeTrue, bltypeFalse)      BS_START_LAYOUT_IF(condition, bltypeTrue, bltypeFalse)  _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
+#define BS_START_LAYOUT_IF_HMAX_VMAX(condition, bltypeTrue, bltypeFalse)      BS_START_LAYOUT_IF(condition, bltypeTrue, bltypeFalse)  _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+
+#define BS_INSERT_LAYOUT_IF(condition, boxlayouttype)  _bs_wStack.push(_bs_pWidget);  if (condition) _bs_pWidget = new QWidget; else _bs_boxed = _BS_EMPTY; { QBoxLayout* _bs_actold = _bs_active; QBoxLayout* _bs_active = _bs_actold; _BS_LOCAL_VARIABLES(_BS_BOXED_LAYOUT) if (condition){  _bs_active = new boxlayouttype(); _bs_active->setContentsMargins(0,0,0,0); }
+#define BS_INSERT_LAYOUT_IF_HMAX_VMIN(condition, boxlayouttype)      BS_INSERT_LAYOUT_IF(condition, boxlayouttype)  if (condition) _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
+#define BS_INSERT_LAYOUT_IF_HMIN_VMIN(condition, boxlayouttype)      BS_INSERT_LAYOUT_IF(condition, boxlayouttype)  if (condition) _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+#define BS_INSERT_LAYOUT_IF_HMIN_VMAX(condition, boxlayouttype)      BS_INSERT_LAYOUT_IF(condition, boxlayouttype)  if (condition) _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
+#define BS_INSERT_LAYOUT_IF_HMAX_VMAX(condition, boxlayouttype)      BS_INSERT_LAYOUT_IF(condition, boxlayouttype)  if (condition) _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
 #define BS_STRETCH                          _bs_active->addStretch(1);
-#if QT_VERSION >= 0x050b00
-#define BS_CHEAT_VMIN
-#else
-#define BS_CHEAT_VMIN                       _bs_pWidget->setContentsMargins(0, -10, 0, -10);
-#endif
+#define BS_SPACING(count)                   _bs_active->addSpacing(count);
 
-#define BS_START_SPLITTER_V                 _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QSplitter;  { QSplitter*   _bs_active = (QSplitter*)_bs_pWidget; _bs_active->setOrientation(Qt::Vertical); _bs_active->setChildrenCollapsible(false);     _BS_LOCAL_(_BS_NOLAYOUT)
+//#if QT_VERSION >= 0x050c00
+#define BS_CHEAT_VMIN
+//#else
+//#define BS_CHEAT_VMIN                       _bs_pWidget->setContentsMargins(0, -10, 0, -10);
+//#endif
+
+#define BS_START_SPLITTER_V                 _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QSplitter;  { QSplitter*   _bs_active = (QSplitter*)_bs_pWidget; _bs_active->setOrientation(Qt::Vertical); _bs_active->setChildrenCollapsible(false);     _BS_LOCAL_VARIABLES(_BS_NOLAYOUT)
 #define BS_START_SPLITTER_V_HMAX_VMIN       BS_START_SPLITTER_V  _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 #define BS_START_SPLITTER_V_HMIN_VMIN       BS_START_SPLITTER_V  _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 #define BS_START_SPLITTER_V_HMIN_VMAX       BS_START_SPLITTER_V  _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
 #define BS_START_SPLITTER_V_HMAX_VMAX       BS_START_SPLITTER_V  _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
-#define BS_START_SPLITTER_H                 _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QSplitter;  { QSplitter*   _bs_active = (QSplitter*)_bs_pWidget; _bs_active->setOrientation(Qt::Horizontal); _bs_active->setChildrenCollapsible(false);     _BS_LOCAL_(_BS_NOLAYOUT)
+#define BS_START_SPLITTER_H                 _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QSplitter;  { QSplitter*   _bs_active = (QSplitter*)_bs_pWidget; _bs_active->setOrientation(Qt::Horizontal); _bs_active->setChildrenCollapsible(false);     _BS_LOCAL_VARIABLES(_BS_NOLAYOUT)
 #define BS_START_SPLITTER_H_HMAX_VMIN       BS_START_SPLITTER_H  _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 #define BS_START_SPLITTER_H_HMIN_VMIN       BS_START_SPLITTER_H  _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 #define BS_START_SPLITTER_H_HMIN_VMAX       BS_START_SPLITTER_H  _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
 #define BS_START_SPLITTER_H_HMAX_VMAX       BS_START_SPLITTER_H  _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
-#define BS_START_FRAME_H(fstyle, fwidth)   _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QFrame;  { QHBoxLayout*   _bs_active = new QHBoxLayout;    ((QFrame*)_bs_pWidget)->setFrameStyle(fstyle); ((QFrame*)_bs_pWidget)->setLineWidth(fwidth);     _BS_LOCAL_(_BS_BOXED_LAYOUT)
+
+
+#define BS_START_FRAME_H(fstyle, fwidth)   _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QFrame;  { QHBoxLayout*   _bs_active = new QHBoxLayout;    ((QFrame*)_bs_pWidget)->setFrameStyle(fstyle); ((QFrame*)_bs_pWidget)->setLineWidth(fwidth);     _BS_LOCAL_VARIABLES(_BS_BOXED_LAYOUT)
 #define BS_START_FRAME_H_HMAX_VMIN(fstyle, fwidth)  BS_START_FRAME_H(fstyle, fwidth)    _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 #define BS_START_FRAME_H_HMIN_VMIN(fstyle, fwidth)  BS_START_FRAME_H(fstyle, fwidth)    _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 #define BS_START_FRAME_H_HMIN_VMAX(fstyle, fwidth)  BS_START_FRAME_H(fstyle, fwidth)    _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
 #define BS_START_FRAME_H_HMAX_VMAX(fstyle, fwidth)  BS_START_FRAME_H(fstyle, fwidth)    _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
-#define BS_START_FRAME_V(fstyle, fwidth)   _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QFrame;  { QVBoxLayout*   _bs_active = new QVBoxLayout;    ((QFrame*)_bs_pWidget)->setFrameStyle(fstyle); ((QFrame*)_bs_pWidget)->setLineWidth(fwidth);     _BS_LOCAL_(_BS_BOXED_LAYOUT)
+#define BS_START_FRAME_V(fstyle, fwidth)   _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QFrame;  { QVBoxLayout*   _bs_active = new QVBoxLayout;    ((QFrame*)_bs_pWidget)->setFrameStyle(fstyle); ((QFrame*)_bs_pWidget)->setLineWidth(fwidth);     _BS_LOCAL_VARIABLES(_BS_BOXED_LAYOUT)
 #define BS_START_FRAME_V_HMAX_VMIN(fstyle, fwidth)  BS_START_FRAME_V(fstyle, fwidth)    _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 #define BS_START_FRAME_V_HMIN_VMIN(fstyle, fwidth)  BS_START_FRAME_V(fstyle, fwidth)    _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 #define BS_START_FRAME_V_HMIN_VMAX(fstyle, fwidth)  BS_START_FRAME_V(fstyle, fwidth)    _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
 #define BS_START_FRAME_V_HMAX_VMAX(fstyle, fwidth)  BS_START_FRAME_V(fstyle, fwidth)    _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
-#define BS_START_FRAME_E(fstyle, fwidth)   _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QFrame;  { ((QFrame*)_bs_pWidget)->setFrameStyle(fstyle);  ((QFrame*)_bs_pWidget)->setLineWidth(fwidth);  QBoxLayout* _bs_active = NULL;    _BS_LOCAL_(_BS_NOLAYOUT)
+
+#define BS_START_FRAME_E(fstyle, fwidth)   _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QFrame;  { ((QFrame*)_bs_pWidget)->setFrameStyle(fstyle);  ((QFrame*)_bs_pWidget)->setLineWidth(fwidth);  QBoxLayout* _bs_active = NULL;    _BS_LOCAL_VARIABLES(_BS_NOLAYOUT)
+
+
+#define BS_START_PAGE_H  _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QWidget; _bs_boxed = _BS_EMPTY; { QHBoxLayout*   _bs_active = new QHBoxLayout; _BS_LOCAL_VARIABLES(_BS_BOXED_LAYOUT)
+#define BS_START_PAGE_H_HMAX_VMIN   BS_START_PAGE_H   _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
+#define BS_START_PAGE_H_HMIN_VMIN   BS_START_PAGE_H   _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+#define BS_START_PAGE_H_HMIN_VMAX   BS_START_PAGE_H   _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
+#define BS_START_PAGE_H_HMAX_VMAX   BS_START_PAGE_H   _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+
+#define BS_START_PAGE_V  _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QWidget; _bs_boxed = _BS_EMPTY; { QVBoxLayout*   _bs_active = new QVBoxLayout; _BS_LOCAL_VARIABLES(_BS_BOXED_LAYOUT)
+#define BS_START_PAGE_V_HMAX_VMIN   BS_START_PAGE_V   _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
+#define BS_START_PAGE_V_HMIN_VMIN   BS_START_PAGE_V   _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+#define BS_START_PAGE_V_HMIN_VMAX   BS_START_PAGE_V   _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
+#define BS_START_PAGE_V_HMAX_VMAX   BS_START_PAGE_V   _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+
 
 #define BS_START_SCROLL_V                   _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QWidget;  { \
   QScrollArea*    scrollArea = new QScrollArea;   \
   scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);  \
   scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); \
   scrollArea->setWidgetResizable(true); \
-  QVBoxLayout* _bs_active = new QVBoxLayout;   _BS_LOCAL_(_BS_BOXED_LAYOUT) \
+  QVBoxLayout* _bs_active = new QVBoxLayout;   _BS_LOCAL_VARIABLES(_BS_BOXED_LAYOUT) \
   _bs_topScroll = scrollArea;
 #define BS_START_SCROLL_V_HMAX_VMIN         BS_START_SCROLL_V    _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 #define BS_START_SCROLL_V_HMIN_VMIN         BS_START_SCROLL_V    _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
@@ -92,20 +146,21 @@ enum    _BS_LAYTYPE {   _BS_BOXED_LAYOUT, _BS_NONBOXED_LAYOUT, _BS_NOLAYOUT };
   scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);  \
   scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn); \
   scrollArea->setWidgetResizable(true); \
-  QHBoxLayout* _bs_active = new QHBoxLayout;   _BS_LOCAL_(_BS_BOXED_LAYOUT) \
+  QHBoxLayout* _bs_active = new QHBoxLayout;   _BS_LOCAL_VARIABLES(_BS_BOXED_LAYOUT) \
   _bs_topScroll = scrollArea;
 #define BS_START_SCROLL_H_HMAX_VMIN         BS_START_SCROLL_H    _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 #define BS_START_SCROLL_H_HMIN_VMIN         BS_START_SCROLL_H    _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 #define BS_START_SCROLL_H_HMIN_VMAX         BS_START_SCROLL_H    _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
 #define BS_START_SCROLL_H_HMAX_VMAX         BS_START_SCROLL_H    _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
-#define BS_START_STACK                     _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QWidget; {   QStackedLayout*  _bs_active = new QStackedLayout();    _BS_LOCAL_(_BS_NONBOXED_LAYOUT)
+#define BS_START_STACK                     _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QWidget; {   QStackedLayout*  _bs_active = new QStackedLayout();    _BS_LOCAL_VARIABLES(_BS_NONBOXED_LAYOUT)
 #define BS_START_STACK_HMAX_VMIN            BS_START_STACK  _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 #define BS_START_STACK_HMIN_VMIN            BS_START_STACK  _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 #define BS_START_STACK_HMIN_VMAX            BS_START_STACK  _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
 #define BS_START_STACK_HMAX_VMAX            BS_START_STACK  _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+#define BS_STACK_SWITCH(idx)  ((QStackedLayout*)_bs_active)->setCurrentIndex(idx);
 
-#define BS_START_GROUP(title, layouttype)  _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QGroupBox(title);  { layouttype*   _bs_active = new layouttype();   _BS_LOCAL_(_BS_BOXED_LAYOUT)
+#define BS_START_GROUP(title, layouttype)  _bs_wStack.push(_bs_pWidget);  _bs_pWidget = new QGroupBox(title);  { layouttype*   _bs_active = new layouttype();   _BS_LOCAL_VARIABLES(_BS_BOXED_LAYOUT)
 #define BS_START_GROUP_HMAX_VMIN(title, layouttype)            BS_START_GROUP(title, layouttype)  _bs_pWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Maximum);
 #define BS_START_GROUP_HMIN_VMIN(title, layouttype)            BS_START_GROUP(title, layouttype)  _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 #define BS_START_GROUP_HMIN_VMAX(title, layouttype)            BS_START_GROUP(title, layouttype)  _bs_pWidget->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
@@ -142,7 +197,7 @@ struct  BSFieldSetup
   BSFieldSetup(const QString& text, const QFont* font=NULL): defaultText(text), pFont(font), mappedvalue(0), flags(0), widthMin(-1), widthMax(-1), stretch(0), alignment(0){}
   
   // version for remap
-  BSFieldSetup(const QString& text, const BSFieldSetup& cpy, int newmapped, int newflags=0): defaultText(text), pFont(cpy.pFont), mappedvalue(newmapped), flags(cpy.flags | newflags), widthMin(cpy.widthMin), widthMax(cpy.widthMax), 
+  BSFieldSetup(const QString& text, const BSFieldSetup& cpy, int newmapped=0, int newflags=0): defaultText(text), pFont(cpy.pFont), mappedvalue(newmapped), flags(cpy.flags | newflags), widthMin(cpy.widthMin), widthMax(cpy.widthMax), 
     stretch(cpy.stretch), alignment(cpy.alignment){}
 };
 #define BSAPPLY_FEATS(_name, fieldsetup)                  if (fieldsetup.pFont)           _name->setFont(*fieldsetup.pFont); \
@@ -150,6 +205,8 @@ struct  BSFieldSetup
                                                           if (fieldsetup.widthMax != -1)  _name->setMaximumWidth(fieldsetup.widthMax); \
                                                           if (fieldsetup.flags & BFS_DISABLED) _name->setEnabled(false); \
                                                           if (fieldsetup.flags & BFS_INVISIBLE) _name->setVisible(false);
+
+#define BSADD_FEATURED(wdg, feats)                        { QWidget* _wdg = wdg; BSAPPLY_FEATS(_wdg, feats) _bs_active->addWidget(_wdg); }
 
 #define BSCOVER(x)                          { x }
 
@@ -177,21 +234,41 @@ struct  BSFieldSetup
 ///
 ///
 
-#define BSDEPLOY_BTN(_btn, fieldsetup)                    { \
-                                                            BSFieldSetup  loc_fs##_name(fieldsetup); \
-                                                            _btn->setText(loc_fs##_name.defaultText); \
-                                                            if (loc_fs##_name.pFont)           _btn->setFont(*loc_fs##_name.pFont); \
-                                                            if (loc_fs##_name.widthMin != -1)  _btn->setMinimumWidth(loc_fs##_name.widthMin); \
-                                                            if (loc_fs##_name.widthMax != -1)  _btn->setMaximumWidth(loc_fs##_name.widthMax); \
-                                                            if (loc_fs##_name.flags & BFS_CHECKABLE) _btn->setCheckable(true); \
-                                                            if ((loc_fs##_name.flags & BFS_CHECKED) == BFS_CHECKED) _btn->setChecked(true); \
-                                                            if (loc_fs##_name.flags & BFS_DISABLED) _btn->setEnabled(false); \
-                                                            if (loc_fs##_name.flags & BFS_INVISIBLE) _btn->setVisible(false); \
-                                                          }
+#define _BSDEPLOY_BTN_OPEN(_btn, fieldsetup)  { \
+                                                BSFieldSetup  loc_fs(fieldsetup); \
+                                                _btn->setText(loc_fs.defaultText); \
+                                                if (loc_fs.pFont)           _btn->setFont(*loc_fs.pFont); \
+                                                if (loc_fs.widthMin != -1)  _btn->setMinimumWidth(loc_fs.widthMin); \
+                                                if (loc_fs.widthMax != -1)  _btn->setMaximumWidth(loc_fs.widthMax); \
+                                                if (loc_fs.flags & BFS_CHECKABLE) _btn->setCheckable(true); \
+                                                if ((loc_fs.flags & BFS_CHECKED) == BFS_CHECKED) _btn->setChecked(true); \
+                                                if (loc_fs.flags & BFS_DISABLED) _btn->setEnabled(false); \
+                                                if (loc_fs.flags & BFS_INVISIBLE) _btn->setVisible(false);
+
+#define BSDEPLOY_BTN(_btn, fieldsetup)          _BSDEPLOY_BTN_OPEN(_btn, fieldsetup) \
+                                              }
+
+
+///
+///
+///
 
 #define BSAUTO_BTN(QBtnType, _btn, fieldsetup)            QBtnType* _btn = new QBtnType(); \
                                                           BSDEPLOY_BTN(_btn, fieldsetup);
 
+///
+#define BSAUTO_BTN_MAPPED(_btn, fieldsetup, mapper)       QPushButton* _btn = new QPushButton(); \
+                                                          _BSDEPLOY_BTN_OPEN(_btn, fieldsetup) \
+                                                            mapper->setMapping(_btn, loc_fs.mappedvalue); \
+                                                            connect(_btn, SIGNAL(clicked()), mapper, SLOT(map())); \
+                                                          }
+
+#define BSAUTO_BTN_GROUPED(_btn, fieldsetup, mapper)      QPushButton* _btn = new QPushButton(); \
+                                                          _BSDEPLOY_BTN_OPEN(_btn, fieldsetup) \
+                                                            group->addButton(_btn, _fscpy.mappedvalue); \
+                                                          }
+
+///
 #define BSAUTO_BTN_ADDMAPPED(fieldsetup, mapper, ...)     { \
                                                             BSFieldSetup _fscpy(fieldsetup); \
                                                             BSAUTO_BTN(QPushButton, _btn, _fscpy) \
@@ -281,7 +358,7 @@ struct  BSUOD_3: public QObjectUserData
     QFont     fntSTD = QFont(this->font());
     const unsigned int btnMinWidth = 80, btnMaxWidth = 120;
     
-    BSLAYOUT_DECL(mainLayout);
+    BS_INIT_FOR(mainLayout);
     BS_START_FRAME_H_HMAX_VMAX(BS_FRAME_PANEL, 2)
         BSFieldSetup btns[] = {
           BSFieldSetup(tr("Hello"), &fntSTD, 1, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),

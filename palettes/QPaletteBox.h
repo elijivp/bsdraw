@@ -20,4 +20,17 @@ protected:
   Q_DECLARE_PRIVATE(QPaletteBox)
 };
 
+
+class IPalette;
+class QPaletteBoxSg: public QPaletteBox
+{
+  Q_OBJECT
+public:
+  explicit QPaletteBoxSg(QWidget *parent = 0);
+private slots:
+  void  _redirChanged(int);
+signals:
+  void  currentChanged(const IPalette* ppal);
+};
+
 #endif // QPALETTEBOX_H

@@ -10,13 +10,18 @@ struct  graphopts_t
   float         specopc;
   unsigned int  backcolor;
   unsigned int  dotsize;
-  float         dotweight;
+  float         dotweight;  /// 0..1
   enum  DESCALING { DE_NONE, DE_CENTER, DE_TRIANGLE, DE_TRIANGLE2, DE_HYPERB };
   DESCALING     descaling;
-  graphopts_t(GRAPHTYPE gtype=GT_LINTERP, float opacity=0.0f, unsigned int specbckgcolor=0xFFFFFFFF, unsigned int dsize=0, float dweight=0.0f, DESCALING ds=DE_NONE):
-    graphtype(gtype), specopc(opacity), backcolor(specbckgcolor), dotsize(dsize), dotweight(dweight), descaling(ds){}
+  float         specsmooth;
+  graphopts_t(GRAPHTYPE gtype=GT_LINTERP, float opacity=0.0f, unsigned int specbckgcolor=0xFFFFFFFF, 
+              unsigned int dsize=0, float dweight=0.0f, DESCALING ds=DE_NONE,
+              float smoothcoef=0.0f):
+    graphtype(gtype), specopc(opacity), backcolor(specbckgcolor), 
+    dotsize(dsize), dotweight(dweight), descaling(ds), specsmooth(smoothcoef){}
   graphopts_t(GRAPHTYPE gtype, DESCALING ds, unsigned int specbckgcolor=0xFFFFFFFF):
-    graphtype(gtype), specopc(0.0f), backcolor(specbckgcolor), dotsize(0), dotweight(0.0f), descaling(ds){}
+    graphtype(gtype), specopc(0.0f), backcolor(specbckgcolor), 
+    dotsize(0), dotweight(0.0f), descaling(ds), specsmooth(0.0f){}
 };
 
 

@@ -11,7 +11,7 @@ public:
 //public slots:
   void    update();
 protected:
-  int     m_count;
+  unsigned int m_count;
   float   m_sm;
   int     m_counter;
   dmtype_sampler_t  m_randomer;

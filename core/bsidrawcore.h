@@ -8,10 +8,21 @@ inline int bscolor3fToint(float r, float g, float b)
   return (int(b*255)<<16) + (int(g*255)<<8) + int(r*255);
 }
 
+inline int bscolor4fToint(float r, float g, float b, float a)
+{
+  return (int(a*255)<<24) + (int(b*255)<<16) + (int(g*255)<<8) + int(r*255);
+}
+
 inline void bsintTocolor3f(int clr, float rgb[])
 {
   int b = (clr >> 16) & 0xFF, g = (clr >> 8) & 0xFF, r = (clr) & 0xFF;
   rgb[0] = b/255.0f;    rgb[1] = g/255.0f;    rgb[2] = r/255.0f;
+}
+
+inline void bsintTocolor4f(int clr, float rgb[])
+{
+  int a = (clr >> 24) & 0xFF, b = (clr >> 16) & 0xFF, g = (clr >> 8) & 0xFF, r = (clr) & 0xFF;
+  rgb[0] = a/255.0f;    rgb[1] = b/255.0f;    rgb[2] = g/255.0f;    rgb[3] = r/255.0f;
 }
 
 struct  DPostmask
@@ -117,6 +128,7 @@ protected:
     m_uniformsCount++;
   }
   virtual void overlayUpdateParameter(bool recreate=false) =0;
+  friend class IOverlayUpdater;
 };
 
 class IDrawOverlayFriendly
@@ -280,12 +292,23 @@ protected:
   void updatePublic(){ for (unsigned int i=0; i<m_drawersCount; i++)  m_drawers[i].repaintable->overlayUpdate(m_drawers[i].idoverlay, true, false, false); }
   void updateParameter(bool recreate){ for (unsigned int i=0; i<m_drawersCount; i++)  m_drawers[i].repaintable->overlayUpdate(m_drawers[i].idoverlay, false, m_repaintban, recreate); }
   virtual void overlayUpdateParameter(bool recreate=false){ updateParameter(recreate); }
+  friend class IOverlayUpdater;
 protected:    /// EXTERNAL interface
   friend class DrawQWidget;
   virtual int   fshTrace(int overlay, char* to) const =0;
   virtual int   fshColor(int overlay, char* to) const =0;
   virtual bool  overlayReaction(OVL_REACTION, const void*, bool*){  return false; }
 protected:
+};
+
+class IOverlayUpdater
+{
+  IOverlay*   pOvl;
+public:
+  IOverlayUpdater(IOverlay* povl): pOvl(povl){}
+  void updatePublic(){  pOvl->updatePublic(); }
+  void updateParameter(bool recreate){ pOvl->updateParameter(recreate); }
+  void appendUniform(DTYPE type, const void* value){  pOvl->appendUniform(type, value); }
 };
 
 #endif // BSDRAWDEF_H

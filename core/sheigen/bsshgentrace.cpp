@@ -368,6 +368,10 @@ void FshTraceGenerator::var_fixed(const char *name, int v1, int v2, int v3){  m_
 
 void FshTraceGenerator::var_const_fixed(const char *name, int v1, int v2, int v3){  m_offset += msprintf(&m_to[m_offset], "const ivec3 %s = ivec3(%d, %d, %d);" SHNL, name, v1, v2, v3); }
 
+void FshTraceGenerator::var_fixed(const char *name, float v1, float v2, float v3, float v4){  m_offset += msprintf(&m_to[m_offset], "vec4 %s = vec4(%F, %F, %F, %F);" SHNL, name, v1, v2, v3, v4); }
+
+void FshTraceGenerator::var_const_fixed(const char *name, float v1, float v2, float v3, float v4){  m_offset += msprintf(&m_to[m_offset], "const vec4 %s = vec4(%F, %F, %F, %F);" SHNL, name, v1, v2, v3, v4); }
+
 void FshTraceGenerator::var_static(DTYPE type, const char *name_eq_value){  m_offset += msprintf(&m_to[m_offset], "%s %s;" SHNL, glsl_types[(int)type], name_eq_value); }
 
 void FshTraceGenerator::var_static(const char *name, const char *value){  m_offset += msprintf(&m_to[m_offset], "%s = %s;" SHNL, name, value); }

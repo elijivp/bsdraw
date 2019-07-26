@@ -107,6 +107,9 @@ public:
   void  var_const_fixed(const char* name, float v1, float v2, float v3);
   void  var_fixed(const char* name, int v1, int v2, int v3);
   void  var_const_fixed(const char* name, int v1, int v2, int v3);
+  
+  void  var_fixed(const char* name, float v1, float v2, float v3, float v4);
+  void  var_const_fixed(const char* name, float v1, float v2, float v3, float v4);
 public:
   void  var_static(DTYPE type, const char* name_eq_value);
   void  var_static(const char* name, const char* value);

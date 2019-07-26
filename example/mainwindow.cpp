@@ -525,7 +525,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         oimg->setOpacity(0.1);
         draws[i]->ovlPushBack(oimg);
         ovl_sprites = draws[i]->ovlPushBack(new OSprites(new QImage(img_path_sprite), OSprites::IC_AUTO, SAMPLES/4/*500*/, 0.2f));
-        draws[i]->ovlPushBack(new OTextStatic("Press Me", CR_RELATIVE, 0.5f, 0.1f, 12, true));
+        draws[i]->ovlPushBack(new OTextTraced("Press Me", CR_RELATIVE, 0.5f, 0.1f, 12, true));
       }
       else if (MW_TEST == DRAW_BRIGHT)
       {
@@ -536,7 +536,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       }
       else if (MW_TEST == DE_LINTERP)
       {
-        draws[i]->ovlPushBack(new OTextStatic("Resize Me", CR_XABS_YREL_NOSCALED, 10.0f, 0.9f, 12, true));
+        draws[i]->ovlPushBack(new OTextColored("Resize Me", CR_XABS_YREL_NOSCALED, 10.0f, 0.9f, 12, 0x00000000, 0x22FFFFFF, 0x00000000));
+//        draws[i]->ovlPushBack(new OTextPaletted("Resize Me", CR_XABS_YREL_NOSCALED, 10.0f, 0.9f, 12, true, ppalettes_adv[0]));
       }
     }
     if (MW_TEST == MAIN_DRAWS_WIDE)
@@ -2257,7 +2258,7 @@ void MainWindow::createOverlaySTD(int id)
       else
         draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_tmp));
       
-      draws[i]->ovlPushBack(new OTextStatic("Press left mouse button and move", CR_RELATIVE, 0.05, 0.05, 12, true, linestyle_white(5,2,0)));
+      draws[i]->ovlPushBack(new OTextTraced("Press left mouse button and move", CR_RELATIVE, 0.05, 0.05, 12, true, linestyle_white(5,2,0)));
       break;
     }
     case COS_DROPLINES:
@@ -2268,7 +2269,7 @@ void MainWindow::createOverlaySTD(int id)
       else
         draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_tmp));
       
-      draws[i]->ovlPushBack(new OTextStatic("Press left mouse button", CR_RELATIVE, 0.05, 0.05, 12, true, linestyle_white(5,2,0)));
+      draws[i]->ovlPushBack(new OTextTraced("Press left mouse button", CR_RELATIVE, 0.05, 0.05, 12, true, linestyle_white(5,2,0)));
       break;
     }
     case COS_CLUSTER:
@@ -2297,10 +2298,10 @@ void MainWindow::createOverlaySTD(int id)
       else
         draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_visir));
       draws[i]->ovlPushBack(new OFCross(CR_RELATIVE, 0, 0, CR_ABSOLUTE, 5, 30, linestyle_yellow(2,1,0)), ovl_visir);
-      draws[i]->ovlPushBack(new OTextStatic("LEFT", CR_ABSOLUTE, -80, 50, 12), ovl_visir);
-      draws[i]->ovlPushBack(new OTextStatic("RIGHT", CR_ABSOLUTE, 50, 50, 12), ovl_visir);
-      draws[i]->ovlPushBack(new OTextStatic("We all", CR_ABSOLUTE, -25, -60, 12), ovl_visir);
-      draws[i]->ovlPushBack(new OTextStatic("Follow mouse", CR_ABSOLUTE, -50, -80, 12, false, linestyle_red(1,0,0)), ovl_visir);
+      draws[i]->ovlPushBack(new OTextTraced("LEFT", CR_ABSOLUTE, -80, 50, 12), ovl_visir);
+      draws[i]->ovlPushBack(new OTextTraced("RIGHT", CR_ABSOLUTE, 50, 50, 12), ovl_visir);
+      draws[i]->ovlPushBack(new OTextTraced("We all", CR_ABSOLUTE, -25, -60, 12), ovl_visir);
+      draws[i]->ovlPushBack(new OTextTraced("Follow mouse", CR_ABSOLUTE, -50, -80, 12, false, linestyle_red(1,0,0)), ovl_visir);
       break;
     }
     case COS_INSIDE:
@@ -2529,7 +2530,7 @@ void MainWindow::changeOVLFeatures(int id)
 //    case BTV_LINEVERT:  newOverlay = new OFLine(OFLine::LT_VERT_BYBOTTOM, ocs, 0.0, 0.0, 10, 100, linestyle_green(1,0,0)); break;
 //    case BTV_FACTOR:  newOverlay = new OFFactor(ocs, 0.0, 0.0, 10, 30, linestyle_yellow(5,1,0)); break;
 //    case BTV_CROSS:  newOverlay = new OFLine(OFLine::LT_CROSS, ocs, 0.0, 0.0, 10, -1, linestyle_green(1,0,0)); break;
-//    case BTV_TEXT: newOverlay = new OTextStatic("CREATED", CR_RELATIVE, 0.5, 0.5, 12, true, linestyle_solid(1,0,0)); break;
+//    case BTV_TEXT: newOverlay = new OTextTraced("CREATED", CR_RELATIVE, 0.5, 0.5, 12, true, linestyle_solid(1,0,0)); break;
 //    case BTV_BORDER: newOverlay = new OBorder(4, linestyle_solid(1,0,0)); break;
 //    default: break;
 //  }
@@ -2562,7 +2563,7 @@ void MainWindow::metaOVLReplace(int vistype)
           case BTV_LINEVERT:  newOverlay = new OFLine(OFLine::LT_VERT_BYBOTTOM, ocs, 0.0, 0.0, CR_ABSOLUTE, 10, 100, linestyle_green(1,0,0)); break;
           case BTV_FACTOR:  newOverlay = new OFFactor(ocs, 0.0, 0.0, CR_ABSOLUTE_NOSCALED, 10, 30, linestyle_yellow(5,1,0)); break;
           case BTV_CROSS:  newOverlay = new OFLine(OFLine::LT_CROSS, ocs, 0.0, 0.0, CR_ABSOLUTE, 10, -1, linestyle_green(1,0,0)); break;
-          case BTV_TEXT: newOverlay = new OTextStatic("CREATED", ocs, 0.0, 0.0, 12, true, linestyle_solid(1,0,0)); break;
+          case BTV_TEXT: newOverlay = new OTextTraced("CREATED", ocs, 0.0, 0.0, 12, true, linestyle_solid(1,0,0)); break;
           case BTV_BORDER: newOverlay = new OBorder(4, linestyle_solid(1,0,0)); break;
           default: break;
         }
@@ -2591,7 +2592,7 @@ void MainWindow::metaOVLCreate(int vistype)
         case BTV_LINEVERT:  newOverlay = new OFLine(OFLine::LT_VERT_BYBOTTOM, cr, 0.5, 0.5, CR_ABSOLUTE, 10, 100, linestyle_green(1,0,0)); break;
         case BTV_FACTOR:  newOverlay = new OFFactor(cr, 0.5, 0.5, CR_ABSOLUTE_NOSCALED, 10, 30, linestyle_yellow(5,1,0)); break;
         case BTV_CROSS:  newOverlay = new OFLine(OFLine::LT_CROSS, cr, 0.5, 0.5, CR_ABSOLUTE, 10, -1, linestyle_green(1,0,0)); break;
-        case BTV_TEXT: newOverlay = new OTextStatic("CREATED", CR_RELATIVE, 0.5, 0.5, 12, true, linestyle_solid(1,0,0)); break;
+        case BTV_TEXT: newOverlay = new OTextTraced("CREATED", CR_RELATIVE, 0.5, 0.5, 12, true, linestyle_solid(1,0,0)); break;
         case BTV_BORDER: newOverlay = new OBorder(4, linestyle_solid(1,0,0)); break;
         default: break;
       }
@@ -2660,6 +2661,17 @@ void MainWindow::changeClusterPalette()
       if (pMKFigures)
       {
         pMKFigures->setPalette(ppalettes_adv[rand() % sizeof(ppalettes_adv)/sizeof(ppalettes_adv[0])], false);
+      }
+    }
+  }
+  else
+  {
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+      IOverlayHard* povl= dynamic_cast<IOverlayHard*>(draws[i]->ovlGet(1));
+      if (povl)
+      {
+        povl->setPalette(ppalettes_adv[rand() % sizeof(ppalettes_adv)/sizeof(ppalettes_adv[0])], false);
       }
     }
   }

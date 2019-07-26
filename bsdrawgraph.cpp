@@ -37,30 +37,59 @@ public:
         fmg.push("vec3 colorFon = texture(texPalette, vec2(0.0, 0.0)).rgb;" SHNL);
       fmg.push("result = colorFon;" SHNL);
       
-      if (graphopts.graphtype == graphopts_t::GT_LINDOWN || graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMAX || graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMIN)
+      bool isDots = graphopts.graphtype == graphopts_t::GT_DOTS;
+      bool isLindown = graphopts.graphtype == graphopts_t::GT_LINDOWN || graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMAX || graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMIN;
+      bool isLinterp = graphopts.graphtype == graphopts_t::GT_LINTERP || graphopts.graphtype == graphopts_t::GT_LINTERPSMOOTH;
+      
+      if (isLindown)
         fmg.push("vec3 neib = vec3(0.0, ibounds.y, 0.0);" SHNL);
       
-      if (graphopts.graphtype == graphopts_t::GT_DOTS)
+      if (isLindown || isLinterp)
+        fmg.cfloatvar("specsmooth", graphopts.specsmooth < -0.5f? -0.5f : graphopts.specsmooth);
+      
+      
+      if (isLinterp || graphopts.descaling == graphopts_t::DE_LINTERP)
       {
-        fmg.push( "for (int i=0; i<countPortions; i++)" SHNL
-                  "{" SHNL
-                    "float VALUE = floor(getValue1D(i, fcoords.x)*(ibounds_noscaled.y-1));" SHNL
+        fmg.push( 
+                  "vec3  fx_around = vec3(float(max(fcoords.x*ibounds_noscaled.x, 1) - 1)/ibounds_noscaled.x, fcoords.x, float(min(fcoords.x*ibounds_noscaled.x, ibounds_noscaled.x-1)  + 1)/ibounds_noscaled.x);" SHNL
+                  "for (int i=0; i<countPortions; i++)" SHNL
+                  "{" SHNL         
+                    "ivec3 ify_around = ivec3(vec3(getValue1D(i, fx_around[0]), getValue1D(i, fx_around[1]), getValue1D(i, fx_around[2])) * (ibounds_noscaled.y - 1));" SHNL
+              );
+        if (graphopts.descaling == graphopts_t::DE_LINTERP)
+        {
+          fmg.push( 
+                    "vec3 fsteps = vec3(mod(floor(fcoords.x*ibounds.x), float(iscaling.x)), (ify_around[2] - ify_around[1])/float(iscaling.x), (ify_around[1] - ify_around[0])/float(iscaling.x));"
+                    "ify_around = ivec3( mix("
+                      "vec3(ify_around[1] + fsteps[1]*(fsteps.x-1.0), ify_around[1] + fsteps[1]*fsteps.x, ify_around[1] + fsteps[1]*(fsteps.x+1)),"
+                      "vec3(ify_around[1] - fsteps[2], ify_around[1], ify_around[1] + fsteps[1]),"
+                      "step(fsteps.x, 0.0)"
+                    "));"
+                    );
+        }
+      }
+      else
+      {
+        fmg.push( 
+                  "vec3  fx_around = vec3(fcoords.x, fcoords.x, fcoords.x);" SHNL
+                  "for (int i=0; i<countPortions; i++)" SHNL
+                  "{" SHNL         
+                    "ivec3 ify_around = ivec3(vec3(getValue1D(i, fx_around[0]), getValue1D(i, fx_around[1]), getValue1D(i, fx_around[2])) * (ibounds_noscaled.y - 1));" SHNL
+              );
+      }
+      
+      
+      
+      if (isDots)
+      {
+        fmg.push( 
+                    "float VALUE = ify_around[1];" SHNL
                     "float MIXWELL = step(distance(vec2(icoords), vec2(icoords.x, VALUE)), 0.0);" SHNL
                     "ppb_sfp[0] = ppb_sfp[0]*(1.0 - MIXWELL) + MIXWELL;" SHNL
                   );
       }
-      else if (graphopts.graphtype == graphopts_t::GT_LINTERP || graphopts.graphtype == graphopts_t::GT_LINTERPSMOOTH)
+      else if (isLinterp)
       {
-        fmg.cfloatvar("specsmooth", graphopts.specsmooth < -0.5f? -0.5f : graphopts.specsmooth);
-        
-        fmg.push( 
-//                  "float tvar = fcoords.x * ibounds_noscaled.x;"
-//                  "vec3  fx_around = vec3((max(tvar, 1.0)-1)/ibounds_noscaled.x, fcoords.x, (min(tvar, ibounds_noscaled.x-1)+1)/ibounds_noscaled.x);" SHNL
-                  "vec3  fx_around = vec3(float(max(fcoords.x * ibounds_noscaled.x, 1) - 1)/ibounds_noscaled.x, fcoords.x, float(min(fcoords.x * ibounds_noscaled.x, ibounds_noscaled.x-1)  + 1)/ibounds_noscaled.x);" SHNL
-                  "for (int i=0; i<countPortions; i++)" SHNL
-                  "{" SHNL         
-                    "ivec3 ify_around = ivec3(vec3(getValue1D(i, fx_around[0]), getValue1D(i, fx_around[1]), getValue1D(i, fx_around[2])) * (ibounds_noscaled.y - 1));" SHNL
-                  );
         if (graphopts.graphtype == graphopts_t::GT_LINTERP)
           fmg.push( 
                       "float fsig_prev = sign(ify_around[0] - ify_around[1]);" SHNL
@@ -98,27 +127,42 @@ public:
                   "float  MIXWELL = max(fhit, specopc*max(max(fmix_prev, fmix_next), fmix_eq ));" SHNL
 //                  "int    IVALUE = int(mix(mix(ify_around[0], ify_around[1], fmix_prev)*(1.0-step(fmix_prev,fmix_next)) + mix(ify_around[2], ify_around[1], fmix_next)*(1.0 - step(fmix_next,fmix_prev)), ify_around[1], fhit));" SHNL
                   "float  VALUE = floor(mix(mix(ify_around[0], ify_around[1], fmix_prev)*step(fmix_next,fmix_prev) + mix(ify_around[2], ify_around[1], fmix_next)*(1.0 - step(fmix_next,fmix_prev)), ify_around[1], fhit));" SHNL
-                  "ppb_sfp[0] = ppb_sfp[0]*(1.0 - sign(MIXWELL)) + sign(MIXWELL);" SHNL
+                  "ppb_sfp[0] = ppb_sfp[0]*(1.0 - sign(MIXWELL)) + MIXWELL;" SHNL
                  );
       }
-      else if (graphopts.graphtype == graphopts_t::GT_LINDOWN || graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMAX || graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMIN)
+      else if (isLindown)
       {
-        fmg.push(   "for (int i=0; i<countPortions; i++)" SHNL
-                    "{" SHNL
-                      "float VALUE = getValue1D(i, fcoords.x)*(ibounds_noscaled.y-1);" SHNL
-                      "float bmix = step(float(icoords.y), floor(VALUE));" SHNL
-                      "neib = vec3( mix(neib[0], VALUE, step(neib[0], VALUE)*(1.0-bmix)), mix(neib[1], VALUE, step(VALUE, neib[1])*bmix), max(neib[2], VALUE) );" SHNL
-                      "float MIXWELL = mix(specopc, bmix, step(floor(VALUE), float(icoords.y)));" SHNL
+        fmg.push(   
+                      "float VALUE = ify_around[1];" SHNL
+//                      "float bmix = step(float(icoords.y), floor(VALUE));" SHNL
+//                      "neib = vec3(  mix(neib[0], VALUE, step(neib[0], VALUE)*(1.0-bmix)), "
+//                                    "mix(neib[1], VALUE, step(VALUE, neib[1])*bmix), "
+//                                    "max(neib[2], VALUE) );" SHNL
+////                      "float MIXWELL = mix(specopc, bmix, step(floor(VALUE), float(icoords.y)));" SHNL
+//                      "float MIXWELL = mix(specopc*(1.0 - clamp((icoords.y-floor(VALUE))/(1.0 + specsmooth*10.0), 0.0, 1.0)), "
+//                      "mix(specopc, 1.0, step(floor(VALUE), float(icoords.y))), bmix);" SHNL
+              
+                      "float bmix = sign(floor(VALUE) - float(icoords.y));" SHNL
+                      "vec3 delta3 = vec3("
+                                          "step(bmix, -1.0)*specopc*(1.0 - clamp((icoords.y-floor(VALUE))/(1.0 + specsmooth*10.0), 0.0, 1.0)), "
+                                          "step(1.0, bmix)*specopc, "
+                                          "1.0 - abs(bmix));" SHNL
+
+                      "float MIXWELL = delta3[0] + delta3[1] + delta3[2];" SHNL
+                      "bmix = step(0.0, bmix) + sign(delta3[0]);" SHNL
+              
+                      "neib = vec3(  mix(neib[0], VALUE, step(neib[0], VALUE)*(1.0-bmix)), "
+                                    "mix(neib[1], VALUE, step(VALUE, neib[1])*bmix), "
+                                    "max(neib[2], VALUE) );" SHNL
                     );
         
         if (graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMAX)
           fmg.push( "MIXWELL = MIXWELL*step(neib[2], VALUE);" SHNL
-                    "bmix = sign(MIXWELL);"
+                    "bmix = bmix*step(neib[2], VALUE);"
                     );
-        
         else if (graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMIN)
           fmg.push( "MIXWELL = MIXWELL*step(floor(VALUE), neib[1])*step(neib[0], VALUE);" SHNL
-                    "bmix = sign(MIXWELL);"
+                    "bmix = bmix*step(floor(VALUE), neib[1])*step(neib[0], VALUE);"
                     );
         
         fmg.push( "VALUE = floor(VALUE);" SHNL
@@ -128,9 +172,8 @@ public:
       }
       
       
-      if (graphopts.descaling != graphopts_t::DE_NONE)
       {
-        const char*   descaling[] = { "",
+        const char*   descaling[] = { "", "", // DE_NONE and DE_LINTERP
                                       "MIXWELL = MIXWELL * (1.0 - abs(sign( int(mod(floor(fcoords.x*ibounds.x + 0.49), iscaling.x)) - iscaling.x/2)));",
                                       "MIXWELL = MIXWELL * (1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), iscaling.x)) - iscaling.x/2) / (iscaling.x/2.0)));",
                                       "MIXWELL = MIXWELL * (1.0 - abs((int(mod( floor(fcoords.x*ibounds.x + 0.49), iscaling.x)) - iscaling.x/2) / (iscaling.x/4.0)));",
@@ -177,8 +220,8 @@ public:
       
       fmg.push(   "vec3  colorGraph = texture(texPalette, vec2(clamp(portionColor, 0.0, 1.0), 0.0)).rgb;" SHNL );
       
-      if (graphopts.graphtype == graphopts_t::GT_LINDOWN || graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMAX || graphopts.graphtype == graphopts_t::GT_LINDOWN_CROSSMIN)
-        fmg.push(   "MIXWELL = 1.0 - step(MIXWELL,0.0);" SHNL );
+//      if (isLindown)
+//        fmg.push(   "MIXWELL = 1.0 - step(MIXWELL,0.0);" SHNL );
 
       fmg.push(   "result = mix(result, colorGraph, MIXWELL);" SHNL
                   "ovMix = max(ovMix, MIXWELL*fcoords.y);" SHNL

@@ -77,6 +77,15 @@ static const char* img_path_normal = "../example/image2.jpg";  /// 800x600
 /// if uncomment: changes 'point size' for width and height synchroniously
 //#define SYNCSCALING 3
 
+class BSUOD_DPM: public QObjectUserData
+{
+public:
+  unsigned int  id;
+  DPostmask*    dpm;
+  BSUOD_DPM(unsigned int _id, DPostmask* _dpm): id(_id), dpm(_dpm) {} 
+  ~BSUOD_DPM(){ if (id == 0) delete dpm; }
+};
+
 const IPalette* const ppalettes_std[] = {  &paletteBkWh, &paletteBkGyGyGyWh, &paletteGnYe, &paletteBlWh, &paletteBkRdWh, &paletteBkBlWh, &paletteBkGrWh, &paletteBkBlGrYeWh };
 const IPalette* const ppalettes_rgb[] = {  &paletteRG, &paletteRB, &paletteRGB };
 
@@ -237,7 +246,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
       draws[i] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
 //      draws[i]->setScalingLimitsSynced(4);
-      DPostmask fsp(DPostmask::PM_LINELEFTBOTTOM, DPostmask::PO_EMPTY, 0, 0.3,0.3,0.3 );
+      DPostmask fsp(DPostmask::PM_LINELEFTBOTTOM, DPostmask::PO_EMPTY, 0, 0.3f,0.3f,0.3f );
       draws[i]->setPostMask(fsp);
     }
   }
@@ -250,17 +259,12 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 3;
     PRECREATE(4, 1);
     syncscaling = 7;
-    graphopts_t gts[] = { {graphopts_t::GT_LINDOWN, 0.5f}, {graphopts_t::GT_LINDOWN_CROSSMIN, 0.5f}, {graphopts_t::GT_LINDOWN_CROSSMAX, 0.5f}, {graphopts_t::GT_LINTERP, 0.8f} };
-    DPostmask fsp[] = {   DPostmask(DPostmask::PM_LINELEFT, DPostmask::PO_ALL, 0, 0.3,0.3,0.3), 
-                          DPostmask(DPostmask::PM_CONTOUR, DPostmask::PO_SIGNAL, 0, 0.3,0.3,0.3), 
-                          DPostmask(DPostmask::PM_LINELEFTBOTTOM, DPostmask::PO_ALL, 0, 0.3,0.3,0.3), 
-                          DPostmask(DPostmask::PM_PSEUDOCIRCLE, DPostmask::PO_ALL, 0, 0.1,0.1,0.1)
+    graphopts_t gts[] = { {graphopts_t::GT_LINDOWN, 0.0f}, {graphopts_t::GT_LINDOWN_CROSSMIN, 0.0f}, {graphopts_t::GT_LINDOWN_CROSSMAX, 0.0f}, {graphopts_t::GT_LINTERP, 0.8f} };
+    DPostmask fsp[] = {   DPostmask(DPostmask::PM_LINELEFT, DPostmask::PO_ALL, 0, 0.3f,0.3f,0.3f), 
+                          DPostmask(DPostmask::PM_LINELEFTTOP, DPostmask::PO_SIGNAL, 0, 0.3f,0.3f,0.3f), 
+                          DPostmask(DPostmask::PM_LINELEFTBOTTOM, DPostmask::PO_ALL, 0, 0.3f,0.3f,0.3f), 
+                          DPostmask(DPostmask::PM_PSEUDOCIRCLE, DPostmask::PO_ALL, 0, 0.1f,0.1f,0.1f)
                            };
-//    DPostmask fsp[] = {   DPostmask(DPostmask::PM_CONTOUR, DPostmask::PO_ALL, 0, 0.3,0.3,0.3), 
-//                          DPostmask(DPostmask::PM_CONTOUR, DPostmask::PO_ALL, 0, 0.3,0.3,0.3), 
-//                          DPostmask(DPostmask::PM_CONTOUR, DPostmask::PO_ALL, 0, 0.3,0.3,0.3), 
-//                          DPostmask(DPostmask::PM_PSEUDOCIRCLE, DPostmask::PO_ALL, 0, 0.1,0.1,0.1)
-//                           };
     for (unsigned int i=0; i<drawscount; i++)
     {
 //      gts[i].descaling = graphopts_t::DE_CENTER;
@@ -465,6 +469,33 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         draws[c*dccount + i] = new DrawGraph(SAMPLES, PORTIONS, gopts);
       }
   }
+  else if (MW_TEST == DE_LINTERP)
+  {
+//    sigtype = ST_RAND;
+    sigtype = ST_MANYSIN;
+    SAMPLES = 140;
+    MAXLINES = 200;
+    PORTIONS = 2;
+    PRECREATE(3, 1);
+    graphopts_t  gopts[] = { graphopts_t(graphopts_t::GT_DOTS, graphopts_t::DE_LINTERP, 0.0f), 
+                             graphopts_t(graphopts_t::GT_LINTERP, graphopts_t::DE_LINTERP, 0.0f), 
+                             graphopts_t(graphopts_t::GT_LINDOWN_CROSSMAX, graphopts_t::DE_LINTERP, 0.0f)
+                           };
+//    graphopts_t  gopts[] = { 
+//                              graphopts_t(graphopts_t::GT_DOTS, 0.6f), 
+//                              graphopts_t(graphopts_t::GT_LINTERP, 0.6f), 
+//                              graphopts_t(graphopts_t::GT_LINDOWN, 0.0f)
+//                           };
+    
+    for (unsigned int i=0; i<sizeof(gopts)/sizeof(graphopts_t); i++)
+    {
+      gopts[i].specsmooth = 0.2;
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, gopts[i]);
+//      draws[i]->setPostMask(DPostmask(DPostmask::PM_LINELEFT, DPostmask::PO_EMPTY, 0, 0.7f,0.8f,0.3f));
+    }
+//    this->setMinimumWidth(1600);
+  }
+  
   
   
   
@@ -502,6 +533,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         oimg->setSlice(0.35);
         oimg->setOpacity(0.15);
         draws[i]->ovlPushBack(oimg);
+      }
+      else if (MW_TEST == DE_LINTERP)
+      {
+        draws[i]->ovlPushBack(new OTextStatic("Resize Me", CR_XABS_YREL_NOSCALED, 10.0f, 0.9f, 12, true));
       }
     }
     if (MW_TEST == MAIN_DRAWS_WIDE)
@@ -1055,6 +1090,61 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           
           ptb->addTab(tr("Addit."));
           BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+            BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
+              DPostmask* dpm = new DPostmask(DPostmask::PM_NONE, DPostmask::PO_SIGNAL, 0, 0x00000000);
+              BSAUTO_TEXT_ADD(tr("Postmask: "), Qt::AlignLeft);
+              BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                BSAUTO_TEXT_ADD(QString::fromUtf8("Type: "))
+                QStringList dpmMain; dpmMain<<QString::fromUtf8("Off")<<QString::fromUtf8("Line left")<<QString::fromUtf8("Line right")
+                                              <<QString::fromUtf8("Line bottom")<<QString::fromUtf8("Line top")
+                                                <<QString::fromUtf8("Lines left-bot")<<QString::fromUtf8("Lines right-bot")
+                                                  <<QString::fromUtf8("Lines left-top")<<QString::fromUtf8("Lines right-top")
+                                                    <<QString::fromUtf8("Contour")<<QString::fromUtf8("Pseudocircle");
+                QComboBox* qcb = new QComboBox;
+                qcb->addItems(dpmMain);
+                qcb->setUserData(1, new BSUOD_DPM(0, dpm));
+                QObject::connect(qcb, SIGNAL(currentIndexChanged(int)), this, SLOT(changePostmask(int)));
+                BSADD(qcb);
+//              BS_STOP
+//              BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                BS_STRETCH
+                    
+                BSAUTO_TEXT_ADD(QString::fromUtf8("Over: "))
+                QStringList dpmOver; dpmOver<<QString::fromUtf8("Off")<<QString::fromUtf8("Signal")<<QString::fromUtf8("Empty")<<QString::fromUtf8("All");
+                QComboBox* qcb2 = new QComboBox;
+                qcb2->addItems(dpmOver);
+                qcb2->setCurrentIndex(1);
+                qcb2->setUserData(1, new BSUOD_DPM(1, dpm));
+                QObject::connect(qcb2, SIGNAL(currentIndexChanged(int)), this, SLOT(changePostmask(int)));
+                BSADD(qcb2);
+                BS_STRETCH
+              BS_STOP
+              
+              BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                BSAUTO_TEXT_ADD(QString::fromUtf8("Weight: "))
+                QSpinBox* qcb3 = new QSpinBox;
+                qcb3->setRange(0, 100);
+                qcb3->setUserData(1, new BSUOD_DPM(2, dpm));
+                QObject::connect(qcb3, SIGNAL(valueChanged(int)), this, SLOT(changePostmask(int)));
+                BSADD(qcb3);
+//              BS_STOP
+//              BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                BS_STRETCH
+                    
+                BSAUTO_TEXT_ADD(QString::fromUtf8("Color: "));
+                for (unsigned int i=0; i<3; i++)
+                {
+                  QSpinBox* qcb4 = new QSpinBox;
+                  qcb4->setRange(0, 255);
+                  qcb4->setUserData(1, new BSUOD_DPM(3+i, dpm));
+                  QObject::connect(qcb4, SIGNAL(valueChanged(int)), this, SLOT(changePostmask(int)));
+                  BSADD(qcb4);
+                }
+              BS_STOP
+//              QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeInterpolation(int)));
+            BS_STOP
+                  
+                  
             BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
               BSAUTO_TEXT_ADD(tr("Interpolation (future):"), 0, Qt::AlignLeft);
               BSFieldSetup interp[] = { 
@@ -2049,6 +2139,25 @@ void  MainWindow::changeFeatures(int id)
     if (drawscount > 0)
       delete draws[--drawscount];
   }
+}
+
+void MainWindow::changePostmask(int sigid)
+{
+  BSUOD_DPM* dpm = (BSUOD_DPM*)sender()->userData(1);
+  if (dpm->id == 0)
+    dpm->dpm->postmask = (DPostmask::DPMASK)sigid;
+  else if (dpm->id == 1)
+    dpm->dpm->over = (DPostmask::DPOVER)sigid;
+  else if (dpm->id == 2)
+    dpm->dpm->weight = sigid;
+  else if (dpm->id == 3)
+    dpm->dpm->color = (dpm->dpm->color & ~(0xFF)) + (sigid);
+  else if (dpm->id == 4)
+    dpm->dpm->color = (dpm->dpm->color & ~(0xFF<<8)) + (sigid<<8);
+  else if (dpm->id == 5)
+    dpm->dpm->color = (dpm->dpm->color & ~(0xFF<<16)) + (sigid<<16);
+  for (unsigned int i=0; i<drawscount; i++)
+    draws[i]->setPostMask(*dpm->dpm);
 }
 
 void MainWindow::changeInterpolation(int sigid)

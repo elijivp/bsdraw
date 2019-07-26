@@ -11,7 +11,7 @@ struct  graphopts_t
   unsigned int  backcolor;
   unsigned int  dotsize;
   float         dotweight;  /// 0..1
-  enum  DESCALING { DE_NONE, DE_CENTER, DE_TRIANGLE, DE_TRIANGLE2, DE_HYPERB };
+  enum  DESCALING { DE_NONE, DE_LINTERP, DE_CENTER, DE_TRIANGLE, DE_TRIANGLE2, DE_HYPERB };
   DESCALING     descaling;
   float         specsmooth;
   graphopts_t(GRAPHTYPE gtype=GT_LINTERP, float opacity=0.0f, unsigned int specbckgcolor=0xFFFFFFFF, 

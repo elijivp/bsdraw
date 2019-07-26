@@ -77,6 +77,7 @@ private slots:
   void    changeSpeedUpdate(int sigid);
   void    changeSpeedUpdate_Once();
   void    changeFeatures(int sigid);
+  void    changePostmask(int sigid);
   void    changeInterpolation(int sigid);
   void    changeBans(bool banned);
 private slots:

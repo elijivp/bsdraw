@@ -141,7 +141,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     for (unsigned int i=0; i<sizeof(gopts)/sizeof(graphopts_t); i++)
     {
-      gopts[i].dotsize = 1;
+      gopts[i].dotsize = 2;
       gopts[i].dotweight = 0.9f;
       gopts[i].backcolor = 0x00777777;
       draws[3*i + 2] = new DrawGraph(SAMPLES, PORTIONS, gopts[i], DrawGraph::DC_DOWNBASE);
@@ -489,11 +489,16 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     for (unsigned int i=0; i<sizeof(gopts)/sizeof(graphopts_t); i++)
     {
-      gopts[i].specsmooth = 0.2;
+//      gopts[i].specsmooth = 0.6;
+//      gopts[i].specopc = 0.5;
+      gopts[i].dotsize = -1;
+      gopts[i].dotweight = 2.0;
+//      gopts[i].descaling = graphopts_t::DE_CENTER;
       draws[i] = new DrawGraph(SAMPLES, PORTIONS, gopts[i]);
 //      draws[i]->setPostMask(DPostmask(DPostmask::PM_LINELEFT, DPostmask::PO_EMPTY, 0, 0.7f,0.8f,0.3f));
     }
 //    this->setMinimumWidth(1600);
+//    this->setMinimumSize(2000, 1200);
   }
   
   

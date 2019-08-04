@@ -5,13 +5,26 @@
 
 struct  graphopts_t
 {
-  enum  GRAPHTYPE { GT_DOTS, GT_LINTERP, GT_LINTERPSMOOTH, GT_LINDOWN, GT_LINDOWN_CROSSMAX, GT_LINDOWN_CROSSMIN };
+  enum  GRAPHTYPE { GT_DOTS,          /// most simple, most lightweight
+                    GT_LINTERP,       /// standard linear interpolation (default)
+                    GT_LINTERPSMOOTH, /// linear interpolation through glsl smoothstep method
+                    GT_LINDOWN,       /// histogram
+                    GT_LINDOWN_CROSSMAX, /// histogram with max of many graphs on cross
+                    GT_LINDOWN_CROSSMIN  /// histogram with all graphs on cross
+                  };
   GRAPHTYPE     graphtype;
   float         specopc;
-  unsigned int  backcolor;
-  unsigned int  dotsize;
-  float         dotweight;  /// 0..1
-  enum  DESCALING { DE_NONE, DE_LINTERP, DE_CENTER, DE_TRIANGLE, DE_TRIANGLE2, DE_HYPERB };
+  unsigned int  backcolor;            /// color to use instead of palette color. 0xFFFFFFFF - not use
+  int           dotsize;              /// >0 : abs size; <0 : scaling + size
+  float         dotweight;            /// 0..1
+  
+  enum  DESCALING { DE_NONE,          /// no descaling (default)
+                    DE_LINTERP,       /// descaling through linear interpolation
+                    DE_CENTER,        /// only central point left
+                    DE_TRIANGLE,      /// ... additional smooth descaling algos
+                    DE_TRIANGLE2, 
+                    DE_HYPERB 
+                  };
   DESCALING     descaling;
   float         specsmooth;
   graphopts_t(GRAPHTYPE gtype=GT_LINTERP, float opacity=0.0f, unsigned int specbckgcolor=0xFFFFFFFF, 

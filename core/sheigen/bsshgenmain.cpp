@@ -198,11 +198,43 @@ void FshMainGenerator::goto_func_begin(const DPostmask& fsp)
                                     "ivec2 loc_i2_pos;" SHNL
                                     "float ovMix = 0.0;" SHNL
                                     "ivec2 iscaling = ivec2(scaling_a, scaling_b);" SHNL
+                                  
                                     "ivec2 ibounds_noscaled = ivec2(datadimm_a, datadimm_b);" SHNL
-                                    "ivec2 ibounds = ibounds_noscaled * iscaling;" SHNL
-                                    "vec2  fcoords = rotate(coords.xy*0.5 + 0.5);" SHNL
-                                    "vec4  ocoords = vec4(coords.xy*0.5 + 0.5, fcoords);" SHNL
-                                    "ivec2 icoords = ivec2(fcoords * vec2(ibounds_noscaled));" SHNL
+                                    "ivec2 ibounds = ibounds_noscaled*iscaling;" SHNL
+                                  
+                                    "vec2  fbounds_noscaled = vec2(datadimm_a, datadimm_b);" SHNL
+                                    "vec2  fbounds = vec2(ibounds);" SHNL
+                                  
+                                    "vec2  relcoords = rotate(coords.xy*0.5 + vec2(0.5,0.5));" SHNL
+                                    "vec4  ocoords = vec4(coords.xy*0.5 + vec2(0.5,0.5), relcoords);" SHNL
+                                  
+//                                  "vec2  fcoords = floor((coords.xy+vec2(1,1))*fbounds/vec2(2.0,2.0) + vec2(0.49, 0.49));" SHNL
+//                                  "vec2  fcoords_noscaled = floor((coords.xy+vec2(1,1))*fbounds_noscaled/vec2(2.0,2.0) + vec2(0.49, 0.49));" SHNL
+//                                    "vec2  fcoords = floor((coords.xy+vec2(1,1))*fbounds/vec2(2.0,2.0));" SHNL
+//                                    "vec2  fcoords_noscaled = floor((coords.xy+vec2(1,1))*fbounds_noscaled/vec2(2.0,2.0));" SHNL
+                                  
+//                                    "vec2  fcoords = floor(relcoords*(fbounds) + vec2(0.49, 0.49));" SHNL
+//                                    "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled) + vec2(0.49, 0.49));" SHNL
+                                  "vec2  fcoords = floor(relcoords*(fbounds));" SHNL
+                                  "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled));" SHNL
+                                  
+//                                  "vec2  fcoords = floor(relcoords*(fbounds - vec2(1,1)) + vec2(0.49, 0.49));" SHNL
+//                                  "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled - vec2(1,1)) + vec2(0.49, 0.49));" SHNL
+                                  
+                                  
+                                  
+                                  //                                    "vec2  fcoords = floor(relcoords*(fbounds - vec2(1,1)) + vec2(0.49, 0.49));" SHNL
+                                  //                                    "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled - vec2(1,1)) + vec2(0.49, 0.49));" SHNL
+//                                  "vec2  fcoords = floor(relcoords*(fbounds - vec2(1,1)));" SHNL
+//                                  "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled - vec2(1,1)));" SHNL
+//                                  "vec2  fcoords = floor(relcoords*fbounds);" SHNL
+//                                  "vec2  fcoords_noscaled = floor(relcoords*fbounds_noscaled);" SHNL
+                                  
+                                    "ivec2 icoords = ivec2(fcoords);" SHNL
+                                    "ivec2 icoords_noscaled = ivec2(fcoords_noscaled);" SHNL
+                                  
+                                    "ivec2 imoded = ivec2( int(mod(fcoords.x, float(iscaling.x))), int(mod(fcoords.y, float(iscaling.y))));" SHNL
+                                  
                                     "vec3  result = vec3(0.0,0.0,0.0);" SHNL;
   memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
   
@@ -211,11 +243,7 @@ void FshMainGenerator::goto_func_begin(const DPostmask& fsp)
   
   m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = vec3(%F,%F,%F);" SHNL
                                         "vec4   ppb_sfp   = vec4(0.0, %F, %F, %F);" SHNL    /// ppban, ppoutsignal, 
-//                                        "ivec4  ppb_rect  = ivec4(int(mod(floor(fcoords.x*float(ibounds.x) + 0.49), float(iscaling.x))),\n\tint(mod(floor(fcoords.y*float(ibounds.y) + 0.49), float(iscaling.y))),iscaling.x-1, iscaling.y-1);" SHNL, 
-                                        "ivec4  ppb_rect  = ivec4("
-                                           "int(mod(fcoords.x*(ibounds.x), float(iscaling.x))),\n\t"
-                                           "int(mod(fcoords.y*(ibounds.y), float(iscaling.y))),"
-                                           "iscaling.x-1, iscaling.y-1);" SHNL, 
+                                        "ivec4  ppb_rect  = ivec4(imoded.x, imoded.y, iscaling.x-1, iscaling.y-1);" SHNL, 
                                         rgb[2], rgb[1], rgb[0],
                                         fsp.over & 1? 1.0f : 0.0f, fsp.over & 2? 1.0f : 0.0f, (float)fsp.weight );
 

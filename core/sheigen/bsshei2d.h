@@ -29,14 +29,14 @@ public:
     {
       const char fsh_bright[] =         "for (int i=0; i<countPortions; i++)"
                                         "{"
-                                          "float value = getValue2D(i, fcoords);"
+                                          "float value = getValue2D(i, relcoords);"
                                           "ovMix = max(ovMix, value);"
                                           "result = result + texture(texPalette, vec2(value, float(i) / float(countPortions - 1))).rgb;"
                                         "}";
 
       const char fsh_domain[] =         "for (int i=0; i<countPortions; i++)"
                                         "{"
-                                          "float domain = texture(domainarr, fcoords).r;"
+                                          "float domain = texture(domainarr, relcoords).r;"
                                           "float value = texture(texData, vec2(domain, 0.0)).r;"  // domain /float(domainscount-1)
                                           "ovMix = max(ovMix, value);"
                                           "result = result + texture(texPalette, vec2(value, float(i) / (countPortions - 1))).rgb;"
@@ -44,7 +44,7 @@ public:
 
       const char fsh_domblack[] =       "for (int i=0; i<countPortions; i++)"
                                         "{"
-                                          "float domain = texture(domainarr, fcoords).r;"
+                                          "float domain = texture(domainarr, relcoords).r;"
                                           "float value = texture(texData, vec2(domain, 0.0)).r * (1-step(domain, 0.0));"    // /float(domainscount-1)
                                           "ovMix = max(ovMix, value);"
                                           "result = result + texture(texPalette, vec2(value, float(i) / (countPortions - 1))).rgb;"

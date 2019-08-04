@@ -101,8 +101,8 @@ int OImageStretched::fshTrace(int overlay, char *to) const
   {
     ocg.goto_normed();
     ocg.push("_densvar = 1.0;");
-    ocg.push( m_autorotated? "vec2 fcoords = coords.pq;" : "vec2 fcoords = coords.st;");
-    ocg.push( "vec4 pixel = texture(");  ocg.param_get(); ocg.push(", vec2(fcoords.x, 1.0 - fcoords.y));");
+    ocg.push( m_autorotated? "vec2 relcoords = coords.pq;" : "vec2 relcoords = coords.st;");
+    ocg.push( "vec4 pixel = texture(");  ocg.param_get(); ocg.push(", vec2(relcoords.x, 1.0 - relcoords.y));");
     ocg.push("result = pixel.rgb;"
              "mixwell = _densvar*pixel.a;");
   }

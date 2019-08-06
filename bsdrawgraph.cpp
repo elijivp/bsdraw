@@ -64,13 +64,13 @@ public:
               );
         if (graphopts.descaling == graphopts_t::DE_LINTERP)
         {
-          fmg.push( 
-                    "vec3 fsteps = vec3(float(imoded.x), (ify_spec[2] - ify_spec[1])/float(iscaling.x), (ify_spec[1] - ify_spec[0])/float(iscaling.x));"
-                    "ffy_spec = mix("
-                      "vec3(ify_spec[1] + fsteps[1]*(fsteps.x-1.0), ify_spec[1] + fsteps[1]*fsteps.x, ify_spec[1] + fsteps[1]*(fsteps.x+1.0)),"
-                      "vec3(ify_spec[1] - fsteps[2], ify_spec[1], ify_spec[1] + fsteps[1]),"
-                      "step(fsteps.x, 0.0) );"
-                    );
+//          fmg.push( 
+//                    "vec3 fsteps = vec3(float(imoded.x), (ify_spec[2] - ify_spec[1])/float(iscaling.x), (ify_spec[1] - ify_spec[0])/float(iscaling.x));"
+//                    "ffy_spec = mix("
+//                      "vec3(ify_spec[1] + fsteps[1]*(fsteps.x-1.0), ify_spec[1] + fsteps[1]*fsteps.x, ify_spec[1] + fsteps[1]*(fsteps.x+1.0)),"
+//                      "vec3(ify_spec[1] - fsteps[2], ify_spec[1], ify_spec[1] + fsteps[1]),"
+//                      "step(fsteps.x, 0.0) );"
+//                    );
           
           
 //          fmg.push( 
@@ -95,13 +95,13 @@ public:
 //                    "corrector = max(corrector, 0.0);"
 //                    "float corrector = clamp((ify_spec[2] - ify_spec[1])/(ify_spec[1] - ify_spec[0]), -2.0, 2.0);"
 //                    "float corrector = clamp(abs(ify_spec[2] - ify_spec[1] - (ify_spec[1] - ify_spec[0]))/(2.0*(ify_spec[2] - ify_spec[1])), -4, 4);"
-//                    "float corrector = clamp(float(ify_spec[2] - ify_spec[1] + (ify_spec[1] - ify_spec[0]))/(2.0*(ify_spec[2] - ify_spec[1])), -3.0, 3.0);"
-                    "float corrector = clamp(0.5 + 0.5*(ify_spec[1] - ify_spec[0])/(ify_spec[2] - ify_spec[1]), -16.0, 16.0);"
+                    "float corrector = clamp(float(ify_spec[2] - ify_spec[1] + (ify_spec[1] - ify_spec[0]))/((ify_spec[2] - ify_spec[1]) - (ify_spec[1] - ify_spec[0])), -4.0, 4.0);"
+//                    "float corrector = clamp(0.5 + 0.5*(ify_spec[1] - ify_spec[0])/(ify_spec[2] - ify_spec[1]), -4.0, 4.0);"
 //                    "float surrector = 1.0 - abs(ify_spec[2] - ify_spec[1])/float(ibounds.y);"
 //                    "float surrector = 1.0 - step(ify_spec[2] - ify_spec[1], 5.0)/(ify_spec[0] - ify_spec[1]);"
                       "float surrector = step(iscaling.y*4.0, abs(ify_spec[2] - ify_spec[1]))*step(iscaling.y*4.0, abs(ify_spec[0] - ify_spec[1]))*(step(sign((ify_spec[2] - ify_spec[1])*(ify_spec[0] - ify_spec[1])), 0.0));"
 //                    "surrector = mix(1.0, 0.0, surrector);"
-//                "surrector = 1.0;"
+                "surrector = 1.0;"
 //                    "vec3 fsteps = vec3(mod(floor(relcoords.x*ibounds.x), float(iscaling.x)), ify_spec[2] - ify_spec[1], (ify_spec[1] - ify_spec[0])/float(iscaling.x));"
                     "vec3 fsteps = vec3(float(imoded.x), ify_spec[2] - ify_spec[1], (ify_spec[1] - ify_spec[0])/float(iscaling.x));"
 //                    "vec3 fcorr = vec3((fsteps.x - 1.0)/float(iscaling.x)*mix(corrector, 1.0, (fsteps.x - 1.0)/float(iscaling.x)*surrector), "
@@ -241,20 +241,21 @@ public:
     
       if (graphopts.dotsize)
       {       
-        fmg.push( "{");
+        fmg.push( "{"
+                    "float hscx = floor(iscaling.x/2.0 + 0.49);");
         if (graphopts.dotsize > 0)
           fmg.cintvar("dotsize", graphopts.dotsize);
         else
         {
           fmg.cintvar("godot", -graphopts.dotsize);
-          fmg.push("int dotsize = int(iscaling.x/2.0) + godot;");
+          fmg.push("int dotsize = int(hscx) + godot;");
         }
-        fmg.push("int dist_limit = int(max((dotsize - 1) - floor(iscaling.x/2.0 - 1), 0));");
+        fmg.push("int dist_limit = int(max((dotsize-1) - hscx + 1, 0.0));");
         fmg.cfloatvar("dotweight", graphopts.dotweight);
         
         if (graphopts.descaling == graphopts_t::DE_LINTERP)
-          fmg.push("float remoded_x = float(relcoords.x*ibounds.x - imoded.x)/fbounds.x*ibounds_noscaled.x + (1.0 - step(float(imoded.x), iscaling.x/2.0));"
-                   "vec2  remodedoffs = vec2(iscaling.x/2.0, 0.0);");
+          fmg.push("float remoded_x = float(relcoords.x*ibounds.x - imoded.x)/fbounds.x*ibounds_noscaled.x + (1.0 - step(float(imoded.x), hscx));"
+                   "vec2  remodedoffs = vec2(hscx, 0.0);");
         else
           fmg.push("float remoded_x = float(relcoords.x*ibounds.x - imoded.x)/fbounds.x*ibounds_noscaled.x;"
                    "vec2  remodedoffs = vec2(0.0, 0.0);");
@@ -264,13 +265,13 @@ public:
                     "{" SHNL
                       "float reltoval = float(remoded_x + j)/ibounds_noscaled.x;" SHNL
                       "float fdist_weight = (dotsize - distance(fcoords + remodedoffs, "
-                        "vec2( floor(reltoval*fbounds.x+0.49), floor(getValue1D(i, reltoval)*(ibounds.y-1))) + vec2(floor(iscaling.x/2.0+0.49), 0.0))"
+                        "vec2( floor(reltoval*fbounds.x), floor(getValue1D(i, reltoval)*(ibounds.y-1))) + vec2(hscx, 0.0))"
                                             ") / float(dotsize);" SHNL                    
 //                  "VALUE = floor(mix(nei[1], VALUE, step(fdist_weight, MIXWELL)));" SHNL
 //                    "MIXWELL = mix(min(fdist_weight*(1 + dotweight), 1.0), MIXWELL, step(fdist_weight, MIXWELL));" SHNL
-                    "fdist_weight = min(fdist_weight*(1 + dotweight), 1.0);" SHNL
+                    "fdist_weight = min(fdist_weight*(1.0 + dotweight), 1.0);" SHNL
                     "MIXWELL = mix(fdist_weight, MIXWELL, step(fdist_weight, MIXWELL));" SHNL
-                    "}" SHNL
+                    "}" SHNL                    
                   "}" SHNL);
       }
       

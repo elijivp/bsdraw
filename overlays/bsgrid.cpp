@@ -20,10 +20,10 @@ OGridRegular::OGridRegular(RISK gr, COORDINATION cn, float startchannel, float s
 //#define OGRID_SYMMETRY "+0.49f"
 //#define OGRID_SYMMETRY ""
 
-int OGridRegular::fshTrace(int overlay, char *to) const
+int OGridRegular::fshTrace(int overlay, bool rotated, char *to) const
 {
   if (m_stepsize == 0)  return -1;    
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -97,9 +97,9 @@ OGridCircular::OGridCircular(COORDINATION cn, float center_x, float center_y, CO
 {
 }
 
-int OGridCircular::fshTrace(int overlay, char *to) const
+int OGridCircular::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -154,9 +154,9 @@ OGridDecart::OGridDecart(COORDINATION cn, float center_x, float center_y, float 
   m_limits[3] = limit_y_bottom;
 }
 
-int OGridDecart::fshTrace(int overlay, char *to) const
+int OGridDecart::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();

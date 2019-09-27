@@ -28,9 +28,9 @@ OMarkDashs::~OMarkDashs()
   delete []m_marks;
 }
 
-int OMarkDashs::fshTrace(int overlay, char *to) const
+int OMarkDashs::fshTrace(int overlay, bool rotated, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -98,9 +98,9 @@ OMarkFigures::~OMarkFigures()
   delete []m_figures;
 }
 
-int OMarkFigures::fshTrace(int overlay, char *to) const
+int OMarkFigures::fshTrace(int overlay, bool rotated, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();

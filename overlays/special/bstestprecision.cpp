@@ -9,9 +9,9 @@ OTestPrecision::OTestPrecision(): IOverlaySimple(),
 //  appendUniform(DT_1I, &m_blockstate);
 }
 
-int OTestPrecision::fshTrace(int overlay, char *to) const
+int OTestPrecision::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
 //    int rel = ocg.add_movecs_pixing(CR_ABSOLUTE_NOSCALED);

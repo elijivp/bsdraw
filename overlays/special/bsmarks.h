@@ -11,7 +11,7 @@ protected:
     float   tcolor;
     float   pos;
   }                 *m_marks;
-  virtual int fshTrace(int overlay, char* to) const;
+  virtual int fshTrace(int overlay, bool rotated, char* to) const;
 private:
   dmtype_arr_t      m_dm_coords;
   COORDINATION      m_featcn;
@@ -36,7 +36,7 @@ protected:
   unsigned int      m_maxfigures;
   struct            figinfo_t;
   struct figinfo_t  *m_figures;
-  virtual int fshTrace(int overlay, char* to) const;
+  virtual int fshTrace(int overlay, bool rotated, char* to) const;
 private:
   dmtype_arr_t      m_dm_coords;
   dmtype_arr_t      m_dm_form;

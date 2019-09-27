@@ -56,9 +56,9 @@ OImageOriginal::OImageOriginal(QImage *image, IMAGECONVERT icvt, bool autorotate
   appendUniform(m_dtype, &m_dmti);
 }
 
-int OImageOriginal::fshTrace(int overlay, char *to) const
+int OImageOriginal::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -94,9 +94,9 @@ OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, bool autorota
   appendUniform(m_dtype, &m_dmti);
 }
 
-int OImageStretched::fshTrace(int overlay, char *to) const
+int OImageStretched::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();

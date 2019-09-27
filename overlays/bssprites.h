@@ -17,7 +17,7 @@ protected:
   dmtype_sampler_t  m_randomer;
   float   m_click[4];
 protected:
-  virtual int fshTrace(int overlay, char* to) const;
+  virtual int fshTrace(int overlay, bool rotated, char* to) const;
   bool overlayReaction(OVL_REACTION oreact, const void* dataptr, bool*);
 };
 

@@ -10,7 +10,7 @@ protected:
 public:
   OPTFill(const linestyle_t& kls);
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
 class ODropPoints: public IOverlayTraced, public OVLCoordsOff, public OVLDimmsOff
@@ -23,7 +23,7 @@ protected:
 public:
   ODropPoints(unsigned int ptlimit, COORDINATION featcn, float radius, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
   virtual bool  overlayReaction(OVL_REACTION, const void *, bool *doStop);
 };
 
@@ -36,7 +36,7 @@ protected:
   unsigned int  ptCount;
 protected:
   DropsBase_(unsigned int countPointsMax, const linestyle_t& kls);
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
 class ODropLine: public DropsBase_
@@ -64,7 +64,7 @@ protected:
 public:
   OSelector(const linestyle_t& kls, float alpha=0.0f);
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
   virtual bool  overlayReaction(OVL_REACTION, const void *, bool *doStop);
 };
 

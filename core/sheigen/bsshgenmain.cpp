@@ -157,8 +157,8 @@ unsigned int FshMainGenerator::basePendingSize(unsigned int ovlscount)
   return 1750 + ovlscount*540;
 }
 
-FshMainGenerator::FshMainGenerator(char *deststring, bool rotated, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]): 
-  m_writebase(deststring), m_to(deststring), m_offset(0), m_rotated(rotated), m_ovlscount(ovlscount), m_ovls(ovlsinfo)
+FshMainGenerator::FshMainGenerator(char *deststring, ORIENTATION orient, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]): 
+  m_writebase(deststring), m_to(deststring), m_offset(0), m_orient(orient), m_ovlscount(ovlscount), m_ovls(ovlsinfo)
 {
 #ifdef BSGLSLVER
   m_offset += msprintf(&m_to[m_offset],  "#version %d" SHNL, BSGLSLVER);
@@ -172,12 +172,22 @@ FshMainGenerator::FshMainGenerator(char *deststring, bool rotated, unsigned int 
                                   "uniform highp sampler2D  texPalette;" SHNL
                                   "in highp vec2            coords;" SHNL
 //                                  "varying  vec4            fragColor;" SHNL
-                                  "vec2 rotate(vec2 coords);" SHNL
                                   "float getValue1D(in int portion, in float x){  return texture(texData, vec2(x, float(portion)/(float(countPortions)-1.0))).r; }" SHNL
                                   "float getValue2D(in int portion, in vec2  x){  return texture(texData, vec2(x.x, float(x.y + float(portion))/float(countPortions))).r; }" SHNL
-                                  "vec3 insider(int i, ivec2 ifromvec) {\n\tfloat scaled01 = float(i - ifromvec[0])/float(ifromvec[1] - sign(float(ifromvec[1])));\n\treturn vec3( step(0.0, scaled01)*(1.0-step(1.001, scaled01)), scaled01, sign(ifromvec[1])*ifromvec[1]); }" SHNL;
+                                  "vec3  insider(int i, ivec2 ifromvec) { float scaled01 = float(i - ifromvec[0])/float(ifromvec[1] - sign(float(ifromvec[1])));\n\treturn vec3( step(0.0, scaled01)*(1.0-step(1.001, scaled01)), scaled01, sign(ifromvec[1])*ifromvec[1]); }" SHNL;
 
   memcpy(&m_to[m_offset], fsh_base, sizeof(fsh_base) - 1);  m_offset += sizeof(fsh_base) - 1;
+  
+  const char* rotaters[] = {      "vec2 rotater(vec2 coords){ return coords; }",
+                                  "vec2 rotater(vec2 coords){ coords.x = 1.0-coords.x; return coords; }",
+                                  "vec2 rotater(vec2 coords){ coords.y = 1.0-coords.y; return coords; }",
+                                  "vec2 rotater(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords; }",
+                                  "vec2 rotater(vec2 coords){ coords.y = 1.0-coords.y; return coords.yx; }",
+                                  "vec2 rotater(vec2 coords){ return coords.yx; }",
+                                  "vec2 rotater(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords.yx; }",
+                                  "vec2 rotater(vec2 coords){ coords.x = 1.0-coords.x; return coords.yx; }"
+                                };
+  m_offset += msprintf(&m_to[m_offset], "%s" SHNL, rotaters[orient]);
 
   for (unsigned int i=0; i<m_ovlscount; i++)
   {
@@ -190,7 +200,7 @@ FshMainGenerator::FshMainGenerator(char *deststring, bool rotated, unsigned int 
   
 }
 
-void FshMainGenerator::goto_func_begin(const DPostmask& fsp)
+void FshMainGenerator::goto_func_begin(int initback, unsigned int backcolor, const DPostmask& fsp)
 {
   static const char fsh_main[] =  "void main()" SHNL
                                   "{" SHNL
@@ -204,8 +214,20 @@ void FshMainGenerator::goto_func_begin(const DPostmask& fsp)
                                   
                                     "vec2  fbounds_noscaled = vec2(datadimm_a, datadimm_b);" SHNL
                                     "vec2  fbounds = vec2(ibounds);" SHNL
-                                  
-                                    "vec2  relcoords = rotate(coords.xy*0.5 + vec2(0.5,0.5));" SHNL
+  
+  
+//  const char* rotates[] = { "vec2 relcoords = vec2(coords.x*0.5 + 0.5, coords.y*0.5 + 0.5);",
+//                            "vec2 relcoords = vec2(1.0 - (coords.x*0.5 + 0.5), coords.y*0.5 + 0.5);",
+//                            "vec2 relcoords = vec2(coords.x*0.5 + 0.5, 1.0 - (coords.y*0.5 + 0.5));",
+//                            "vec2 relcoords = vec2(1.0 - (coords.x*0.5 + 0.5), 1.0 - (coords.y*0.5 + 0.5));",
+//                            "vec2 relcoords = vec2(1.0 - (coords.y*0.5 + 0.5), coords.x*0.5 + 0.5);",
+//                            "vec2 relcoords = vec2(coords.y*0.5 + 0.5, coords.x*0.5 + 0.5);",
+//                            "vec2 relcoords = vec2(1.0 - (coords.y*0.5 + 0.5), 1.0 - (coords.x*0.5 + 0.5));",
+//                            "vec2 relcoords = vec2(coords.y*0.5 + 0.5, 1.0 - (coords.x*0.5 + 0.5));"
+//                          };
+//  m_offset += msprintf(&m_to[m_offset], rotates[m_orient] SHNL);
+
+                                    "vec2  relcoords = rotater(vec2(coords.xy*0.5 + vec2(0.5,0.5)));" SHNL
                                     "vec4  ocoords = vec4(coords.xy*0.5 + vec2(0.5,0.5), relcoords);" SHNL
                                   
 //                                  "vec2  fcoords = floor((coords.xy+vec2(1,1))*fbounds/vec2(2.0,2.0) + vec2(0.49, 0.49));" SHNL
@@ -215,68 +237,113 @@ void FshMainGenerator::goto_func_begin(const DPostmask& fsp)
                                   
 //                                    "vec2  fcoords = floor(relcoords*(fbounds) + vec2(0.49, 0.49));" SHNL
 //                                    "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled) + vec2(0.49, 0.49));" SHNL
-                                  "vec2  fcoords = floor(relcoords*(fbounds));" SHNL
-                                  "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled));" SHNL
+//                                  "vec2  fcoords = floor(relcoords*(fbounds - vec2(1,0)) + vec2(0.49999, 0.49999));" SHNL
+//                                  "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled - vec2(1,0)) + vec2(0.49999, 0.49999));" SHNL
                                   
-//                                  "vec2  fcoords = floor(relcoords*(fbounds - vec2(1,1)) + vec2(0.49, 0.49));" SHNL
-//                                  "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled - vec2(1,1)) + vec2(0.49, 0.49));" SHNL
+                                  //                                  "vec2  fcoords = floor(relcoords*(fbounds - vec2(1,1)) + vec2(0.49, 0.49));" SHNL
+                                  //                                  "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled - vec2(1,1)) + vec2(0.49, 0.49));" SHNL
                                   
-                                  
-                                  
-                                  //                                    "vec2  fcoords = floor(relcoords*(fbounds - vec2(1,1)) + vec2(0.49, 0.49));" SHNL
-                                  //                                    "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled - vec2(1,1)) + vec2(0.49, 0.49));" SHNL
+//                                    "vec2  fcoords = floor(relcoords*(fbounds - vec2(1,1)) + vec2(0.49, 0.49));" SHNL
+//                                    "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled - vec2(1,1)) + vec2(0.49, 0.49));" SHNL
 //                                  "vec2  fcoords = floor(relcoords*(fbounds - vec2(1,1)));" SHNL
 //                                  "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled - vec2(1,1)));" SHNL
 //                                  "vec2  fcoords = floor(relcoords*fbounds);" SHNL
 //                                  "vec2  fcoords_noscaled = floor(relcoords*fbounds_noscaled);" SHNL
                                   
-                                    "ivec2 icoords = ivec2(fcoords);" SHNL
-                                    "ivec2 icoords_noscaled = ivec2(fcoords_noscaled);" SHNL
+                                  
+
+                                    "vec2  fcoords = (relcoords*(fbounds));" SHNL   /// ! no floor.
+                                    "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled));" SHNL
+                                  
+                                  
+//                                    "ivec2 icoords = ivec2(fcoords);" SHNL
+//                                    "ivec2 icoords_noscaled = ivec2(fcoords_noscaled);" SHNL
                                   
                                     "ivec2 imoded = ivec2( int(mod(fcoords.x, float(iscaling.x))), int(mod(fcoords.y, float(iscaling.y))));" SHNL
                                   
-                                    "vec3  result = vec3(0.0,0.0,0.0);" SHNL;
+                                    ;
+
   memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
   
-  float rgb[3];
-  bsintTocolor3f(fsp.color, rgb);
+  if (initback == 0)
+    m_offset += msprintf(&m_to[m_offset], "vec3  backcolor = vec3(0.0, 0.0, 0.0);" SHNL);
+  else if (initback == 1)
+    this->ccolor("backcolor", backcolor);
+  else if (initback == 2)
+    m_offset += msprintf(&m_to[m_offset], "vec3  backcolor = texture(texPalette, vec2(0.0, 0.0)).rgb;" SHNL);
   
-  m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = vec3(%F,%F,%F);" SHNL
-                                        "vec4   ppb_sfp   = vec4(0.0, %F, %F, %F);" SHNL    /// ppban, ppoutsignal, 
+  m_offset += msprintf(&m_to[m_offset],   "vec3  result = backcolor;" SHNL);
+    
+  m_offset += msprintf(&m_to[m_offset], "vec3   ppb_sfp   = vec3(0.0, %F, %F);" SHNL    /// ppban, ppoutsignal, 
                                         "ivec4  ppb_rect  = ivec4(imoded.x, imoded.y, iscaling.x-1, iscaling.y-1);" SHNL, 
-                                        rgb[2], rgb[1], rgb[0],
-                                        fsp.over & 1? 1.0f : 0.0f, fsp.over & 2? 1.0f : 0.0f, (float)fsp.weight );
-
-  
+                                        fsp.threshold, (float)fsp.weight );
+//                                        fsp.over & 1? 1.0f : 0.0f, fsp.over & 2? 1.0f : 0.0f, (float)fsp.weight );
 }
 
 void FshMainGenerator::goto_func_end(const DPostmask &fsp)
-{
-  static const char fsh_decltrace[] = "vec4 ovTrace;" SHNL;
-  memcpy(&m_to[m_offset], fsh_decltrace, sizeof(fsh_decltrace) - 1);  m_offset += sizeof(fsh_decltrace) - 1;
-  
-  if (fsp.postmask != DPostmask::PM_NONE)
+{  
+  if (fsp.over != DPostmask::PO_OFF)
   {
-    m_offset += msprintf(&m_to[m_offset],  "%s" SHNL
-                                          "result = mix(result, ppb_color, ppb_sfp[1] * ppb_sfp[0] * ppb_in + ppb_sfp[2] * (1.0 - ppb_sfp[0])*ppb_in );" SHNL,
-                      fsp.postmask == DPostmask::PM_LINELEFT?         "float ppb_in = step(ppb_rect.x, ppb_sfp[3]);" :
-                      fsp.postmask == DPostmask::PM_LINERIGHT?        "float ppb_in = step(ppb_rect[2] - ppb_rect.x, ppb_sfp[3]);" :
-                      fsp.postmask == DPostmask::PM_LINEBOTTOM?       "float ppb_in = step(ppb_rect.y, ppb_sfp[3]);" :
-                      fsp.postmask == DPostmask::PM_LINETOP?          "float ppb_in = step(ppb_rect[3] - ppb_rect.y, ppb_sfp[3]);" :
-                      fsp.postmask == DPostmask::PM_LINELEFTBOTTOM?   "float ppb_in = sign(step(ppb_rect.x, ppb_sfp[3])+step(ppb_rect.y, ppb_sfp[3]));" : 
-                      fsp.postmask == DPostmask::PM_LINERIGHTBOTTOM?  "float ppb_in = sign(step(ppb_rect[2] - ppb_rect.x, ppb_sfp[3])+step(ppb_rect.y, ppb_sfp[3]));" : 
-                      fsp.postmask == DPostmask::PM_LINELEFTTOP?      "float ppb_in = sign(step(ppb_rect.x, ppb_sfp[3])+step(ppb_rect[3] - ppb_rect.y, ppb_sfp[3]));" : 
-                      fsp.postmask == DPostmask::PM_LINERIGHTTOP?     "float ppb_in = sign(step(ppb_rect[2] - ppb_rect.x, ppb_sfp[3])+step(ppb_rect[3] - ppb_rect.y, ppb_sfp[3]));" : 
-                      fsp.postmask == DPostmask::PM_CONTOUR?          "float ppb_in = sign(step(ppb_rect.x, ppb_sfp[3]) + step(ppb_rect.y, ppb_sfp[3])"
-                                                                      " + step(ppb_rect[2] - ppb_rect.x, ppb_sfp[3]) + step(ppb_rect[3] - ppb_rect.y, ppb_sfp[3]));" :
-                      fsp.postmask == DPostmask::PM_PSEUDOCIRCLE?     "vec2 _ppb_pos = vec2(abs(0.5 - float(ppb_rect.x)/ppb_rect[2]), abs(0.5 - float(ppb_rect.y)/ppb_rect[3]));"
-                                                                        "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
-//                                                                        "float ppb_in = smoothstep((ppb_sfp[3]*0.1 + 0.2)*(ppb_sfp[3]*0.1 + 0.2), 0.7*0.7, _ppb_d2);"
-                                                                        "float ppb_in = smoothstep(0.25*0.25, (0.66 - ppb_sfp[3]*0.05)*(0.66 - ppb_sfp[3]*0.05), _ppb_d2);"
-                                                                      : "float ppb_in = 0.0;"
-                                                                            );
+    const char* dpostmasks[] = {  
+                                  "float ppb_in = sign(step(ppb_rect.x, ppb_sfp[2]) + step(ppb_rect.y, ppb_sfp[2])"
+                                          " + step(ppb_rect[2] - ppb_rect.x, ppb_sfp[2]) + step(ppb_rect[3] - ppb_rect.y, ppb_sfp[2]));", // PM_CONTOUR
+                                  "float ppb_in = step(ppb_rect.x, ppb_sfp[2]);", // PM_LINELEFT
+                                  "float ppb_in = step(ppb_rect[2] - ppb_rect.x, ppb_sfp[2]);", // PM_LINERIGHT
+                                  "float ppb_in = step(ppb_rect.y, ppb_sfp[2]);", // PM_LINEBOTTOM
+                                  "float ppb_in = step(ppb_rect[3] - ppb_rect.y, ppb_sfp[2]);", // PM_LINETOP
+                                  "float ppb_in = sign(step(ppb_rect.x, ppb_sfp[2])+step(ppb_rect.y, ppb_sfp[2]));", //  PM_LINELEFTBOTTOM
+                                  "float ppb_in = sign(step(ppb_rect[2] - ppb_rect.x, ppb_sfp[2])+step(ppb_rect.y, ppb_sfp[2]));", //  PM_LINERIGHTBOTTOM
+                                  "float ppb_in = sign(step(ppb_rect.x, ppb_sfp[2])+step(ppb_rect[3] - ppb_rect.y, ppb_sfp[2]));", //  PM_LINELEFTTOP
+                                  "float ppb_in = sign(step(ppb_rect[2] - ppb_rect.x, ppb_sfp[2])+step(ppb_rect[3] - ppb_rect.y, ppb_sfp[2]));", // PM_LINERIGHTTOP 
+                                  "vec2 _ppb_pos = vec2(abs(0.5 - float(ppb_rect.x)/ppb_rect[2]), abs(0.5 - float(ppb_rect.y)/ppb_rect[3]));"
+                                  "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
+//                                                                        "float ppb_in = smoothstep((ppb_sfp[2]*0.1 + 0.2)*(ppb_sfp[2]*0.1 + 0.2), 0.7*0.7, _ppb_d2);"
+                                  "float ppb_in = smoothstep(0.25*0.25, (0.66 - ppb_sfp[2]*0.05)*(0.66 - ppb_sfp[2]*0.05), _ppb_d2);", // PM_PSEUDOCIRCLE
+                                  "float ppb_in = step(abs(ppb_rect.x-ppb_rect[2]/2), ppb_sfp[2])*step(abs(ppb_rect.y-ppb_rect[3]/2), ppb_sfp[2]);", // PM_DOT
+                                  "float ppb_in = step(ppb_rect.x, ppb_sfp[2])*step(ppb_rect.y, ppb_sfp[2]);", // PM_DOTLEFTBOTTOM
+                                  "float ppb_in = sign( "
+                                                        "step(ppb_rect.x, ppb_sfp[2])*step(ppb_rect.y, ppb_sfp[2]) + "
+                                                        "step(ppb_rect[2]-ppb_rect.x, ppb_sfp[2])*step(ppb_rect.y, ppb_sfp[2]) + "
+                                                        "step(ppb_rect.x, ppb_sfp[2])*step(ppb_rect[3]-ppb_rect.y, ppb_sfp[2]) + "
+                                                        "step(ppb_rect[2]-ppb_rect.x, ppb_sfp[2])*step(ppb_rect[3]-ppb_rect.y, ppb_sfp[2]));", // PM_DOTCONTOUR
+                                  "float ppb_in = step(abs(ppb_rect.x-ppb_rect.y), ppb_sfp[2]);", // PM_SHTRICHL
+//      "float ppb_in = step(abs(ppb_rect.x - ppb_rect.y - mod(2, ppb_rect.y) ), 0.0);", // PM_SHTRICHL
+                                  "float ppb_in = step(abs(ppb_rect.x-(ppb_rect[3]-ppb_rect.y)), ppb_sfp[2]);", // PM_SHTRICHR
+      
+                                  "float ppb_in = sign(step(abs(ppb_rect.x-ppb_rect.y), ppb_sfp[2]) + step(abs(ppb_rect.x-(ppb_rect[3]-ppb_rect.y)), ppb_sfp[2]));", // PM_CROSS
+    };
+    
+    if (fsp.postmask < sizeof(dpostmasks) / sizeof(const char*))
+    {
+      m_offset += msprintf(&m_to[m_offset],   "%s" SHNL, dpostmasks[fsp.postmask]);
+      
+      
+      if (fsp.colorManual == -1)
+      {
+        if (fsp.colorPalette == 0.0f)
+          m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = backcolor;" SHNL);
+        else
+          m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = texture(texPalette, vec2(%F, 0.0)).rgb;" SHNL, fsp.colorPalette);
+      }
+      else
+      {
+        float rgb[3];
+        bsintTocolor3f(fsp.colorManual, rgb);
+        m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = vec3(%F,%F,%F);" SHNL, rgb[2], rgb[1], rgb[0]);
+      }
+      
+    
+      m_offset += msprintf(&m_to[m_offset], "result = mix(result, ppb_color, ppb_in * %s );" SHNL,
+                           fsp.over == DPostmask::PO_SIGNAL?  "ppb_sfp[0]" : 
+                           fsp.over == DPostmask::PO_EMPTY?   "(1.0 - ppb_sfp[0])" : 
+                           fsp.over == DPostmask::PO_ALL?     "1.0" : "0.0"
+                                          );
+                //  "result = mix(result, ppb_color, ppb_sfp[1]*ppb_sfp[0]*ppb_in + ppb_sfp[2]*(1.0 - ppb_sfp[0])*ppb_in );" SHNL,
+    }
   }
   
+  static const char fsh_decltrace[] = "vec4 ovTrace;" SHNL;
+  memcpy(&m_to[m_offset], fsh_decltrace, sizeof(fsh_decltrace) - 1);  m_offset += sizeof(fsh_decltrace) - 1;  
   for (unsigned int i=0; i<m_ovlscount; i++)
     if (m_ovls[i].link >= 0)
     {

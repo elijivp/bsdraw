@@ -8,15 +8,20 @@
 */
 
 
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)7
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)4
+#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)12
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)17
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)10
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)17
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)21
 #ifndef MW_TEST_NOCHOOSE_DEFAULT
 #include <QInputDialog>
 #endif
 
 int main(int argc, char *argv[])
-{  
+{
   QApplication a(argc, argv);
-  
+
   tests_t   MW_TEST;
 #ifdef MW_TEST_NOCHOOSE_DEFAULT
   MW_TEST = MW_TEST_NOCHOOSE_DEFAULT;

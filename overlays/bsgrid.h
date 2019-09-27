@@ -18,7 +18,7 @@ protected:
   bool          m_babsheight;
   int           m_maxsteps;
 protected:
-  int fshTrace(int overlay, char *to) const;
+  int fshTrace(int overlay, bool rotated, char *to) const;
 };
 
 /// Circular grid
@@ -31,7 +31,7 @@ protected:
   float         m_stepsize;
   int           m_maxsteps;
 protected:
-  int fshTrace(int overlay, char *to) const;
+  int fshTrace(int overlay, bool rotated, char *to) const;
 };
 
 /// Dekart grid
@@ -44,7 +44,7 @@ protected:
   float         m_limits[4];
   int           m_riskheight;
 protected:
-  int fshTrace(int overlay, char *to) const;
+  int fshTrace(int overlay, bool rotated, char *to) const;
 };
 
 #endif // GRID_H

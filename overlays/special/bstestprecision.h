@@ -8,7 +8,7 @@ class OTestPrecision: public IOverlaySimple, public OVLCoordsOff, public OVLDimm
 public:
   OTestPrecision();
 protected:
-  virtual int fshTrace(int overlay, char* to) const;
+  virtual int fshTrace(int overlay, bool rotated, char* to) const;
 //  virtual bool overlayReaction(OVL_REACTION oreact, const void*, bool* doStop);
 };
 

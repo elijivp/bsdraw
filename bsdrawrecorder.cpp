@@ -8,7 +8,7 @@ DrawRecorder::DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, un
   m_matrixDimmA = samplesHorz;
   m_matrixDimmB = linesStart;
   m_portionSize = m_matrixDimmA;
-  deployMemory(m_countPortions*m_portionSize*m_resizelim);
+  deployMemory(portions*m_portionSize*m_resizelim);
   m_matrixLmSize = linesMemory;
 }
 

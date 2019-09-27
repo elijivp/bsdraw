@@ -21,21 +21,6 @@
 #define initializeOpenGLFunctions initializeGLFunctions
 #endif
 
-class ISheiGenerator
-{
-public:
-  virtual   const char*   shaderName() const =0;
-  virtual   unsigned int  shvertex_pendingSize() const =0;
-  virtual   unsigned int  shvertex_store(char* to) const =0;
-  virtual   unsigned int  shfragment_pendingSize(unsigned int ovlscount) const =0;
-  virtual   unsigned int  shfragment_store(const DPostmask&, bool rotated, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const =0;
-  
-public:
-  enum      { PMT_PSEUDO2D, PMT_FORCE1D }; /// PORTION_MESH_TYPE
-  virtual   int           portionMeshType() const =0;
-  virtual   ~ISheiGenerator(){}
-};
-
 class QScrollBar;
 class DrawQWidget: public QOpenGLWidget, protected QOpenGLFunctions, public DrawCore
 {
@@ -48,6 +33,7 @@ class DrawQWidget: public QOpenGLWidget, protected QOpenGLFunctions, public Draw
                       _SF_COUNT
                    };
 protected:
+  bool                    m_compileOnInitializeGL; /// true by default
   char*                   m_vshmem, *m_fshmem;
   unsigned int            m_vshalloc, m_fshalloc;
   ISheiGenerator*         m_pcsh;
@@ -68,6 +54,7 @@ public:
   DrawQWidget(ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient);
   ~DrawQWidget();
   
+  void  compileWhenInitializeGL(bool cflag);
   void  connectScrollBar(QScrollBar*, bool staticView=false, bool setOrientation=true);
 public slots:
 //    void update();    /// inherited from QWidget!
@@ -89,6 +76,7 @@ public slots:
   
   void    slot_setMirroredHorz();
   void    slot_setMirroredVert();
+  void    slot_setPortionsCount(int count);
   
   void    slot_enableAutoUpdate(bool);
   void    slot_disableAutoUpdate(bool);
@@ -96,7 +84,7 @@ public slots:
   void    slot_disableAutoUpdateByData(bool);
 protected:
   void    palettePrepare(const IPalette *ppal, bool discrete, int levels);
-  void    applyHardPendings();
+  void    initCollectAndCompileShader();
   void    initializeGL();
   void    paintGL();
 protected:

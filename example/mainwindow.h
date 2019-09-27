@@ -22,9 +22,10 @@ public:
 private:
   DrawQWidget**  draws;
   const int             MW_TEST;
-  int                   SAMPLES, DSAMPLES;
-  int                   MAXLINES;
-  int                   PORTIONS;
+  unsigned int          SAMPLES;
+  int                   DSAMPLES; // for omp cycles
+  unsigned int          MAXLINES;
+  unsigned int          PORTIONS;
   int                   RND;
   
   float*                testbuf2D;

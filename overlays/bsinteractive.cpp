@@ -4,9 +4,9 @@
 OActivePoint::OActivePoint(COORDINATION cn, float center_x, float center_y): IOverlaySimple(),
   OVLCoordsDynamic(cn, center_x, center_y), OVLDimmsOff(){}
 
-int   OActivePoint::fshTrace(int overlay, char* to) const
+int   OActivePoint::fshTrace(int overlay, bool rotated, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   ocg.goto_normed();
   ocg.goto_func_end(false);
@@ -21,9 +21,9 @@ int   OActivePoint::fshTrace(int overlay, char* to) const
 OActiveCursor::OActiveCursor(bool linkToScaledCenter): IOverlaySimple(),
   OVLCoordsDynamic(CR_RELATIVE, 0.5, 0.5), OVLDimmsOff(), m_linked(linkToScaledCenter) {}
 
-int   OActiveCursor::fshTrace(int overlay, char* to) const
+int   OActiveCursor::fshTrace(int overlay, bool rotated, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
 //  if (m_linked)
 //    ocg.push("ioffset = ivec2(ioffset/iscaling)*iscaling + iscaling/2;");
@@ -68,9 +68,9 @@ void OActiveRandom::update()
   updateParameter(false);
 }
 
-int   OActiveRandom::fshTrace(int overlay, char* to) const
+int   OActiveRandom::fshTrace(int overlay, bool rotated, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   ocg.goto_normed();
   ocg.param_alias("myseed");
@@ -93,9 +93,9 @@ int   OActiveRandom::fshTrace(int overlay, char* to) const
 //{
 //}
 
-//int   Interactive1DMaxMin::fshTrace(int overlay, char* to) const
+//int   Interactive1DMaxMin::fshTrace(int overlay, bool rotated, char* to) const
 //{
-//  FshTraceGenerator ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE | FshTraceGenerator::OINC_BOUNDS);
+//  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_GETVALUE | FshTraceGenerator::OINC_BOUNDS);
 //  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
 //  {
 //    {

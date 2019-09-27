@@ -3,6 +3,13 @@
 
 #include "bsidrawcore.h"
 
+
+enum  OVL_ORIENTATION   {  OO_INHERITED=0, OO_DEFAULT=1,
+                           OO_LRBT=1, OO_RLBT, OO_LRTB, OO_RLTB, OO_TBLR, OO_BTLR, OO_TBRL, OO_BTRL,
+                           OO_IHBT  , OO_IHTB, OO_LRIH, OO_RLIH
+                        };
+
+
 class IOverlaySimple: public IOverlay
 {
   int   m_inversive;

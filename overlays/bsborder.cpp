@@ -15,9 +15,9 @@ OBorder::OBorder(unsigned int widthpixels, const linestyle_t &kls): IOverlayTrac
 {
 }
 
-int OBorder::fshTrace(int overlay, char *to) const
+int OBorder::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed_empty();
@@ -42,9 +42,9 @@ OToons::OToons(COORDINATION cr, float diameter, float border, const linestyle_t 
 {
 }
 
-int OToons::fshTrace(int overlay, char *to) const
+int OToons::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();

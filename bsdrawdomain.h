@@ -34,6 +34,8 @@ public:
   void  includeRectFree(int left, int top, int width, int height);
   void  includePixelFree(int r, int c);
   
+  bool  isFree(int r, int c) const;
+  
   void  excludeRow(int row);
   void  excludeColumn(int column);
   void  excludeRect(int left, int top, int width, int height);

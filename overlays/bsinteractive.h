@@ -8,7 +8,7 @@ class OActivePoint: public IOverlaySimple, public OVLCoordsDynamic, public OVLDi
 public:
   OActivePoint(COORDINATION cn, float center_x, float center_y);
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
   float   m_seed[2];
 };
 
@@ -17,7 +17,7 @@ class OActiveCursor: public IOverlaySimple, public OVLCoordsDynamic, public OVLD
 public:
   OActiveCursor(bool linkToScaledCenter=false);
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
   virtual bool  overlayReaction(OVL_REACTION, const void *dataptr, bool*);
   bool  m_linked;
 };
@@ -30,7 +30,7 @@ public:
   OActiveRandom();
   void  update();
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
   unsigned int m_ctr;
   float   m_seed[2];
 };
@@ -42,7 +42,7 @@ protected:
 //  Interactive1DMaxMin(POINTERTYPE vt);
 //  ~Interactive1DMaxMin();
 //protected:
-//  virtual int   fshTrace(int overlay, char* to) const;
+//  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 //  POINTERTYPE   m_pointerType;
 //};
 

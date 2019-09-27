@@ -13,9 +13,9 @@ OFPoint::OFPoint(OVLCoordsStatic* pcoords, float offset_x, float offset_y, const
   r = kls.r;  g = kls.g;  b = kls.b;
 }
 
-int   OFPoint::fshTrace(int overlay, char* to) const
+int   OFPoint::fshTrace(int overlay, bool rotated, char* to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -43,9 +43,9 @@ OFCircle::OFCircle(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, 
 {
 }
 
-int   OFCircle::fshTrace(int overlay, char* to) const
+int   OFCircle::fshTrace(int overlay, bool rotated, char* to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -84,9 +84,9 @@ OFSquare::OFSquare(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, 
 {
 }
 
-int OFSquare::fshTrace(int overlay, char *to) const
+int OFSquare::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -124,9 +124,9 @@ OFSquareCC::OFSquareCC(float fillopacity, OVLCoordsStatic* pcoords, float offset
 {
 }
 
-int OFSquareCC::fshTrace(int overlay, char *to) const
+int OFSquareCC::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -164,9 +164,9 @@ OFTriangle::OFTriangle(ORIENT orientation, float fillopacity, OVLCoordsStatic *p
   
 }
 
-int OFTriangle::fshTrace(int overlay, char *to) const
+int OFTriangle::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -222,9 +222,9 @@ OFLine::OFLine(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float e
 {
 }
 
-int   OFLine::fshTrace(int overlay, char* to) const
+int   OFLine::fshTrace(int overlay, bool rotated, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   {
     ocg.goto_normed();
@@ -286,9 +286,9 @@ OFArrow::OFArrow(OVLCoordsStatic* pcoords, float offset_arrow_x, float offset_ar
 {
 }
 
-int   OFArrow::fshTrace(int overlay, char* to) const
+int   OFArrow::fshTrace(int overlay, bool rotated, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   
   ocg.var_fixed("endpoint", m_param1, m_param2);
@@ -340,9 +340,9 @@ OFCross::OFCross(OVLCoordsStatic *pcoords, float offset_x, float offset_y, COORD
 {
 }
 
-int OFCross::fshTrace(int overlay, char *to) const
+int OFCross::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -374,9 +374,9 @@ OFFactor::OFFactor(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COO
 {
 }
 
-int   OFFactor::fshTrace(int overlay, char* to) const
+int   OFFactor::fshTrace(int overlay, bool rotated, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();

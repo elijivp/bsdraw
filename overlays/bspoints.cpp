@@ -10,9 +10,9 @@ OPTFill::OPTFill(const linestyle_t& kls): IOverlaySimple(),
 }
   
 
-int OPTFill::fshTrace(int overlay, char *to) const
+int OPTFill::fshTrace(int overlay, bool rotated, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   ocg.goto_normed();
   ocg.var_fixed("clr", m_fill.r, m_fill.g, m_fill.b);
@@ -41,9 +41,9 @@ ODropPoints::ODropPoints(unsigned int ptlimit, COORDINATION, float, const linest
 }
   
 
-int ODropPoints::fshTrace(int overlay, char *to) const
+int ODropPoints::fshTrace(int overlay, bool rotated, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     int ptpixing = ocg.add_movecs_pixing(CR_RELATIVE);
@@ -96,9 +96,9 @@ DropsBase_::DropsBase_(unsigned int countPointsMax, const linestyle_t& kls): IOv
   appendUniform(DT_1I, &ptCount);
 }
 
-int DropsBase_::fshTrace(int overlay, char *to) const
+int DropsBase_::fshTrace(int overlay, bool rotated, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     int ptpixing = ocg.add_movecs_pixing(CR_RELATIVE);
@@ -202,9 +202,9 @@ OSelector::OSelector(const linestyle_t &kls, float alpha): IOverlayTraced(kls), 
 //  return m_phase == 0;
 //}
 
-int OSelector::fshTrace(int overlay, char *to) const
+int OSelector::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     {

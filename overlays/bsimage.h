@@ -31,7 +31,7 @@ public:
   OImageOriginal(QImage* image, IMAGECONVERT icvt, bool autorotated, COORDINATION cn, float x, float y, float mult_w=1.0f, float mult_h=1.0f);
   OImageOriginal(QImage* image, IMAGECONVERT icvt, bool autorotated, OVLCoordsStatic* pcoords, float offset_x, float offset_y, float mult_w=1.0f, float mult_h=1.0f);
 protected:
-  virtual int     fshTrace(int overlay, char* to) const;
+  virtual int     fshTrace(int overlay, bool rotated, char* to) const;
   float           m_sizemultiplier[2];
 };
 
@@ -41,7 +41,7 @@ public:
   OImageStretched(QImage* image, IMAGECONVERT icvt, bool autorotated, COORDINATION cn=CR_RELATIVE, float x=0.0f, float y=0.0f, float mult_w=1.0f, float mult_h=1.0f);
   OImageStretched(QImage* image, IMAGECONVERT icvt, bool autorotated, OVLCoordsStatic* pcoords, float offset_x, float offset_y, float mult_w=1.0f, float mult_h=1.0f);
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
 

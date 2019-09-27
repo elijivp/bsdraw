@@ -25,20 +25,51 @@ inline void bsintTocolor4f(int clr, float rgb[])
   rgb[0] = a/255.0f;    rgb[1] = b/255.0f;    rgb[2] = g/255.0f;    rgb[3] = r/255.0f;
 }
 
+
+enum  ORIENTATION       { OR_LRBT=0,  OR_RLBT,  OR_LRTB,  OR_RLTB,    // order for +4 work
+                          OR_TBLR,    OR_BTLR,  OR_TBRL,  OR_BTRL 
+                        };
+
 struct  DPostmask
 {
-  enum DPMASK   {  PM_NONE, PM_LINELEFT, PM_LINERIGHT, PM_LINEBOTTOM, PM_LINETOP,
-                   PM_LINELEFTBOTTOM, PM_LINERIGHTBOTTOM, PM_LINELEFTTOP, PM_LINERIGHTTOP,
-                   PM_CONTOUR, PM_PSEUDOCIRCLE  };
-  DPMASK        postmask;
   enum DPOVER   {  PO_OFF=0, PO_SIGNAL=1, PO_EMPTY=2, PO_ALL=3 };
   DPOVER        over;
+  enum DPMASK   {  PM_CONTOUR, PM_LINELEFT, PM_LINERIGHT, PM_LINEBOTTOM, PM_LINETOP,
+                   PM_LINELEFTBOTTOM, PM_LINERIGHTBOTTOM, PM_LINELEFTTOP, PM_LINERIGHTTOP,
+                   PM_PSEUDOCIRCLE, PM_DOT, 
+                   PM_DOTLEFTBOTTOM, PM_DOTCONTOUR,
+                   PM_SHTRICHL, PM_SHTRICHR, PM_CROSS  };
+  DPMASK        postmask;
   int           weight;
-  int           color;
-  DPostmask(DPMASK mask, DPOVER over_, int weight_, float r_, float g_, float b_):
-  postmask(mask), over(over_), weight(weight_) { color = bscolor3fToint(r_, g_, b_); }
-  DPostmask(DPMASK mask, DPOVER over_, int weight_, int color_):
-  postmask(mask), over(over_), weight(weight_), color(color_){}
+  int           colorManual;
+  float         colorPalette; /// activates if colorManual == -1
+  float         threshold;    /// for 2D draws
+  DPostmask(DPOVER over_, DPMASK mask, int weight_, float r_, float g_, float b_, float emptyThreshold=0.0f):
+  over(over_), postmask(mask), weight(weight_), threshold(emptyThreshold) { colorManual = bscolor3fToint(r_, g_, b_); }
+  DPostmask(DPOVER over_, DPMASK mask, int weight_, int colorhex, float emptyThreshold=0.0f):
+  over(over_), postmask(mask), weight(weight_), colorManual(colorhex), threshold(emptyThreshold){}
+  DPostmask(DPOVER over_, DPMASK mask, int weight_, float colorByPalette=0.0f, float emptyThreshold=0.0f):
+  over(over_), postmask(mask), weight(weight_), colorManual(-1), colorPalette(colorByPalette), threshold(emptyThreshold){}
+};
+
+struct ovlfraginfo_t
+{
+  int   link;
+};
+
+class ISheiGenerator
+{
+public:
+  virtual   const char*   shaderName() const =0;
+  virtual   unsigned int  shvertex_pendingSize() const =0;
+  virtual   unsigned int  shvertex_store(char* to) const =0;
+  virtual   unsigned int  shfragment_pendingSize(unsigned int ovlscount) const =0;
+  virtual   unsigned int  shfragment_store(unsigned int allocPortions, const DPostmask&, ORIENTATION orient, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const =0;
+  
+public:
+  enum      { PMT_PSEUDO2D, PMT_FORCE1D }; /// PORTION_MESH_TYPE
+  virtual   int           portionMeshType() const =0;
+  virtual   ~ISheiGenerator(){}
 };
 
 enum  DTYPE { /// Trace/simple shader datatypes
@@ -82,11 +113,6 @@ struct dmtype_palette_t
 {
   const IPalette*   ppal;
   bool              discrete;
-};
-
-struct ovlfraginfo_t
-{
-  int   link;
 };
 
 enum  COORDINATION      { CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
@@ -250,6 +276,9 @@ private:
   bool  assign(int overlay, IDrawOverlayFriendly* idr, bool delowner)
   {
     if (m_drawersCount >= MAXDRAWERS) return false;
+    
+//    overlayAttaching(m_drawersCount);
+    
     m_drawers[m_drawersCount].idoverlay = overlay;
     m_drawers[m_drawersCount].repaintable = idr;
     m_drawers[m_drawersCount].delowner = delowner;
@@ -295,10 +324,11 @@ protected:
   friend class IOverlayUpdater;
 protected:    /// EXTERNAL interface
   friend class DrawQWidget;
-  virtual int   fshTrace(int overlay, char* to) const =0;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const =0;
   virtual int   fshColor(int overlay, char* to) const =0;
   virtual bool  overlayReaction(OVL_REACTION, const void*, bool*){  return false; }
 protected:
+//  virtual void  overlayAttaching(unsigned int /*ctr*/){}
 };
 
 class IOverlayUpdater

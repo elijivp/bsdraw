@@ -21,9 +21,9 @@ OContour::OContour(float from, float to, const linestyle_t &kls, bool noscaled_c
 {
 }
 
-int OContour::fshTrace(int overlay, char *to) const
+int OContour::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_GETVALUE);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.var_const_fixed("bnd", m_from, m_to);
@@ -66,9 +66,9 @@ OContourPal::OContourPal(float from, float to, const IPalette* ipal, bool discre
 {
 }
 
-int OContourPal::fshTrace(int overlay, char *to) const
+int OContourPal::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_GETVALUE);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.var_const_fixed("bnd", m_from, m_to);
@@ -106,9 +106,9 @@ OCover::OCover(float from, float to, int inversive_algo, COVER_OTHER_PORTIONS co
 {
 }
 
-int OCover::fshTrace(int overlay, char *to) const
+int OCover::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_GETVALUE);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.var_const_fixed("bnd", m_from, m_to);
@@ -147,9 +147,9 @@ OSlice::OSlice(float cover, int inversive_algo): IOverlaySimple(inversive_algo),
 {
 }
 
-int OSlice::fshTrace(int overlay, char *to) const
+int OSlice::fshTrace(int overlay, bool rotated, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_GETVALUE);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.var_const_fixed("clr", m_slice_r, m_slice_g, m_slice_b);

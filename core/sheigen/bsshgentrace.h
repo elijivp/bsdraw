@@ -32,6 +32,7 @@ template <> inline void _bs_unzip_dimms(const OVLCoordsDimmsLinked* d, _bs_unzip
 class FshTraceGenerator
 {
   int                                 m_overlay;
+  bool                                m_rotated;
   const char*                         m_writebase;
   char* const                         m_to;
   int                                 m_offset;
@@ -48,18 +49,18 @@ class FshTraceGenerator
 public:
   enum  OCG_INCLUDE_BITS  {  OINC_NONE=0, OINC_GETVALUE=1, OINC_RANDOM=2/*OINC_BOUNDS=4  */};
 public:
-  FshTraceGenerator(const AbstractOverlay::uniforms_t& ufms, int overlay, char* deststring, int ocg_include_bits = 0);
+  FshTraceGenerator(const AbstractOverlay::uniforms_t& ufms, int overlay, bool rotated, char* deststring, int ocg_include_bits = 0);
   int  written() const { return m_offset; }
 //  enum  ROTATION { ROT_FOLLOW, ROT_HORZ, ROT_VERT, ROT_NONE };
 private:
-  void  _gtb();
+  void  _gtb(OVL_ORIENTATION orient);
   void  _gtb_coords(const _bs_unzip_t& bsu);
   void  _gtb_dimms(const _bs_unzip_t& bsu);
 public:
   template <class Coords, class Dimms>
-  void  goto_func_begin(const Coords* coords, const Dimms* dimms)
+  void  goto_func_begin(const Coords* coords, const Dimms* dimms, OVL_ORIENTATION orient=OO_INHERITED) // -1 for auto, enum OR_... for other
   {
-    _gtb();
+    _gtb(orient);
     {
       _bs_unzip_t cu;
       _bs_unzip_coords(coords, &cu);

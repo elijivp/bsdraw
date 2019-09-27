@@ -19,8 +19,8 @@ static const char* glsl_types[] = { "float", "vec2", "vec3", "vec4",
 
 extern int msprintf(char* to, const char* format, ...);
 
-FshTraceGenerator::FshTraceGenerator(const AbstractOverlay::uniforms_t &ufms, int overlay, char *deststring, int ocg_include_bits): 
-  m_overlay(overlay),
+FshTraceGenerator::FshTraceGenerator(const AbstractOverlay::uniforms_t &ufms, int overlay, bool rotated, char *deststring, int ocg_include_bits): 
+  m_overlay(overlay), m_rotated(rotated),
   m_writebase(deststring), m_to(deststring), m_offset(0), 
   m_pixingsctr(0), m_relingsctr(0), m_maths(0), m_paramsctr(0), m_prmmemoryiter(0)
 {
@@ -80,13 +80,36 @@ FshTraceGenerator::FshTraceGenerator(const AbstractOverlay::uniforms_t &ufms, in
   }
 }
 
-void FshTraceGenerator::_gtb()
-{
-  m_offset += msprintf(&m_to[m_offset], "vec4 overlayTrace%d(in vec4 coords, in float density, in ivec2 mastercoords, out ivec2 selfposition){" SHNL
-                                        "ivec2 iscaling = ivec2(scaling_a, scaling_b);" SHNL
-                                        "ivec2 ibounds = ivec2(datadimm_a, datadimm_b) * iscaling;" SHNL
-                                        "ivec2 icoords = ivec2(floor(coords.pq*ibounds + vec2(0.49,0.49)));" SHNL
-                                      , m_overlay);
+void FshTraceGenerator::_gtb(OVL_ORIENTATION orient)
+{ 
+  m_offset += msprintf(&m_to[m_offset], "vec4 overlayTrace%d(in vec4 coords, in float density, in ivec2 mastercoords, out ivec2 selfposition){" SHNL, 
+                       m_overlay);
+  
+  bool rtn = orient == OO_LRBT || orient == OO_RLBT || orient == OO_LRTB || orient == OO_RLTB;
+  bool rty = orient == OO_BTLR || orient == OO_BTRL || orient == OO_TBLR || orient == OO_TBRL;
+  
+  if (orient == OO_INHERITED || (m_rotated == false && rtn) || (m_rotated == true && rty))
+    m_offset += msprintf(&m_to[m_offset], "ivec2 iscaling = ivec2(scaling_a, scaling_b);" SHNL
+                                          "ivec2 ibounds = ivec2(datadimm_a, datadimm_b) * iscaling;" SHNL );
+  else
+    m_offset += msprintf(&m_to[m_offset], "ivec2 iscaling = ivec2(scaling_b, scaling_a);" SHNL
+                                          "ivec2 ibounds = ivec2(datadimm_b, datadimm_a) * iscaling;" SHNL );
+  
+  {
+    const char* coords_orient[] = {
+    //  OO_INHERITED
+        "coords.pq",
+    //  OO_LRBT, OO_RLBT, OO_LRTB, OO_RLTB, 
+        "coords.st", "vec2(1.0 - coords.s, coords.t)", "vec2(coords.s, 1.0 - coords.t)", "vec2(1.0 - coords.s, 1.0 - coords.t)",
+    //  OO_TBLR, OO_BTLR, OO_TBRL, OO_BTRL,
+        "vec2(1.0 - coords.t, coords.s)", "coords.ts", "vec2(1.0 - coords.t, 1.0 - coords.s)", "vec2(coords.t, 1.0 - coords.s)",
+    // OO_IHBT, OO_IHTB, OO_LRIH, OO_RLIH
+        "coords.pt", "vec2(coords.p, 1.0 - coords.t)", "coords.sq", "vec2(1.0 - coords.s, coords.q)"
+    };
+    m_offset += msprintf(&m_to[m_offset], //"ivec2 icoords = ivec2(floor(coords.pq*ibounds + vec2(0.49,0.49)));" SHNL /// ??1
+                                          "ivec2 icoords = ivec2(floor(%s*ibounds));" SHNL
+                                          , coords_orient[int(orient)]);
+  }
 
   static const char _vars[] =             "vec3 result=vec3(0.0,0.0,0.0);" SHNL
                                           "float mixwell = 0.0;" SHNL
@@ -104,7 +127,8 @@ void FshTraceGenerator::_gtb_coords(const _bs_unzip_t &bsu)
       m_offset += msprintf(&m_to[m_offset], "vec2(%F, %F)", bsu.ffs[0], bsu.ffs[1]);
     else if (bsu.type >= 2)
       m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr++);
-    m_offset += msprintf(&m_to[m_offset],  " * movecs_pixing%d) + vec2(0.49,0.49)));" SHNL, coordspixing);
+//    m_offset += msprintf(&m_to[m_offset],  " * movecs_pixing%d) + vec2(0.49,0.49)));" SHNL, coordspixing);    /// ??2
+    m_offset += msprintf(&m_to[m_offset],  " * movecs_pixing%d)));" SHNL, coordspixing);
     m_offset += msprintf(&m_to[m_offset],  "ioffset = ioffset + mastercoords;" SHNL);
   }
   else

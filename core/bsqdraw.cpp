@@ -18,7 +18,8 @@ const char*   DrawQWidget::vardesc(SHEIFIELD sf)
   return nullptr;
 }
 
-DrawQWidget::DrawQWidget(ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient): DrawCore(portions, orient), m_vshalloc(0), m_fshalloc(0), m_pcsh(pcsh), 
+DrawQWidget::DrawQWidget(ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient): DrawCore(portions, orient),
+  m_compileOnInitializeGL(true), m_vshalloc(0), m_fshalloc(0), m_pcsh(pcsh), 
   m_matrixLmSize(0), m_sbStatic(false), 
   m_cttrLeft(0), m_cttrTop(0), m_cttrRight(0), m_cttrBottom(0), m_texOvlCount(0)
 {
@@ -40,16 +41,21 @@ DrawQWidget::~DrawQWidget()
     delete []m_fshmem;
 }
 
+void DrawQWidget::compileWhenInitializeGL(bool cflag)
+{
+  m_compileOnInitializeGL = cflag;
+}
+
 //OR_LRBT=0,  OR_RLBT,  OR_LRTB,  OR_RLTB
 //OR_TBLR,    OR_BTLR,  OR_TBRL,  OR_BTRL 
-inline const char*  fragment_rotateLRBT(){  return  "vec2 rotate(vec2 coords){ return coords; }"; }
-inline const char*  fragment_rotateRLBT(){  return  "vec2 rotate(vec2 coords){ coords.x = 1.0-coords.x; return coords; }"; }
-inline const char*  fragment_rotateLRTB(){  return  "vec2 rotate(vec2 coords){ coords.y = 1.0-coords.y; return coords; }"; }
-inline const char*  fragment_rotateRLTB(){  return  "vec2 rotate(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords; }"; }
-inline const char*  fragment_rotateTBLR(){  return  "vec2 rotate(vec2 coords){ coords.y = 1.0-coords.y; return coords.yx; }"; }
-inline const char*  fragment_rotateBTLR(){  return  "vec2 rotate(vec2 coords){ return coords.yx; }"; }
-inline const char*  fragment_rotateTBRL(){  return  "vec2 rotate(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords.yx; }"; }
-inline const char*  fragment_rotateBTRL(){  return  "vec2 rotate(vec2 coords){ coords.x = 1.0-coords.x; return coords.yx; }"; }
+//inline const char*  fragment_rotateLRBT(){  return  "vec2 rotate(vec2 coords){ return coords; }"; }
+//inline const char*  fragment_rotateRLBT(){  return  "vec2 rotate(vec2 coords){ coords.x = 1.0-coords.x; return coords; }"; }
+//inline const char*  fragment_rotateLRTB(){  return  "vec2 rotate(vec2 coords){ coords.y = 1.0-coords.y; return coords; }"; }
+//inline const char*  fragment_rotateRLTB(){  return  "vec2 rotate(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords; }"; }
+//inline const char*  fragment_rotateTBLR(){  return  "vec2 rotate(vec2 coords){ coords.y = 1.0-coords.y; return coords.yx; }"; }
+//inline const char*  fragment_rotateBTLR(){  return  "vec2 rotate(vec2 coords){ return coords.yx; }"; }
+//inline const char*  fragment_rotateTBRL(){  return  "vec2 rotate(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords.yx; }"; }
+//inline const char*  fragment_rotateBTRL(){  return  "vec2 rotate(vec2 coords){ coords.x = 1.0-coords.x; return coords.yx; }"; }
 
 inline float*   ccode_swap(float* arr){ float t=arr[0]; arr[0] = arr[1]; arr[1] = t; return arr;   }
 inline float*  ccode_rotateLRBT(float *arr){  return  arr; }
@@ -100,7 +106,6 @@ inline const char*  fastpaced_opm(char* tmpbuf, unsigned int ovl, unsigned int s
   return tmpbuf;
 }
 
-
 void DrawQWidget::palettePrepare(const IPalette* ppal, bool discrete, int levels)
 {
   const void*   palArr;
@@ -128,101 +133,113 @@ void DrawQWidget::palettePrepare(const IPalette* ppal, bool discrete, int levels
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);  
 }
 
+
 #ifdef BSSHADER_DUMP
 #include <QFile>
 #endif
-void DrawQWidget::applyHardPendings()
+void DrawQWidget::initCollectAndCompileShader()
 {
-  if (m_pcsh && havePendOn(PC_INIT))
+  glClear(GL_COLOR_BUFFER_BIT);
+  
+  m_ShaderProgram.removeAllShaders();
+     
+  /// 1. Vertex shader
+  /// mem alloc
+  if (m_vshalloc == 0)
   {
-    glClear(GL_COLOR_BUFFER_BIT);
-    
+    m_vshalloc = m_pcsh->shvertex_pendingSize();
+    m_vshmem = new char[m_vshalloc];
+  }
+  
+  /// store
+  unsigned int vsh_written = m_pcsh->shvertex_store(m_vshmem);
+  Q_UNUSED(vsh_written);
+//    qDebug()<<m_pcsh->shaderName()<<" vertex size "<<vsh_written<<" (had"<<m_vshalloc<<")";
+  
+  if (!m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Vertex, m_vshmem))
+  {
+    qDebug()<<Q_FUNC_INFO<<"... vertex shader failure!";
+    return;
+  }
+  
+  
+  /// 2. Fragment shader
+  /// mem alloc
+  if (m_fshalloc == 0 || m_fshalloc < m_pcsh->shfragment_pendingSize(m_overlaysCount + 2))
+  {
+    if (m_fshalloc != 0)
+      delete []m_fshmem;
+    m_fshalloc = m_pcsh->shfragment_pendingSize(m_overlaysCount + 2);
+    m_fshmem = new char[m_fshalloc];
+  }
+  
+  
+  //    {
+  //      const char* pfragment_rotate_enumed[] = { 
+  //        fragment_rotateLRBT(), fragment_rotateRLBT(), fragment_rotateLRTB(), fragment_rotateRLTB(),
+  //        fragment_rotateTBLR(), fragment_rotateBTLR(), fragment_rotateTBRL(), fragment_rotateBTRL()
+  //      };
+  //      m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, pfragment_rotate_enumed[m_orient]);
+  //    }
+  
+  /// store
+  {
+    ovlfraginfo_t ovlsinfo[OVLLIMIT];
+    for (unsigned int i=0; i<m_overlaysCount; i++)
+    {
+      if (m_overlays[i].olinks.type != msstruct_t::MS_SELF && m_overlays[i].olinks.type != msstruct_t::MS_ROOT)
+        ovlsinfo[i].link = m_overlays[i].olinks.details.drivenid;
+      else
+        ovlsinfo[i].link = -1;
+    }
+    unsigned int fsh_written = m_pcsh->shfragment_store(m_allocatedPortions, m_postMask, m_orient, m_overlaysCount, ovlsinfo, m_fshmem);
+    Q_UNUSED(fsh_written);
+//      qDebug()<<m_pcsh->shaderName()<<" fragment size "<<fsh_written<<" (had"<<m_fshalloc<<")";
+  }
+  if (!m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, m_fshmem))
+  {
+    qDebug()<<Q_FUNC_INFO<<"... fragment shader failure!";
+    return;
+  }
+  
+  
 #ifdef BSSHADER_DUMP
     QFile fout("fragshader.txt");
     fout.open(QFile::WriteOnly | QFile::Text);
+    fout.write((const char*)m_fshmem);
+    fout.write((const char*)"\n\n\n\n");
 #endif
+  
+  char  ovlshaderbuf[8192*2];
+  for (unsigned int i=0; i<m_overlaysCount; i++)
+  {     
+    int fshtResult = m_overlays[i].povl->fshTrace(i + 1, m_matrixSwitchAB, ovlshaderbuf);
+    if (fshtResult == -1)
+      qDebug()<<Q_FUNC_INFO<<"OVL fshTrace failure!";
+    else if (fshtResult > 0)
+      m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, ovlshaderbuf);
     
-    if (m_vshalloc == 0)
-    {
-      m_vshalloc = m_pcsh->shvertex_pendingSize();
-      m_vshmem = new char[m_vshalloc];
-    }
-    unsigned int vsh_written = m_pcsh->shvertex_store(m_vshmem);
-    Q_UNUSED(vsh_written);
-//    qDebug()<<m_pcsh->shaderName()<<" vertex size "<<vsh_written<<" (had"<<m_vshalloc<<")";
-    
-    if (m_fshalloc == 0 || m_fshalloc < m_pcsh->shfragment_pendingSize(m_overlaysCount + 2))
-    {
-      if (m_fshalloc != 0)
-        delete []m_fshmem;
-      m_fshalloc = m_pcsh->shfragment_pendingSize(m_overlaysCount + 2);
-      m_fshmem = new char[m_fshalloc];
-    }
-    
-    {
-      ovlfraginfo_t ovlsinfo[OVLLIMIT];
-      for (unsigned int i=0; i<m_overlaysCount; i++)
-      {
-        if (m_overlays[i].olinks.type != msstruct_t::MS_SELF && m_overlays[i].olinks.type != msstruct_t::MS_ROOT)
-          ovlsinfo[i].link = m_overlays[i].olinks.details.drivenid;
-        else
-          ovlsinfo[i].link = -1;
-      }
-      unsigned int fsh_written = m_pcsh->shfragment_store(m_postMask, m_matrixSwitchAB, m_overlaysCount, ovlsinfo, m_fshmem);
-      Q_UNUSED(fsh_written);
-//      qDebug()<<m_pcsh->shaderName()<<" fragment size "<<fsh_written<<" (had"<<m_fshalloc<<")";
-      
 #ifdef BSSHADER_DUMP
-      fout.write((const char*)m_fshmem);
-      fout.write((const char*)"\n\n\n\n");
+    fout.write((const char*)ovlshaderbuf);
+    fout.write((const char*)"\n\n\n\n");
 #endif
-    }
     
-    m_ShaderProgram.removeAllShaders();
-    if (!m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Vertex, m_vshmem))
-      qDebug()<<"Vertex failure!";
-
-    
-    if (!m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, m_fshmem))
-      qDebug()<<"Fragment0 failure!";
-    
-    {
-      const char* pfragment_rotate_enumed[] = { 
-        fragment_rotateLRBT(), fragment_rotateRLBT(), fragment_rotateLRTB(), fragment_rotateRLTB(),
-        fragment_rotateTBLR(), fragment_rotateBTLR(), fragment_rotateTBRL(), fragment_rotateBTRL()
-      };
-      m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, pfragment_rotate_enumed[m_orient]);
-    }
-    
-    char  ovlshaderbuf[8192*2];
-    for (unsigned int i=0; i<m_overlaysCount; i++)
-    {     
-      int fshtResult = m_overlays[i].povl->fshTrace(i + 1, ovlshaderbuf);
-      if (fshtResult == -1)
-        qDebug()<<"OVL fshTrace failure!";
-      else if (fshtResult > 0)
-        m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, ovlshaderbuf);
-      
+    int fshcResult = m_overlays[i].povl->fshColor(i + 1, ovlshaderbuf);
+    if (fshcResult == -1)
+      qDebug()<<Q_FUNC_INFO<<"OVL fshColor failure!";
+    else if (fshcResult > 0)
+      m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment,  ovlshaderbuf);
+        
 #ifdef BSSHADER_DUMP
-      fout.write((const char*)ovlshaderbuf);
-      fout.write((const char*)"\n\n\n\n");
+    fout.write((const char*)ovlshaderbuf);
+    fout.write((const char*)"\n\n\n\n");
 #endif
-      
-      int fshcResult = m_overlays[i].povl->fshColor(i + 1, ovlshaderbuf);
-      if (fshcResult == -1)
-        qDebug()<<"OVL fshColor failure!";
-      else if (fshcResult > 0)
-        m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment,  ovlshaderbuf);
-          
-#ifdef BSSHADER_DUMP
-      fout.write((const char*)ovlshaderbuf);
-      fout.write((const char*)"\n\n\n\n");
-#endif
-    }
-    
-    m_ShaderProgram.bindAttributeLocation("vertices", 0);
-    m_ShaderProgram.link();
-    
+  }
+  
+//  m_ShaderProgram.bindAttributeLocation("vertices", 0); ???
+  
+  if (m_ShaderProgram.link())
+  {
     for (int i=0; i<_SF_COUNT; i++)
     {
       const char* vd = vardesc((SHEIFIELD)i);
@@ -271,10 +288,12 @@ void DrawQWidget::applyHardPendings()
     
     unpend(PC_INIT);
     m_bitmaskPendingChanges |= (m_dataDomains == nullptr? 0 : PC_DOMAIN) | PC_SIZE | PC_DATA | PC_PARAMS | PC_PARAMSOVL;
+    
+  } /// link
+  
 #ifdef BSSHADER_DUMP
-    fout.close();
+  fout.close();
 #endif
-  }
 }
 
 void DrawQWidget::initializeGL()
@@ -288,7 +307,9 @@ void DrawQWidget::initializeGL()
   glGenTextures(1, &m_texAll[HT_MATRIX]); /// matrix
   glGenTextures(1, &m_texAll[HT_PAL]);  /// palette
   glGenTextures(1, &m_texAll[HT_DMN]);  /// domain
-  applyHardPendings();
+
+  if (m_compileOnInitializeGL)
+    initCollectAndCompileShader();
   
   m_bitmaskPendingChanges |= PC_SIZE | PC_DATA | PC_PARAMS | PC_PARAMSOVL; 
 //  qDebug("GL: initialized. %04x", m_bitmaskPendingChanges);
@@ -313,13 +334,18 @@ void DrawQWidget::paintGL()
 #endif
   }
   glClearColor(m_clearcolor[0], m_clearcolor[1], m_clearcolor[2], 1.0f);
-//    glClear(GL_COLOR_BUFFER_BIT); // on applyHardPendings
+//    glClear(GL_COLOR_BUFFER_BIT); // on initCollectAndCompileShader
 //    glEnable(GL_BLEND);
   
-  applyHardPendings();
+//  qDebug()<<"paintGL visible:"<<isVisible();
+  if (havePendOn(PC_INIT))
+    initCollectAndCompileShader();
+
   
-  m_ShaderProgram.bind();
+  if (m_ShaderProgram.bind())
   {
+//    qDebug()<<"paintGL binded:"<<m_ShaderProgram.isLinked()<<m_ShaderProgram.programId();
+    
     int loc;
     
     if ((loc = m_locations[SF_DATA]) != -1)
@@ -363,7 +389,8 @@ void DrawQWidget::paintGL()
       glBindTexture(GL_TEXTURE_2D, m_texAll[HT_PAL]);
       if (m_ppal && havePendOn(PC_PALETTE))
       {
-        palettePrepare(m_ppal, m_ppaldiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D? m_countPortions : 1);
+//        palettePrepare(m_ppal, m_ppaldiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_countPortions != 0? m_countPortions : 1);
+        palettePrepare(m_ppal, m_ppaldiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_allocatedPortions != 0? m_allocatedPortions : 1);
         if (m_clearbypalette)
           _colorCvt(m_ppal->firstColor());
       }
@@ -572,13 +599,12 @@ void DrawQWidget::paintGL()
     }
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     m_ShaderProgram.disableAttributeArray(0);
+    m_ShaderProgram.release();
     
-  }
-  unpendAll();
-  m_ShaderProgram.release();
-  
-  for (unsigned int i=0; i<m_texOvlCount; i++)
-    glBindTexture(GL_TEXTURE_2D, 0);
+    unpendAll();
+    for (unsigned int i=0; i<m_texOvlCount; i++)
+      glBindTexture(GL_TEXTURE_2D, 0);
+  } /// if bind
 }
 
 void DrawQWidget::callWidgetUpdate()
@@ -732,6 +758,7 @@ void DrawQWidget::slot_clearData(){ clearData(); }
 
 void DrawQWidget::slot_setMirroredHorz(){ setMirroredHorz(); }
 void DrawQWidget::slot_setMirroredVert(){ setMirroredVert(); }
+void DrawQWidget::slot_setPortionsCount(int count){  setPortionsCount(count); }
 
 void DrawQWidget::slot_enableAutoUpdate(bool enabled){  banAutoUpdate(!enabled); }
 void DrawQWidget::slot_disableAutoUpdate(bool disabled){  banAutoUpdate(disabled); }
@@ -910,7 +937,7 @@ public:
 ///////////////////////////////////////
 extern int msprintf(char* to, const char* format, ...);
 
-int DrawCore::OverlayEmpty::fshTrace(int overlay, char* to) const
+int DrawCore::OverlayEmpty::fshTrace(int overlay, bool /*rotated*/, char* to) const
 {
   return msprintf(to, "vec4 overlayTrace%d(in vec4 coords, in float density, in ivec2 mastercoords, out ivec2 selfposition){ return vec4(0.0,0.0,0.0,0.0); }\n", overlay);
 }

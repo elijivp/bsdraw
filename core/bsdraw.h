@@ -19,9 +19,6 @@ struct  contrast_t
   float   contrast, offset;   /// k*x + b
   contrast_t(float c=1, float o=0): contrast(c), offset(o){}
 };
-enum  ORIENTATION       { OR_LRBT=0,  OR_RLBT,  OR_LRTB,  OR_RLTB,    // order for +4 work
-                          OR_TBLR,    OR_BTLR,  OR_TBRL,  OR_BTRL 
-                        };
 
 inline  void  _bsdraw_update_kb(const bounds_t& bnd, const contrast_t& cnt, float* k, float *b)
 {
@@ -40,6 +37,7 @@ protected:
   contrast_t            m_contrast;
   float                 m_loc_k, m_loc_b;
   unsigned int          m_portionSize;        /// inner sizeof data
+  unsigned int          m_allocatedPortions;
   unsigned int          m_countPortions;      /// count of parallel drawings in one
   
   ORIENTATION           m_orient;
@@ -125,12 +123,12 @@ protected:
   class OverlayEmpty: public IOverlay
   {
   public:
-    virtual int  fshTrace(int, char*) const;
+    virtual int  fshTrace(int, bool, char*) const;
     virtual int  fshColor(int, char*) const;
   };
   OverlayEmpty          m_overlaySingleEmpty;
 public:
-  DrawCore(unsigned int portions, ORIENTATION orient):  m_portionSize(0), m_countPortions(portions), m_orient(orient),
+  DrawCore(unsigned int portions, ORIENTATION orient):  m_portionSize(0), m_allocatedPortions(portions), m_countPortions(portions), m_orient(orient),
                                                         m_matrixData(nullptr), m_matrixDataCached(nullptr),
                                                         m_matrixSwitchAB(orient > OR_RLTB),
                                                         m_dataTextureInterp(false),
@@ -140,7 +138,7 @@ public:
                                                         m_ppal(nullptr), m_ppaldiscretise(false), m_clearbypalette(true), 
                                                         m_dataDomains(nullptr), m_dataDomainsFastFree(true),
                                                         m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
-                                                        m_postMask(DPostmask::PM_NONE, DPostmask::PO_OFF, 0, 0.0f, 0.0f, 0.0f),
+                                                        m_postMask(DPostmask::PO_OFF, DPostmask::PM_CONTOUR, 0, 0.0f, 0.0f, 0.0f),
                                                         m_overlaysCount(0)
   {
     _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);
@@ -149,7 +147,7 @@ public:
 protected:
   void    deployMemory()
   {
-    unsigned int total = m_countPortions * m_portionSize;
+    unsigned int total = m_allocatedPortions * m_portionSize;
     m_matrixData = new float[total];
     for (unsigned int i=0; i<total; i++)
       m_matrixData[i] = 0;
@@ -160,6 +158,7 @@ public:
   
 public:
                     /// Access methods
+  unsigned int          allocatedPortions() const { return m_allocatedPortions; }
   unsigned int          countPortions() const { return m_countPortions; }
   
   void                  setBounds(const bounds_t& d){ m_bounds = d; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
@@ -269,6 +268,17 @@ public:
   unsigned int directions() const { DATADIMMUSAGE ddu = getDataDimmUsage(); if (ddu == DDU_2D || ddu == DDU_DD) return 2; return 1; }
 public:
   /// 2. Delegated methods
+  bool  setPortionsCount(int portionsLessThanAlocated)
+  {
+    if (portionsLessThanAlocated >= 0 && portionsLessThanAlocated <= m_allocatedPortions)
+    {
+      m_countPortions = (unsigned int)portionsLessThanAlocated;
+      m_bitmaskPendingChanges |= PC_DATA | PC_PARAMS;
+      if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+      return true;
+    }
+    return false;
+  }
 public:
   void  setOrientation(ORIENTATION orient)
   { 

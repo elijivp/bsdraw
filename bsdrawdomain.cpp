@@ -88,6 +88,11 @@ void DIDomain::includePixelFree(int r, int c)
     m_dataptr[m_width*r + c] = *m_count;
 }
 
+bool DIDomain::isFree(int r, int c) const
+{
+  return m_dataptr[m_width*r + c] == 0.0f;
+}
+
 
 
 void DIDomain::excludeRow(int row)
@@ -126,7 +131,7 @@ DrawDomain::DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsig
   m_matrixDimmA = samplesHorz;
   m_matrixDimmB = samplesVert;
   unsigned int total = m_matrixDimmA*m_matrixDimmB;
-  deployMemory(total*m_countPortions);
+  deployMemory(total*portions);
   m_portionSize = 1;
   
   m_dataDomains = new float[total];
@@ -142,7 +147,7 @@ DrawDomain::DrawDomain(const DIDomain &cpy, unsigned int portions, ORIENTATION o
   m_matrixDimmA = cpy.m_width;
   m_matrixDimmB = cpy.m_height;
   unsigned int total = m_matrixDimmA*m_matrixDimmB;
-  deployMemory(total*m_countPortions);
+  deployMemory(total*portions);
   
   m_dataDomains = new float[total];
   memcpy(m_dataDomains, cpy.m_dataptr, total*sizeof(float));

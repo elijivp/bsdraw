@@ -10,7 +10,7 @@ public:
   OFPoint(COORDINATION cn, float center_x, float center_y, const linestyle_t& kls=linestyle_solid(1,1,1));
   OFPoint(OVLCoordsStatic* pcoords, float offset_x, float offset_y, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
 class OFCircle: public IOverlayTraced, public OVLCoordsDynamic, public OVLDimms1Static
@@ -21,7 +21,7 @@ public:
   OFCircle(float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float radius, const linestyle_t& kls=linestyle_solid(1,1,1));
   OFCircle(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float radius, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 //public:
 //  float radius() const;
 //  void  updateRadius(float radius);
@@ -35,7 +35,7 @@ public:
   OFSquare(float fillopacity, COORDINATION cn, float leftbottom_x, float leftbottom_y, COORDINATION featcn, float aside, const linestyle_t& kls=linestyle_solid(1,1,1));
   OFSquare(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float aside, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 //public:
 //  float getSide() const;
 //  void  updateSide(float aside);
@@ -49,7 +49,7 @@ public:
   OFSquareCC(float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float halfside, const linestyle_t& kls=linestyle_solid(1,1,1));
   OFSquareCC(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float halfside, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 public:
   float halfside() const;
   void  updateHalfside(float aside);
@@ -66,7 +66,7 @@ public:
   OFTriangle(ORIENT orientation, float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float getSide, const linestyle_t& kls=linestyle_solid(1,1,1));
   OFTriangle(ORIENT orientation, float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float getSide, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 //public:
 //  float fside() const;
 //  void  updateSide(float getSide);
@@ -88,7 +88,7 @@ public:
   OFLine(COORDINATION cn, float start_x, float start_y, float end_x, float end_y, const linestyle_t& linestyle=linestyle_solid(1,1,1));
   OFLine(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float end_x, float end_y, const linestyle_t& linestyle=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
 class OFArrow: public IOverlayTraced, public OVLCoordsDynamic, public OVLDimmsOff
@@ -103,7 +103,7 @@ public:
   OFArrow(COORDINATION cn, float arrow_x, float arrow_y, float end_x, float end_y, const linestyle_t& linestyle=linestyle_solid(1,1,1));
   OFArrow(OVLCoordsStatic* pcoords, float offset_arrow_x, float offset_arrow_y, float end_x, float end_y, const linestyle_t& linestyle=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
 class OFCross: public IOverlayTraced, public OVLCoordsDynamic, public OVLDimms1Static
@@ -114,7 +114,7 @@ public:
   OFCross(COORDINATION cn, float start_x, float start_y, COORDINATION featcn, float gap, float size=-1, const linestyle_t& linestyle=linestyle_solid(1,1,1));
   OFCross(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap, float size=-1, const linestyle_t& linestyle=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
 class OFFactor: public IOverlayTraced, public OVLCoordsDynamic, public OVLDimms2Static
@@ -125,7 +125,7 @@ public:
   OFFactor(COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float gap, float size, const linestyle_t& kls=linestyle_solid(1,1,1));
   OFFactor(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap, float size=-1, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, char* to) const;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
 #endif // BSFIGURES_H

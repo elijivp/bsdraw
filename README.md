@@ -3,7 +3,7 @@ Source code for 4 principal types of graphs, drawed by fragment and vertex shade
 
 * Technology: Qt widgets, inherits QOpenGLWidget class.
 * Shaders: generated and compiled after initializeGl stage.
-* Compatibility: tested on qt4.8, qt5.5, qt5.10 (win/linux). GLSL version 1.30+
+* Compatibility: tested on qt4.8, qt5.5, qt5.12 (win/linux). GLSL version 1.30+
 * Features: fast, const size, cross-platform, universal.
 * Note: main define called BSGLSLVER prepends each shader with string "#version %BSGLSLVER%". 
 All shaders in bsdraw are compatible with glsl 130, but by default BSGLSLVER is not set. So
@@ -11,7 +11,7 @@ if you have any issues, add DEFINES+=BSGLSLVER=130 in your .pro file.
 
 ### Simple example:
 ```
-DrawQWidget* pDraw = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(graphopts_t::GT_LINTERP, 0.0f, 0x77777777, 1, 0.5f), DrawGraph::DC_DOWNBASE);
+DrawQWidget* pDraw = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.2f, DE_LINTEPR, 0x00333333, 1, 0.5f), DrawGraph::CP_OWNRANGE);
 pDraw->setDataPalette(&palette_gnu_latte);
 pDraw->setData((const float*)data);
 setCentralWidget(pDraw);
@@ -33,8 +33,8 @@ It is difficult to describe all the characteristics, so:
 
 Left to right, up to down: 
 * DrawIntensity, DrawDomain, DrawRecorder, 
-* DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_LINDOWN_CROSSMAX),
-* DrawGraph(GT_DOTS, dotsize=1, weight=0.5), DrawGraph(GT_LINTERP, dotsize=1, weight=0.5), DrawGraph(GT_LINDOWN_CROSSMAX, dotsize=1, weight=0.5)
+* DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_HISTOGRAM_CROSSMAX),
+* DrawGraph(GT_DOTS, dotsize=1, weight=0.5), DrawGraph(GT_LINTERP, dotsize=1, weight=0.5), DrawGraph(GT_HISTOGRAM_CROSSMAX, dotsize=1, weight=0.5)
 
 ### Scaling
 That technology is designed to solve 2 problems: resize and posteffects
@@ -43,8 +43,8 @@ That technology is designed to solve 2 problems: resize and posteffects
 
 Left to right, up to down (SCALING=4, Postmask(PM_LINELEFTBOTTOM)): 
 * DrawIntensity, DrawDomain, DrawRecorder, 
-* DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_LINDOWN_CROSSMAX),
-* DrawGraph(GT_DOTS, Postmask(PM_PSEUDOCIRCLE)), DrawGraph(GT_LINTERP, Postmask(PM_LINELEFT)), DrawGraph(GT_LINDOWN_CROSSMAX, Postmask(PM_LINELEFT))
+* DrawGraph(GT_DOTS), DrawGraph(GT_LINTERP), DrawGraph(GT_HISTOGRAM_CROSSMAX),
+* DrawGraph(GT_DOTS, Postmask(PM_PSEUDOCIRCLE)), DrawGraph(GT_LINTERP, Postmask(PM_LINELEFT)), DrawGraph(GT_HISTOGRAM_CROSSMAX, Postmask(PM_LINELEFT))
 
 ### Overlays
 Fragment shaders compiled like additional functions and mixed with drawed data.
@@ -68,7 +68,7 @@ for (unsigned int i=0; i<drawscount; i++)
 ORIENTATION orients[] = { OR_LRBT, OR_TBLR, OR_BTRL, OR_BTLR, OR_TBRL, OR_RLTB };
 for (unsigned int i=0; i<drawscount; i++)
 {
-  draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(graphopts_t::GT_LINTERPSMOOTH, 0.0, 0x00111111), DrawGraph::DC_OFF, 1.0, -0.5);
+  draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp2(DE_NONE, 0x00111111), DrawGraph::CP_SINGLE, 1.0, -0.5);
   draws[i]->setOrientation(orients[i]);
 }
 ```
@@ -117,6 +117,5 @@ bsdraw/overlays/bscontour.cpp & .h;
 bsdraw/overlays/bsimage.cpp & .h
     
 #### Future:
-* vertical draws: graph and recorder
 * texture atlas for text
 * axes with text marking

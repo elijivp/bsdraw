@@ -147,8 +147,8 @@ MainWindow::MainWindow(QWidget *parent)
   {
     /// 3 row 3 column
 //    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goHistogramCrossMax(0.0f, DE_CENTER), DrawGraph::CP_SINGLE, 0.5f, 1.0f);
-    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goHistogramCrossMax(PR_VALUEONLY, DE_NONE), DrawGraph::CP_SINGLE, 0.5f, 1.0f);
-    pDraw->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_SHTRICHL, 0, 0.3f));
+    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goHistogramCrossMax(PR_SUMMARY, DE_NONE), DrawGraph::CP_SINGLE, 0.5f, 1.0f);
+    pDraw->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_LINELEFTBOTTOM, 0, 0.0f));
     pDraw->setScalingLimitsV(5);
     pDraw->setDataPalette(&palette_gnu_latte);
     pDraw->setData(arr_peaks);

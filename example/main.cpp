@@ -9,7 +9,7 @@
 
 
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)4
-#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)12
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)12
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)17
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)10
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)17

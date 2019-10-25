@@ -175,6 +175,8 @@ public:
   
   unsigned int          scalingH() const { return m_scalingWidth; }
   unsigned int          scalingV() const { return m_scalingHeight; }
+  unsigned int          dataWidth() const { return m_matrixDimmA*m_scalingWidth; }
+  unsigned int          dataHeight() const { return m_matrixDimmB*m_scalingHeight; }
   void                  scalingLimitsH(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingWidthMin;  if (scmax) *scmax = m_scalingWidthMax; }
   void                  scalingLimitsV(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingHeightMin;  if (scmax) *scmax = m_scalingHeightMax; }
 protected:
@@ -306,6 +308,8 @@ public:
     const ORIENTATION mv[] = { OR_LRTB, OR_RLTB, OR_LRBT, OR_RLBT, OR_BTLR, OR_TBLR, OR_BTRL, OR_TBRL };
     setOrientation(mv[m_orient]);
   }
+  bool  mirroredHorz() const { return orientationMirroredHorz(m_orient); }
+  bool  mirroredVert() const { return orientationMirroredVert(m_orient); }
 public:
   /// 3. Overlays
   int             ovlPushBack(IOverlay* povl, bool owner=true)

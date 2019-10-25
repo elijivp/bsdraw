@@ -42,7 +42,7 @@ struct  graphopts_t
   float           smooth;
   BSPOSTRECT      postrect;
   
-  graphopts_t(BSGRAPHTYPE gtype, BSDESCALING ds=DE_NONE, float opacity=0.0f, unsigned int specbckgcolor=0xFFFFFFFF, 
+  graphopts_t(BSGRAPHTYPE gtype=GT_DOTS, BSDESCALING ds=DE_NONE, float opacity=0.0f, unsigned int specbckgcolor=0xFFFFFFFF, 
               int dsize=0, float dsmooth=0.0f, float smoothcoef=0.0f, BSPOSTRECT pr=PR_STANDARD):
     graphtype(gtype), descaling(ds), opacity(opacity), backcolor(specbckgcolor), 
     dotsize(dsize), dotsmooth(dsmooth), smooth(smoothcoef), postrect(pr){}

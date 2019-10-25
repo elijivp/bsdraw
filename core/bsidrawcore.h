@@ -30,6 +30,18 @@ enum  ORIENTATION       { OR_LRBT=0,  OR_RLBT,  OR_LRTB,  OR_RLTB,    // order f
                           OR_TBLR,    OR_BTLR,  OR_TBRL,  OR_BTRL 
                         };
 
+inline bool orientationMirroredHorz(ORIENTATION ort)
+{
+  const bool mh[] = { false, true, false, true, false, false, true, true };
+  return mh[ort];
+}
+
+inline bool orientationMirroredVert(ORIENTATION ort)
+{
+  const bool mv[] = { false, false, true, true, true, false, true, false };
+  return mv[ort];
+}
+
 struct  DPostmask
 {
   enum DPOVER   {  PO_OFF=0, PO_SIGNAL=1, PO_EMPTY=2, PO_ALL=3 };
@@ -38,7 +50,7 @@ struct  DPostmask
                    PM_LINELEFTBOTTOM, PM_LINERIGHTBOTTOM, PM_LINELEFTTOP, PM_LINERIGHTTOP,
                    PM_PSEUDOCIRCLE, PM_DOT, 
                    PM_DOTLEFTBOTTOM, PM_DOTCONTOUR,
-                   PM_SHTRICHL, PM_SHTRICHR, PM_CROSS  };
+                   PM_SHTRICHL, PM_SHTRICHR, PM_CROSS, PM_GRID, PM_FILL, PM_SQUARES  };
   DPMASK        postmask;
   int           weight;
   int           colorManual;

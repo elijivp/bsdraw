@@ -563,6 +563,9 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     this->setMinimumWidth(1200);
     sigtype = ST_GEN_NORM;
+    
+    sigtype = ST_MANYSIN;
+    sp = SP_ONCE;
   }
   else if (MW_TEST == FEATURE_POSTMASK)
   {
@@ -593,15 +596,19 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                           DPostmask(DPostmask::PO_ALL, DPostmask::PM_PSEUDOCIRCLE, 4, 0.0f),
                           DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_PSEUDOCIRCLE, 0, 0.0f, 0.9f),
       
-                          DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_CROSS, 0, 0.0f, 0.8f),
+                          DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_FILL, 0, 0.0f, 0.8f),
                           DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOT, 1, 0.0f, 0.0f),
-                          DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_SHTRICHL, 0, 0.5f, 0.5f, 0.5f, 0.3f),
+                          DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_SHTRICHL, 1, 0.5f, 0.5f, 0.5f, 0.3f),
                           
                           DPostmask(DPostmask::PO_ALL, DPostmask::PM_CONTOUR, 1, 0.0f, 0.0f, 0.0f),
                           DPostmask(DPostmask::PO_ALL, DPostmask::PM_CONTOUR, 1, 0.3f, 0.3f, 0.3f),
                           DPostmask(DPostmask::PO_ALL, DPostmask::PM_CONTOUR, 1, 1.0f, 1.0f, 1.0f),
                           
-                       };    
+                       };
+    
+//    for (int i=0; i<sizeof(dpms)/sizeof(DPostmask); i++)
+//      dpms[i] = DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_CROSS, 0, 0.5f, 0.5f, 0.5f, i / 18.0f);
+//    sp = SP_ONCE;
     
     
     for (unsigned int c=0; c<dccount; c++)
@@ -609,6 +616,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       {
         draws[c*drcount + i] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
         draws[c*drcount + i]->setPostMask(dpms[i*dccount + c]);
+//        draws[c*drcount + i]->setScalingLimitsH(16);
+//        draws[c*drcount + i]->setScalingLimitsV(10,10);
       }
     draws[0]->ovlPushBack(new OTextColored("Original", CR_XABS_YREL_NOSCALED, 5.0f, 0.9f, 12, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
     

@@ -147,24 +147,23 @@ public:
           fmg.push(              
                 "vec3 dd = vec3(ify_spec[1] - ify_spec[0], ify_spec[2] - ify_spec[1], ify_spec[3] - ify_spec[2]);" SHNL
                 "vec3 ss = vec3(sign(dd[0]), sign(dd[1]), sign(dd[2]));" SHNL
+                
                 "vec2 srs = vec2((1.0 + ss[0]*ss[1])/2.0, (1.0 + ss[1]*ss[2])/2.0);" SHNL
                 "ss[1] = ss[1] + (1.0 - abs(ss[1]))*ss[0];" SHNL
                 "ss = vec3(ss[0] + (1.0 - abs(ss[0]))*ss[1], ss[1], ss[2] + (1.0 - abs(ss[2]))*ss[1]);" SHNL
                 "vec2 corrector = vec2(  clamp(0.5 + ss[0]*ss[1]*mix(0.5, 0.15, srs[0])*sqrt(dd[0]*dd[0] + 1.0)/sqrt(dd[1]*dd[1] + 1.0), -3.0, 3.0),"
                                         "clamp(0.5 - ss[2]*ss[1]*mix(0.5, 0.15, srs[1])*sqrt(dd[2]*dd[2] + 1.0)/sqrt(dd[1]*dd[1] + 1.0), -3.0, 3.0)"
                                       ");" SHNL
-                
 //                "vec2 corrector = vec2( 0.5, 0.5 );" SHNL
-                
                 "vec3 fsteps = vec3(float(imoded.x), ify_spec[2] - ify_spec[1], (ify_spec[1] - ify_spec[0])/float(iscaling.x));" SHNL
                 "vec3 stepF = vec3((fsteps.x - 1.0)/float(iscaling.x), (fsteps.x   )/float(iscaling.x), (fsteps.x + 1.0)/float(iscaling.x));" SHNL
-//                "vec3 stepB = vec3(1.0 - (fsteps.x - 1.0)/float(iscaling.x), 1.0 - (fsteps.x   )/float(iscaling.x), 1.0 - (fsteps.x + 1.0)/float(iscaling.x));" SHNL
                 
-                
+                "dd = vec3(mix(corrector[0], corrector[1], stepF[0]), mix(corrector[0], corrector[1], stepF[1]), mix(corrector[0], corrector[1], stepF[2]));" SHNL
+
                 "vec3 fcorr = vec3("
-                    "mix(mix(0.0, mix(corrector[0], corrector[1], stepF[0]), stepF[0]), mix(mix(corrector[0], corrector[1], stepF[0]), 1.0, stepF[0]), stepF[0]), " SHNL
-                    "mix(mix(0.0, mix(corrector[0], corrector[1], stepF[1]), stepF[1]), mix(mix(corrector[0], corrector[1], stepF[1]), 1.0, stepF[1]), stepF[1]), " SHNL
-                    "mix(mix(0.0, mix(corrector[0], corrector[1], stepF[2]), stepF[2]), mix(mix(corrector[0], corrector[1], stepF[2]), 1.0, stepF[2]), stepF[2]) " SHNL
+                    "mix(mix(0.0, dd[0], stepF[0]), mix(dd[0], 1.0, stepF[0]), stepF[0]), " SHNL
+                    "mix(mix(0.0, dd[1], stepF[1]), mix(dd[0], 1.0, stepF[1]), stepF[1]), " SHNL
+                    "mix(mix(0.0, dd[2], stepF[2]), mix(dd[2], 1.0, stepF[2]), stepF[2]) " SHNL
                                   ");" SHNL
                 
                     "ffy_spec = mix(" SHNL
@@ -174,36 +173,8 @@ public:
 //                "vec3(0.0, 0.0, 0.0),"
                       "step(fsteps.x, 0.0) );" SHNL
                     );
-//            fmg.push(              
-//                  "vec3 dd = vec3(ify_spec[1] - ify_spec[0], ify_spec[2] - ify_spec[1], ify_spec[3] - ify_spec[2]);" SHNL
-//                  "vec3 ss = vec3(sign(dd[0]), sign(dd[1]), sign(dd[2]));" SHNL
-//                  "vec2 srs = vec2((1.0 + ss[0]*ss[1])/2.0, (1.0 + ss[1]*ss[2])/2.0);" SHNL
-////                  "ss[1] = ss[1] + (1.0 - abs(ss[1]))*ss[0];" SHNL
-////                  "ss = vec3(ss[0] + (1.0 - abs(ss[0]))*ss[1], ss[1], ss[2] + (1.0 - abs(ss[2]))*ss[1]);" SHNL
-//                  "vec2 corrector = vec2(  abs(dd[0])*ss[0]*ss[1]*mix(0.5, 0.15, srs[0])*sqrt(dd[0]*dd[0] + 1.0)/sqrt(dd[1]*dd[1] + 1.0),"
-//                                          "abs(dd[2])*-ss[2]*ss[1]*mix(0.5, 0.15, srs[1])*sqrt(dd[2]*dd[2] + 1.0)/sqrt(dd[1]*dd[1] + 1.0)"
-//                                        ");" SHNL
-                  
-//  //                "vec2 corrector = vec2( 0.5, 0.5 );" SHNL
-                  
-//                  "vec3 fsteps = vec3(float(imoded.x), ify_spec[2] - ify_spec[1], (ify_spec[1] - ify_spec[0])/float(iscaling.x));" SHNL
-//                  "vec3 stepF = vec3((fsteps.x - 1.0)/float(iscaling.x), (fsteps.x   )/float(iscaling.x), (fsteps.x + 1.0)/float(iscaling.x));" SHNL
-//  //                "vec3 stepB = vec3(1.0 - (fsteps.x - 1.0)/float(iscaling.x), 1.0 - (fsteps.x   )/float(iscaling.x), 1.0 - (fsteps.x + 1.0)/float(iscaling.x));" SHNL
-                  
-                  
-//                  "vec3 fcorr = vec3("
-//                      "mix(mix(0.0, mix(corrector[0], corrector[1], stepF[0]), stepF[0]), mix(mix(corrector[0], corrector[1], stepF[0]), fsteps[1], stepF[0]), stepF[0]), " SHNL
-//                      "mix(mix(0.0, mix(corrector[0], corrector[1], stepF[1]), stepF[1]), mix(mix(corrector[0], corrector[1], stepF[1]), fsteps[1], stepF[1]), stepF[1]), " SHNL
-//                      "mix(mix(0.0, mix(corrector[0], corrector[1], stepF[2]), stepF[2]), mix(mix(corrector[0], corrector[1], stepF[2]), fsteps[1], stepF[2]), stepF[2]) " SHNL
-//                                    ");" SHNL
-                  
-//                      "ffy_spec = mix(" SHNL
-//                        "vec4(ify_spec[1] + fcorr[0], ify_spec[1] + fcorr[1], ify_spec[1] + fcorr[2], 0.0)," SHNL
-//  //                      "vec3(ify[1] - fsteps[2], ify[1], ify[1] + fsteps[1]*fcorr[1]),"
-//                        "vec4(ify_spec[1] - fsteps[2], ify_spec[1], ify_spec[1] + fcorr[2], 0.0)," SHNL
-//  //                "vec3(0.0, 0.0, 0.0),"
-//                        "step(fsteps.x, 0.0) );" SHNL
-//                      );
+        
+          
 
         
         if (needDots == 3)
@@ -461,6 +432,9 @@ void DrawGraph::resizeGL(int w, int h)
   clampScaling();
   m_matrixDimmB = sizeB / scalingB;
   if (m_matrixDimmB == 0) m_matrixDimmB = 1;
+  
+//  qDebug()<<"DrawGraph: "<<h<<m_matrixDimmB;
+  
   pendResize(true);
 }
 

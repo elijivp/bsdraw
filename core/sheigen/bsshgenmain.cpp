@@ -306,11 +306,13 @@ void FshMainGenerator::goto_func_end(const DPostmask &fsp)
                                                         "step(ppb_rect[2]-ppb_rect.x, ppb_sfp[2])*step(ppb_rect.y, ppb_sfp[2]) + "
                                                         "step(ppb_rect.x, ppb_sfp[2])*step(ppb_rect[3]-ppb_rect.y, ppb_sfp[2]) + "
                                                         "step(ppb_rect[2]-ppb_rect.x, ppb_sfp[2])*step(ppb_rect[3]-ppb_rect.y, ppb_sfp[2]));", // PM_DOTCONTOUR
-                                  "float ppb_in = step(abs(ppb_rect.x-ppb_rect.y), ppb_sfp[2]);", // PM_SHTRICHL
-//      "float ppb_in = step(abs(ppb_rect.x - ppb_rect.y - mod(2, ppb_rect.y) ), 0.0);", // PM_SHTRICHL
-                                  "float ppb_in = step(abs(ppb_rect.x-(ppb_rect[3]-ppb_rect.y)), ppb_sfp[2]);", // PM_SHTRICHR
+                                  "float ppb_in = step(mod(abs(ppb_rect.x - ppb_rect.y), ppb_sfp[2] + sign(ppb_sfp[2])*2.0), 0.0);", // PM_SHTRICHL
+                                  "float ppb_in = step(mod(abs(ppb_rect.x - ppb_rect[3] + ppb_rect.y), ppb_sfp[2] + sign(ppb_sfp[2])*2.0), 0.0);", // PM_SHTRICHR
+                   "float ppb_in = step(mod(float(ppb_rect.x), 4.0),0.0)*step(mod(float(ppb_rect.y), 4.0), 0.0) + mod(float(ppb_rect.x),2.0)*mod(float(ppb_rect.y),2.0);", // PM_CROSS
+                                  "float ppb_in = step(mod(abs(ppb_rect.x - ppb_rect.y), (ppb_sfp[2] + 1.0)*2.0), 0.0);", // PM_GRID
+                                  "float ppb_in = step(mod(abs(ppb_rect.x - ppb_rect.y), 2.0 + ppb_sfp[2]) + mod(abs(ppb_rect.x - ppb_rect[3] - 1 + ppb_rect.y), 2.0 + ppb_sfp[2]), 0.0);", // PM_FILL
+                                  "float ppb_in = step(mod(abs(ppb_rect.x - ppb_rect.y) + abs(ppb_rect.x - ppb_rect[3] + 1 + ppb_rect.y), 3.0 + ppb_sfp[2]), 0.0);" // PM_SQUARES
       
-                                  "float ppb_in = sign(step(abs(ppb_rect.x-ppb_rect.y), ppb_sfp[2]) + step(abs(ppb_rect.x-(ppb_rect[3]-ppb_rect.y)), ppb_sfp[2]));", // PM_CROSS
     };
     
     if (fsp.postmask < sizeof(dpostmasks) / sizeof(const char*))

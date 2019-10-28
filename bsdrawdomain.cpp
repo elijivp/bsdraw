@@ -1,5 +1,7 @@
 #include "bsdrawdomain.h"
 
+#include <QResizeEvent>
+
 #include <memory.h>
 
 #include "core/sheigen/bsshei2d.h"
@@ -178,20 +180,22 @@ unsigned int DrawDomain::domainsCount() const
   return m_portionSize;
 }
 
-void DrawDomain::resizeGL(int w, int h)
+void DrawDomain::resizeEvent(QResizeEvent* event)
 {
-  w -= m_cttrLeft + m_cttrRight;
-  h -= m_cttrTop + m_cttrBottom;
+  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
+  int w = event->size().width() - (m_cttrLeft + m_cttrRight);
+  int h = event->size().height() - (m_cttrTop + m_cttrBottom);
   
-  unsigned int& scalingA = m_matrixSwitchAB? m_scalingHeight : m_scalingWidth;
-  unsigned int& scalingB = m_matrixSwitchAB? m_scalingWidth : m_scalingHeight;
   int& sizeA = m_matrixSwitchAB? h : w;
   int& sizeB = m_matrixSwitchAB? w : h;
   
-  scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
-  scalingB = (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB);
-  clampScaling();
-  pendResize(true);
+  /*int differentAB = */clampScaling( 
+                      (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA),
+                      (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB)
+                                                            );
+//  pendResize(differentAB != 0);
+  pendResize(false);
+  DrawQWidget::resizeEvent(event);
 }
 
 

@@ -1,4 +1,7 @@
 #include "bsdrawintensity.h"
+
+#include <QResizeEvent>
+
 #include "core/sheigen/bsshei2d.h"
 
 DrawIntensity::DrawIntensity(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, ORIENTATION orient): DrawQWidget(new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient)
@@ -9,20 +12,22 @@ DrawIntensity::DrawIntensity(unsigned int samplesHorz, unsigned int samplesVert,
   deployMemory();
 }
 
-void DrawIntensity::resizeGL(int w, int h)
+void DrawIntensity::resizeEvent(QResizeEvent* event)
 {
-  w -= m_cttrLeft + m_cttrRight;
-  h -= m_cttrTop + m_cttrBottom;
+  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
   
-  unsigned int& scalingA = m_matrixSwitchAB? m_scalingHeight : m_scalingWidth;
-  unsigned int& scalingB = m_matrixSwitchAB? m_scalingWidth : m_scalingHeight;
+  int w = event->size().width() - (m_cttrLeft + m_cttrRight);
+  int h = event->size().height() - (m_cttrTop + m_cttrBottom);
+  
   int& sizeA = m_matrixSwitchAB? h : w;
   int& sizeB = m_matrixSwitchAB? w : h;
+  /*int differentAB = */clampScaling(
+                      (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA), 
+                      (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB));
+//  pendResize(differentAB != 0);
+  pendResize(false);
   
-  scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
-  scalingB = (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB);
-  clampScaling();
-  pendResize(true);
+  DrawQWidget::resizeEvent(event);
 }
 
 

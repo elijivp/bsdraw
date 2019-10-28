@@ -255,14 +255,14 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     draws[1] = new DrawIntensity(SAMPLES/2, 1, PORTIONS);
     draws[1]->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_LINELEFT, 0, 0.2f));
-    draws[1]->setScalingLimitsH(msc*2);
-    draws[1]->setScalingLimitsV(msc*2, msc*2);
+    draws[1]->setScalingLimitsHorz(msc*2);
+    draws[1]->setScalingLimitsVert(msc*2, msc*2);
     
     draws[2] = new DrawIntensity(SAMPLES/2, 1, PORTIONS);
     draws[2]->setOrientation(OR_TBLR);
     draws[2]->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_LINELEFT, 0, 0.2f));
-    draws[2]->setScalingLimitsH(msc*2, msc*2);
-    draws[2]->setScalingLimitsV(msc*2);
+    draws[2]->setScalingLimitsHorz(msc*2);
+    draws[2]->setScalingLimitsVert(msc*2, msc*2);
     
     draws[3] = new DrawIntensity(1, 1, PORTIONS);
     draws[3]->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_PSEUDOCIRCLE, 0, 0.2f));
@@ -460,8 +460,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //        gts[c].postrect = prs[i];
 //        gts[c].smooth = 0.05f;
         draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gts[c] + prs[i], DrawGraph::CP_SINGLE);
-        draws[c*drcount + i]->setScalingLimitsH(c == 2? 5 : 12);
-        draws[c*drcount + i]->setScalingLimitsV(c == 0 && i == 1? 12 : 5);
+        draws[c*drcount + i]->setScalingLimitsHorz(c == 2? 5 : 12);
+        draws[c*drcount + i]->setScalingLimitsVert(c == 0 && i == 1? 12 : 5);
         draws[c*drcount + i]->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_CONTOUR, c == 1? i == 2? 4 : 1 : 0));
       }
     
@@ -477,14 +477,14 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     graphopts_t  gopts(GT_LINTERP, DE_LINTERP, 0.0f, 0xFFFFFFFF, 0, 0.0f, 0.2f, PR_STANDARD);
     draws[0] = new DrawGraph(SAMPLES, PORTIONS, gopts, DrawGraph::CP_SINGLE, 0.332f, 1.0f);
-    draws[0]->setScalingLimitsH(4,4);
+    draws[0]->setScalingLimitsHorz(4,4);
     
     draws[1] = new DrawRecorder(SAMPLES, 100, 100, PORTIONS);
     draws[1]->setDataTextureInterpolation(true);
     
     draws[2] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
     draws[2]->setDataTextureInterpolation(true);
-    draws[2]->setScalingLimitsV(10,10);
+    draws[2]->setScalingLimitsVert(10,10);
     
 //    setMinimumWidth(1200);
 
@@ -564,8 +564,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     this->setMinimumWidth(1200);
     sigtype = ST_GEN_NORM;
     
-    sigtype = ST_MANYSIN;
-    sp = SP_ONCE;
+//    sigtype = ST_MANYSIN;
+//    sp = SP_ONCE;
   }
   else if (MW_TEST == FEATURE_POSTMASK)
   {
@@ -588,8 +588,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       
                           // 3rd row
                           DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOTCONTOUR, 0, 0.0f, 0.0f),
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOTCONTOUR, 1, 0.0f, 0.0f),
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOTCONTOUR, 2, 0.0f, 0.0f),
+                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_SQUARES, 0, 0.0f, 0.0f),
+                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOTCONTOUR, 3, 0.0f, 0.0f),
     
                           // 4th row
                           DPostmask(DPostmask::PO_ALL, DPostmask::PM_PSEUDOCIRCLE, 0, 0.0f),
@@ -616,8 +616,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       {
         draws[c*drcount + i] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
         draws[c*drcount + i]->setPostMask(dpms[i*dccount + c]);
-//        draws[c*drcount + i]->setScalingLimitsH(16);
-//        draws[c*drcount + i]->setScalingLimitsV(10,10);
+//        draws[c*drcount + i]->setScalingLimitsHorz(16);
+//        draws[c*drcount + i]->setScalingLimitsVert(10,10);
       }
     draws[0]->ovlPushBack(new OTextColored("Original", CR_XABS_YREL_NOSCALED, 5.0f, 0.9f, 12, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
     
@@ -639,7 +639,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
       draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.5f, DE_QINTERP), cps[i], 1.0f, 0.3f);
 //      draws[i]->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f));
-      draws[i]->setScalingLimitsH(7);
+      draws[i]->setScalingLimitsHorz(7);
       
       draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.8f, 0.7f, 12, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
     }
@@ -655,7 +655,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 2;
     PRECREATE(4, 1);
     draws[0] = new DrawGraph(SAMPLES/8, PORTIONS, graphopts_t::goHistogram(), DrawGraph::CP_SINGLE);
-    draws[0]->setScalingLimitsH(8,8);
+    draws[0]->setScalingLimitsB(8,8);
     draws[0]->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_CONTOUR, 0, 0.3f,0.3f,0.3f));
     
     draws[1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.0f, DE_NONE), DrawGraph::CP_SINGLE);
@@ -690,10 +690,12 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     syncscaling = 1;
     
     PRECREATE(sizeof(ppalettes_adv) / sizeof(const IPalette*), 1);
+//    PRECREATE(4, 1);
     for (unsigned int i=0; i<drawscount; i++)
     {
       draws[i] = new DrawIntensity(SAMPLES, MAXLINES);
       draws[i]->setDataPalette(ppalettes_adv[i]);
+      draws[i]->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     }
     sigtype = ST_RAMP;
   }
@@ -743,8 +745,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //      if (i<drawscount - 1)
 //      {
 //        draws[i] = new DrawIntensity(SAMPLES, 1, PORTIONS);
-//        draws[i]->setScalingLimitsV(10,10);
-//        draws[i]->setScalingLimitsH(10,10);
+//        draws[i]->setScalingLimitsVert(10,10);
+//        draws[i]->setScalingLimitsHorz(10,10);
 //        if (i == 1)
 //          draws[i]->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_CONTOUR, 0, 0.3f,0.3f,0.3f));
 //        else if (i == 2)
@@ -776,8 +778,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       if (syncscaling > 0)
       {
         draws[i]->setScalingLimitsSynced(syncscaling);
-//        draws[i]->setScalingLimitsH(syncscaling);
-//        draws[i]->setScalingLimitsV(syncscaling);
+//        draws[i]->setScalingLimitsHorz(syncscaling);
+//        draws[i]->setScalingLimitsVert(syncscaling);
       }
       
       draws[i]->setClearColor(0x00333333);
@@ -1373,7 +1375,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                                                     <<QString::fromUtf8("Pseudocircle")<<QString::fromUtf8("Dot")
                                                       <<QString::fromUtf8("Dot left-bot")<<QString::fromUtf8("Dot contour")
                                                       <<QString::fromUtf8("/")<<QString::fromUtf8("\\")
-                                                      <<QString::fromUtf8("Cross");
+                                                      <<QString::fromUtf8("Cross")<<QString::fromUtf8("Grid")
+                                                        <<QString::fromUtf8("Fill")<<QString::fromUtf8("Squares");
                 QComboBox* qcb = new QComboBox;
                 qcb->addItems(dpmMain);
                 qcb->setUserData(1, new BSUOD_DPM(0, dpm));
@@ -1609,6 +1612,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BSAUTO_TEXT_ADD(QString().sprintf("ppalettes_adv[%d]:\t\t%s", i, ppalettes_names[i]));
               BSADD(draws[i]);
             }
+          BS_STRETCH
           BS_STOP;
         }
   //      else if (MW_TEST == PROGRESS_BAR)
@@ -2999,18 +3003,18 @@ void MainWindow::changeScaling(int value)
     if (to == SC_MIN_H || to == SC_MAX_H)
     {
       unsigned int scmin, scmax;
-      draws[i]->scalingLimitsH(&scmin, &scmax);
+      draws[i]->scalingLimitsHorz(&scmin, &scmax);
       if (to == SC_MIN_H) scmin = value;
       else scmax = value;
-      draws[i]->setScalingLimitsH(scmin, scmax);
+      draws[i]->setScalingLimitsHorz(scmin, scmax);
     }
     else if (to == SC_MIN_V || to == SC_MAX_V)
     {
       unsigned int scmin, scmax;
-      draws[i]->scalingLimitsV(&scmin, &scmax);
+      draws[i]->scalingLimitsVert(&scmin, &scmax);
       if (to == SC_MIN_V) scmin = value;
       else scmax = value;
-      draws[i]->setScalingLimitsV(scmin, scmax);
+      draws[i]->setScalingLimitsVert(scmin, scmax);
     }
   }
 }

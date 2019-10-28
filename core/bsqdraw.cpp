@@ -13,8 +13,8 @@ const char*   DrawQWidget::vardesc(SHEIFIELD sf)
   if (sf == SF_COUNTPORTIONS)       return "countPortions";
   if (sf == SF_DIMM_A)              return "datadimm_a";
   if (sf == SF_DIMM_B)              return "datadimm_b";
-  if (sf == SF_CHNL_HORZSCALING)    return "scaling_a";
-  if (sf == SF_CHNL_VERTSCALING)    return "scaling_b";
+  if (sf == SF_CHNL_SCALING_A)    return "scaling_a";
+  if (sf == SF_CHNL_SCALING_B)    return "scaling_b";
   return nullptr;
 }
 
@@ -439,15 +439,15 @@ void DrawQWidget::paintGL()
     
     if (havePendOn(PC_SIZE))
     {
-      if ((loc = m_locations[SF_DIMM_A]) != -1)                   m_ShaderProgram.setUniformValue(loc, m_matrixDimmA);
-      if ((loc = m_locations[SF_DIMM_B]) != -1)                   m_ShaderProgram.setUniformValue(loc, m_matrixDimmB);
-      if ((loc = m_locations[SF_CHNL_HORZSCALING]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixSwitchAB? m_scalingHeight : m_scalingWidth);
-      if ((loc = m_locations[SF_CHNL_VERTSCALING]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixSwitchAB? m_scalingWidth : m_scalingHeight);
+      if ((loc = m_locations[SF_DIMM_A]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixDimmA);
+      if ((loc = m_locations[SF_DIMM_B]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixDimmB);
+      if ((loc = m_locations[SF_CHNL_SCALING_A]) != -1) m_ShaderProgram.setUniformValue(loc, m_scalingA);
+      if ((loc = m_locations[SF_CHNL_SCALING_B]) != -1) m_ShaderProgram.setUniformValue(loc, m_scalingB);
     }
     
     if (havePendOn(PC_PARAMS))
     {
-      if ((loc = m_locations[SF_COUNTPORTIONS]) != -1)            m_ShaderProgram.setUniformValue(loc, this->m_countPortions);
+      if ((loc = m_locations[SF_COUNTPORTIONS]) != -1)  m_ShaderProgram.setUniformValue(loc, this->m_countPortions);
 //        if ((loc = m_locations[SF_BOUNDS]) != -1)                   m_ShaderProgram.setUniformValue(loc, (const QVector2D&)m_bounds);
 //        if ((loc = m_locations[SF_CONTRAST]) != -1)                 m_ShaderProgram.setUniformValue(loc, (const QVector2D&)m_contrast);
     }
@@ -473,11 +473,11 @@ void DrawQWidget::paintGL()
             int         loc = ufm.location;
             const void* data = ufm.dataptr;
             switch (ufm.type) {
-              case DT_1F: m_ShaderProgram.setUniformValue(loc, *(GLfloat*)data); break;
-              case DT_2F: m_ShaderProgram.setUniformValue(loc, *(QVector2D*)data); break;
-              case DT_3F: m_ShaderProgram.setUniformValue(loc, *(QVector3D*)data); break;
-              case DT_4F: m_ShaderProgram.setUniformValue(loc, *(QVector4D*)data); break;
-              case DT_1I: m_ShaderProgram.setUniformValue(loc, *(GLint*)data); break;
+              case DT_1F: m_ShaderProgram.setUniformValue(loc, *(const GLfloat*)data); break;
+              case DT_2F: m_ShaderProgram.setUniformValue(loc, *(const QVector2D*)data); break;
+              case DT_3F: m_ShaderProgram.setUniformValue(loc, *(const QVector3D*)data); break;
+              case DT_4F: m_ShaderProgram.setUniformValue(loc, *(const QVector4D*)data); break;
+              case DT_1I: m_ShaderProgram.setUniformValue(loc, *(const GLint*)data); break;
 //              case DT_3I: m_ShaderProgram.setUniformValue(loc, *(QSize*)data); break;
 //                case DT_2I: m_ShaderProgram.setUniformValue(loc, *(QSize*)data); break;
               case DT_ARR: case DT_ARR2: case DT_ARR3: case DT_ARR4:
@@ -585,18 +585,19 @@ void DrawQWidget::paintGL()
     
     if (m_matrixSwitchAB)
     {
-      glViewport(0 + m_cttrLeft, height() - (m_matrixDimmA*m_scalingHeight) - m_cttrTop, 
-                 m_matrixDimmB*m_scalingWidth,
-                 m_matrixDimmA*m_scalingHeight
+      glViewport(0 + m_cttrLeft, height() - (m_matrixDimmA*m_scalingA) - m_cttrTop, 
+                 m_matrixDimmB*m_scalingB,
+                 m_matrixDimmA*m_scalingA
                  );
     }
     else
     {
-      glViewport(0 + m_cttrLeft, height() - (m_matrixDimmB*m_scalingHeight) - m_cttrTop, 
-                 m_matrixDimmA*m_scalingWidth,
-                 m_matrixDimmB*m_scalingHeight
+      glViewport(0 + m_cttrLeft, height() - (m_matrixDimmB*m_scalingB) - m_cttrTop, 
+                 m_matrixDimmA*m_scalingA,
+                 m_matrixDimmB*m_scalingB
                  );
     }
+    
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     m_ShaderProgram.disableAttributeArray(0);
     m_ShaderProgram.release();
@@ -616,7 +617,7 @@ void DrawQWidget::callWidgetUpdate()
 //  setUpdatesEnabled(true);
 }
 
-void DrawQWidget::innerResize()
+void DrawQWidget::innerUpdateGeometry()
 {
   this->updateGeometry();
 }
@@ -624,38 +625,39 @@ void DrawQWidget::innerResize()
 QSize DrawQWidget::minimumSizeHint() const
 {
   if (m_matrixSwitchAB)
-    return QSize( (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*m_scalingWidthMin + m_cttrLeft + m_cttrRight,
-                  m_matrixDimmA*m_scalingHeightMin + m_cttrTop + m_cttrBottom
+    return QSize( (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*m_scalingBMin + m_cttrLeft + m_cttrRight,
+                  m_matrixDimmA*m_scalingAMin + m_cttrTop + m_cttrBottom
                   );
   else
-    return QSize( m_matrixDimmA*m_scalingWidthMin + m_cttrLeft + m_cttrRight,
-                  (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*m_scalingHeightMin + m_cttrTop + m_cttrBottom
+    return QSize( m_matrixDimmA*m_scalingAMin + m_cttrLeft + m_cttrRight,
+                  (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*m_scalingBMin + m_cttrTop + m_cttrBottom
                   );
-        //            ((getDataDimmUsage() != DDU_2D && getDataDimmUsage() != DDU_DD)? 1 : m_matrixDimmB)*m_scalingHeightMin + m_cttrTop + m_cttrBottom
+        //            ((getDataDimmUsage() != DDU_2D && getDataDimmUsage() != DDU_DD)? 1 : m_matrixDimmB)*m_scalingBMin + m_cttrTop + m_cttrBottom
 }
 
 QSize DrawQWidget::sizeHint() const
 { 
   if (m_matrixSwitchAB)
-    return QSize( (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*m_scalingWidth + m_cttrLeft + m_cttrRight, 
-                  m_matrixDimmA*m_scalingHeight + m_cttrTop + m_cttrBottom
+    return QSize( (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*m_scalingB + m_cttrLeft + m_cttrRight, 
+                  m_matrixDimmA*m_scalingA + m_cttrTop + m_cttrBottom
                   );
   else
-    return QSize( m_matrixDimmA*m_scalingWidth + m_cttrLeft + m_cttrRight, 
-                  (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*m_scalingHeight + m_cttrTop + m_cttrBottom
+    return QSize( m_matrixDimmA*m_scalingA + m_cttrLeft + m_cttrRight, 
+                  (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*m_scalingB + m_cttrTop + m_cttrBottom
                   );
-        //            ((getDataDimmUsage() != DDU_2D && getDataDimmUsage() != DDU_DD)? 1 : m_matrixDimmB)*m_scalingHeight + m_cttrTop + m_cttrBottom
+//  return minimumSizeHint();
+        //            ((getDataDimmUsage() != DDU_2D && getDataDimmUsage() != DDU_DD)? 1 : m_matrixDimmB)*m_scalingB + m_cttrTop + m_cttrBottom
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void  DrawQWidget::store_crd_clk(OVL_REACTION oreact, unsigned int x, unsigned int y)
 {
-  const unsigned int& dimmWidth = m_matrixSwitchAB? m_matrixDimmB : m_matrixDimmA;
-  const unsigned int& dimmHeight = m_matrixSwitchAB? m_matrixDimmA : m_matrixDimmB;
-  if (x < m_cttrLeft + dimmWidth*m_scalingWidth && y < m_cttrTop + dimmHeight*m_scalingHeight)
+  unsigned int dimmWidth = actualDrawWidth();
+  unsigned int dimmHeight = actualDrawHeight();
+  if (x < m_cttrLeft + dimmWidth && y < m_cttrTop + dimmHeight)
   {
-    float dataptr[] = { float(x - m_cttrLeft) / (dimmWidth*m_scalingWidth), 1.0f - float(y - m_cttrTop) / (dimmHeight*m_scalingHeight) };
+    float dataptr[] = { float(x - m_cttrLeft) / dimmWidth, 1.0f - float(y - m_cttrTop) / dimmHeight };
 //    qDebug()<<"Before: "<<dataptr[0]<<dataptr[1];
     float* (*pfns[])(float*) = {  ccode_rotateLRBT, ccode_rotateRLBT, ccode_rotateLRTB, ccode_rotateRLTB,
                                   ccode_rotateTBLR, ccode_rotateBTLR, ccode_rotateTBRL, ccode_rotateBTRL
@@ -705,18 +707,22 @@ void DrawQWidget::mouseMoveEvent(QMouseEvent *event)
 //  setMouseTracking(tru!!);
 }
 
-void DrawQWidget::resizeEvent(QResizeEvent *event)
-{
-  int l,t,r,b;
-  getContentsMargins(&l,&t,&r,&b);
-  if (l != m_cttrLeft || t != m_cttrTop || r != m_cttrRight || b != m_cttrBottom)
-  {
-    m_cttrLeft = l; m_cttrTop = t; m_cttrRight = r; m_cttrBottom = b;
-//    updateGeometry(); // no need? strange...
-  }
-//  else  // nothing to say here...
-  QOpenGLWidget::resizeEvent(event);
-}
+//void DrawQWidget::resizeEvent(QResizeEvent *event)
+//{
+//  int l,t,r,b;
+//  getContentsMargins(&l,&t,&r,&b);
+//  if (l != m_cttrLeft || t != m_cttrTop || r != m_cttrRight || b != m_cttrBottom)
+//  {
+//    m_cttrLeft = l; m_cttrTop = t; m_cttrRight = r; m_cttrBottom = b;
+////    updateGeometry(); // no need? strange...
+//  }
+////  else  // nothing to say here...
+  
+////  qDebug()<<"Draw Q Widget: "<<event->size()<<m_matrixDimmB;
+//  qDebug()<<Q_FUNC_INFO<<event->size()<<size()<<"__________"<<actualDrawLengthA()<<actualDrawLengthB();//<<"????????????"<<pDraw->minimumSize();
+  
+//  QOpenGLWidget::resizeEvent(event);
+//}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -741,8 +747,8 @@ void DrawQWidget::connectScrollBar(QScrollBar *qsb, bool staticView, bool setOri
   QObject::connect(qsb, SIGNAL(valueChanged(int)), this, SLOT(slideLmHeight(int)));
 }
 
-void DrawQWidget::slot_setScalingH(int s){  setScalingLimitsH(s, s); }
-void DrawQWidget::slot_setScalingV(int s){  setScalingLimitsV(s, s); }
+void DrawQWidget::slot_setScalingH(int s){  setScalingLimitsHorz(s, s); }
+void DrawQWidget::slot_setScalingV(int s){  setScalingLimitsVert(s, s); }
 void DrawQWidget::slot_setBoundLow(float value){  setBoundLow(value); }
 void DrawQWidget::slot_setBoundHigh(float value){ setBoundHigh(value);  }
 void DrawQWidget::slot_setContrast(float k, float b){ setContrast(contrast_t(k, b));  }

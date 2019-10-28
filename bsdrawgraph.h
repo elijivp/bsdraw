@@ -114,7 +114,8 @@ public:
 protected:
   virtual unsigned int    portionSize()const{  return m_matrixDimmA; }
   virtual DATADIMMUSAGE   getDataDimmUsage() const { return DDU_1D; }
-  void                    resizeGL(int w, int h);
+//  void                    resizeGL(int w, int h);
+  virtual void            resizeEvent(QResizeEvent *event);
 };
 
 /// 2D graph with data append

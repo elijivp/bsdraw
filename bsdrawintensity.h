@@ -10,7 +10,8 @@ public:
 protected:
   virtual unsigned int    portionSize()const{ return m_matrixDimmA*m_matrixDimmB; }
   virtual DATADIMMUSAGE   getDataDimmUsage() const { return DDU_2D; }
-  virtual void            resizeGL(int w, int h);
+//  virtual void            resizeGL(int w, int h);
+  virtual void            resizeEvent(QResizeEvent*);
 };
 
 

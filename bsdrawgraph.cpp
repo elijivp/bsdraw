@@ -1,5 +1,7 @@
 #include "bsdrawgraph.h" 
 
+#include <QResizeEvent>
+
 #include "core/sheigen/bsshgenmain.h"
 
 #ifndef SHNL
@@ -406,10 +408,6 @@ void DrawGraph::reConstructor(unsigned int samples)
   m_matrixDimmB = 1;
   m_portionSize = samples;
   deployMemory();
-  if (m_matrixSwitchAB)
-    m_scalingWidth = 1;
-  else
-    m_scalingHeight = 1;
 }
 
 /// m_countPortions === graphs
@@ -418,24 +416,22 @@ DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, COLORPOLICY down
 DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, COLORPOLICY downcolorize, float colorize_start, float colorize_stop):
   DrawQWidget(new DrawGraph_Sheigen(graphopts, colorize_start, colorize_stop, downcolorize), graphs, OR_LRBT){ reConstructor(samples); }
 
-void DrawGraph::resizeGL(int w, int h)
+void DrawGraph::resizeEvent(QResizeEvent* event)
 {
-  w -= m_cttrLeft + m_cttrRight;
-  h -= m_cttrTop + m_cttrBottom;
+  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
   
-  unsigned int& scalingA = m_matrixSwitchAB? m_scalingHeight : m_scalingWidth;
-  unsigned int& scalingB = m_matrixSwitchAB? m_scalingWidth : m_scalingHeight;
-  int& sizeA = m_matrixSwitchAB? h : w;
-  int& sizeB = m_matrixSwitchAB? w : h;
+  int w = event->size().width() - (m_cttrLeft + m_cttrRight);
+  int h = event->size().height() - (m_cttrTop + m_cttrBottom);
+  const int& sizeA = m_matrixSwitchAB? h : w;
+  const int& sizeB = m_matrixSwitchAB? w : h;
   
-  scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
-  clampScaling();
-  m_matrixDimmB = sizeB / scalingB;
+  /*int differentAB = */clampScaling((unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA), m_scalingB);
+  m_matrixDimmB = sizeB / m_scalingB;
   if (m_matrixDimmB == 0) m_matrixDimmB = 1;
-  
-//  qDebug()<<"DrawGraph: "<<h<<m_matrixDimmB;
-  
-  pendResize(true);
+//  qDebug()<<"DrawGraph"<<__FUNCTION__<<size()<<"__________"<<actualDrawLengthA()<<actualDrawLengthB();
+//  pendResize(sizeA == actualDrawLengthA());
+  pendResize(false);
+  DrawQWidget::resizeEvent(event);
 }
 
 ////////////////////////////////////////////////////////////////

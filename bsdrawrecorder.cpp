@@ -1,6 +1,8 @@
 #include "bsdrawrecorder.h"
 #include "core/sheigen/bsshei2d.h"
 
+#include <QResizeEvent>
+
 
 DrawRecorder::DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory, unsigned int portions, ORIENTATION orient, unsigned int resizeLimit): DrawQWidget(new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient),
   m_stopped(0), m_memory(portions, samplesHorz, linesMemory), m_resizelim(resizeLimit)
@@ -46,24 +48,26 @@ void DrawRecorder::clearData()
   DrawQWidget::vmanUpData();  // clearData?
 }
 
-void DrawRecorder::resizeGL(int w, int h)
+void DrawRecorder::resizeEvent(QResizeEvent* event)
 {
-  w -= m_cttrLeft + m_cttrRight;
-  h -= m_cttrTop + m_cttrBottom;
+  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
   
-  unsigned int& scalingA = m_matrixSwitchAB? m_scalingHeight : m_scalingWidth;
-  unsigned int& scalingB = m_matrixSwitchAB? m_scalingWidth : m_scalingHeight;
+  int w = event->size().width() - (m_cttrLeft + m_cttrRight);
+  int h = event->size().height() - (m_cttrTop + m_cttrBottom);
+  
   int& sizeA = m_matrixSwitchAB? h : w;
   int& sizeB = m_matrixSwitchAB? w : h;
   
-  scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
-  clampScaling();
+  /*int differentAB = */clampScaling((unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA), m_scalingB);
   unsigned int old_dimmB = m_matrixDimmB;
-  m_matrixDimmB = sizeB / scalingB;
+  m_matrixDimmB = sizeB / m_scalingB;
   if (m_matrixDimmB > m_resizelim) m_matrixDimmB = m_resizelim;
   if (m_matrixDimmB > old_dimmB  || (m_matrixDimmB < old_dimmB  && (m_countPortions > 1)))
     fillMatrix();
-  pendResize(true);
+//  pendResize(differentAB != 0);
+  pendResize(false);
+  
+  DrawQWidget::resizeEvent(event);
 }
 
 void DrawRecorder::fillMatrix()
@@ -83,10 +87,10 @@ void DrawRecorder::fillMatrix()
 
 void DrawRecorder::slideLmHeight(int pp)
 {
-  if (m_matrixLmSize < m_matrixDimmB*(m_matrixSwitchAB? m_scalingWidth : m_scalingHeight))
+  if (m_matrixLmSize < m_matrixDimmB*m_scalingB)
     m_stopped = 0;
   else
-    m_stopped = ((float)pp/m_matrixLmSize)*(m_matrixLmSize - m_matrixDimmB*(m_matrixSwitchAB? m_scalingWidth : m_scalingHeight));
+    m_stopped = ((float)pp/m_matrixLmSize)*(m_matrixLmSize - m_matrixDimmB*m_scalingB);
   fillMatrix();
   DrawQWidget::vmanUpData();
 }

@@ -7,13 +7,14 @@
   rabota.doRun(&les);
 */
 
-
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)1
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)4
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)8
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)12
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)15
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)14
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)10
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)17
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)21
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)18
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)20
 #ifndef MW_TEST_NOCHOOSE_DEFAULT
 #include <QInputDialog>
 #endif

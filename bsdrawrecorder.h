@@ -17,7 +17,8 @@ public:
   virtual void            clearData();
 protected:
   virtual DATADIMMUSAGE   getDataDimmUsage() const { return DDU_15D; }
-  virtual void            resizeGL(int w, int h);
+//  virtual void            resizeGL(int w, int h);
+  virtual void            resizeEvent(QResizeEvent*);
 protected:
           void            fillMatrix();
   virtual void            slideLmHeight(int);

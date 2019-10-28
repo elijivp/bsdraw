@@ -58,7 +58,8 @@ public:
   unsigned int      domainsCount() const;
 protected:
   virtual DATADIMMUSAGE   getDataDimmUsage() const { return DDU_DD; }
-  virtual void            resizeGL(int w, int h);
+//  virtual void            resizeGL(int w, int h);
+  virtual void            resizeEvent(QResizeEvent* event);
 };
 
 #endif // DRAWDOMAIN_H

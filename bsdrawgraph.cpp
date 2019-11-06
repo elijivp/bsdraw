@@ -416,22 +416,16 @@ DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, COLORPOLICY down
 DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, COLORPOLICY downcolorize, float colorize_start, float colorize_stop):
   DrawQWidget(new DrawGraph_Sheigen(graphopts, colorize_start, colorize_stop, downcolorize), graphs, OR_LRBT){ reConstructor(samples); }
 
-void DrawGraph::resizeEvent(QResizeEvent* event)
+
+void DrawGraph::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB)
 {
-  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
-  
-  int w = event->size().width() - (m_cttrLeft + m_cttrRight);
-  int h = event->size().height() - (m_cttrTop + m_cttrBottom);
-  const int& sizeA = m_matrixSwitchAB? h : w;
-  const int& sizeB = m_matrixSwitchAB? w : h;
-  
-  /*int differentAB = */clampScaling((unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA), m_scalingB);
-  m_matrixDimmB = sizeB / m_scalingB;
-  if (m_matrixDimmB == 0) m_matrixDimmB = 1;
-//  qDebug()<<"DrawGraph"<<__FUNCTION__<<size()<<"__________"<<actualDrawLengthA()<<actualDrawLengthB();
-//  pendResize(sizeA == actualDrawLengthA());
-  pendResize(false);
-  DrawQWidget::resizeEvent(event);
+  *matrixDimmA = m_matrixDimmA;
+  *scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
+  *scalingB = m_scalingB;
+  clampScaling(scalingA, scalingB);
+  *matrixDimmB = sizeB / *scalingB;
+  if (*matrixDimmB == 0)
+    *matrixDimmB = 1;
 }
 
 ////////////////////////////////////////////////////////////////

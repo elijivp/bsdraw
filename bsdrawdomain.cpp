@@ -180,23 +180,15 @@ unsigned int DrawDomain::domainsCount() const
   return m_portionSize;
 }
 
-void DrawDomain::resizeEvent(QResizeEvent* event)
+void DrawDomain::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB)
 {
-  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
-  int w = event->size().width() - (m_cttrLeft + m_cttrRight);
-  int h = event->size().height() - (m_cttrTop + m_cttrBottom);
-  
-  int& sizeA = m_matrixSwitchAB? h : w;
-  int& sizeB = m_matrixSwitchAB? w : h;
-  
-  /*int differentAB = */clampScaling( 
-                      (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA),
-                      (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB)
-                                                            );
-//  pendResize(differentAB != 0);
-  pendResize(false);
-  DrawQWidget::resizeEvent(event);
+  *matrixDimmA = m_matrixDimmA;
+  *matrixDimmB = m_matrixDimmB;
+  *scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
+  *scalingB = (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB);
+  clampScaling(scalingA, scalingB);
 }
+
 
 
 

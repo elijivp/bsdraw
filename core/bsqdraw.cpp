@@ -2,6 +2,9 @@
 
 #include "../palettes/bsipalette.h"
 
+#include <QMouseEvent>
+#include <QResizeEvent>
+
 const char*   DrawQWidget::vardesc(SHEIFIELD sf)
 {
   if (sf == SF_DATA)                return "texData";
@@ -317,6 +320,7 @@ void DrawQWidget::initializeGL()
 
 void DrawQWidget::paintGL()
 { 
+//  qDebug("blublublu %04x", m_bitmaskPendingChanges);
   glDisable(GL_DEPTH_TEST);
   {
 //    glDisable(GL_BLEND);
@@ -583,19 +587,14 @@ void DrawQWidget::paintGL()
     m_ShaderProgram.enableAttributeArray(0);
     m_ShaderProgram.setAttributeArray(0, GL_FLOAT, m_SurfaceVertex, 2);
     
-    if (m_matrixSwitchAB)
+    if (!m_rawResizeModeNoScaled)
     {
-      glViewport(0 + m_cttrLeft, height() - (m_matrixDimmA*m_scalingA) - m_cttrTop, 
-                 m_matrixDimmB*m_scalingB,
-                 m_matrixDimmA*m_scalingA
-                 );
-    }
-    else
-    {
-      glViewport(0 + m_cttrLeft, height() - (m_matrixDimmB*m_scalingB) - m_cttrTop, 
-                 m_matrixDimmA*m_scalingA,
-                 m_matrixDimmB*m_scalingB
-                 );
+      if (m_matrixSwitchAB)
+        glViewport(0 + m_cttrLeft,            height() - (m_matrixDimmA*m_scalingA) - m_cttrTop, 
+                   m_matrixDimmB*m_scalingB,  m_matrixDimmA*m_scalingA );
+      else
+        glViewport(0 + m_cttrLeft,            height() - (m_matrixDimmB*m_scalingB) - m_cttrTop, 
+                   m_matrixDimmA*m_scalingA,  m_matrixDimmB*m_scalingB );
     }
     
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -607,6 +606,68 @@ void DrawQWidget::paintGL()
       glBindTexture(GL_TEXTURE_2D, 0);
   } /// if bind
 }
+
+void DrawQWidget::resizeGL(int w, int h)
+{
+  if (m_rawResizeModeNoScaled)
+  {
+    if (m_matrixSwitchAB)
+      glViewport(0 + m_cttrLeft,            height() - (m_matrixDimmA*m_scalingA) - m_cttrTop, 
+                 m_matrixDimmB*m_scalingB,  m_matrixDimmA*m_scalingA );
+    else
+      glViewport(0 + m_cttrLeft,            height() - (m_matrixDimmB*m_scalingB) - m_cttrTop, 
+                 m_matrixDimmA*m_scalingA,  m_matrixDimmB*m_scalingB );
+  }
+  
+  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
+  w -= m_cttrLeft + m_cttrRight;
+  h -= m_cttrTop + m_cttrBottom;
+  
+  int& sizeA = m_matrixSwitchAB? h : w;
+  int& sizeB = m_matrixSwitchAB? w : h;
+  
+//  qDebug()<<"DrawQWidget PRE resizeEv: "<<QSize(w,h)<<m_matrixDimmA<<m_matrixDimmB<<m_scalingA<<m_scalingB;
+  
+  unsigned int matrixDimmA, matrixDimmB, scalingA, scalingB;
+  sizeAndScaleHint(sizeA, sizeB, &matrixDimmA, &matrixDimmB, &scalingA, &scalingB);
+  
+//  qDebug()<<"DrawQWidget POS resizeEv: "<<QSize(w,h)<<matrixDimmA<<matrixDimmB<<scalingA<<scalingB;
+  
+  m_matrixDimmA = matrixDimmA;
+  m_matrixDimmB = matrixDimmB;
+  m_scalingA = scalingA;
+  m_scalingB = scalingB;
+  
+  pendResize(false);
+}
+
+/*
+void DrawQWidget::resizeEvent(QResizeEvent *event)    // calls after resizeGL anyway
+{
+  QOpenGLWidget::resizeEvent(event);
+//  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
+  
+  
+//  int w = event->size().width() - (m_cttrLeft + m_cttrRight);
+//  int h = event->size().height() - (m_cttrTop + m_cttrBottom);
+//  int& sizeA = m_matrixSwitchAB? h : w;
+//  int& sizeB = m_matrixSwitchAB? w : h;
+  
+//  qDebug()<<"DrawQWidget PRE resizeEv: "<<event->size()<<m_matrixDimmA<<m_matrixDimmB<<m_scalingA<<m_scalingB;
+  
+//  unsigned int matrixDimmA, matrixDimmB, scalingA, scalingB;
+//  sizeAndScaleHint(sizeA, sizeB, &matrixDimmA, &matrixDimmB, &scalingA, &scalingB);
+  
+//  qDebug()<<"DrawQWidget POS resizeEv: "<<event->size()<<matrixDimmA<<matrixDimmB<<scalingA<<scalingB;
+  
+//  m_matrixDimmA = matrixDimmA;
+//  m_matrixDimmB = matrixDimmB;
+//  m_scalingA = scalingA;
+//  m_scalingB = scalingB;
+
+//  pendResize(false);
+}
+*/
 
 void DrawQWidget::callWidgetUpdate()
 {
@@ -653,8 +714,8 @@ QSize DrawQWidget::sizeHint() const
 
 void  DrawQWidget::store_crd_clk(OVL_REACTION oreact, unsigned int x, unsigned int y)
 {
-  unsigned int dimmWidth = actualDrawWidth();
-  unsigned int dimmHeight = actualDrawHeight();
+  unsigned int dimmWidth = sizeScaledWidth();
+  unsigned int dimmHeight = sizeScaledHeight();
   if (x < m_cttrLeft + dimmWidth && y < m_cttrTop + dimmHeight)
   {
     float dataptr[] = { float(x - m_cttrLeft) / dimmWidth, 1.0f - float(y - m_cttrTop) / dimmHeight };
@@ -687,9 +748,6 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION oreact, unsigned int x, unsigned i
   }
 }
 
-#include <QMouseEvent>
-#include <QResizeEvent>
-
 void DrawQWidget::mousePressEvent(QMouseEvent *event)
 {
   if (event->button() == Qt::LeftButton)  store_crd_clk(OR_LMPRESS, event->pos().x(), event->pos().y());
@@ -706,23 +764,6 @@ void DrawQWidget::mouseMoveEvent(QMouseEvent *event)
 //  store_crd_clk(OR_LMMOVE, event->pos().x(), event->pos().y());
 //  setMouseTracking(tru!!);
 }
-
-//void DrawQWidget::resizeEvent(QResizeEvent *event)
-//{
-//  int l,t,r,b;
-//  getContentsMargins(&l,&t,&r,&b);
-//  if (l != m_cttrLeft || t != m_cttrTop || r != m_cttrRight || b != m_cttrBottom)
-//  {
-//    m_cttrLeft = l; m_cttrTop = t; m_cttrRight = r; m_cttrBottom = b;
-////    updateGeometry(); // no need? strange...
-//  }
-////  else  // nothing to say here...
-  
-////  qDebug()<<"Draw Q Widget: "<<event->size()<<m_matrixDimmB;
-//  qDebug()<<Q_FUNC_INFO<<event->size()<<size()<<"__________"<<actualDrawLengthA()<<actualDrawLengthB();//<<"????????????"<<pDraw->minimumSize();
-  
-//  QOpenGLWidget::resizeEvent(event);
-//}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

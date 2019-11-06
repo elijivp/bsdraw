@@ -772,6 +772,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     for (unsigned int i=0; i<drawscount; i++)
     {
+//      draws[i]->setRawResizeModeNoScaled(true);
+      
       if (MW_TEST != ADV_PALETTES)
         draws[i]->setDataPalette(defaultPalette);
       

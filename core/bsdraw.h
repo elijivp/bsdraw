@@ -49,6 +49,8 @@ protected:
   bool                  m_matrixSwitchAB;
   
   bool                  m_dataTextureInterp;
+  
+  bool                  m_rawResizeModeNoScaled;
 
   unsigned int          m_scalingA;
   unsigned int          m_scalingB;
@@ -131,7 +133,7 @@ public:
   DrawCore(unsigned int portions, ORIENTATION orient):  m_portionSize(0), m_allocatedPortions(portions), m_countPortions(portions), m_orient(orient),
                                                         m_matrixData(nullptr), m_matrixDataCached(nullptr),
                                                         m_matrixSwitchAB(orient > OR_RLTB),
-                                                        m_dataTextureInterp(false),
+                                                        m_dataTextureInterp(false), m_rawResizeModeNoScaled(false),
                                                         m_scalingA(1), m_scalingB(1),
                                                         m_scalingAMin(1), m_scalingAMax(0),
                                                         m_scalingBMin(1), m_scalingBMax(0), m_scalingIsSynced(false),
@@ -174,59 +176,58 @@ public:
   void                  setScalingLimitsHorz(unsigned int scmin, unsigned int scmax=0){  if (!m_matrixSwitchAB) setScalingLimitsA(scmin, scmax); else setScalingLimitsB(scmin, scmax); }
   void                  setScalingLimitsVert(unsigned int scmin, unsigned int scmax=0){  if (!m_matrixSwitchAB) setScalingLimitsB(scmin, scmax); else setScalingLimitsA(scmin, scmax); }
   void                  setScalingLimitsSynced(unsigned int scmin, unsigned int scmax=0){  m_scalingIsSynced = true; m_scalingAMin = m_scalingBMin = scmin < 1? 1 : scmin; m_scalingAMax = m_scalingBMax = scmax; clampScalingManually(); pendResize(true); }
+  void                  scalingLimitsHorz(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingAMin;  if (scmax) *scmax = m_scalingAMax; }
+  void                  scalingLimitsVert(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingBMin;  if (scmax) *scmax = m_scalingBMax; }
   
   unsigned int          scalingA() const { return m_scalingA; }
   unsigned int          scalingB() const { return m_scalingB; }
   unsigned int          scalingHorz() const { return m_matrixSwitchAB? m_scalingB : m_scalingA; }
   unsigned int          scalingVert() const { return m_matrixSwitchAB? m_scalingA : m_scalingB; }
   
-  unsigned int          actualDrawLengthA() const { return m_matrixDimmA*m_scalingA; }
-  unsigned int          actualDrawLengthB() const { return m_matrixDimmB*m_scalingB; }
-  unsigned int          actualDrawWidth() const { return m_matrixSwitchAB? m_matrixDimmB*m_scalingB : m_matrixDimmA*m_scalingA; }
-  unsigned int          actualDrawHeight() const { return m_matrixSwitchAB? m_matrixDimmA*m_scalingA : m_matrixDimmB*m_scalingB; }
-  void                  scalingLimitsHorz(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingAMin;  if (scmax) *scmax = m_scalingAMax; }
-  void                  scalingLimitsVert(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingBMin;  if (scmax) *scmax = m_scalingBMax; }
-protected:
-  int   clampScaling(unsigned int scalingA, unsigned int scalingB)
+  unsigned int          sizeDimmA() const { return m_matrixDimmA; }
+  unsigned int          sizeDimmB() const { return m_matrixDimmB; }
+  
+  unsigned int          sizeScaledA() const { return m_matrixDimmA*m_scalingA; }
+  unsigned int          sizeScaledB() const { return m_matrixDimmB*m_scalingB; }
+  unsigned int          sizeScaledWidth() const { return m_matrixSwitchAB? m_matrixDimmB*m_scalingB : m_matrixDimmA*m_scalingA; }
+  unsigned int          sizeScaledHeight() const { return m_matrixSwitchAB? m_matrixDimmA*m_scalingA : m_matrixDimmB*m_scalingB; }
+public:
+  virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB)=0;
+  void                  sizeAndScaleHint(int width_in, int height_in, int* actualwidth, int* actualheight)
   {
-    int differentAB = 0;
-    if (scalingA < m_scalingAMin) scalingA = m_scalingAMin;
-    if (m_scalingAMax && scalingA > m_scalingAMax) scalingA = m_scalingAMax;
-    if (scalingB < m_scalingBMin) scalingB = m_scalingBMin;
-    if (m_scalingBMax && scalingB > m_scalingBMax)  scalingB = m_scalingBMax;
+    unsigned int dimmA, dimmB, scalingA, scalingB;
+    if (m_matrixSwitchAB)
+      sizeAndScaleHint(height_in, width_in, &dimmB, &dimmA, &scalingB, &scalingA);
+    else
+      sizeAndScaleHint(width_in, height_in, &dimmA, &dimmB, &scalingA, &scalingB);
+    *actualwidth = dimmA*scalingA;
+    *actualheight = dimmB*scalingB;
+  }
+protected:
+  void  clampScaling(unsigned int* scalingA, unsigned int* scalingB)
+  {
+    if (*scalingA < m_scalingAMin) *scalingA = m_scalingAMin;
+    if (m_scalingAMax && *scalingA > m_scalingAMax) *scalingA = m_scalingAMax;
+    if (*scalingB < m_scalingBMin) *scalingB = m_scalingBMin;
+    if (m_scalingBMax && *scalingB > m_scalingBMax)  *scalingB = m_scalingBMax;
     
     if (m_scalingIsSynced)
     {
       DATADIMMUSAGE ddu(getDataDimmUsage());
-      if (scalingB > scalingA || (ddu != DDU_2D && ddu != DDU_DD)) scalingB = scalingA;
-      else scalingA = scalingB;
+      if (*scalingB > *scalingA || (ddu != DDU_2D && ddu != DDU_DD)) *scalingB = *scalingA;
+      else *scalingA = *scalingB;
     }
-    if (m_scalingA != scalingA){  m_scalingA = scalingA;  differentAB |= 2; }
-    if (m_scalingB != scalingB){  m_scalingB = scalingB;  differentAB |= 1; }
-    return differentAB;
-//    if (m_scalingA < m_scalingAMin) m_scalingA = m_scalingAMin;
-//    if (m_scalingAMax && m_scalingA > m_scalingAMax) m_scalingA = m_scalingAMax;
-//    if (m_scalingB < m_scalingBMin) m_scalingB = m_scalingBMin;
-//    if (m_scalingBMax && m_scalingB > m_scalingBMax)  m_scalingB = m_scalingBMax;
-    
-//    if (m_scalingIsSynced)
-//    {
-//      DATADIMMUSAGE ddu(getDataDimmUsage());
-//      if (m_scalingB > m_scalingA || (ddu != DDU_2D && ddu != DDU_DD)) m_scalingB = m_scalingA;
-//      else m_scalingA = m_scalingB;
-//    }
   }
 private:
-  int   clampScalingManually()
+  void  clampScalingManually()
   {
     unsigned int old_scaling = m_scalingB;
-    int differentAB = clampScaling(m_scalingA, m_scalingB);
+    clampScaling(&m_scalingA, &m_scalingB);
     if (m_scalingB != old_scaling  && (getDataDimmUsage() == DDU_1D))
     {
       float coeff = float(old_scaling) / m_scalingB;
       m_matrixDimmB = (unsigned int)(m_matrixDimmB*coeff + 0.5f);
     }
-    return differentAB;
   }
 public:
   void  setDataTextureInterpolation(bool interp)
@@ -235,6 +236,13 @@ public:
     m_bitmaskPendingChanges |= PC_DATA;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
+  
+  void  setRawResizeModeNoScaled(bool rawmode)
+  {
+    m_rawResizeModeNoScaled = rawmode;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+  }
+  bool  rawResizeModeNoScaled() const { return m_rawResizeModeNoScaled; }
 public:
   void  setDataPalette(const IPalette* ppal)
   {

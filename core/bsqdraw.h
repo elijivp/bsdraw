@@ -87,6 +87,7 @@ protected:
   void    initCollectAndCompileShader();
   void    initializeGL();
   void    paintGL();
+  void    resizeGL(int w, int h);
 protected:
   virtual void callWidgetUpdate();
   virtual void innerUpdateGeometry();

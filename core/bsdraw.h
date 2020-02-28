@@ -7,6 +7,7 @@
 
 #include "bsidrawcore.h"
 #include "bsoverlay.h"
+#include "palettes/bsipalette.h"
 
 //#########################
 struct  bounds_t
@@ -27,6 +28,12 @@ inline  void  _bsdraw_update_kb(const bounds_t& bnd, const contrast_t& cnt, floa
   *k = cnt.contrast/(bnd.HL - bnd.LL);
   *b = -bnd.LL*cnt.contrast/(bnd.HL - bnd.LL) + cnt.offset;
 }
+
+//inline  void  _bsdraw_recalced_bounds(const contrast_t& cnt, float k, float b, bounds_t* bnd)
+//{
+//  bnd->LL = (cnt.offset - b)/k;
+//  bnd->HL = cnt.contrast/k + bnd->LL;
+//}
 
 //#########################
 
@@ -164,21 +171,17 @@ public:
   unsigned int          countPortions() const { return m_countPortions; }
   
   void                  setBounds(const bounds_t& d){ m_bounds = d; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
+  void                  setBounds(float LL, float HL){ setBounds(bounds_t(LL, HL)); }
   void                  setBoundLow(float LL){ m_bounds.LL = LL; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA;    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
   void                  setBoundHigh(float HL){ m_bounds.HL = HL; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA;   if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
   bounds_t              bounds() const { return m_bounds; }
   
   void                  setContrast(const contrast_t& c){ m_contrast = c; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
+  void                  setContrast(float k, float b){ setContrast(contrast_t(k, b)); }
   contrast_t            contrast()const{ return m_contrast; }
-public:
-  void                  setScalingLimitsA(unsigned int scmin, unsigned int scmax=0){    m_scalingAMin = scmin < 1? 1 : scmin; m_scalingAMax = scmax;  m_scalingIsSynced = false; clampScalingManually(); pendResize(true); }
-  void                  setScalingLimitsB(unsigned int scmin, unsigned int scmax=0){    m_scalingBMin = scmin < 1? 1 : scmin; m_scalingBMax = scmax;  m_scalingIsSynced = false; clampScalingManually(); pendResize(true); }
-  void                  setScalingLimitsHorz(unsigned int scmin, unsigned int scmax=0){  if (!m_matrixSwitchAB) setScalingLimitsA(scmin, scmax); else setScalingLimitsB(scmin, scmax); }
-  void                  setScalingLimitsVert(unsigned int scmin, unsigned int scmax=0){  if (!m_matrixSwitchAB) setScalingLimitsB(scmin, scmax); else setScalingLimitsA(scmin, scmax); }
-  void                  setScalingLimitsSynced(unsigned int scmin, unsigned int scmax=0){  m_scalingIsSynced = true; m_scalingAMin = m_scalingBMin = scmin < 1? 1 : scmin; m_scalingAMax = m_scalingBMax = scmax; clampScalingManually(); pendResize(true); }
-  void                  scalingLimitsHorz(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingAMin;  if (scmax) *scmax = m_scalingAMax; }
-  void                  scalingLimitsVert(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingBMin;  if (scmax) *scmax = m_scalingBMax; }
   
+//  bounds_t              boundsReal() const {  bounds_t result; _bsdraw_recalced_bounds(m_contrast, m_loc_k, m_loc_b, &result); return result; }
+public:
   unsigned int          scalingA() const { return m_scalingA; }
   unsigned int          scalingB() const { return m_scalingB; }
   unsigned int          scalingHorz() const { return m_matrixSwitchAB? m_scalingB : m_scalingA; }
@@ -186,11 +189,24 @@ public:
   
   unsigned int          sizeDimmA() const { return m_matrixDimmA; }
   unsigned int          sizeDimmB() const { return m_matrixDimmB; }
+  unsigned int          sizeDimmHorz() const { return m_matrixSwitchAB? m_matrixDimmB : m_matrixDimmA; }
+  unsigned int          sizeDimmVert() const { return m_matrixSwitchAB? m_matrixDimmA : m_matrixDimmB; }
   
   unsigned int          sizeScaledA() const { return m_matrixDimmA*m_scalingA; }
   unsigned int          sizeScaledB() const { return m_matrixDimmB*m_scalingB; }
-  unsigned int          sizeScaledWidth() const { return m_matrixSwitchAB? m_matrixDimmB*m_scalingB : m_matrixDimmA*m_scalingA; }
-  unsigned int          sizeScaledHeight() const { return m_matrixSwitchAB? m_matrixDimmA*m_scalingA : m_matrixDimmB*m_scalingB; }
+  unsigned int          sizeScaledHorz() const { return m_matrixSwitchAB? m_matrixDimmB*m_scalingB : m_matrixDimmA*m_scalingA; }
+  unsigned int          sizeScaledVert() const { return m_matrixSwitchAB? m_matrixDimmA*m_scalingA : m_matrixDimmB*m_scalingB; }
+  
+  void                  scalingLimitsA(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingAMin;  if (scmax) *scmax = m_scalingAMax; }
+  void                  scalingLimitsB(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingBMin;  if (scmax) *scmax = m_scalingBMax; }
+  void                  scalingLimitsHorz(unsigned int *scmin, unsigned int *scmax=nullptr) const { if (!m_matrixSwitchAB) scalingLimitsA(scmin, scmax); else scalingLimitsB(scmin, scmax); }
+  void                  scalingLimitsVert(unsigned int *scmin, unsigned int *scmax=nullptr) const { if (!m_matrixSwitchAB) scalingLimitsA(scmin, scmax); else scalingLimitsB(scmin, scmax); }
+  
+  void                  setScalingLimitsA(unsigned int scmin, unsigned int scmax=0){  m_scalingAMin = scmin < 1? 1 : scmin; m_scalingAMax = scmax;  m_scalingIsSynced = false; clampScalingManually(); pendResize(true); }
+  void                  setScalingLimitsB(unsigned int scmin, unsigned int scmax=0){  m_scalingBMin = scmin < 1? 1 : scmin; m_scalingBMax = scmax;  m_scalingIsSynced = false; clampScalingManually(); pendResize(true); }
+  void                  setScalingLimitsHorz(unsigned int scmin, unsigned int scmax=0){ if (!m_matrixSwitchAB) setScalingLimitsA(scmin, scmax); else setScalingLimitsB(scmin, scmax); }
+  void                  setScalingLimitsVert(unsigned int scmin, unsigned int scmax=0){ if (!m_matrixSwitchAB) setScalingLimitsB(scmin, scmax); else setScalingLimitsA(scmin, scmax); }
+  void                  setScalingLimitsSynced(unsigned int scmin, unsigned int scmax=0){ m_scalingIsSynced = true; m_scalingAMin = m_scalingBMin = scmin < 1? 1 : scmin; m_scalingAMax = m_scalingBMax = scmax; clampScalingManually(); pendResize(true); }
 public:
   virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB)=0;
   void                  sizeAndScaleHint(int width_in, int height_in, int* actualwidth, int* actualheight)
@@ -256,6 +272,7 @@ public:
     m_bitmaskPendingChanges |= PC_PALETTE;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
+  const IPalette* dataPalette() const { return m_ppal; }
   bool            paletteInterpolation()const { return m_dataTextureInterp; }
 public:
   /// 1. Data methods
@@ -294,6 +311,17 @@ public:
     m_bitmaskPendingChanges |= PC_DATA;
     if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();
   }
+  
+  void getData(float* result) const
+  {
+    unsigned int total = m_countPortions * m_portionSize;
+    for (unsigned int i=0; i<total; i++)
+      result[i] = m_matrixData[i];
+  }
+  const float* getDataPtr() const
+  {
+    return m_matrixData;
+  }
 protected:
   void  vmanUpData(){ m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();  }
   enum  DATADIMMUSAGE { DDU_2D, DDU_15D, DDU_1D, DDU_DD };
@@ -302,9 +330,9 @@ public:
   unsigned int directions() const { DATADIMMUSAGE ddu = getDataDimmUsage(); if (ddu == DDU_2D || ddu == DDU_DD) return 2; return 1; }
 public:
   /// 2. Delegated methods
-  bool  setPortionsCount(int portionsLessThanAlocated)
+  bool  setPortionsCount(unsigned int portionsLessThanAlocated)
   {
-    if (portionsLessThanAlocated >= 0 && portionsLessThanAlocated <= m_allocatedPortions)
+    if (/*portionsLessThanAlocated >= 0 && */portionsLessThanAlocated <= m_allocatedPortions)
     {
       m_countPortions = (unsigned int)portionsLessThanAlocated;
       m_bitmaskPendingChanges |= PC_DATA | PC_PARAMS;
@@ -496,6 +524,11 @@ public:
     m_clearbypalette = true;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
+  bool            isClearedByPalette() const { return m_clearbypalette; }
+  unsigned int    clearColor() const {  return (unsigned int)
+        (int(m_clearcolor[0]*255.0f) + (int(m_clearcolor[1]*255.0f)<<8) + (int(m_clearcolor[2]*255.0f)<<16));
+                                     }
+  virtual unsigned int colorBack() const { return m_ppal->first(); }
 protected:
   virtual void    callWidgetUpdate()=0;
   virtual void    innerUpdateGeometry()=0;

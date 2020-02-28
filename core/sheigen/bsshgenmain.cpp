@@ -200,6 +200,11 @@ FshMainGenerator::FshMainGenerator(char *deststring, ORIENTATION orient, unsigne
   
 }
 
+//FshMainGenerator::FshMainGenerator(char* deststring): 
+//  m_writebase(deststring), m_to(deststring), m_offset(0), m_orient(OR_LRTB), m_ovlscount(0), m_ovls(nullptr)
+//{
+//}
+
 void FshMainGenerator::goto_func_begin(int initback, unsigned int backcolor, const DPostmask& fsp)
 {
   static const char fsh_main[] =  "void main()" SHNL
@@ -265,14 +270,17 @@ void FshMainGenerator::goto_func_begin(int initback, unsigned int backcolor, con
 
   memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
   
-  if (initback == 0)
+  if (initback == INITBACK_BYZERO || initback == INIT_BYZERO)
     m_offset += msprintf(&m_to[m_offset], "vec3  backcolor = vec3(0.0, 0.0, 0.0);" SHNL);
-  else if (initback == 1)
+  else if (initback == INITBACK_BYVALUE || initback == INIT_BYVALUE)
     this->ccolor("backcolor", backcolor);
-  else if (initback == 2)
+  else if (initback == INITBACK_BYPALETTE || initback == INIT_BYPALETTE)
     m_offset += msprintf(&m_to[m_offset], "vec3  backcolor = texture(texPalette, vec2(0.0, 0.0)).rgb;" SHNL);
   
-  m_offset += msprintf(&m_to[m_offset],   "vec3  result = backcolor;" SHNL);
+  if (initback == INIT_BYZERO || initback == INIT_BYVALUE || initback == INIT_BYPALETTE)
+    m_offset += msprintf(&m_to[m_offset],   "vec3  result = backcolor;" SHNL);
+  else
+    m_offset += msprintf(&m_to[m_offset],   "vec3  result = vec3(0.0, 0.0, 0.0);" SHNL);
     
   m_offset += msprintf(&m_to[m_offset], "vec3   ppb_sfp   = vec3(0.0, %F, %F);" SHNL    /// ppban, ppoutsignal, 
                                         "ivec4  ppb_rect  = ivec4(imoded.x, imoded.y, iscaling.x-1, iscaling.y-1);" SHNL, 

@@ -12,6 +12,8 @@
 #include "bsdrawdomain.h"
 #include "bsdrawgraph.h"
 #include "bsdrawrecorder.h"
+#include "bsdrawempty.h"
+#include "bsdrawscales.h"
 
 #include "overlays/bsinteractive.h"
 #include "overlays/bsgrid.h"
@@ -79,6 +81,9 @@ static const char* img_path_normal = "../example/image2.jpg";  /// 800x600
 /// if uncomment: changes 'point size' for width and height synchroniously
 //#define SYNCSCALING 3
 
+/// if uncomment: DrawScales usage
+//#define USESCALES
+
 class BSUOD_DPM: public QObjectUserData
 {
 public:
@@ -89,7 +94,7 @@ public:
 };
 
 const IPalette* const ppalettes_std[] = {  &paletteBkWh, &paletteBkGyGyGyWh, &paletteGnYe, &paletteBlWh, &paletteBkRdWh, &paletteBkBlWh, &paletteBkGrWh, &paletteBkBlGrYeWh };
-const IPalette* const ppalettes_rgb[] = {  &paletteRG, &paletteRB, &paletteRGB };
+const IPalette* const ppalettes_rgb[] = {  &paletteRG, &paletteRB, &paletteRGB, &paletteBGR };
 
 MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent), 
   MW_TEST(testnumber), randomer(nullptr), active_ovl(0), ovl_visir(-1), ovl_marks(-1), ovl_figures(-1), ovl_sprites(-1), ovl_active_mark(9), ovl_is_synced(true), sigtype(ST_PEAK3), sig_k(1), sig_b(0)
@@ -125,7 +130,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       {
         ddm.start();
         for (int r=0; r<MAXLINES/2; r++)
-          ddm.includePixel(MAXLINES/2 + sin(j/(2.0*M_PI*8))*MAXLINES/4 - MAXLINES/4 + r, j);
+          ddm.includePixel(int(MAXLINES/2 + sin(j/(2.0*M_PI*8))*MAXLINES/4 - MAXLINES/4 + r), j);
         ddm.finish();
       }
     }
@@ -248,7 +253,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 1;
     
     PRECREATE(2, 2);
-    int msc = 5;
+    unsigned int msc = 5;
     draws[0] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
     draws[0]->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_LINELEFTBOTTOM, 0, 0.02f));
     draws[0]->setScalingLimitsSynced(msc, msc);
@@ -515,6 +520,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       }
     
     sigtype = ST_HIPERB;
+//    sigtype = ST_GEN_NORM;
+//    sp = SP_ONCE;
     defaultPalette = (const IPalette*)ppalettes_adv[47];
   }
   else if (MW_TEST == FEATURE_ORIENTS)
@@ -574,6 +581,12 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 1;
     syncscaling = 10;
     PRECREATE(6, 3);
+    
+//    SAMPLES = 10;
+//    MAXLINES = 7;
+//    PORTIONS = 1;
+//    syncscaling = 10;
+//    PRECREATE(3, 3);
     
     DPostmask dpms[] = {  
                           // 1st row
@@ -672,6 +685,28 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     sigtype = ST_MOVE;
   }
+  else if (MW_TEST == SCALES_1)
+  {
+    SAMPLES = 180;
+    MAXLINES = 50;
+    PORTIONS = 1;
+    PRECREATE(4, 1);
+//    syncscaling = 4;
+    
+//    DrawGraph::COLORPOLICY cps[] = { DrawGraph::CP_SINGLE, DrawGraph::CP_OWNRANGE, DrawGraph::CP_OWNRANGE_GROSS, DrawGraph::CP_OWNRANGE_SYMMETRIC, DrawGraph::CP_RANGE, DrawGraph::CP_SUBPAINTED };
+//    const char* cpnames[] = { "CP_SINGLE", "CP_OWNRANGE", "CP_OWNRANGE_GROSS", "CP_OWNRANGE_SYMMETRIC", "CP_RANGE", "CP_SUBPAINTED" };
+    
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.0f, DE_QINTERP, i == 2? 0x00AAAAAA : 0xFFFFFFFF), DrawGraph::CP_SINGLE, 1.0f, 0.3f);
+//      draws[i]->setScalingLimitsHorz(7);
+//      draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.8f, 0.7f, 12, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
+    }
+//    this->setMinimumHeight(1000);
+//    this->setMinimumWidth(1200);
+    sigtype = ST_MOVE;
+    defaultPalette = ppalettes_adv[12];
+  }
   else if (MW_TEST == DRAW_BRIGHT_CLUSTER) /// bright cluster
   {
     SAMPLES = 30;
@@ -731,7 +766,20 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 
     sigtype = ST_MOVE;
   }
-  
+  else if (MW_TEST == VOCAB)
+  {
+    SAMPLES = 300;
+    MAXLINES = 450;
+    PORTIONS = 1;
+    PRECREATE(1, 2);
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+//      draws[i] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
+      draws[i] = new DrawEmpty(SAMPLES, MAXLINES, 0x00333333);
+    }
+//    draws[2]->setPostMask(DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOTCONTOUR, 0, 0.0f, 0.0f));
+    sigtype = ST_10;
+  }
   
 //  else if (MW_TEST == PROGRESS_BAR)   /// progress
 //  {
@@ -784,7 +832,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //        draws[i]->setScalingLimitsVert(syncscaling);
       }
       
-      draws[i]->setClearColor(0x00333333);
+//      draws[i]->setClearColor(0x00333333);
 //      draws[i]->setClearByPalette();
       if (MW_TEST == LET_IT_SNOW)
       {
@@ -798,6 +846,13 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       else if (MW_TEST == DRAW_BRIGHT && i == 0)
       {
         IOverlaySimpleImage* oimg = new OImageStretched(new QImage(img_path_normal), IOverlaySimpleImage::IC_BLOCKALPHA, false);
+        oimg->setSlice(0.35);
+        oimg->setOpacity(0.15);
+        draws[i]->ovlPushBack(oimg);
+      }
+      else if (MW_TEST == VOCAB)
+      {
+        IOverlaySimpleImage* oimg = new OImageStretched(new QImage(img_path_normal), IOverlaySimpleImage::IC_ASIS, false);
         oimg->setSlice(0.35);
         oimg->setOpacity(0.15);
         draws[i]->ovlPushBack(oimg);
@@ -906,7 +961,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             BS_STOP
           
             BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-              BSAUTO_TEXT_ADD(tr("Data posttransform:"), 0, Qt::AlignHCenter);
+              BS_SPACING(30)
+              BSAUTO_TEXT_ADD(tr("Modify data:"), 0, Qt::AlignHCenter);
               BS_STRETCH
               BSAUTO_TEXT_ADD(tr("k*x + b"), 0, Qt::AlignHCenter);
               BS_STRETCH
@@ -923,7 +979,38 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 BS_STOP
               }
               QObject::connect(edMapper, SIGNAL(mapped(int)), this, SLOT(changeFloats(int)));
+              BS_SPACING(30)
             BS_STOP
+            
+            {
+              BSFieldSetup fseds[] = { 
+                BSFieldSetup("1.0", &fntSTD, ED_HIGH, 0, edMinWidth, edMaxWidth),
+                BSFieldSetup("0.0", &fntSTD, ED_LOW, 0, edMinWidth, edMaxWidth),
+                BSFieldSetup("1.0", &fntSTD, ED_CONTRAST, 0, edMinWidth, edMaxWidth),
+                BSFieldSetup("0.0", &fntSTD, ED_OFFSET, 0, edMinWidth, edMaxWidth),
+              };
+              QSignalMapper*  edMapper = new QSignalMapper(this);
+              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
+                BS_STRETCH
+                
+                lab = new QLabel(tr("Bounds:"));
+                BSADD(lab);
+                BS_START_LAYOUT(QHBoxLayout)
+                  for (int i=0; i<2; i++)
+                    BSAUTO_EDIT_ADDMAPPED(fseds[i], edMapper, 0, Qt::AlignRight);
+                BS_STOP
+                BS_STRETCH    
+                
+                lab = new QLabel(tr("Contrast:"));
+                BSADD(lab);
+                BS_START_LAYOUT(QHBoxLayout)
+                  for (int i=2; i<4; i++)
+                    BSAUTO_EDIT_ADDMAPPED(fseds[i], edMapper, 0, Qt::AlignRight);
+                BS_STOP
+                BS_STRETCH
+              BS_STOP
+              QObject::connect(edMapper, SIGNAL(mapped(int)), this, SLOT(changeFloats(int)));
+            } 
             BS_STRETCH
           BS_STOP
           
@@ -982,6 +1069,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 BSFieldSetup bfs[] = { BSFieldSetup("2 clr: ReGn", &fntSTD, 0, on2 == false? BFS_DISABLED : 0, btnMinWidth), 
                                        BSFieldSetup("2 clr: ReBu", &fntSTD, 1, on2 == false? BFS_DISABLED : 0, btnMinWidth), 
                                        BSFieldSetup("3 clr: RGB", &fntSTD, 2, on3 == false? BFS_DISABLED : 0, btnMinWidth), 
+                                       BSFieldSetup("3 clr: BGR", &fntSTD, 3, on3 == false? BFS_DISABLED : 0, btnMinWidth), 
                                      };
                 for (unsigned int j=0; j<sizeof(bfs)/sizeof(BSFieldSetup); j++)
                   BSAUTO_BTN_ADDMAPPED(bfs[j], palMapperRGB);
@@ -990,36 +1078,17 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               }
               BS_STOP
             BS_STOP
-            
-            {
-              BSFieldSetup fseds[] = { 
-                BSFieldSetup("1.0", &fntSTD, ED_HIGH, 0, edMinWidth, edMaxWidth),
-                BSFieldSetup("0.0", &fntSTD, ED_LOW, 0, edMinWidth, edMaxWidth),
-                BSFieldSetup("1.0", &fntSTD, ED_CONTRAST, 0, edMinWidth, edMaxWidth),
-                BSFieldSetup("0.0", &fntSTD, ED_OFFSET, 0, edMinWidth, edMaxWidth),
-              };
-              QSignalMapper*  edMapper = new QSignalMapper(this);
-              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-                BS_STRETCH
-                
-                lab = new QLabel(tr("setBounds:"));
-                BSADD(lab);
-                BS_START_LAYOUT(QHBoxLayout)
-                  for (int i=0; i<2; i++)
-                    BSAUTO_EDIT_ADDMAPPED(fseds[i], edMapper, 0, Qt::AlignRight);
-                BS_STOP
-                BS_STRETCH    
-                
-                lab = new QLabel(tr("setContrast:"));
-                BSADD(lab);
-                BS_START_LAYOUT(QHBoxLayout)
-                  for (int i=2; i<4; i++)
-                    BSAUTO_EDIT_ADDMAPPED(fseds[i], edMapper, 0, Qt::AlignRight);
-                BS_STOP
-                BS_STRETCH
-              BS_STOP
-              QObject::connect(edMapper, SIGNAL(mapped(int)), this, SLOT(changeFloats(int)));
-            } 
+            BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
+              BS_STRETCH
+              BSAUTO_BTN(QCheckBox, dsc, BSFieldSetup("Palette Discrete", &fntSTD, 0, PORTIONS < 2? BFS_DISABLED : 0, btnMinWidth));
+              BSADD(dsc)
+              QObject::connect(dsc, SIGNAL(toggled(bool)), this, SLOT(changePaletteDiscretion(bool)));
+              BS_STRETCH
+              BSAUTO_BTN(QCheckBox, itp, BSFieldSetup("Data interpolation", &fntSTD, 0, 0, btnMinWidth));
+              BSADD(itp)
+              QObject::connect(itp, SIGNAL(toggled(bool)), this, SLOT(changeDataTextureInterpolation(bool)));
+              BS_STRETCH
+            BS_STOP
             BS_STRETCH
           BS_STOP
 
@@ -1664,6 +1733,60 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BSADD(draws[i])
           BS_STOP;
         }
+        else if (MW_TEST == SCALES_1)
+        {
+          BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
+            DrawBars::COLORS cps[] = {DrawBars::CP_DEFAULT, DrawBars::CP_FROM_DRAWBACK, 
+                                      DrawBars::CP_FROM_DRAWBACK, DrawBars::CP_FROM_DRAWPALETTE_INV };
+            const char* labels_clr[][2] = {  {"colors: default", "Universe scale"},
+                                             {"colors: drawback", "Fixed scale, floating marks"},
+                                             {"colors: drawback", "Tap by alphabet"},
+                                             {"colors: inversed", "Fixed minimal scale"},
+                                          };
+            for (unsigned int i=0; i<drawscount; i++)
+            {
+              DrawBars* pDB = new DrawBars(draws[i], cps[i]);
+              if (cps[i] == DrawBars::CP_FROM_DRAWBACK)
+              {
+                pDB->addContour(AT_LEFT, 0);
+                pDB->addContour(AT_TOP, 0);
+                pDB->addContour(AT_BOTTOM, 0);
+                pDB->addContour(AT_RIGHT, 0);
+              }
+                
+              
+              if (i == 0)
+                pDB->addScaleDrawUniSide(AT_TOP, DBF_ENUMERATE_FROMZERO | DBF_ENUMERATE_SHOWLAST, 20);
+              else if (i == 1)
+                pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED, 0.0, SAMPLES, SAMPLES);
+              else if (i == 2)
+                pDB->addScaleTapNM(AT_TOP, DBMODE_STATIC, standard_tap_symbolate<-1>, 4, SAMPLES, 20);
+              else
+                pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED_POW2 | DBF_ONLY2NOTES | DBF_NOTESINSIDE, 0.0, 1.0, SAMPLES, 10);
+              
+              
+              if (i == drawscount - 1)
+              {
+//                pDB->addContour(AT_LEFT, 40);
+                pDB->addScaleDrawGraphB(AT_LEFT, 0 /*| DBF_NOTESINSIDE/* | DBF_INTERVENT*/, 3, 32);
+//                pDB->addSpace(AT_LEFT, 10);
+              }
+              else
+                pDB->addScaleDrawGraphB(AT_LEFT, 0 /*| DBF_NOTESINSIDE*/, 21, 32);
+              
+//              if (i < 3)
+              {
+                pDB->addLabel(AT_LEFT, 0 | DBF_LABELAREA_FULLBAR, labels_clr[i][0], Qt::AlignCenter, Qt::Vertical);
+                pDB->addLabel(AT_TOP, 0, labels_clr[i][1], Qt::AlignCenter, Qt::Horizontal);
+              }
+              
+              BSADD(pDB)
+            }
+          BS_STOP
+//          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+//            BSAUTO_TEXT_ADD("\tResize Me");
+//          BS_STOP
+        }
         else if (MW_TEST == TABS)
         {
           BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
@@ -1717,7 +1840,19 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
                 if (qsb)
                   draws[i*drcount + j]->connectScrollBar(qsb, false);
-                BSADD(draws[i*drcount + j], lwresult);
+                
+#ifdef USESCALES
+#define BS_SCALED_ALIAS(draw, drdre)  DrawBars* drdre = new DrawBars(draw, DrawBars::CP_FROM_DRAWBACK); \
+                                      drdre->addScaleDrawUniSide(AT_TOP, 0, 21); \
+                                      if (draw->directions() == 2)  drdre->addScaleDrawUniSide(AT_LEFT, 0, 21); \
+                                      else                          drdre->addScaleDrawGraphB(AT_LEFT, 0 | DBF_NOTESINSIDE, 21, 20);
+#else
+#define BS_SCALED_ALIAS(draw, drdre)  DrawQWidget* drdre = draw;
+#endif
+                
+                BS_SCALED_ALIAS(draws[i*drcount + j], pDraw)
+                BSADD(pDraw, lwresult);
+//                BSADD(draws[i*drcount + j], lwresult);
               }
               if (MW_TEST == DRAW_BRIGHT)
                 BS_STRETCH
@@ -2420,6 +2555,18 @@ void MainWindow::changePaletteRGB(int id)
 {
   for (unsigned int i=0; i<drawscount; i++)
     draws[i]->setDataPalette(ppalettes_rgb[id]);
+}
+
+void MainWindow::changePaletteDiscretion(bool v)
+{
+  for (unsigned int i=0; i<drawscount; i++)
+    draws[i]->setDataPaletteDiscretion(v);
+}
+
+void MainWindow::changeDataTextureInterpolation(bool v)
+{
+  for (unsigned int i=0; i<drawscount; i++)
+    draws[i]->setDataTextureInterpolation(v);
 }
 
 void  MainWindow::changeFloats(int edid)

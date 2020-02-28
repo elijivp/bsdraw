@@ -9,7 +9,8 @@ class IPalette
 {
 public:
   virtual void          getPalette(const void** clrarr, unsigned int* count, unsigned int* format) const =0;
-  virtual unsigned int  firstColor() const=0;
+  virtual unsigned int  first() const=0;
+  virtual unsigned int  last() const=0;
   virtual ~IPalette(){}
 public:
   enum  { FMT_UNKNOWN,

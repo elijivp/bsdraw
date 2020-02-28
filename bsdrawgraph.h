@@ -95,8 +95,6 @@ inline graphopts_t operator+(const graphopts_t& go, unsigned int backgroundcolor
 /// 2D graph
 class DrawGraph: public DrawQWidget
 {
-protected:
-  void  reConstructor(unsigned int samples);
 public:
   enum COLORPOLICY          // IPalette split onto graphs
   { 
@@ -108,14 +106,22 @@ public:
 //    CP_RANGE_GROSS,         // color, gradiented in palette, ignoring portions, nonlinear gradient
     CP_SUBPAINTED           // portions ignored. value point direct onto palette
   };
-  
+protected:
+  graphopts_t             m_graphopts;
+  DrawGraph::COLORPOLICY  m_colorpolicy;
+protected:
+  void  reConstructor(unsigned int samples);
+public:
   DrawGraph(unsigned int samples, unsigned int graphs=1, COLORPOLICY downcolorize=CP_SINGLE, float colorize_start=1.0f, float colorize_stop=0.5f);
   DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, COLORPOLICY downcolorize=CP_SINGLE, float colorize_start=1.0f, float colorize_stop=0.5f);
+  const graphopts_t&      graphOpts() const { return m_graphopts; }
+  COLORPOLICY             colorPolicy() const { return m_colorpolicy; }
 protected:
   virtual unsigned int    portionSize()const{  return m_matrixDimmA; }
   virtual DATADIMMUSAGE   getDataDimmUsage() const { return DDU_1D; }
 public:
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB);
+  virtual unsigned int    colorBack() const;
 };
 
 /// 2D graph with data append

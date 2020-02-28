@@ -56,7 +56,9 @@ SOURCES += main.cpp\
     ../overlays/special/bstestprecision.cpp \
     ../overlays/bscontour.cpp \
     ../palettes/QPaletteBox.cpp \
-    ../overlays/bsimage.cpp
+    ../overlays/bsimage.cpp \
+    ../bsdrawscales.cpp \
+    ../bsdrawempty.cpp
 
 HEADERS  += \
     mainwindow.h \
@@ -92,7 +94,9 @@ HEADERS  += \
     ../palettes/QPaletteBox.h \
     ../overlays/bsimage.h \
     layout/bsqlayout.h \
-    tests.h
+    tests.h \
+    ../bsdrawscales.h \
+    ../bsdrawempty.h
 
 RESOURCES += \
     ../palettes/QPaletteBox.qrc

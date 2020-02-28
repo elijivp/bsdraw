@@ -26,6 +26,7 @@ public:
                 "uniform highp int       domainscount;" );
 
     fmg.goto_func_begin(FshMainGenerator::INITBACK_BYPALETTE, 0, fsp);
+//    fmg.goto_func_begin(FshMainGenerator::INITBACK_BYZERO, 0, fsp);
     {
       fmg.cintvar("allocatedPortions", (int)allocatedPortions);
       const char fsh_bright[] =         "for (int i=0; i<countPortions; i++)"

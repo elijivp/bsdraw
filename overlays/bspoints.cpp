@@ -223,8 +223,8 @@ bool OSelector::overlayReaction(OVL_REACTION oreact, const void* dataptr, bool*)
   if (oreact == OR_LMPRESS)
   {
     m_phase = 1;
-    m_xy = ovlcoords_t((float*)dataptr);
-    m_wh= ovldimms2_t(0.0f, 0.0f);
+    m_xy = ovlcoords_t((const float*)dataptr);
+    m_wh = ovldimms2_t(0.0f, 0.0f);
     m_dimmsready = false;
     result = true;
   }

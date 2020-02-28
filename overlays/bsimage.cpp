@@ -6,10 +6,18 @@
 #include <QApplication>
 #include <QPainter>
 
+#include <QDebug>
 
 /////////////////////////////////////////////////////////
 
-IOverlaySimpleImage::IOverlaySimpleImage(QImage *image, IMAGECONVERT icvt, bool autorotated): m_autorotated(autorotated)
+
+static bool g_bs_detach_image = false;
+
+void bs_detachFutureImages(bool dt){  g_bs_detach_image = dt; }
+
+
+
+IOverlaySimpleImage::IOverlaySimpleImage(QImage *image, IMAGECONVERT icvt, bool autorotated, bool detach): m_autorotated(autorotated)
 {
   m_imageowner=false;
   switch (icvt)
@@ -21,9 +29,13 @@ IOverlaySimpleImage::IOverlaySimpleImage(QImage *image, IMAGECONVERT icvt, bool 
   }
   if (!m_pImage->isNull())
   {
+    if (detach)
+      m_pImage->detach();
+//    qDebug()<<m_pImage->isDetached();
     m_dmti.w = m_pImage->width();
     m_dmti.h = m_pImage->height();
     m_dmti.data = m_pImage->constBits();
+//    qDebug()<<m_pImage->format();
   }
   else
   {
@@ -38,10 +50,16 @@ IOverlaySimpleImage::~IOverlaySimpleImage()
     delete m_pImage;
 }
 
+void IOverlaySimpleImage::reUpdate()
+{
+  IOverlay::updatePublic();
+//  IOverlay::updateParameter(false);
+}
+
 /////////////////////////////////////////////////////////
 
 OImageOriginal::OImageOriginal(QImage* image, IMAGECONVERT icvt, bool autorotated, COORDINATION cn, float x, float y, float mult_w, float mult_h): 
-  IOverlaySimpleImage(image, icvt, autorotated), OVLCoordsDynamic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+  IOverlaySimpleImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsDynamic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
@@ -49,7 +67,7 @@ OImageOriginal::OImageOriginal(QImage* image, IMAGECONVERT icvt, bool autorotate
 }
 
 OImageOriginal::OImageOriginal(QImage *image, IMAGECONVERT icvt, bool autorotated, OVLCoordsStatic *pcoords, float offset_x, float offset_y, float mult_w, float mult_h):
-  IOverlaySimpleImage(image, icvt, autorotated), OVLCoordsDynamic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+  IOverlaySimpleImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsDynamic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
@@ -79,7 +97,7 @@ int OImageOriginal::fshTrace(int overlay, bool rotated, char *to) const
 
 
 OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, bool autorotated, COORDINATION cn, float x, float y, float mult_w, float mult_h):
-  IOverlaySimpleImage(image, icvt, autorotated), OVLCoordsStatic(cn, x, y), OVLDimms2Static(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+  IOverlaySimpleImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsStatic(cn, x, y), OVLDimms2Static(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
@@ -87,7 +105,7 @@ OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, bool autorota
 }
 
 OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, bool autorotated, OVLCoordsStatic *pcoords, float offset_x, float offset_y, float mult_w, float mult_h):
-  IOverlaySimpleImage(image, icvt, autorotated), OVLCoordsStatic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Static(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+  IOverlaySimpleImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsStatic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Static(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;

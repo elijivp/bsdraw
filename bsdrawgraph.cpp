@@ -10,9 +10,9 @@
 
 class DrawGraph_Sheigen: public ISheiGenerator
 {
-  graphopts_t graphopts;
-  float       colorizer[2];
-  DrawGraph::COLORPOLICY dc;
+  graphopts_t             graphopts;
+  float                   colorizer[2];
+  DrawGraph::COLORPOLICY  dc;
 public:
   DrawGraph_Sheigen(const graphopts_t& kgo, float czstart, float czstop, DrawGraph::COLORPOLICY downcolorise): graphopts(kgo), dc(downcolorise)
   {
@@ -26,6 +26,10 @@ public:
     }
   }
   ~DrawGraph_Sheigen();
+public:
+  const graphopts_t&      graphOpts() const { return graphopts; }
+  DrawGraph::COLORPOLICY  colorPolicy() const { return dc; }
+public:
   virtual const char*   shaderName() const {  return "GRAPH"; }
   virtual int           portionMeshType() const{  return PMT_FORCE1D; }
   virtual unsigned int  shvertex_pendingSize() const { return VshMainGenerator1D::pendingSize(); }
@@ -36,8 +40,8 @@ public:
     FshMainGenerator fmg(to, orient, ovlscount, ovlsinfo);
     float opacity = graphopts.opacity > 1.0f? 1.0f : graphopts.opacity < 0.0f? 0.0f : graphopts.opacity;
     fmg.cfloatvar("specopc", 1.0f - opacity);
-    fmg.goto_func_begin(graphopts.backcolor != 0xFFFFFFFF? FshMainGenerator::INITBACK_BYVALUE:
-                                                           FshMainGenerator::INITBACK_BYPALETTE, 
+    fmg.goto_func_begin(graphopts.backcolor != 0xFFFFFFFF? FshMainGenerator::INIT_BYVALUE:
+                                                           FshMainGenerator::INIT_BYPALETTE, 
                         graphopts.backcolor, fsp);
     {
       bool isDots = graphopts.graphtype == GT_DOTS;
@@ -205,10 +209,10 @@ public:
         if (graphopts.graphtype == GT_LINTERP)
           fmg.push( 
                       "float fsig_prev = sign(ffy[0] - ffy[1]);" SHNL
-                      "float fmix_prev = 1.0 - clamp((fcoords_noscaled.y - ffy[1])/(ffy[0]-ffy[1] + fsig_prev*1)/(1.0 + specsmooth), 0.0, 1.0);" SHNL   /// fsig_prev*1 == addit. specsmooth level
-                  
                       "float fsig_next = sign(ffy[2] - ffy[1]);" SHNL
-                      "float fmix_next = 1.0 - clamp((fcoords_noscaled.y - ffy[1])/(ffy[2]-ffy[1] + fsig_next*1)/(1.0 + specsmooth), 0.0, 1.0);" SHNL   /// fsig_prev*2 == addit. specsmooth level
+                      "float ffdist = (fcoords_noscaled.y - ffy[1])/(1.0 + specsmooth);"
+                      "float fmix_prev = 1.0 - clamp(ffdist/(ffy[0]-ffy[1] + fsig_prev*1), 0.0, 1.0);" SHNL   /// fsig_prev*1 == addit. specsmooth level
+                      "float fmix_next = 1.0 - clamp(ffdist/(ffy[2]-ffy[1] + fsig_next*1), 0.0, 1.0);" SHNL   /// fsig_next*2 == addit. specsmooth level
                 
 //                      "float fmix_eq = 1.0 - abs(icoords_noscaled.y - ffy[1])/(3.0*(1.0 + specsmooth));" SHNL
                       "float fmix_eq = 1.0 - abs(fcoords_noscaled.y - ffy[1])/(1.4*(1.0 + specsmooth));" SHNL
@@ -412,9 +416,13 @@ void DrawGraph::reConstructor(unsigned int samples)
 
 /// m_countPortions === graphs
 DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, COLORPOLICY downcolorize, float colorize_start, float colorize_stop):
-  DrawQWidget(new DrawGraph_Sheigen(graphopts_t::goInterp(0.0f, DE_LINTERP), colorize_start, colorize_stop, downcolorize), graphs, OR_LRBT){ reConstructor(samples); }
+  DrawQWidget(new DrawGraph_Sheigen(graphopts_t::goInterp(0.0f, DE_LINTERP), colorize_start, colorize_stop, downcolorize), graphs, OR_LRBT),
+  m_graphopts(graphopts_t::goInterp(0.0f, DE_LINTERP)), m_colorpolicy(downcolorize)
+{ reConstructor(samples); }
 DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, COLORPOLICY downcolorize, float colorize_start, float colorize_stop):
-  DrawQWidget(new DrawGraph_Sheigen(graphopts, colorize_start, colorize_stop, downcolorize), graphs, OR_LRBT){ reConstructor(samples); }
+  DrawQWidget(new DrawGraph_Sheigen(graphopts, colorize_start, colorize_stop, downcolorize), graphs, OR_LRBT), 
+  m_graphopts(graphopts), m_colorpolicy(downcolorize)
+{ reConstructor(samples); }
 
 
 void DrawGraph::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB)
@@ -426,6 +434,11 @@ void DrawGraph::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA
   *matrixDimmB = sizeB / *scalingB;
   if (*matrixDimmB == 0)
     *matrixDimmB = 1;
+}
+
+unsigned int DrawGraph::colorBack() const
+{
+  return m_graphopts.backcolor == 0xFFFFFFFF? DrawQWidget::colorBack() : m_graphopts.backcolor;
 }
 
 ////////////////////////////////////////////////////////////////

@@ -11,10 +11,11 @@
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)4
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)8
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)12
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)14
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)10
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)13
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)16
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)18
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)20
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)19
+#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)24
 #ifndef MW_TEST_NOCHOOSE_DEFAULT
 #include <QInputDialog>
 #endif

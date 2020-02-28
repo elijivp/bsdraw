@@ -396,7 +396,7 @@ void DrawQWidget::paintGL()
 //        palettePrepare(m_ppal, m_ppaldiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_countPortions != 0? m_countPortions : 1);
         palettePrepare(m_ppal, m_ppaldiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_allocatedPortions != 0? m_allocatedPortions : 1);
         if (m_clearbypalette)
-          _colorCvt(m_ppal->firstColor());
+          _colorCvt(m_ppal->first());
       }
       m_ShaderProgram.setUniformValue(loc, HT_PAL);
     }
@@ -714,8 +714,8 @@ QSize DrawQWidget::sizeHint() const
 
 void  DrawQWidget::store_crd_clk(OVL_REACTION oreact, unsigned int x, unsigned int y)
 {
-  unsigned int dimmWidth = sizeScaledWidth();
-  unsigned int dimmHeight = sizeScaledHeight();
+  unsigned int dimmWidth = sizeScaledHorz();
+  unsigned int dimmHeight = sizeScaledVert();
   if (x < m_cttrLeft + dimmWidth && y < m_cttrTop + dimmHeight)
   {
     float dataptr[] = { float(x - m_cttrLeft) / dimmWidth, 1.0f - float(y - m_cttrTop) / dimmHeight };
@@ -790,6 +790,8 @@ void DrawQWidget::connectScrollBar(QScrollBar *qsb, bool staticView, bool setOri
 
 void DrawQWidget::slot_setScalingH(int s){  setScalingLimitsHorz(s, s); }
 void DrawQWidget::slot_setScalingV(int s){  setScalingLimitsVert(s, s); }
+
+void DrawQWidget::slot_setBounds(float low, float high){  setBounds(low, high); }
 void DrawQWidget::slot_setBoundLow(float value){  setBoundLow(value); }
 void DrawQWidget::slot_setBoundHigh(float value){ setBoundHigh(value);  }
 void DrawQWidget::slot_setContrast(float k, float b){ setContrast(contrast_t(k, b));  }

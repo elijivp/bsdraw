@@ -75,7 +75,7 @@ struct  ovlcoords_t
   float x,y;
   ovlcoords_t(){}
   ovlcoords_t(float _x, float _y): x(_x), y(_y){}
-  ovlcoords_t(float xy[]): x(xy[0]), y(xy[1]){}
+  ovlcoords_t(const float xy[]): x(xy[0]), y(xy[1]){}
 };
 
 typedef float ovldimms1_t;
@@ -85,7 +85,7 @@ struct  ovldimms2_t
   float w,h;
   ovldimms2_t(){}
   ovldimms2_t(float _w, float _h): w(_w), h(_h){}
-  ovldimms2_t(float wh[]): w(wh[0]), h(wh[1]){}
+  ovldimms2_t(const float wh[]): w(wh[0]), h(wh[1]){}
 };
 
 struct  ovldimms4_t
@@ -93,7 +93,7 @@ struct  ovldimms4_t
   float l,t,r,b;
   ovldimms4_t(){}
   ovldimms4_t(float _l, float _t, float _r, float _b): l(_l), t(_t), r(_r), b(_b) {}
-  ovldimms4_t(float ltrb[]): l(ltrb[0]), t(ltrb[1]), r(ltrb[2]), b(ltrb[3]){}
+  ovldimms4_t(const float ltrb[]): l(ltrb[0]), t(ltrb[1]), r(ltrb[2]), b(ltrb[3]){}
 };
 
 

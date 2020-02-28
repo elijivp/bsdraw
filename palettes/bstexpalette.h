@@ -17,7 +17,8 @@ public:
     *count = maxCount;
     *format = FMT_UNSIGNED_BYTE;
   }
-  virtual unsigned int  firstColor() const {  return palbuf[0];  }
+  virtual unsigned int  first() const {  return palbuf[0];  }
+  virtual unsigned int  last() const {  return palbuf[maxCount-1];  }
   unsigned int    operator[](int i) const {  return palbuf[i]; }
   unsigned int&   operator[](int i) {  return palbuf[i]; }
   unsigned int    count() const {  return size; }

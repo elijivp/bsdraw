@@ -32,7 +32,14 @@ public:
   FshMainGenerator(char* deststring, ORIENTATION orient, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]);
   unsigned int  written() const { return m_offset; }
 public:
-  enum  { INITBACK_BYZERO, INITBACK_BYVALUE, INITBACK_BYPALETTE };
+  enum  { 
+    INITBACK_BYZERO,
+    INITBACK_BYVALUE,
+    INITBACK_BYPALETTE,
+    INIT_BYZERO,
+    INIT_BYVALUE,
+    INIT_BYPALETTE
+        };
   void  goto_func_begin(int initback, unsigned int backcolor, const DPostmask &fsp); /// initresult: 0-none, 1-by zero, 2-by backcolor
   void  goto_func_end(const DPostmask &fsp);
 public:

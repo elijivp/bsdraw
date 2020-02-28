@@ -72,6 +72,8 @@ private slots:
   void    changePaletteSTD(int palid);
   void    changePaletteADV(int palid);
   void    changePaletteRGB(int palid);
+  void    changePaletteDiscretion(bool);
+  void    changeDataTextureInterpolation(bool);
   void    changeFloats(int edid);
   void    changeSpeedData(int sigid);
   void    changeSpeedData_Once();

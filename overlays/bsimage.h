@@ -14,8 +14,10 @@ public:
                      };
   enum  IMAGEOPTIONS { IO_ORIGINAL, IO_STRETCHED, IO_ORIGINAL_AUTOROTATE, IO_STRETCHED_AUTOROTATE };
 public:
-  IOverlaySimpleImage(QImage* image, IMAGECONVERT icvt, bool autorotated);
+  IOverlaySimpleImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach=false);
   ~IOverlaySimpleImage();
+  QImage*         getImage(){ return m_pImage; }
+  void            reUpdate();
 protected:
   DTYPE           m_dtype;    /// dont forget to register it after coords&dimms!
   dmtype_image_t  m_dmti;
@@ -44,5 +46,7 @@ protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
+
+void  bs_detachFutureImages(bool);
 
 #endif // OIMAGE_H

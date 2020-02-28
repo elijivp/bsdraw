@@ -57,10 +57,9 @@ public:
   void  compileWhenInitializeGL(bool cflag);
   void  connectScrollBar(QScrollBar*, bool staticView=false, bool setOrientation=true);
 public slots:
-//    void update();    /// inherited from QWidget!
-//    void repaint();   /// inherited from QWidget!
   void    slot_setScalingH(int);
   void    slot_setScalingV(int);
+  void    slot_setBounds(float low, float high);
   void    slot_setBoundLow(float);
   void    slot_setBoundHigh(float);
   void    slot_setContrast(float k, float b);

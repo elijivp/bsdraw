@@ -34,7 +34,7 @@ private:
   unsigned int          drawscount;
   float *               randomer;
   unsigned int          active_ovl;
-  int                   ovl_visir, ovl_marks, ovl_figures, ovl_sprites;
+  int                   ovl_visir, ovl_marks, ovl_figures, ovl_snowflake;
   int                   ovl_active_mark;
   bool                  ovl_is_synced;
   enum    ED_DRAW     {  ED_UNKNOWN, ED_LOW, ED_HIGH, ED_CONTRAST, ED_OFFSET, ED_SIGB, ED_SIGK };

@@ -159,7 +159,7 @@ public:           /// TRACES  from inormed
   void  trace_square_cc_end(float fillcoeff=0.0f);
 
   void  trace_circle_cc_begin(const char* radius, const char* border);
-  void  trace_circle_cc_end(float fillcoeff);
+  void  trace_circle_cc_end(float fillcoeff/*, bool notraceinside=false*/);
   
   void  trace_2linehorz_c(const char* size = nullptr, const char* gap = nullptr, const char* offset = nullptr, const char* crosslimit=nullptr);
   void  trace_2linevert_c(const char* size = nullptr, const char* gap = nullptr, const char* offset = nullptr, const char* crosslimit=nullptr);

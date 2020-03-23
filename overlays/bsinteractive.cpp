@@ -37,9 +37,9 @@ int   OActiveCursor::fshTrace(int overlay, bool rotated, char* to) const
   return ocg.written();
 }
 
-bool OActiveCursor::overlayReaction(OVL_REACTION oreact, const void* dataptr, bool*)
+bool OActiveCursor::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
 {
-  if (oreact == OR_LMPRESS || oreact == OR_LMMOVE)
+  if (oreact == ORM_LMPRESS || oreact == ORM_LMMOVE)
   {
     setCoordinates(((const float*)dataptr)[0], ((const float*)dataptr)[1]);
     return true;

@@ -7,17 +7,17 @@
 
 const char*   DrawQWidget::vardesc(SHEIFIELD sf)
 {
-  if (sf == SF_DATA)                return "texData";
+  if (sf == SF_DATA)            return "texData";
 //  if (sf == SF_BOUNDS)              return "bounds";
 //  if (sf == SF_CONTRAST)            return "contrast";
-  if (sf == SF_PALETTE)             return "texPalette";
-  if (sf == SF_DOMAIN)              return "domainarr";
-  if (sf == SF_PORTIONSIZE)         return "domainscount";
-  if (sf == SF_COUNTPORTIONS)       return "countPortions";
-  if (sf == SF_DIMM_A)              return "datadimm_a";
-  if (sf == SF_DIMM_B)              return "datadimm_b";
-  if (sf == SF_CHNL_SCALING_A)    return "scaling_a";
-  if (sf == SF_CHNL_SCALING_B)    return "scaling_b";
+  if (sf == SF_PALETTE)         return "texPalette";
+  if (sf == SF_DOMAIN)          return "texGround";
+  if (sf == SF_PORTIONSIZE)     return "countGround";
+  if (sf == SF_COUNTPORTIONS)   return "countPortions";
+  if (sf == SF_DIMM_A)          return "datadimm_a";
+  if (sf == SF_DIMM_B)          return "datadimm_b";
+  if (sf == SF_CHNL_SCALING_A)  return "scaling_a";
+  if (sf == SF_CHNL_SCALING_B)  return "scaling_b";
   return nullptr;
 }
 
@@ -31,6 +31,8 @@ DrawQWidget::DrawQWidget(ISheiGenerator* pcsh, unsigned int portions, ORIENTATIO
   
   m_portionMeshType = m_pcsh->portionMeshType();  
 //  setMouseTracking(true);
+  
+  setFocusPolicy(Qt::ClickFocus);
 }
 
 DrawQWidget::~DrawQWidget()
@@ -290,7 +292,7 @@ void DrawQWidget::initCollectAndCompileShader()
     } // init ovl
     
     unpend(PC_INIT);
-    m_bitmaskPendingChanges |= (m_dataDomains == nullptr? 0 : PC_DOMAIN) | PC_SIZE | PC_DATA | PC_PARAMS | PC_PARAMSOVL;
+    m_bitmaskPendingChanges |= (m_groundData == nullptr? 0 : PC_GROUND) | PC_SIZE | PC_DATA | PC_PARAMS | PC_PARAMSOVL;
     
   } /// link
   
@@ -309,7 +311,7 @@ void DrawQWidget::initializeGL()
   initializeOpenGLFunctions();
   glGenTextures(1, &m_texAll[HT_MATRIX]); /// matrix
   glGenTextures(1, &m_texAll[HT_PAL]);  /// palette
-  glGenTextures(1, &m_texAll[HT_DMN]);  /// domain
+  glGenTextures(1, &m_texAll[HT_GND]);  /// ground: domain/SDP(specialy destroyed picture)
 
   if (m_compileOnInitializeGL)
     initCollectAndCompileShader();
@@ -395,45 +397,118 @@ void DrawQWidget::paintGL()
       {
 //        palettePrepare(m_ppal, m_ppaldiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_countPortions != 0? m_countPortions : 1);
         palettePrepare(m_ppal, m_ppaldiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_allocatedPortions != 0? m_allocatedPortions : 1);
+//        if (m_clearbypalette)
+//          _colorCvt(m_ppal->first());
         if (m_clearbypalette)
-          _colorCvt(m_ppal->first());
+          _colorCvt(this->colorBack());
       }
       m_ShaderProgram.setUniformValue(loc, HT_PAL);
     }
     
-    if ((loc = m_locations[SF_DOMAIN]) != -1)
+    if ((loc = m_locations[SF_GROUND]) != -1)
     {
-      glActiveTexture(GL_TEXTURE0 + HT_DMN);
-      glBindTexture(GL_TEXTURE_2D, m_texAll[HT_DMN]);
+      glActiveTexture(GL_TEXTURE0 + HT_GND);
+      glBindTexture(GL_TEXTURE_2D, m_texAll[HT_GND]);
       
-      if (havePendOn(PC_DOMAIN))
+      if (havePendOn(PC_GROUND))
       {
-        float* dataDomainsCached=m_dataDomainsFastFree? m_dataDomains : new float[m_matrixDimmA*m_matrixDimmB];
-        for (unsigned int i=0; i<m_matrixDimmA*m_matrixDimmB; i++)
-          dataDomainsCached[i] = m_dataDomains[i] / (m_portionSize+1);
+        switch (m_groundType)
+        {
+        case GND_DOMAIN:
+        {
+          float* groundData = (float*)m_groundData;
+          float* groundDataCached=m_groundDataFastFree? groundData : new float[m_matrixDimmA*m_matrixDimmB];
+          for (unsigned int i=0; i<m_matrixDimmA*m_matrixDimmB; i++)
+            groundDataCached[i] = groundData[i] / (m_portionSize+1);
         
-        glTexImage2D(   GL_TEXTURE_2D, 0, 
+          glTexImage2D(   GL_TEXTURE_2D, 0, 
 #if QT_VERSION >= 0x050000
-                        GL_R32F, 
+                          GL_R32F, 
 #elif QT_VERSION >= 0x040000
-                        GL_RED, 
+                          GL_RED, 
 #endif
-                        m_matrixDimmA, m_matrixDimmB, 0, GL_RED, GL_FLOAT, dataDomainsCached);
-//          glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        
-        delete []dataDomainsCached;
-        if (m_dataDomainsFastFree)
-          m_dataDomains = nullptr;
-      }
-      m_ShaderProgram.setUniformValue(loc, HT_DMN);
-      
+                          m_matrixDimmA, m_matrixDimmB, 0, GL_RED, GL_FLOAT, groundDataCached);
+  //          glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+          
+          delete []groundDataCached;
+          if (m_groundDataFastFree)
+            m_groundData = nullptr;
+          break;
+        }
+        case GND_SDP:
+        { 
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+          
+          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+          
+//          GLint   gl_internalFormat;
+//          GLenum  gl_format;
+//          GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
+//#if QT_VERSION >= 0x050000
+//          glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+//          glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
+//          if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
+//          else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA8;   gl_format = GL_RGBA;   }
+//          else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_ALPHA8;   gl_format = GL_ALPHA;   }
+//#elif QT_VERSION >= 0x040000
+//          if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
+//          else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
+//          else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
+//#endif
+          glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, m_groundDataWidth, m_groundDataHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_groundData);
+          break;
+        }
+        default:  Q_ASSERT(havePendOn(PC_GROUND) && m_groundType != GND_NONE); break;
+        }
+      } // if pend on ground
+      m_ShaderProgram.setUniformValue(loc, HT_GND);
     }
     
-    if (havePendOn(PC_DOMAIN))
+//    if ((loc = m_locations[SF_SDP]) != -1)
+//    {
+//      glActiveTexture(GL_TEXTURE0 + HT_SDP);
+//      glBindTexture(GL_TEXTURE_2D, m_texAll[HT_SDP]);
+      
+//      if (havePendOn(PC_SDP)) 
+//      {NIH! sdp->dd
+//        float* dataDomainsCached=m_groundDataFastFree? m_groundData : new float[m_matrixDimmA*m_matrixDimmB];
+//        for (unsigned int i=0; i<m_matrixDimmA*m_matrixDimmB; i++)
+//          dataDomainsCached[i] = m_groundData[i] / (m_portionSize+1);
+        
+//        glTexImage2D(   GL_TEXTURE_2D, 0, 
+//#if QT_VERSION >= 0x050000
+//                        GL_R32F, 
+//#elif QT_VERSION >= 0x040000
+//                        GL_RED, 
+//#endif
+//                        m_matrixDimmA, m_matrixDimmB, 0, GL_RED, GL_FLOAT, dataDomainsCached);
+////          glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        
+//        delete []dataDomainsCached;
+//        if (m_groundDataFastFree)
+//          m_groundData = nullptr;
+//      }
+//      m_ShaderProgram.setUniformValue(loc, HT_GND);
+      
+//    }
+    
+    if (havePendOn(PC_GROUND))
     {
       if ((loc = m_locations[SF_PORTIONSIZE]) != -1)
       {
@@ -507,18 +582,17 @@ void DrawQWidget::paintGL()
                 if (m_overlays[i].upcount >= 1001)
                 {
                   glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
+//                  glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, GLsizei(psampler->count), 1, 0, GL_RGBA, GL_FLOAT, psampler->data);
                   glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, GLsizei(psampler->count), 1, 0, GL_RGBA, GL_FLOAT, psampler->data);
                   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  //                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);  border = need special color
-  //                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
                   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
                   m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
                 }
                 break;
               }
-              case DT_TEX:  case DT_TEXA: case DT_TEXT:
+              case DT_TEXTURE:
               {
                 if (m_overlays[i].upcount >= 1001)
                 {
@@ -526,40 +600,37 @@ void DrawQWidget::paintGL()
 //                  glBindTexture(GL_TEXTURE_2D, m_textures[ufm.tex_idx]);
                   const dmtype_image_t* pimage = (const dmtype_image_t*)data;
                   
-                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                  glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-                  glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-                  
-                  glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-                  glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-                  glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-                  glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-                  
-                  GLint   gl_internalFormat;
-                  GLenum  gl_format;
-                  GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
-                  
+                  if (pimage->type != dmtype_image_t::NONE)
+                  {
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                    glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+                    glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+                    
+                    glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+                    glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+                    glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+                    glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+                    
+                    GLint   gl_internalFormat;
+                    GLenum  gl_format;
+                    GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
+                    
 #if QT_VERSION >= 0x050000
-                  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-                  glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
-//                  GLint tex_internalFormat = GL_RGB8;       GLenum tex_format = GL_RGB;       GLenum texture_type = GL_UNSIGNED_BYTE;
-//                  GLint texa_internalFormat = GL_RGBA8;     GLenum texa_format = GL_RGBA;
-//                  GLint string_internalFormat = GL_ALPHA8;  GLenum string_format = GL_ALPHA;  GLenum string_type = GL_UNSIGNED_BYTE;
-                  if (ufm.type == DT_TEX)       {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
-                  else if (ufm.type == DT_TEXA) {    gl_internalFormat = GL_RGBA8;   gl_format = GL_RGBA;   }
-                  else if (ufm.type == DT_TEXT) {    gl_internalFormat = GL_ALPHA8;   gl_format = GL_ALPHA;   }
+                    glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+                    glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
+                    if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
+                    else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA8;   gl_format = GL_RGBA;   }
+                    else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_ALPHA8;   gl_format = GL_ALPHA;   }
 #elif QT_VERSION >= 0x040000
-//                  GLint tex_internalFormat = GL_RGB;        GLenum tex_format = GL_RGB;       GLenum texture_type = GL_UNSIGNED_BYTE;
-//                  GLint texa_internalFormat = GL_RGBA;      GLenum texa_format = GL_RGBA;           
-//                  GLint string_internalFormat = GL_RGBA;  GLenum string_format = GL_RGBA;  GLenum string_type = GL_UNSIGNED_BYTE;
-                  if (ufm.type == DT_TEX)       {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
-                  else if (ufm.type == DT_TEXA) {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
-                  else if (ufm.type == DT_TEXT) {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
+                    if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
+                    else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
+                    else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
 #endif
-                  glTexImage2D(  GL_TEXTURE_2D, 0, gl_internalFormat, pimage->w, pimage->h, 0, gl_format, gl_texture_type, pimage->data);
+                    glTexImage2D(  GL_TEXTURE_2D, 0, gl_internalFormat, pimage->w, pimage->h, 0, gl_format, gl_texture_type, pimage->data);
+                  }
                   m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
                 }
                 break;
@@ -712,57 +783,85 @@ QSize DrawQWidget::sizeHint() const
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void  DrawQWidget::store_crd_clk(OVL_REACTION oreact, unsigned int x, unsigned int y)
+void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
 {
-  unsigned int dimmWidth = sizeScaledHorz();
-  unsigned int dimmHeight = sizeScaledVert();
-  if (x < m_cttrLeft + dimmWidth && y < m_cttrTop + dimmHeight)
+  int dimmWidth = sizeScaledHorz();
+  int dimmHeight = sizeScaledVert();
+  if (oreact != ORM_LMPRESS)
   {
-    float dataptr[] = { float(x - m_cttrLeft) / dimmWidth, 1.0f - float(y - m_cttrTop) / dimmHeight };
+    if (x < 0)  x = 0; else if (x >= m_cttrLeft + dimmWidth) x = m_cttrLeft + dimmWidth - 1;
+    if (y < 0)  y = 0; else if (y >= m_cttrTop + dimmHeight) y = m_cttrTop + dimmHeight - 1;
+  }
+  else if (x >= m_cttrLeft + dimmWidth || y >= m_cttrTop + dimmHeight)
+    return;
+
+  float dataptr[] = { float(x - m_cttrLeft) / (dimmWidth-1), 1.0f - float(y - m_cttrTop) / (dimmHeight-1) };
 //    qDebug()<<"Before: "<<dataptr[0]<<dataptr[1];
-    float* (*pfns[])(float*) = {  ccode_rotateLRBT, ccode_rotateRLBT, ccode_rotateLRTB, ccode_rotateRLTB,
-                                  ccode_rotateTBLR, ccode_rotateBTLR, ccode_rotateTBRL, ccode_rotateBTRL
-                               };
-    float* rslt = (*pfns[m_orient])(dataptr);
+  float* (*pfns[])(float*) = {  ccode_rotateLRBT, ccode_rotateRLBT, ccode_rotateLRTB, ccode_rotateRLTB,
+                                ccode_rotateTBLR, ccode_rotateBTLR, ccode_rotateTBRL, ccode_rotateBTRL
+                             };
+  float* rslt = (*pfns[m_orient])(dataptr);
 //    float* rslt = dataptr;
 //    qDebug()<<"Aftere: "<<dataptr[0]<<dataptr[1];
-    
-    bool doStop = false, doUpdate = false;
-    for (int i=int(m_overlaysCount)-1; i>=0; i--)
+  
+  bool doStop = false, doUpdate = false;
+  for (int i=int(m_overlaysCount)-1; i>=0; i--)
+  {
+    if (m_overlays[i].povl->overlayReactionMouse(oreact, rslt, &doStop))
     {
-      if (m_overlays[i].povl->overlayReaction(oreact, rslt, &doStop))
-      {
-        m_overlays[i].upcount++;
-        doUpdate = true;
-      }
-      if (doStop)
-        break;
+      m_overlays[i].upcount++;
+      doUpdate = true;
     }
+    if (doStop)
+      break;
+  }
 //    if (!havePendOn(PC_PARAMSOVL) && doUpdate)
-    if (doUpdate)
-    {
-      m_bitmaskPendingChanges |= PC_PARAMSOVL;
-      if (!autoUpdateBanned(RD_BYOVL_ACTIONS))
-        callWidgetUpdate();
-    }
+  if (doUpdate)
+  {
+    m_bitmaskPendingChanges |= PC_PARAMSOVL;
+    if (!autoUpdateBanned(RD_BYOVL_ACTIONS))
+      callWidgetUpdate();
   }
 }
 
 void DrawQWidget::mousePressEvent(QMouseEvent *event)
 {
-  if (event->button() == Qt::LeftButton)  store_crd_clk(OR_LMPRESS, event->pos().x(), event->pos().y());
+  if (event->button() == Qt::LeftButton)  store_crd_clk(ORM_LMPRESS, event->pos().x(), event->pos().y());
 }
 
 void DrawQWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-  if (event->button() == Qt::LeftButton)  store_crd_clk(OR_LMRELEASE, event->pos().x(), event->pos().y());
+  if (event->button() == Qt::LeftButton)  store_crd_clk(ORM_LMRELEASE, event->pos().x(), event->pos().y());
 }
 
 void DrawQWidget::mouseMoveEvent(QMouseEvent *event)
 {
-  if (event->buttons() & Qt::LeftButton)  store_crd_clk(OR_LMMOVE, event->pos().x(), event->pos().y());
-//  store_crd_clk(OR_LMMOVE, event->pos().x(), event->pos().y());
-//  setMouseTracking(tru!!);
+  if (event->buttons() & Qt::LeftButton)  store_crd_clk(ORM_LMMOVE, event->pos().x(), event->pos().y());
+//  store_crd_clk(ORM_LMMOVE, event->pos().x(), event->pos().y());
+  //  setMouseTracking(tru!!);
+}
+
+void DrawQWidget::keyPressEvent(QKeyEvent* event)
+{
+  bool doStop = false, doUpdate = false;
+  int modifiers = int(event->modifiers()) >> 24;
+  for (int i=int(m_overlaysCount)-1; i>=0; i--)
+  {
+    if (m_overlays[i].povl->overlayReactionKey(event->key(), modifiers, &doStop))
+    {
+      m_overlays[i].upcount++;
+      doUpdate = true;
+    }
+    if (doStop)
+      break;
+  }
+  if (doUpdate)
+  {
+    m_bitmaskPendingChanges |= PC_PARAMSOVL;
+    if (!autoUpdateBanned(RD_BYOVL_ACTIONS))
+      callWidgetUpdate();
+  }
+  QWidget::keyPressEvent(event);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -24,7 +24,7 @@ public:
   ODropPoints(unsigned int ptlimit, COORDINATION featcn, float radius, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
-  virtual bool  overlayReaction(OVL_REACTION, const void *, bool *doStop);
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void *, bool *doStop);
 };
 
 class DropsBase_: public IOverlayTraced, public OVLCoordsStatic, public OVLDimmsOff
@@ -45,7 +45,7 @@ class ODropLine: public DropsBase_
 public:
   ODropLine(unsigned int maxpoints, bool lastFollowsMouse=true, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual bool  overlayReaction(OVL_REACTION, const void *, bool *doStop);
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void *, bool *doStop);
 };
 
 class OBrush: public DropsBase_
@@ -53,7 +53,7 @@ class OBrush: public DropsBase_
 public:
   OBrush(unsigned int memoryPoints, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual bool  overlayReaction(OVL_REACTION, const void *, bool *doStop);
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void *, bool *doStop);
 };
 
 class OSelector: public IOverlayTraced, public OVLCoordsDimmsLinked
@@ -61,11 +61,27 @@ class OSelector: public IOverlayTraced, public OVLCoordsDimmsLinked
 protected:
   float     m_alpha;
   int       m_phase;
+  bool      m_move;
+  ovlcoords_t m_dxy;
 public:
   OSelector(const linestyle_t& kls, float alpha=0.0f);
+  void    setMoveMode(bool mvm){  m_move = mvm; }
+  bool    moveMode() const { return m_move; }
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
-  virtual bool  overlayReaction(OVL_REACTION, const void *, bool *doStop);
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void *, bool *doStop);
+};
+
+class OSelectorCircular: public IOverlayTraced, public OVLCoordsDimmsLinked
+{
+protected:
+  float     m_alpha;
+  int       m_phase;
+public:
+  OSelectorCircular(const linestyle_t& kls, float alpha=0.0f);
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void *, bool *doStop);
 };
 
 #endif // POINTS_H

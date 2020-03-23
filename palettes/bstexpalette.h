@@ -48,6 +48,23 @@ public:
 };
 
 
+template<int maxCount>
+class PaletteBORDS: public PaletteSTD<maxCount>
+{
+public:
+  PaletteBORDS(unsigned int clr1){ for (int i=0; i<maxCount; i++)  PaletteSTD<maxCount>::palbuf[i] = clr1; }
+#define PCD_CAST(clr, brd)  b1 = b2; b2 = int(brd*maxCount);  if (b2 > b1){ if (b2 > maxCount) b2 = maxCount; for (int i=b1; i<b2; i++)  PaletteSTD<maxCount>::palbuf[i] = clr; if (b2 == maxCount) return; }
+#define PCD_LAST(clr)       b1 = b2; b2 = maxCount;                                                           for (int i=b1; i<b2; i++)  PaletteSTD<maxCount>::palbuf[i] = clr;
+  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3)
+    {   int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_LAST(clr3); }
+  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, unsigned int clr4)
+    {   int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_LAST(clr4); }
+  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, unsigned int clr4, float brd4, unsigned int clr5)
+    {   int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_LAST(clr5); }
+  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6)
+    {   int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); PCD_LAST(clr6); }
+};
+
 /* QT_VERSION >= x050000 usage:
  *    
  * 

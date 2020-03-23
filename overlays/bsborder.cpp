@@ -1,7 +1,7 @@
 #include "bsborder.h"
 #include "../core/sheigen/bsshgentrace.h"
 
-bool  AbstractBorder::overlayReaction(OVL_REACTION, const void *dataptr, bool* doStop)
+bool  AbstractBorder::overlayReactionMouse(OVL_REACTION_MOUSE, const void *dataptr, bool* doStop)
 {
   if (m_banclicks)
     *doStop = clickBanned(((const float*)dataptr)[0], ((const float*)dataptr)[1]);
@@ -68,7 +68,7 @@ int OToons::fshTrace(int overlay, bool rotated, char *to) const
 //  return false;
 //}
 
-bool OToons::overlayReaction(OVL_REACTION, const void*, bool*)
+bool OToons::overlayReactionMouse(OVL_REACTION_MOUSE, const void*, bool*)
 {
 //  if (m_banclicks)
 //  {

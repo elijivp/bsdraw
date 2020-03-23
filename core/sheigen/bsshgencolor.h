@@ -13,12 +13,12 @@ private:
 
   int                                 m_paramsctr;
 public:
-  FshColorGenerator(int overlay, char *deststring);
+  FshColorGenerator(int overlay, char *deststring, int ovlctr=0);
   unsigned int  written() const { return m_offset; }
 public:
-  enum  CGV { CGV_COLORED, CGV_TRACED, CGV_TRACETEXTURE, CGV_EMPTY };
+  enum  CGV { CGV_COLORED, CGV_TRACED, CGV_TEXTURED, CGV_EMPTY };
   void  goto_func_begin(CGV cgv);
-private:
+public:
   
 public:
   void  mixwell_by_alpha(float alpha);

@@ -9,7 +9,7 @@ class AbstractBorder: virtual public IOverlay
 public:
   AbstractBorder(bool banclicks): m_banclicks(banclicks){}
 protected:
-  virtual bool  overlayReaction(OVL_REACTION, const void *dataptr, bool* doStop);
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void *dataptr, bool* doStop);
   virtual bool  clickBanned(float x, float y) const =0;
 };
 
@@ -32,7 +32,7 @@ public:
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 //  virtual bool  clickBanned(float x, float y) const;
-  virtual bool  overlayReaction(OVL_REACTION, const void *dataptr, bool* doStop);
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void *dataptr, bool* doStop);
 };
 
 #endif // BSBORDER_H

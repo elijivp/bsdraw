@@ -12,8 +12,9 @@
 #include "bsdrawdomain.h"
 #include "bsdrawgraph.h"
 #include "bsdrawrecorder.h"
-#include "bsdrawempty.h"
 #include "bsdrawscales.h"
+#include "specdraws/bsdrawempty.h"
+#include "specdraws/bsdrawsdpicture.h"
 
 #include "overlays/bsinteractive.h"
 #include "overlays/bsgrid.h"
@@ -23,6 +24,7 @@
 #include "overlays/bsfigures.h"
 #include "overlays/bssprites.h"
 #include "overlays/special/bsmarks.h"
+#include "overlays/special/bssnowflake.h"
 #include "overlays/bsborder.h"
 #include "overlays/bscontour.h"
 #include "overlays/bsimage.h"
@@ -73,6 +75,7 @@ static const char* img_path_sprite =  "../example/snowflakewhite.png";
 static const char* img_path_normal = "../example/image2.jpg";  /// 800x600
 //static const char* img_path_normal = "../example/mikey.jpg";  /// 1920x816
 //static const char* img_path_normal = "../example/image3.jpg";  /// 200x150
+static const char* img_path_sdp = "../example/template.png";  /// 700x800
 
 /// if uncomment: data generation will be more in 5 times. setData called with decimation algo
 //#define DECIMATION window_min
@@ -97,7 +100,7 @@ const IPalette* const ppalettes_std[] = {  &paletteBkWh, &paletteBkGyGyGyWh, &pa
 const IPalette* const ppalettes_rgb[] = {  &paletteRG, &paletteRB, &paletteRGB, &paletteBGR };
 
 MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent), 
-  MW_TEST(testnumber), randomer(nullptr), active_ovl(0), ovl_visir(-1), ovl_marks(-1), ovl_figures(-1), ovl_sprites(-1), ovl_active_mark(9), ovl_is_synced(true), sigtype(ST_PEAK3), sig_k(1), sig_b(0)
+  MW_TEST(testnumber), randomer(nullptr), active_ovl(0), ovl_visir(-1), ovl_marks(-1), ovl_figures(-1), ovl_snowflake(-1), ovl_active_mark(9), ovl_is_synced(true), sigtype(ST_PEAK3), sig_k(1), sig_b(0)
 {  
   int syncscaling=0;
   drawscount = 0;
@@ -382,14 +385,14 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
       {
-        graphopts_t  gopts(gts[i],  DE_NONE,
+        graphopts_t  gopts = {      gts[i],  DE_NONE,
                                     i == 0? c == dccount-1? 0.4f : 0.3f : 0.0f,
                                     c == 1? 0xFFFFFFFF : 0x00999999,
                                     i != 2? 0 : 2, 
                                     0.5f,
                                     i < 2? 0.25f : 0.0f,
                                     PR_STANDARD
-                           );
+                           };
         draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gopts, dclr[c]);
       }
   
@@ -406,14 +409,14 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
       {
-        graphopts_t  gopts(gts[i],  DE_NONE,
+        graphopts_t  gopts = {      gts[i],  DE_NONE,
                                     i == 0? c == dccount-1? 0.4f : 0.3f : 0.0f,
                                     c == 1? 0xFFFFFFFF : 0x00999999, 
                                     i != 2? 0 : 2,
                                     0.5f,
                                     0.0f,
                                     PR_STANDARD
-                           );
+                              };
         draws[c*drcount + i] = new DrawGraphMoveEx(SAMPLES, 5, SAMPLES*2, PORTIONS, gopts, dclr[c]);
       }
 
@@ -473,6 +476,25 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     sp = SP_SLOWEST;
     sigtype = ST_GEN_NORM;    
   }
+  else if (MW_TEST == DRAW_SDPICTURE)
+  {
+    SAMPLES = 500;
+    MAXLINES = 700;
+    PORTIONS = 1;
+    PRECREATE(1, 1);
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+      draws[i] = new DrawSDPicture(SAMPLES, MAXLINES, img_path_sdp /*"/home/elijah/Projects/schema/schemod.png"*/);
+      draws[i]->setRawResizeModeNoScaled(true);
+    }
+//    draws[2]->setPostMask(DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOTCONTOUR, 0, 0.0f, 0.0f));
+    sigtype = ST_MANYSIN;
+    sp = SP_FAST;
+//    sigtype = ST_ZOO;
+//    sp = SP_ONCE;
+//    defaultPalette = &paletteSemaphoreWRYG;
+    defaultPalette = &palette_idl_rainbow;
+  }
   else if (MW_TEST == FEATURE_PORTIONS)
   {
     SAMPLES = 400;
@@ -480,7 +502,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 3;
     PRECREATE(3, 1);
     
-    graphopts_t  gopts(GT_LINTERP, DE_LINTERP, 0.0f, 0xFFFFFFFF, 0, 0.0f, 0.2f, PR_STANDARD);
+    graphopts_t  gopts = { GT_LINTERP, DE_LINTERP, 0.0f, 0xFFFFFFFF, 0, 0.0f, 0.2f, PR_STANDARD };
     draws[0] = new DrawGraph(SAMPLES, PORTIONS, gopts, DrawGraph::CP_SINGLE, 0.332f, 1.0f);
     draws[0]->setScalingLimitsHorz(4,4);
     
@@ -506,7 +528,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                            0.2f,  0.3f,  0.4f,
                            0.6f,  0.8f,  1.0f
                          };
-    graphopts_t  gopts(GT_LINTERP, DE_NONE, 0.0f, 0xFFFFFFFF, 0, 0.0f, 0.5f, PR_STANDARD);
+    graphopts_t  gopts = { GT_LINTERP, DE_NONE, 0.0f, 0xFFFFFFFF, 0, 0.0f, 0.5f, PR_STANDARD };
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
       {
@@ -780,6 +802,94 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //    draws[2]->setPostMask(DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOTCONTOUR, 0, 0.0f, 0.0f));
     sigtype = ST_10;
   }
+  else if (MW_TEST == PALETTE_TESTER)
+  {
+//    SAMPLES = 100;
+//    MAXLINES = 300;
+//    PORTIONS = 1;
+//    PRECREATE(1, 1);
+////    draws[0] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
+//    draws[0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram());
+//    draws[0]->setScalingLimitsHorz(5);
+//    sigtype = ST_RAMP;
+//    sp = SP_ONCE;
+    
+//    draws[0]->setDataPaletteDiscretion(true);
+    
+//#if false
+//    static const int clc = 33;
+//    static unsigned int colors[clc];
+//    int dm = clc/3;
+//    for (int i=0; i<dm; i++)
+//    {
+//      unsigned int up = (unsigned int)((i/float(dm-1))*255);
+//      colors[dm*0 + i] = up << 8;
+//      colors[dm*1 + i] = up << 8 | up << 0;
+//      colors[dm*2 + i] = up << 0;
+//    }
+//#elif false
+//    static const int clc = 24;
+//    static unsigned int colors[clc];
+//    int dm = clc/4;
+//    for (int i=0; i<dm; i++)
+//    {
+//      colors[dm*0 + i] = 0xFFFFFF;
+//      colors[dm*1 + i] = 0xFF << 0;
+//      colors[dm*2 + i] = 0xFF << 8 | 0xFF << 0;
+//      colors[dm*3 + i] = 0xFF << 8;
+//    }
+//#else
+//    static const int clc = 96;
+//    static unsigned int colors[clc];
+//    int dm = clc/4;
+//    for (int i=0; i<dm; i++)
+//    {
+//      unsigned int up = (unsigned int)(((i)/float(dm-1))*255);
+//      unsigned int gnd = up << 16 | up << 8 | up;
+//      colors[dm*0 + i] = gnd;
+//      colors[dm*1 + i] = 0xFF << 0 | gnd;
+//      colors[dm*2 + i] = 0xFF << 8 | 0xFF << 0 | gnd;
+//      colors[dm*3 + i] = 0xFF << 8 | gnd;
+//    }
+//#endif
+//    static PalettePTR pptr(colors, clc, false);
+    
+//    qDebug()<<"const unsigned int colorsSemaphore [] = { ";
+//    QString result="  ";
+//    for (int i=0; i<clc; i++)
+//    {
+//      result += QString().sprintf(i == clc-1? "0x%08x" : "0x%08x,", pptr[i]);
+//      if ((i+1) % 10 == 0)
+//      {
+//        qDebug()<<result.toStdString().c_str();
+//        result = "  ";
+//      }
+//    }
+//    qDebug()<<result.toStdString().c_str();
+//    qDebug()<<"};";
+//    qDebug()<<"const PaletteConstFWD<sizeof(colorsSemaphore) / sizeof(unsigned int)>   paletteSemaphore(colorsSemaphore);";
+//    qDebug()<<"const PaletteConstBWD<sizeof(colorsSemaphore) / sizeof(unsigned int)>   paletteSemaphore_inv(colorsSemaphore);";
+    
+//    defaultPalette = &pptr;
+    
+    SAMPLES = 1000;
+    MAXLINES = 200;
+    PORTIONS = 1;
+    PRECREATE(1, 1);
+    DrawGraph::COLORPOLICY cps[] = { /*DrawGraph::CP_SINGLE, DrawGraph::CP_OWNRANGE, DrawGraph::CP_OWNRANGE_GROSS, 
+                                     DrawGraph::CP_OWNRANGE_SYMMETRIC, */DrawGraph::CP_RANGE, DrawGraph::CP_SUBPAINTED };
+    for (int i=0; i < 1; i++)
+    {
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(0.0f, DE_NONE, 0x00000000), cps[i], 1.0f, 0.0f);
+//      draws[i]->setScalingLimitsHorz(5);
+      draws[i]->setDataPaletteDiscretion(true);
+    }
+    sigtype = ST_RAMP;
+    sp = SP_ONCE;
+    
+    static PaletteBORDS<100> pptr(0x000000ff, 0.15f, 0x0000ff00, 0.85f, 0x000000ff);
+    defaultPalette = &pptr;
+  }
   
 //  else if (MW_TEST == PROGRESS_BAR)   /// progress
 //  {
@@ -836,33 +946,40 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //      draws[i]->setClearByPalette();
       if (MW_TEST == LET_IT_SNOW)
       {
-        IOverlaySimpleImage* oimg = new OImageStretched(new QImage(img_path_mikey), IOverlaySimpleImage::IC_BLOCKALPHA, false);
+        IOverlay* oimg = new OImageStretched(new QImage(img_path_mikey), OVLQImage::IC_BLOCKALPHA, false);
         oimg->setSlice(0.35);
         oimg->setOpacity(0.1);
         draws[i]->ovlPushBack(oimg);
-        ovl_sprites = draws[i]->ovlPushBack(new OSprites(new QImage(img_path_sprite), OSprites::IC_AUTO, SAMPLES/4/*500*/, 0.2f));
+        ovl_snowflake = draws[i]->ovlPushBack(new OSnowflake(new QImage(img_path_sprite), OSnowflake::IC_AUTO, SAMPLES/4/*500*/, 0.2f));
         draws[i]->ovlPushBack(new OTextTraced("Press Me", CR_RELATIVE, 0.5f, 0.1f, 12, OO_INHERITED, true));
       }
       else if (MW_TEST == DRAW_BRIGHT && i == 0)
       {
-        IOverlaySimpleImage* oimg = new OImageStretched(new QImage(img_path_normal), IOverlaySimpleImage::IC_BLOCKALPHA, false);
+        IOverlay* oimg = new OImageStretched(new QImage(img_path_normal), OVLQImage::IC_BLOCKALPHA, false);
         oimg->setSlice(0.35);
         oimg->setOpacity(0.15);
         draws[i]->ovlPushBack(oimg);
       }
       else if (MW_TEST == VOCAB)
       {
-        IOverlaySimpleImage* oimg = new OImageStretched(new QImage(img_path_normal), IOverlaySimpleImage::IC_ASIS, false);
+        IOverlay* oimg = new OImageStretched(new QImage(img_path_normal), OVLQImage::IC_ASIS, false);
         oimg->setSlice(0.35);
         oimg->setOpacity(0.15);
         draws[i]->ovlPushBack(oimg);
+        
+//        OSprites* sprites = new OSprites(new QImage(img_path_sprite), OSprites::IC_AUTO, 1.0f, 20, OSprites::CR_OPACITY, OSprites::CB_CENTER);
+        OSprites* sprites = new OSprites(new QImage(img_path_sprite), OSprites::IC_AUTO, 1.0f, 20, ppalettes_adv[3], false);
+        sprites->setActiveCount(5);
+        for (unsigned int i=0; i<sprites->count(); i++)
+          sprites->setKPDC(i, 0.1 + i*0.2f, 0.5f, i == 1? 0.5f : 0.2f, /*i == 1? 0.0f : 0.2f*/0.1*i);
+        draws[i]->ovlPushBack(sprites);
       }
     }
     if (MW_TEST == DEMO_3_overlays)
       for (unsigned int i=0; i<drawscount; i++)
       {
         QImage  img(img_path_normal);
-        IOverlay* ovl = new OImageStretched(&img, IOverlaySimpleImage::IC_AUTO, false);
+        IOverlay* ovl = new OImageStretched(&img, OVLQImage::IC_AUTO, false);
         ovl->setSlice(i != 1? 0.25f : 0.0f);
         draws[i]->ovlPushBack(ovl);
         draws[i]->ovlPushBack(new OGridRegular(OGridRegular::REGULAR_HORZ, CR_RELATIVE, 0.05, 0.05, linestyle_greydark(5,1,0),-1));
@@ -2283,11 +2400,11 @@ void MainWindow::generateData()
     }
   }
   
-  if (ovl_sprites != -1)
+  if (ovl_snowflake != -1)
   {
     for (unsigned int i=0; i<drawscount; i++)
     {
-      OSprites* pSprites = (OSprites*)draws[i]->ovlGet(ovl_sprites);
+      OSnowflake* pSprites = (OSnowflake*)draws[i]->ovlGet(ovl_snowflake);
       if (pSprites)
         pSprites->update();
     }
@@ -2875,20 +2992,20 @@ void MainWindow::createOverlaySTD(int id)
         else
           draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_visir));
         QImage img(img_path_sprite);
-        draws[i]->ovlPushBack(new OImageOriginal(&img, IOverlaySimpleImage::IC_AUTO, false, CR_PIXEL, -24, 0, 0.2f, 0.2f), ovl_visir);
+        draws[i]->ovlPushBack(new OImageOriginal(&img, OVLQImage::IC_AUTO, false, CR_PIXEL, -24, 0, 0.2f, 0.2f), ovl_visir);
       }
       break;
     }
     case COS_FOREGROUND:
     {
       QImage  img(img_path_normal);
-      draws[i]->ovlPushBack(new OImageStretched(&img, IOverlaySimpleImage::IC_BLOCKALPHA, false));
+      draws[i]->ovlPushBack(new OImageStretched(&img, OVLQImage::IC_BLOCKALPHA, false));
       break;
     }
     case COS_BACKGROUND:
     {
       QImage  img(img_path_normal);
-      IOverlay* ovl = new OImageOriginal(&img, IOverlaySimpleImage::IC_AUTO, false, CR_RELATIVE, 0.0f, 0.0f);
+      IOverlay* ovl = new OImageOriginal(&img, OVLQImage::IC_AUTO, false, CR_RELATIVE, 0.0f, 0.0f);
       ovl->setSlice(0.0f);
       draws[i]->ovlPushBack(ovl);
       break;

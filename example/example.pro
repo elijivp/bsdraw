@@ -58,7 +58,9 @@ SOURCES += main.cpp\
     ../palettes/QPaletteBox.cpp \
     ../overlays/bsimage.cpp \
     ../bsdrawscales.cpp \
-    ../bsdrawempty.cpp
+    ../specdraws/bsdrawempty.cpp \
+    ../overlays/special/bssnowflake.cpp \
+    ../specdraws/bsdrawsdpicture.cpp
 
 HEADERS  += \
     mainwindow.h \
@@ -96,7 +98,9 @@ HEADERS  += \
     layout/bsqlayout.h \
     tests.h \
     ../bsdrawscales.h \
-    ../bsdrawempty.h
+    ../specdraws/bsdrawempty.h \
+    ../overlays/special/bssnowflake.h \
+    ../specdraws/bsdrawsdpicture.h
 
 RESOURCES += \
     ../palettes/QPaletteBox.qrc

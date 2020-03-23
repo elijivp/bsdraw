@@ -89,12 +89,12 @@ enum  DTYPE { /// Trace/simple shader datatypes
               DT_ARR,   DT_ARR2,  DT_ARR3, DT_ARR4, 
               DT_ARRI, DT_ARRI2, DT_ARRI3, DT_ARRI4, 
               DT_SAMP4, DT_1I, DT_2I, DT_3I, DT_4I,
-              DT_TEX, DT_TEXA, DT_TEXT, 
+              DT_TEXTURE,
               
               /// special Color shader datatypes (Hard)
               DT__HC_SPECIAL_TYPES=100, DT__HC_PALETTE };
 
-inline bool dtIsTexture(DTYPE dtype) { return dtype == DT_SAMP4 || dtype == DT_TEX || dtype == DT_TEXA || dtype == DT_TEXT || dtype == DT__HC_PALETTE; }
+inline bool dtIsTexture(DTYPE dtype) { return dtype == DT_SAMP4 || dtype == DT_TEXTURE || dtype == DT__HC_PALETTE; }
 
 struct dmtype_t
 {
@@ -116,6 +116,8 @@ struct dmtype_arr_t
 
 struct dmtype_image_t
 {
+  enum  { NONE, RGB, RGBA, FASTALPHA };
+  int           type;
   unsigned int  w, h;
   const void*   data;
 };
@@ -252,15 +254,18 @@ inline linestyle_t    linestyle_dots(float red, float green, float blue, OUTSIDE
 inline linestyle_t    linestyle_strdot(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(4, 2, 1, red,green,blue, ols); }
 inline linestyle_t    linestyle_strdotdot(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(4, 2, 2, red,green,blue, ols); }
 
-inline linestyle_t&   linestyle_update(linestyle_t* ls, float red, float green, float blue){ ls->r = red; ls->g = green; ls->b = blue; return *ls; }
-inline linestyle_t    linestyle_update(linestyle_t ls, float red, float green, float blue){ ls.r = red; ls.g = green; ls.b = blue; return ls; }
+inline linestyle_t&   linestyle_update(linestyle_t* ls, float red, float green, float blue){ ls->r = red; ls->g = green; ls->b = blue; ls->inversive = -1; return *ls; }
+inline linestyle_t    linestyle_update(linestyle_t ls, float red, float green, float blue){ ls.r = red; ls.g = green; ls.b = blue; ls.inversive = -1; return ls; }
+inline linestyle_t    linestyle_update(linestyle_t ls, unsigned int clr){   ls.b = ((clr >> 16) & 0xFF)/255.0f;    ls.g = ((clr >> 8) & 0xFF)/255.0f; ls.r = ((clr) & 0xFF)/255.0f; ls.inversive = -1; return ls; }
+inline linestyle_t    linestyle_update_inverse(linestyle_t ls, int inv){   ls.r = ls.g = ls.b = 0; ls.inversive = inv; return ls; }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-enum  OVL_REACTION { OR_LMPRESS, OR_LMMOVE, OR_LMRELEASE };
+enum  OVL_REACTION_MOUSE { ORM_LMPRESS, ORM_LMMOVE, ORM_LMRELEASE };
+enum  OVL_MODIFIER_KEYBOARD {  OMK_NONE=0, OMK_SHIFT=2, OMK_CONTROL=4, OMK_ALT=8 };
 
 class IOverlay: virtual public AbstractOverlay
 {
@@ -338,7 +343,8 @@ protected:    /// EXTERNAL interface
   friend class DrawQWidget;
   virtual int   fshTrace(int overlay, bool rotated, char* to) const =0;
   virtual int   fshColor(int overlay, char* to) const =0;
-  virtual bool  overlayReaction(OVL_REACTION, const void*, bool*){  return false; }
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void*, bool* /*doStop*/){  return false; }
+  virtual bool  overlayReactionKey(int /*key*/, int /*modifiersOMK*/, bool* /*doStop*/){  return false; }
 protected:
 //  virtual void  overlayAttaching(unsigned int /*ctr*/){}
 };

@@ -37,12 +37,12 @@ int OTestPrecision::fshTrace(int overlay, bool rotated, char *to) const
 
 
 /*
-bool OTestPrecision::overlayReaction(OVL_REACTION oreact, const void*, bool* doStop)
+bool OTestPrecision::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void*, bool* doStop)
 {
   if (m_blockstate != 0)
   {
     *doStop = true;
-    if (oreact == OR_LMRELEASE)
+    if (oreact == ORM_LMRELEASE)
     {
       m_blockstate = 0;
       return true;

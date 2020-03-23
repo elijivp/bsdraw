@@ -136,11 +136,12 @@ DrawDomain::DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsig
   deployMemory(total*portions);
   m_portionSize = 1;
   
-  m_dataDomains = new float[total];
-  memset(m_dataDomains, 0, total*sizeof(float));
-  m_dataDomainsFastFree = !holdmemorytilltheend;
+  m_groundType = GND_DOMAIN;
+  m_groundData = new float[total];
+  memset(m_groundData, 0, total*sizeof(float));
+  m_groundDataFastFree = !holdmemorytilltheend;
   
-  m_domain._init(m_matrixDimmA, m_matrixDimmB, isBckgrndDomain, &m_portionSize, m_dataDomains);
+  m_domain._init(m_matrixDimmA, m_matrixDimmB, isBckgrndDomain, &m_portionSize, (float*)m_groundData);
 }
 
 DrawDomain::DrawDomain(const DIDomain &cpy, unsigned int portions, ORIENTATION orient, bool holdmemorytilltheend): 
@@ -151,28 +152,29 @@ DrawDomain::DrawDomain(const DIDomain &cpy, unsigned int portions, ORIENTATION o
   unsigned int total = m_matrixDimmA*m_matrixDimmB;
   deployMemory(total*portions);
   
-  m_dataDomains = new float[total];
-  memcpy(m_dataDomains, cpy.m_dataptr, total*sizeof(float));
+  m_groundType = GND_DOMAIN;
+  m_groundData = new float[total];
+  memcpy(m_groundData, cpy.m_dataptr, total*sizeof(float));
   m_portionSize = *cpy.m_count;
-  m_dataDomainsFastFree = !holdmemorytilltheend;
+  m_groundDataFastFree = !holdmemorytilltheend;
  
-  m_domain._init(m_matrixDimmA, m_matrixDimmB, cpy.isBackgroundDomain(), &m_portionSize, m_dataDomains);
+  m_domain._init(m_matrixDimmA, m_matrixDimmB, cpy.isBackgroundDomain(), &m_portionSize, (float*)m_groundData);
 }
 
 DrawDomain::~DrawDomain()
 {
-  if (m_dataDomains != nullptr)
-    delete []m_dataDomains;
+  if (m_groundData != nullptr)
+    delete [](float*)m_groundData;
 }
 
 DIDomain *DrawDomain::domain()
 {
-  return m_dataDomains == NULL? 0 : &m_domain;  
+  return m_groundData == NULL? 0 : &m_domain;  
 }
 
 const DIDomain *DrawDomain::domain() const
 {
-  return m_dataDomains == NULL? 0 : &m_domain;  
+  return m_groundData == NULL? 0 : &m_domain;  
 }
 
 unsigned int DrawDomain::domainsCount() const

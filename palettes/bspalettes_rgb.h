@@ -44,5 +44,75 @@ const unsigned int colorsRB[] = {
 const PaletteConstFWD<sizeof(colorsRB) / sizeof(unsigned int)>   paletteRB(colorsRB);
 const PaletteConstBWD<sizeof(colorsRB) / sizeof(unsigned int)>   paletteRB_inv(colorsRB);
 
+///////////////////////////////////////// SEMAPHORES  /////////////////////////////////////////////////////////////
+
+const unsigned int colorsSemaphoreRYGgrad [] = { 
+  0x00000000,0x00001900,0x00003300,0x00004c00,0x00006600,0x00007f00,0x00009900,0x0000b200,0x0000cc00,0x0000e500,
+  0x0000ff00,0x00000000,0x00001919,0x00003333,0x00004c4c,0x00006666,0x00007f7f,0x00009999,0x0000b2b2,0x0000cccc,
+  0x0000e5e5,0x0000ffff,0x00000000,0x00000019,0x00000033,0x0000004c,0x00000066,0x0000007f,0x00000099,0x000000b2,
+  0x000000cc,0x000000e5,0x000000ff
+};
+const PaletteConstFWD<sizeof(colorsSemaphoreRYGgrad) / sizeof(unsigned int)>   paletteSemaphoreRYGgrad(colorsSemaphoreRYGgrad);
+const PaletteConstBWD<sizeof(colorsSemaphoreRYGgrad) / sizeof(unsigned int)>   paletteSemaphoreRYGgrad_inv(colorsSemaphoreRYGgrad);
+
+const unsigned int colorsSemaphoreRYG [] = { 
+  0x0000ff00,0x0000ff00,0x0000ff00,0x0000ff00,0x0000ffff,0x0000ffff,0x0000ffff,0x0000ffff,0x000000ff,0x000000ff,0x000000ff,0x000000ff
+};
+const PaletteConstFWD<sizeof(colorsSemaphoreRYG) / sizeof(unsigned int)>   palette(colorsSemaphoreRYG);
+const PaletteConstBWD<sizeof(colorsSemaphoreRYG) / sizeof(unsigned int)>   palette_inv(colorsSemaphoreRYG);
+
+const unsigned int colorsSemaphoreRG [] = { 
+  0x000000ff,0x000000ff,0x000000ff,0x0000ff00,0x0000ff00,0x0000ff00
+};
+const PaletteConstFWD<sizeof(colorsSemaphoreRG) / sizeof(unsigned int)>   paletteSemaphoreRG(colorsSemaphoreRG);
+const PaletteConstBWD<sizeof(colorsSemaphoreRG) / sizeof(unsigned int)>   paletteSemaphoreRG_inv(colorsSemaphoreRG);
+
+
+const unsigned int colorsSemaphoreGRYG [] = { 
+  0x00999999,0x00999999,0x00999999,0x00999999,0x00999999,0x00999999,0x000000ff,0x000000ff,0x000000ff,0x000000ff,
+  0x000000ff,0x000000ff,0x0000ffff,0x0000ffff,0x0000ffff,0x0000ffff,0x0000ffff,0x0000ffff,0x0000ff00,0x0000ff00,
+  0x0000ff00,0x0000ff00,0x0000ff00,0x0000ff00
+};
+const PaletteConstFWD<sizeof(colorsSemaphoreGRYG) / sizeof(unsigned int)>   paletteSemaphoreGRYG(colorsSemaphoreGRYG);
+const PaletteConstBWD<sizeof(colorsSemaphoreGRYG) / sizeof(unsigned int)>   paletteSemaphoreGRYG_inv(colorsSemaphoreGRYG);
+
+const unsigned int colorsSemaphoreGRYGsimple [] = { 
+  0x00999999,0x000000ff,0x0000ffff,0x0000ff00
+};
+const PaletteConstFWD<sizeof(colorsSemaphoreGRYGsimple) / sizeof(unsigned int)>   paletteSemaphoreGRYGsimple(colorsSemaphoreGRYGsimple);
+const PaletteConstBWD<sizeof(colorsSemaphoreGRYGsimple) / sizeof(unsigned int)>   paletteSemaphoreGRYGsimple_inv(colorsSemaphoreGRYGsimple);
+
+const unsigned int colorsSemaphoreBRYG [] = { 
+  0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x000000ff,0x000000ff,0x000000ff,0x000000ff,
+  0x000000ff,0x000000ff,0x0000ffff,0x0000ffff,0x0000ffff,0x0000ffff,0x0000ffff,0x0000ffff,0x0000ff00,0x0000ff00,
+  0x0000ff00,0x0000ff00,0x0000ff00,0x0000ff00
+};
+const PaletteConstFWD<sizeof(colorsSemaphoreBRYG) / sizeof(unsigned int)>   paletteSemaphoreBRYG(colorsSemaphoreBRYG);
+const PaletteConstBWD<sizeof(colorsSemaphoreBRYG) / sizeof(unsigned int)>   paletteSemaphoreBRYG_inv(colorsSemaphoreBRYG);
+
+const unsigned int colorsSemaphoreWRYG [] = { 
+  0x00ffffff,0x00ffffff,0x00ffffff,0x00ffffff,0x00ffffff,0x00ffffff,0x000000ff,0x000000ff,0x000000ff,0x000000ff,
+  0x000000ff,0x000000ff,0x0000ffff,0x0000ffff,0x0000ffff,0x0000ffff,0x0000ffff,0x0000ffff,0x0000ff00,0x0000ff00,
+  0x0000ff00,0x0000ff00,0x0000ff00,0x0000ff00
+};
+const PaletteConstFWD<sizeof(colorsSemaphoreWRYG) / sizeof(unsigned int)>   paletteSemaphoreWRYG(colorsSemaphoreWRYG);
+const PaletteConstBWD<sizeof(colorsSemaphoreWRYG) / sizeof(unsigned int)>   paletteWRYG_inv(colorsSemaphoreWRYG);
+
+
+const unsigned int colorsSemaphoreWRYGgrad [] = { 
+  0x00000000,0x000b0b0b,0x00161616,0x00212121,0x002c2c2c,0x00373737,0x00424242,0x004d4d4d,0x00585858,0x00636363,
+  0x006e6e6e,0x00797979,0x00858585,0x00909090,0x009b9b9b,0x00a6a6a6,0x00b1b1b1,0x00bcbcbc,0x00c7c7c7,0x00d2d2d2,
+  0x00dddddd,0x00e8e8e8,0x00f3f3f3,0x00ffffff,0x000000ff,0x000b0bff,0x001616ff,0x002121ff,0x002c2cff,0x003737ff,
+  0x004242ff,0x004d4dff,0x005858ff,0x006363ff,0x006e6eff,0x007979ff,0x008585ff,0x009090ff,0x009b9bff,0x00a6a6ff,
+  0x00b1b1ff,0x00bcbcff,0x00c7c7ff,0x00d2d2ff,0x00ddddff,0x00e8e8ff,0x00f3f3ff,0x00ffffff,0x0000ffff,0x000bffff,
+  0x0016ffff,0x0021ffff,0x002cffff,0x0037ffff,0x0042ffff,0x004dffff,0x0058ffff,0x0063ffff,0x006effff,0x0079ffff,
+  0x0085ffff,0x0090ffff,0x009bffff,0x00a6ffff,0x00b1ffff,0x00bcffff,0x00c7ffff,0x00d2ffff,0x00ddffff,0x00e8ffff,
+  0x00f3ffff,0x00ffffff,0x0000ff00,0x000bff0b,0x0016ff16,0x0021ff21,0x002cff2c,0x0037ff37,0x0042ff42,0x004dff4d,
+  0x0058ff58,0x0063ff63,0x006eff6e,0x0079ff79,0x0085ff85,0x0090ff90,0x009bff9b,0x00a6ffa6,0x00b1ffb1,0x00bcffbc,
+  0x00c7ffc7,0x00d2ffd2,0x00ddffdd,0x00e8ffe8,0x00f3fff3,0x00ffffff
+};
+const PaletteConstFWD<sizeof(colorsSemaphoreWRYGgrad) / sizeof(unsigned int)>   paletteSemaphoreWRYGgrad(colorsSemaphoreWRYGgrad);
+const PaletteConstBWD<sizeof(colorsSemaphoreWRYGgrad) / sizeof(unsigned int)>   paletteSemaphoreWRYGgrad_inv(colorsSemaphoreWRYGgrad);
+
 #endif // PALETTE_RGB_H
 

@@ -2,9 +2,10 @@
 #define OIMAGE_H
 
 #include "../core/bsoverlay.h"
-
 class QImage;
-class IOverlaySimpleImage: public IOverlaySimple
+
+
+class OVLQImage
 {
 public:
   enum  IMAGECONVERT { IC_AUTO,       /// creates new image and converts to ARGB 32bit (with image->convertToFormat(QImage::Format_ARGB32))
@@ -14,18 +15,32 @@ public:
                      };
   enum  IMAGEOPTIONS { IO_ORIGINAL, IO_STRETCHED, IO_ORIGINAL_AUTOROTATE, IO_STRETCHED_AUTOROTATE };
 public:
-  IOverlaySimpleImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach=false);
-  ~IOverlaySimpleImage();
+  OVLQImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach=false);
+  ~OVLQImage();
   QImage*         getImage(){ return m_pImage; }
-  void            reUpdate();
+  const QImage*   getImage() const { return m_pImage; }
+  bool            assignImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach);
+  void            banAlphaChannel(bool ban);
+  bool            isAlphaBanned() const;
 protected:
-  DTYPE           m_dtype;    /// dont forget to register it after coords&dimms!
-  dmtype_image_t  m_dmti;
+  dmtype_image_t  m_dmti;         /// dont forget to register it after coords&dimms!
   QImage*         m_pImage;
   bool            m_autorotated;
   bool            m_imageowner;
+  bool            m_banalpha;
 };
 /////////////////
+
+class IOverlaySimpleImage: public IOverlaySimple, public OVLQImage
+{
+public:
+  IOverlaySimpleImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach=false): 
+    OVLQImage(image, icvt, autorotated, detach){}
+  
+  void  reUpdate();
+  bool  setImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach);
+};
+
 
 class OImageOriginal: public IOverlaySimpleImage, public OVLCoordsDynamic, public OVLDimms2Dynamic
 {
@@ -47,6 +62,6 @@ protected:
 };
 
 
-void  bs_detachFutureImages(bool);
+void  bs_detachFutureImagesInConstructors(bool);
 
 #endif // OIMAGE_H

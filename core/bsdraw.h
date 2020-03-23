@@ -70,8 +70,11 @@ protected:
   float                 m_clearcolor[3];
   bool                  m_clearbypalette;
 protected:
-  float*                m_dataDomains;
-  bool                  m_dataDomainsFastFree;
+  enum  GROUNDTYPE      { GND_NONE, GND_DOMAIN, GND_SDP };
+  GROUNDTYPE            m_groundType;
+  void*                 m_groundData;
+  unsigned int          m_groundDataWidth, m_groundDataHeight;
+  bool                  m_groundDataFastFree;
 protected:
   int                   m_bitmaskUpdateBan;
   int                   m_bitmaskPendingChanges;
@@ -85,7 +88,7 @@ public:
   bool                  autoUpdateBanned(REDRAWBY rdb) const {  return ((1 << (int)rdb) & m_bitmaskUpdateBan) != 0;  }
 protected:
   /// inner. Pending changes bitmask
-  enum                  PCBM  { PC_INIT=1, PC_SIZE=2, PC_DOMAIN=4, PC_DATA=8, PC_PALETTE=16, PC_PARAMS=32, PC_PARAMSOVL=128  };
+  enum                  PCBM  { PC_INIT=1, PC_SIZE=2, PC_GROUND=4, PC_DATA=8, PC_PALETTE=16, PC_PARAMS=64, PC_PARAMSOVL=128  };
   bool                  havePendOn(PCBM bit) const {  return (m_bitmaskPendingChanges & bit) != 0; }
   bool                  havePending() const {  return m_bitmaskPendingChanges != 0; } 
   void                  unpend(PCBM bit) {  m_bitmaskPendingChanges &= ~bit; }
@@ -145,14 +148,14 @@ public:
                                                         m_scalingAMin(1), m_scalingAMax(0),
                                                         m_scalingBMin(1), m_scalingBMax(0), m_scalingIsSynced(false),
                                                         m_ppal(nullptr), m_ppaldiscretise(false), m_clearbypalette(true), 
-                                                        m_dataDomains(nullptr), m_dataDomainsFastFree(true),
+                                                        m_groundType(GND_NONE), m_groundData(nullptr), m_groundDataFastFree(true),
                                                         m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
                                                         m_postMask(DPostmask::PO_OFF, DPostmask::PM_CONTOUR, 0, 0.0f, 0.0f, 0.0f),
                                                         m_overlaysCount(0)
   {
     _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);
   }
-  ~DrawCore(){ _ovlRemoveAll(); if (m_matrixData) delete []m_matrixData; if (m_matrixDataCached)  delete []m_matrixDataCached; }
+  virtual ~DrawCore(){ _ovlRemoveAll(); if (m_matrixData) delete []m_matrixData; if (m_matrixDataCached)  delete []m_matrixDataCached; }
 protected:
   void    deployMemory()
   {
@@ -169,6 +172,7 @@ public:
                     /// Access methods
   unsigned int          allocatedPortions() const { return m_allocatedPortions; }
   unsigned int          countPortions() const { return m_countPortions; }
+  unsigned int          portionSize() const { return m_portionSize; }
   
   void                  setBounds(const bounds_t& d){ m_bounds = d; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
   void                  setBounds(float LL, float HL){ setBounds(bounds_t(LL, HL)); }

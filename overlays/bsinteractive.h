@@ -18,7 +18,7 @@ public:
   OActiveCursor(bool linkToScaledCenter=false);
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
-  virtual bool  overlayReaction(OVL_REACTION, const void *dataptr, bool*);
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void *dataptr, bool*);
   bool  m_linked;
 };
 

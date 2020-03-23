@@ -26,7 +26,7 @@ class DrawQWidget: public QOpenGLWidget, protected QOpenGLFunctions, public Draw
 {
   Q_OBJECT
   enum  SHEIFIELD  {  SF_DATA, SF_PALETTE, 
-                      SF_DOMAIN, SF_PORTIONSIZE, 
+                      SF_DOMAIN, SF_GROUND=SF_DOMAIN, SF_PORTIONSIZE, 
                       SF_COUNTPORTIONS, SF_DIMM_A, SF_DIMM_B, SF_CHNL_SCALING_A, SF_CHNL_SCALING_B,
   //                    SF_BOUNDS,
   //                    SF_CONTRAST,
@@ -49,7 +49,7 @@ protected:
 protected:
   unsigned int            m_texAll[96];
   unsigned int            m_texOvlCount;
-  enum  { HT_MATRIX=0, HT_PAL, HT_DMN, HT_OVERLAYSSTART };
+  enum  { HT_MATRIX=0, HT_PAL, HT_GND, HT_OVERLAYSSTART };
 public:
   DrawQWidget(ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient);
   ~DrawQWidget();
@@ -96,8 +96,10 @@ protected:
   virtual void mouseReleaseEvent(QMouseEvent *event);
   virtual void mouseMoveEvent(QMouseEvent *event);
 //  virtual void resizeEvent(QResizeEvent *event);
+  
+  virtual void keyPressEvent(QKeyEvent *event);
 private:
-  void  store_crd_clk(OVL_REACTION oreact, unsigned int x, unsigned int y);
+  void  store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y);
   const char*   vardesc(SHEIFIELD);
 protected slots:
   virtual void  slideLmHeight(int);

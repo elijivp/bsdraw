@@ -357,7 +357,7 @@ public:
                   "}" SHNL);
       }
       
-      if (isHistogram)
+      if (isHistogram && dc != DrawGraph::CP_RANGE)
         fmg.push("VALCLR = clamp(fcoords_noscaled.y/VALCLR, 0.0, 1.0);" SHNL);
       else
         fmg.push("VALCLR = VALCLR/fbounds_noscaled.y;" SHNL);

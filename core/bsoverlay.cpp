@@ -26,7 +26,7 @@ int IOverlayTraced::fshColor(int overlay, char* to) const
 int IOverlayHard::fshColor(int overlay, char* to) const
 {
   FshColorGenerator ocg(overlay, to);
-  ocg.goto_func_begin(FshColorGenerator::CGV_TRACETEXTURE);
+  ocg.goto_func_begin(FshColorGenerator::CGV_TEXTURED);
   {
     ocg.mixwell_by_traced(m_linestyle);
   }

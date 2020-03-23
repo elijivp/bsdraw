@@ -61,9 +61,9 @@ int ODropPoints::fshTrace(int overlay, bool rotated, char *to) const
   return ocg.written();
 }
 
-bool ODropPoints::overlayReaction(OVL_REACTION oreact, const void* dataptr, bool*)
+bool ODropPoints::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
 {
-  if (oreact == OR_LMPRESS || oreact == OR_LMMOVE)
+  if (oreact == ORM_LMPRESS || oreact == ORM_LMMOVE)
   {
     int placeTo = ptCount;
     if (ptCount == ptCountMax)
@@ -123,17 +123,17 @@ ODropLine::ODropLine(unsigned int maxpoints, bool lastFollowsMouse, const linest
 {
 }
 
-bool ODropLine::overlayReaction(OVL_REACTION oreact, const void* dataptr, bool*)
+bool ODropLine::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
 {
   bool result = false;
-  if (oreact == OR_LMPRESS)
+  if (oreact == ORM_LMPRESS)
   {
     if (ptCount == ptCountMax)
       ptCount--;
     ptdrops[ptCount++] = ovlcoords_t(((float*)dataptr)[0], ((float*)dataptr)[1]);
     result = true;
   }
-  else if (oreact == OR_LMMOVE && followMoving)
+  else if (oreact == ORM_LMMOVE && followMoving)
   {
     if (ptCount == 1 && followMoving)
       ptdrops[ptCount++] = ovlcoords_t(((float*)dataptr)[0], ((float*)dataptr)[1]);
@@ -144,7 +144,7 @@ bool ODropLine::overlayReaction(OVL_REACTION oreact, const void* dataptr, bool*)
     }
     result = true;
   }
-  else if (oreact == OR_LMRELEASE)
+  else if (oreact == ORM_LMRELEASE)
   {
     m_coords = ovlcoords_t(0.0f, 0.0f);
     for (unsigned int i=0; i<ptCount; i++)
@@ -165,9 +165,9 @@ OBrush::OBrush(unsigned int memoryPoints, const linestyle_t& kls): DropsBase_(me
 {
 }
 
-bool OBrush::overlayReaction(OVL_REACTION oreact, const void* dataptr, bool*)
+bool OBrush::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
 {
-  if (oreact == OR_LMPRESS || oreact == OR_LMMOVE)
+  if (oreact == ORM_LMPRESS || oreact == ORM_LMMOVE)
   {
     if (ptCount == ptCountMax)
       return false;
@@ -176,7 +176,7 @@ bool OBrush::overlayReaction(OVL_REACTION oreact, const void* dataptr, bool*)
     ptdrops[ptCount++] = ovlcoords_t(((float*)dataptr)[0], ((float*)dataptr)[1]);
     return true;
   }
-  else if (oreact == OR_LMRELEASE)
+  else if (oreact == ORM_LMRELEASE)
   {
     
   }
@@ -187,20 +187,11 @@ bool OBrush::overlayReaction(OVL_REACTION oreact, const void* dataptr, bool*)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 OSelector::OSelector(const linestyle_t &kls, float alpha): IOverlayTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f),
-  m_alpha(alpha), m_phase(-1)
+  m_alpha(alpha), m_phase(-1), m_move(false)
 {
   if (alpha > 0.0f)
     m_linestyle.outside = OLS_OPACITY_LINEAR;
 }
-
-//bool OSelector::getRectangle(float *start_x, float *start_y, float *end_x, float *end_y)
-//{
-//  *start_x = m_coords.x;
-//  *start_y = m_coords.y;
-//  *end_x = m_sides.w;
-//  *end_y = m_sides.h;
-//  return m_phase == 0;
-//}
 
 int OSelector::fshTrace(int overlay, bool rotated, char *to) const
 {
@@ -217,10 +208,95 @@ int OSelector::fshTrace(int overlay, bool rotated, char *to) const
   return ocg.written();
 }
 
-bool OSelector::overlayReaction(OVL_REACTION oreact, const void* dataptr, bool*)
+bool OSelector::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
 {
   bool result = false;
-  if (oreact == OR_LMPRESS)
+  
+  if (m_move == true)
+  {
+    if (m_dimmsready)
+    {
+      ovlcoords_t clk((const float*)dataptr);
+      if (oreact == ORM_LMPRESS)
+      {
+        if (inrect(clk))
+        {
+          m_dxy = clk;
+          return true;
+        }
+      }
+      else if (oreact == ORM_LMMOVE)
+      {
+        m_xy.x += clk.x - m_dxy.x;
+        m_xy.y += clk.y - m_dxy.y;
+        m_dxy = clk;
+        result = true;
+      }
+    }
+  }
+  
+  if (result == false)
+  {
+    if (oreact == ORM_LMPRESS)
+    {
+      m_phase = 1;
+      m_xy = ovlcoords_t((const float*)dataptr);
+      m_wh = ovldimms2_t(0.0f, 0.0f);
+      m_dimmsready = false;
+      result = true;
+    }
+    else
+    {
+      if (m_phase == 1)
+      {
+        ovlcoords_t pdt((const float*)dataptr);
+        m_wh.w = pdt.x - m_xy.x;  //if (m_wh[0] < 0) m_wh[0] = -m_wh[0];
+        m_wh.h = pdt.y - m_xy.y;  //if (m_wh[1] < 0) m_wh[1] = -m_wh[1];
+        result = true;
+      }
+      if (oreact == ORM_LMRELEASE)
+      {
+        m_phase = 0;
+        m_dimmsready = true;
+      }
+    }
+  }
+  
+  if (result)
+    overlayUpdateParameter();
+  return result;
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+OSelectorCircular::OSelectorCircular(const linestyle_t &kls, float alpha): IOverlayTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f),
+  m_alpha(alpha), m_phase(-1)
+{
+  if (alpha > 0.0f)
+    m_linestyle.outside = OLS_OPACITY_LINEAR;
+}
+
+int OSelectorCircular::fshTrace(int overlay, bool rotated, char *to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    {
+      ocg.goto_normed();      
+      ocg.trace_circle_cc_begin("idimms2.x", "2");
+      ocg.trace_circle_cc_end(m_alpha);
+    }
+  }
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
+
+bool OSelectorCircular::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
+{
+  bool result = false;
+  if (oreact == ORM_LMPRESS)
   {
     m_phase = 1;
     m_xy = ovlcoords_t((const float*)dataptr);
@@ -228,20 +304,20 @@ bool OSelector::overlayReaction(OVL_REACTION oreact, const void* dataptr, bool*)
     m_dimmsready = false;
     result = true;
   }
-  else if (oreact == OR_LMMOVE)
+  else
   {
     if (m_phase == 1)
     {
       ovlcoords_t pdt((float*)dataptr);
-      m_wh.w = pdt.x - m_xy.x;  //if (m_wh[0] < 0) m_wh[0] = -m_wh[0];
-      m_wh.h = pdt.y - m_xy.y;  //if (m_wh[1] < 0) m_wh[1] = -m_wh[1];
+      m_wh.w = pdt.x - m_xy.x;  if (m_wh.w < 0) m_wh.w = -m_wh.w;
+      m_wh.h = pdt.y - m_xy.y;  if (m_wh.h < 0) m_wh.h = -m_wh.h;
       result = true;
     }
-  }
-  else if (oreact == OR_LMRELEASE)
-  {
-    m_phase = 0;
-    m_dimmsready = true;
+    if (oreact == ORM_LMRELEASE)
+    {
+      m_phase = 0;
+      m_dimmsready = true;
+    }
   }
   if (result)
     overlayUpdateParameter();

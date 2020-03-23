@@ -1,37 +1,49 @@
 #include "bssprites.h"
 #include "../core/sheigen/bsshgentrace.h"
+#include "../core/sheigen/bsshgencolor.h"
 
 #include <qmath.h>
 #include <memory.h>
 
-OSprites::OSprites(QImage *image, IMAGECONVERT icvt, unsigned int count, float sizemultiplier): IOverlaySimpleImage(image, icvt, false), m_count(count), m_sm(sizemultiplier)
+#include <QDebug>
+
+OSprites::OSprites(QImage *image, IMAGECONVERT icvt, float sizemultiplier, unsigned int count, COLOR_SPRITE cr, CENTER_BY cb): 
+  OVLQImage(image, icvt, false), 
+  m_sm(sizemultiplier), m_countmax(count), m_cb(cb), m_cr(cr), m_countactive(0)
 {
   const unsigned int v4 = 4;
-  float* rnd = new float[m_count*v4];
-  for (unsigned int i=0; i<m_count*v4; i++)
-    rnd[i] = qrand()/float(RAND_MAX);
+  kpdc_t*   kpdc = new kpdc_t[m_countmax*v4];
   
-  m_randomer.count = m_count;
-  m_randomer.data = rnd;
-  appendUniform(DT_SAMP4, &m_randomer);
+  m_kpdc.count = m_countmax;
+  m_kpdc.data = (float*)kpdc;
+  appendUniform(DT_SAMP4, &m_kpdc);
+  appendUniform(DT_1I, &m_countactive);
+  appendUniform(DT_TEXTURE, &m_dmti);
+}
+
+OSprites::OSprites(QImage* image, OVLQImage::IMAGECONVERT icvt, float sizemultiplier, unsigned int count, const IPalette* ipal, bool discrete, CENTER_BY cb):
+  OVLQImage(image, icvt, false), 
+  m_sm(sizemultiplier), m_countmax(count), m_cb(cb), m_cr(-1), m_countactive(0)
+{
+  const unsigned int v4 = 4;
+  kpdc_t*   kpdc = new kpdc_t[m_countmax*v4];
   
+  m_kpdc.count = m_countmax;
+  m_kpdc.data = (float*)kpdc;
+  appendUniform(DT_SAMP4, &m_kpdc);
+  appendUniform(DT_1I, &m_countactive);
+  appendUniform(DT_TEXTURE, &m_dmti);
   
-  m_counter = 0;
-  appendUniform(DT_1I, &m_counter);
-  memset(m_click, 0, sizeof(m_click));
-  appendUniform(DT_4F, m_click);
-  appendUniform(m_dtype, &m_dmti);
+  m_dm_palette.ppal = ipal;
+  m_dm_palette.discrete = discrete;
+  appendUniform(DT__HC_PALETTE, &m_dm_palette);
+  
+//  qDebug()<<uniforms().count;
 }
 
 OSprites::~OSprites()
 {
-  delete [](float*)m_randomer.data;
-}
-
-void OSprites::update()
-{
-  m_counter++;
-  updateParameter(false);
+  delete [](kpdc_t*)m_kpdc.data;
 }
 
 int OSprites::fshTrace(int overlay, bool rotated, char *to) const
@@ -39,55 +51,129 @@ int OSprites::fshTrace(int overlay, bool rotated, char *to) const
   FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_RANDOM);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
-    ocg.var_const_fixed("spritescount", (int)m_count);
+    ocg.var_const_fixed("countmax", (int)m_countmax);
     ocg.var_fixed("base_size", (int)(m_dmti.w*m_sm), (int)(m_dmti.h*m_sm));
-//    ocg.param_pass();
-    int texrandomer = ocg.param_push();
-    ocg.param_alias("counter");
-    ocg.param_alias("moveto");
-    ocg.push("vec4 randomer;");
-    
-    ocg.push("for (int i=0; i<spritescount; i++)"
+    int texkpdc = ocg.param_push();
+    ocg.param_alias("countactive");
+    ocg.push("vec4 kpdc;");
+    ocg.push("for (int i=0; i<countactive; i++)"
              "{");
     { 
-      /// randomer[0] = size => velocity => ampliture
-      /// randomer[1] & randomer[2] = just start x,y position
-      ocg.push( "randomer = texture(");  ocg.param_mem(texrandomer); ocg.push(", vec2(float(i)/float(spritescount), 0.0)).rgba;");
-      ocg.push( "ivec2 rect_size = ivec2(base_size*(mix(0.3 + randomer[0]*0.4, 1.0, step(0.99, randomer[0]))));"
-                "_insvar.xy = vec2(cos(counter*(0.3 + 1.0/(0.3+randomer[0]))/(2.0*3.1415))*5*((randomer[0] - 1.0)*0.5 + 0.6)*(2.0*mod(i, 2) - 1.0), counter*(randomer[0]*2.0 + 1.2));"
-                "_insvar.x = randomer[1]*ibounds.x + _insvar.x;"
-                "_insvar.y = mod((1.0-randomer[2])*ibounds.y - _insvar.y, ibounds.y + rect_size.y);"
-                
-                "_insvar.x = _insvar.x + (1.0-step(moveto[3], 0.0))*(counter - moveto[2])*(distance(vec2(moveto.x, 1.0 - moveto.y), vec2(_insvar.xy/ibounds)))*(1.0 - 2.0*step(moveto.x, _insvar.x/ibounds.x))*(randomer[0]*1.5+1.0);"
-                
-                "ivec2 inormed = icoords - ivec2(_insvar.x, ibounds.y - _insvar.y);"
-                "_densvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1.0-step(rect_size.x, float(inormed.x)))*(1.0-step(rect_size.y, float(inormed.y)));"
-                "vec2  tcoords = inormed/vec2(rect_size.x-1, rect_size.y-1);");
+      ocg.push( "kpdc = texture(");  ocg.param_mem(texkpdc); ocg.push(", vec2(float(i)/float(countmax-1), 0.0)).rgba;");
+      ocg.push( "ivec2 rect_size = ivec2(base_size*vec2(kpdc[2], kpdc[2]));" );
       
-      ocg.push("vec4 pixel = texture(");  ocg.param_get(); ocg.push(", vec2(tcoords.x, 1.0 - tcoords.y));");
-      ocg.push("result = mix(result, pixel.rgb, _densvar*pixel.a);"
-               "mixwell = max(mixwell, _densvar*pixel.a);");
+      {   /// zoom
+        if (m_cb == CB_CENTER)
+          ocg.push("ivec2 inormed = icoords - ivec2(kpdc[0]*ibounds.x, kpdc[1]*ibounds.y) + rect_size/2;");
+        else
+          ocg.push("ivec2 inormed = icoords - ivec2(kpdc[0]*ibounds.x, kpdc[1]*ibounds.y);");
+      }
+      
+      ocg.push( "_densvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1.0-step(rect_size.x, float(inormed.x)))*(1.0-step(rect_size.y, float(inormed.y)));"
+                "vec2  tcoords = inormed/vec2(rect_size.x-1, rect_size.y-1);");
+      ocg.push("vec4 pixel = texture(");  ocg.param_get(); ocg.push(", vec2(tcoords.x, tcoords.y));");
+      
+      
+      {   /// color
+        if (m_cr == -1)
+        {
+          ocg.push("result = mix(result, vec3(kpdc[3], 0.0, 0.0), _densvar*pixel.a);"
+                   "mixwell = max(mixwell, _densvar*pixel.a);");
+        }
+        else
+        {
+          if (m_cr == CR_OPACITY)
+            ocg.push("_densvar = _densvar * (1.0 - kpdc[3]);");
+          else if (m_cr == CR_DISABLE)
+            ocg.push("pixel.rgb = mix(pixel.rgb, vec3(0.2,0.2,0.2), kpdc[3]);");
+          
+          ocg.push("result = mix(result, pixel.rgb, _densvar*pixel.a);"
+                   "mixwell = max(mixwell, _densvar*pixel.a);");
+        }
+      }
     }
     ocg.push("}");
   }
   ocg.goto_func_end(false);
+//  qDebug()<<to;
+//  Q_ASSERT(false);
   return ocg.written();
 }
 
-bool OSprites::overlayReaction(OVL_REACTION oreact, const void* dataptr, bool*)
+int OSprites::fshColor(int overlay, char* to) const
 {
-  if (oreact == OR_LMPRESS)
+  FshColorGenerator ocg(overlay, to, 3);
+  if (m_cr == -1)
   {
-    m_click[0] = ((const float*)dataptr)[0];
-    m_click[1] = ((const float*)dataptr)[1];
-    m_click[2] = float(m_counter);
-    m_click[3] = 1.0f;
-    return true;
+    ocg.goto_func_begin(FshColorGenerator::CGV_TEXTURED);
+//    ocg.push("mixwell = trace[0];");
   }
-  if (oreact == OR_LMRELEASE)
-  {
-    m_click[3] = 0.0f;
-    return true;
-  }
+  else
+    ocg.goto_func_begin(FshColorGenerator::CGV_COLORED);
+  ocg.goto_func_end();
+//  qDebug()<<to;
+//  Q_ASSERT(false);
+  return ocg.written();
+}
+
+bool OSprites::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
+{
+//  if (oreact == ORM_LMPRESS)
+//  {
+//    m_click[0] = ((const float*)dataptr)[0];
+//    m_click[1] = ((const float*)dataptr)[1];
+//    m_click[2] = float(m_counter);
+//    m_click[3] = 1.0f;
+//    return true;
+//  }
+//  if (oreact == ORM_LMRELEASE)
+//  {
+//    m_click[3] = 0.0f;
+//    return true;
+//  }
   return false;
+}
+
+void OSprites::setPalette(const IPalette* ipal, bool discrete)
+{
+  m_dm_palette.ppal = ipal;
+  m_dm_palette.discrete = discrete;
+  IOverlay::overlayUpdateParameter(true); 
+}
+
+void  OSprites::setKPDC(unsigned int idx, float x, float y){ ((kpdc_t*)m_kpdc.data)[idx].x = x; ((kpdc_t*)m_kpdc.data)[idx].y = y; }
+void  OSprites::setKPDCZoom(unsigned int idx, float zoom){ ((kpdc_t*)m_kpdc.data)[idx].zoom = zoom; }
+void  OSprites::setKPDCColor(unsigned int idx, float color){ ((kpdc_t*)m_kpdc.data)[idx].color = color; }
+void OSprites::setKPDCZoomColor(unsigned int idx, float zoom, float color){ ((kpdc_t*)m_kpdc.data)[idx].zoom = zoom; ((kpdc_t*)m_kpdc.data)[idx].color = color; }
+void  OSprites::setKPDC(unsigned int idx, float x, float y, float color){ ((kpdc_t*)m_kpdc.data)[idx].x = x; ((kpdc_t*)m_kpdc.data)[idx].y = y; ((kpdc_t*)m_kpdc.data)[idx].color = color; }
+void  OSprites::setKPDC(unsigned int idx, float x, float y, float zoom, float color)
+{
+  ((kpdc_t*)m_kpdc.data)[idx].x = x;
+  ((kpdc_t*)m_kpdc.data)[idx].y = y;
+  ((kpdc_t*)m_kpdc.data)[idx].zoom = zoom;
+  ((kpdc_t*)m_kpdc.data)[idx].color = color;
+}
+
+
+void OSprites::updateKPDC()
+{
+  IOverlay::overlayUpdateParameter(true);
+//  updatePublic();
+}
+
+const kpdc_t& OSprites::at(int idx) const
+{
+  return ((const kpdc_t*)m_kpdc.data)[idx];
+}
+
+void OSprites::setActiveCount(unsigned int count)
+{
+  if (count <= m_countmax)
+  {
+    if (count != m_countactive)
+    {
+      m_countactive = count;
+//      IOverlay::overlayUpdateParameter();
+    }
+  }
 }

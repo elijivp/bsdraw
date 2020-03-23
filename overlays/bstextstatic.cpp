@@ -15,7 +15,7 @@
 OITextStatic::OITextStatic(IOverlay* ovllink, const char* text, unsigned int fontSize, OVL_ORIENTATION orient): 
   m_ovllink(ovllink), m_pImage(nullptr), m_orient(orient)
 {
-  m_ovllink.appendUniform(DT_TEXT, &dmti);
+  m_ovllink.appendUniform(DT_TEXTURE, &dmti);
   
   QFont f1(QApplication::font());
   f1.setPointSize(fontSize);
@@ -25,14 +25,14 @@ OITextStatic::OITextStatic(IOverlay* ovllink, const char* text, unsigned int fon
 OITextStatic::OITextStatic(IOverlay* ovllink, const char* text, const QFont& font, OVL_ORIENTATION orient): 
   m_ovllink(ovllink), m_pImage(nullptr), m_orient(orient)
 {
-  m_ovllink.appendUniform(DT_TEXT, &dmti);
+  m_ovllink.appendUniform(DT_TEXTURE, &dmti);
   innerSetText(otextopts_t(text, 0), font);
 }
 
 OITextStatic::OITextStatic(IOverlay* ovllink, const otextopts_t& text, unsigned int fontSize, OVL_ORIENTATION orient):
   m_ovllink(ovllink), m_pImage(nullptr), m_orient(orient)
 {
-  m_ovllink.appendUniform(DT_TEXT, &dmti);
+  m_ovllink.appendUniform(DT_TEXTURE, &dmti);
   QFont f1(QApplication::font());
   f1.setPointSize(fontSize);
   innerSetText(text, f1);
@@ -41,7 +41,7 @@ OITextStatic::OITextStatic(IOverlay* ovllink, const otextopts_t& text, unsigned 
 OITextStatic::OITextStatic(IOverlay* ovllink, const otextopts_t& text, const QFont& font, OVL_ORIENTATION orient):
   m_ovllink(ovllink), m_pImage(nullptr), m_orient(orient)
 {
-  m_ovllink.appendUniform(DT_TEXT, &dmti);
+  m_ovllink.appendUniform(DT_TEXTURE, &dmti);
   innerSetText(text, font);
 }
 
@@ -86,7 +86,7 @@ void  OITextStatic::innerSetText(const otextopts_t& ot, const QFont &font)
   }
   
 //  laterInitDimms(0, height, width, 0);
-  
+  dmti.type = dmtype_image_t::FASTALPHA;
   dmti.w = (unsigned int)width;
   dmti.h = (unsigned int)height;
   dmti.data = m_pImage->constBits();

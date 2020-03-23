@@ -31,12 +31,12 @@ int OBlocker::fshTrace(int overlay, bool rotated, char *to) const
   return ocg.written();
 }
 
-bool OBlocker::overlayReaction(OVL_REACTION oreact, const void*, bool* doStop)
+bool OBlocker::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void*, bool* doStop)
 {
   if (m_blockstate != 0)
   {
     *doStop = true;
-    if (oreact == OR_LMRELEASE)
+    if (oreact == ORM_LMRELEASE)
     {
       m_blockstate = 0;
       return true;

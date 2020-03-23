@@ -15,6 +15,7 @@ class IOverlaySimple: public IOverlay
   int   m_inversive;
 public:
   IOverlaySimple(int inversive_algo=-1): m_inversive(inversive_algo){}
+  void    setInversiveAlgo(int ia){ m_inversive = ia; }
 protected:
   virtual int fshColor(int overlay, char *to) const;
 };
@@ -239,6 +240,11 @@ public:
     *top   = m_wh.h < 0? m_xy.y + m_wh.h : m_xy.y;
     *bottom= m_wh.h < 0? m_xy.y : m_xy.y + m_wh.h;
     return m_dimmsready;
+  }
+  bool inrect(ovlcoords_t xy) const
+  {
+    return  (m_wh.w < 0? m_xy.x + m_wh.w  : m_xy.x) < xy.x && xy.x < (m_wh.w < 0? m_xy.x : m_xy.x + m_wh.w) &&
+            (m_wh.h < 0? m_xy.y + m_wh.h  : m_xy.y) < xy.y && xy.y < (m_wh.h < 0? m_xy.y : m_xy.y + m_wh.h);
   }
   typedef OVLCoordsDimmsLinked     coords_type_t;
   typedef OVLCoordsDimmsLinked     dimms_type_t;

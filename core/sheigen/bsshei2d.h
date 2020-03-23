@@ -22,8 +22,8 @@ public:
     FshMainGenerator fmg(to, orient, ovlscount, ovlsinfo);
 
     if (dsup != DS_NONE)
-      fmg.push( "uniform highp sampler2D domainarr;"
-                "uniform highp int       domainscount;" );
+      fmg.push( "uniform highp sampler2D texGround;"
+                "uniform highp int       countGround;" );
 
     fmg.goto_func_begin(FshMainGenerator::INITBACK_BYPALETTE, 0, fsp);
 //    fmg.goto_func_begin(FshMainGenerator::INITBACK_BYZERO, 0, fsp);
@@ -39,8 +39,8 @@ public:
 
       const char fsh_domain[] =         "for (int i=0; i<countPortions; i++)"
                                         "{"
-                                          "float domain = texture(domainarr, relcoords).r;"
-                                          "float value = texture(texData, vec2(domain, 0.0)).r;"  // domain /float(domainscount-1)
+                                          "float domain = texture(texGround, relcoords).r;"
+                                          "float value = texture(texData, vec2(domain, 0.0)).r;"  // domain /float(countGround-1)
                                           "ovMix = max(ovMix, value);"
                                           "result = result + texture(texPalette, vec2(value, float(i) / (allocatedPortions - 1))).rgb;"
                                           "ppb_sfp[0] = mix(1.0, ppb_sfp[0], step(value, ppb_sfp[1]));"
@@ -48,8 +48,8 @@ public:
 
       const char fsh_domblack[] =       "for (int i=0; i<countPortions; i++)"
                                         "{"
-                                          "float domain = texture(domainarr, relcoords).r;"
-                                          "float value = texture(texData, vec2(domain, 0.0)).r * (1-step(domain, 0.0));"    // /float(domainscount-1)
+                                          "float domain = texture(texGround, relcoords).r;"
+                                          "float value = texture(texData, vec2(domain, 0.0)).r * (1-step(domain, 0.0));"    // /float(countGround-1)
                                           "ovMix = max(ovMix, value);"
                                           "result = result + texture(texPalette, vec2(value, float(i) / (allocatedPortions - 1))).rgb;"
                                           "ppb_sfp[0] = mix(1.0, ppb_sfp[0], step(value, ppb_sfp[1]));"

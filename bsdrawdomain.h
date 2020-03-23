@@ -53,7 +53,7 @@ public:
   DrawDomain(const DIDomain& cpy, unsigned int portions=1, ORIENTATION orient=OR_LRBT, bool holdmemorytilltheend=false);
   ~DrawDomain();
 public:
-  DIDomain*         domain();         /// NULL if data was cleared (holdmemtilltheend was turned on in constructor and first draw invoked PC_DOMAIN)
+  DIDomain*         domain();         /// NULL if data was cleared (holdmemtilltheend was turned on in constructor and first draw invoked PC_GROUND)
   const DIDomain*   domain() const;   /// --//--
   unsigned int      domainsCount() const;
 protected:

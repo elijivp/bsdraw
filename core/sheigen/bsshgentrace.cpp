@@ -8,7 +8,7 @@ static const char* glsl_types[] = { "float", "vec2", "vec3", "vec4",
                                     "int",  "ivec2", "ivec3", "ivec4", 
 //                                    "vec2", "vec3", "vec4", 
                                     "sampler2D", "int", "ivec2", "ivec3", "ivec4",
-                                    "sampler2D", "sampler2D", "sampler2D", 
+                                    "sampler2D",
                                     
                                     /// Special types
                                     "_HC_typecounter", "sampler2D", 
@@ -59,7 +59,7 @@ FshTraceGenerator::FshTraceGenerator(const AbstractOverlay::uniforms_t &ufms, in
   {
     if (loc_uniforms[i].type >= DT__HC_SPECIAL_TYPES)
     {
-      m_paramsctr++;
+//      m_paramsctr++;
       continue;
     }
     
@@ -555,7 +555,7 @@ void FshTraceGenerator::trace_square_cc_end(float fillcoeff) {  trace_rect_cc_en
 
 void FshTraceGenerator::trace_circle_cc_begin(const char *radius, const char *border) { m_offset += msprintf(&m_to[m_offset], "vec4 _cd = vec4(%s-1, %s + density, inormed.x*inormed.x + inormed.y*inormed.y, %s);", radius, border, border); }
 
-void FshTraceGenerator::trace_circle_cc_end(float fillcoeff)
+void FshTraceGenerator::trace_circle_cc_end(float fillcoeff/*, bool notraceinside*/)
 {
   if ((m_maths & (1 << MM_PI)) == 0)  math_pi();
   if (fillcoeff > 0.0f)
@@ -564,7 +564,8 @@ void FshTraceGenerator::trace_circle_cc_end(float fillcoeff)
                                           "float mixwell_fill = 1-step(r2[1], _cd[2]);" SHNL
                                           "float mixwell_before = smoothstep(r2[0], r2[1], _cd[2])*mixwell_fill;" SHNL
                                           "float mixwell_aftere = (1 - smoothstep(r2[1], r2[2], _cd[2]))*(step(r2[1], _cd[2]));" SHNL
-                                          "_insvar = vec3(mix(mixwell_before + mixwell_aftere, %F, mixwell_fill*(1 - step(1.0, mixwell_before + mixwell_aftere))), atan(float(inormed.x), float(inormed.y))/(2*PI), 2*PI*_cd[0])*_insban;" SHNL
+//                                          "_insvar = vec3(mix(mixwell_before + mixwell_aftere, %F, mixwell_fill*(1 - step(1.0, mixwell_before + mixwell_aftere))), atan(float(inormed.x), float(inormed.y))/(2*PI), 2*PI*_cd[0])*_insban;" SHNL
+                         "_insvar = vec3(mix(mixwell_before + mixwell_aftere, %F, mixwell_fill*(1 - step(1.0, mixwell_before + mixwell_aftere))), atan(float(inormed.x), float(inormed.y))/(2*PI)*step(mixwell_fill, 0.0), 2*PI*_cd[0])*_insban;" SHNL
                                           TRACE_MIX_INSVAR_WITH_RESULT
                         , fillcoeff
                         );    

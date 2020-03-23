@@ -1,6 +1,6 @@
 #include "bsdrawempty.h"
 
-#include "core/sheigen/bsshgenmain.h"
+#include "../core/sheigen/bsshgenmain.h"
 
 class SheiGeneratorEmpty: public ISheiGenerator
 {

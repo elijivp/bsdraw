@@ -10,25 +10,16 @@
 
 class DrawGraph_Sheigen: public ISheiGenerator
 {
-  graphopts_t             graphopts;
-  float                   colorizer[2];
-  DrawGraph::COLORPOLICY  dc;
 public:
-  DrawGraph_Sheigen(const graphopts_t& kgo, float czstart, float czstop, DrawGraph::COLORPOLICY downcolorise): graphopts(kgo), dc(downcolorise)
-  {
-//    if (czstart > 1)  czstart = 1;
-//    else if (czstart < 0) czstart = 0;
-    colorizer[0] = czstart; colorizer[1] = czstop;
-    for (int i=0; i<2; i++)
-    {
-      if (colorizer[i] > 1.0f) colorizer[i] = 1.0f;
-      else if (colorizer[i] < 0) colorizer[i] = 0;
-    }
-  }
+  graphopts_t   graphopts;
+  coloropts_t   coloropts;
+public:
+  DrawGraph_Sheigen(const graphopts_t& kgo, const coloropts_t& kco): graphopts(kgo), coloropts(kco)
+  {}
   ~DrawGraph_Sheigen();
-public:
-  const graphopts_t&      graphOpts() const { return graphopts; }
-  DrawGraph::COLORPOLICY  colorPolicy() const { return dc; }
+//public:
+//  const graphopts_t&      gopts() const { return graphopts; }
+//  const coloropts_t&      copts() const { return coloropts; }
 public:
   virtual const char*   shaderName() const {  return "GRAPH"; }
   virtual int           portionMeshType() const{  return PMT_FORCE1D; }
@@ -40,9 +31,9 @@ public:
     FshMainGenerator fmg(to, orient, ovlscount, ovlsinfo);
     float opacity = graphopts.opacity > 1.0f? 1.0f : graphopts.opacity < 0.0f? 0.0f : graphopts.opacity;
     fmg.cfloatvar("specopc", 1.0f - opacity);
-    fmg.goto_func_begin(graphopts.backcolor != 0xFFFFFFFF? FshMainGenerator::INIT_BYVALUE:
+    fmg.goto_func_begin(coloropts.backcolor != 0xFFFFFFFF? FshMainGenerator::INIT_BYVALUE:
                                                            FshMainGenerator::INIT_BYPALETTE, 
-                        graphopts.backcolor, fsp);
+                        coloropts.backcolor, fsp);
     {
       bool isDots = graphopts.graphtype == GT_DOTS;
       bool isHistogram = graphopts.graphtype == GT_HISTOGRAM || graphopts.graphtype == GT_HISTOGRAM_CROSSMAX || graphopts.graphtype == GT_HISTOGRAM_CROSSMIN;
@@ -229,7 +220,7 @@ public:
                       "float fsig_next= sign(ffy[2] - ffy[1]);" SHNL
                       "float fmix_next = smoothstep(ffy[2] + fsig_next, ffy[1], fcoords_noscaled.y);" SHNL
                       
-                      "float fmix_eq = 1.0 - abs(fcoords_noscaled.y - ffy[1])/(3.0*(1.0 + specsmooth));"
+                      "float fmix_eq = 1.0 - abs(fcoords_noscaled.y - ffy[1])/(1.4*(1.0 + specsmooth));"
                     );
         
         
@@ -357,36 +348,36 @@ public:
                   "}" SHNL);
       }
       
-      if (isHistogram && dc != DrawGraph::CP_RANGE)
+      if (isHistogram && coloropts.cpolicy != CP_RANGE)
         fmg.push("VALCLR = clamp(fcoords_noscaled.y/VALCLR, 0.0, 1.0);" SHNL);
       else
         fmg.push("VALCLR = VALCLR/fbounds_noscaled.y;" SHNL);
       
             
       
-      float base = colorizer[0];
-      float interval = colorizer[1] - colorizer[0];
+      float base = coloropts.cstart;
+      float interval = coloropts.cstop - coloropts.cstart;
       fmg.cfloatvar("pcBase", base);
       fmg.cfloatvar("pcInterval", interval);
       
       if (allocatedPortions > 1)
       {
         fmg.cintvar("allocatedPortions", allocatedPortions);
-        if (dc == DrawGraph::CP_SINGLE)                   fmg.push("float portionColor = pcBase + pcInterval*(float(i)/float(allocatedPortions-1));" SHNL);                   /// -1!
-        else if (dc == DrawGraph::CP_OWNRANGE)            fmg.push("float portionColor = pcBase + pcInterval/float(allocatedPortions)*(i + 1.0 - VALCLR);" SHNL);             /// not -1!
-        else if (dc == DrawGraph::CP_OWNRANGE_GROSS)      fmg.push("float portionColor = pcBase + pcInterval/float(allocatedPortions)*(i + 1.0 - sqrt(VALCLR));" SHNL);       /// not -1!
-        else if (dc == DrawGraph::CP_OWNRANGE_SYMMETRIC)  fmg.push("float portionColor = pcBase + pcInterval/float(allocatedPortions)*(i + 0.5 - abs(VALCLR - 0.5) );" SHNL); /// not -1!
-        else if (dc == DrawGraph::CP_RANGE)               fmg.push("float portionColor = (pcBase + pcInterval*(float(i)/float(allocatedPortions)))*VALCLR;" SHNL);            /// not -1!
-        else if (dc == DrawGraph::CP_SUBPAINTED)          fmg.push("float portionColor = fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
+        if (coloropts.cpolicy == CP_SINGLE)                   fmg.push("float portionColor = pcBase + pcInterval*(float(i)/float(allocatedPortions-1));" SHNL);                   /// -1!
+        else if (coloropts.cpolicy == CP_OWNRANGE)            fmg.push("float portionColor = pcBase + pcInterval/float(allocatedPortions)*(i + 1.0 - VALCLR);" SHNL);             /// not -1!
+        else if (coloropts.cpolicy == CP_OWNRANGE_GROSS)      fmg.push("float portionColor = pcBase + pcInterval/float(allocatedPortions)*(i + 1.0 - sqrt(VALCLR));" SHNL);       /// not -1!
+        else if (coloropts.cpolicy == CP_OWNRANGE_SYMMETRIC)  fmg.push("float portionColor = pcBase + pcInterval/float(allocatedPortions)*(i + 0.5 - abs(VALCLR - 0.5) );" SHNL); /// not -1!
+        else if (coloropts.cpolicy == CP_RANGE)               fmg.push("float portionColor = (pcBase + pcInterval*(float(i)/float(allocatedPortions)))*VALCLR;" SHNL);            /// not -1!
+        else if (coloropts.cpolicy == CP_SUBPAINTED)          fmg.push("float portionColor = fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
       }
       else
       {
-        if (dc == DrawGraph::CP_SINGLE)                   fmg.push("float portionColor = pcBase;" SHNL);
-        else if (dc == DrawGraph::CP_OWNRANGE)            fmg.push("float portionColor = pcBase + pcInterval*VALCLR;" SHNL);
-        else if (dc == DrawGraph::CP_OWNRANGE_GROSS)      fmg.push("float portionColor = pcBase + pcInterval*sqrt(VALCLR);" SHNL);
-        else if (dc == DrawGraph::CP_OWNRANGE_SYMMETRIC)  fmg.push("float portionColor = pcBase + pcInterval*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL);
-        else if (dc == DrawGraph::CP_RANGE)               fmg.push("float portionColor = pcBase + pcInterval*VALCLR;" SHNL);
-        else if (dc == DrawGraph::CP_SUBPAINTED)          fmg.push("float portionColor = fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
+        if (coloropts.cpolicy == CP_SINGLE)                   fmg.push("float portionColor = pcBase;" SHNL);
+        else if (coloropts.cpolicy == CP_OWNRANGE)            fmg.push("float portionColor = pcBase + pcInterval*VALCLR;" SHNL);
+        else if (coloropts.cpolicy == CP_OWNRANGE_GROSS)      fmg.push("float portionColor = pcBase + pcInterval*sqrt(VALCLR);" SHNL);
+        else if (coloropts.cpolicy == CP_OWNRANGE_SYMMETRIC)  fmg.push("float portionColor = pcBase + pcInterval*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL);
+        else if (coloropts.cpolicy == CP_RANGE)               fmg.push("float portionColor = pcBase + pcInterval*VALCLR;" SHNL);
+        else if (coloropts.cpolicy == CP_SUBPAINTED)          fmg.push("float portionColor = fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
       }
 
       fmg.push(   "vec3  colorGraph = texture(texPalette, vec2(portionColor, 0.0)).rgb;" SHNL );
@@ -406,6 +397,16 @@ DrawGraph_Sheigen::~DrawGraph_Sheigen()
 }
 
 
+DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, unsigned int memForDeploy, const graphopts_t& graphopts, const coloropts_t& coloropts):
+  DrawQWidget(new DrawGraph_Sheigen(graphopts, coloropts), graphs, OR_LRBT)
+{
+  m_matrixDimmA = samples;
+  m_matrixDimmB = 1;
+  m_portionSize = samples;
+  deployMemory(memForDeploy);
+}
+
+
 void DrawGraph::reConstructor(unsigned int samples)
 {
   m_matrixDimmA = samples;
@@ -415,17 +416,38 @@ void DrawGraph::reConstructor(unsigned int samples)
 }
 
 /// m_countPortions === graphs
-DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, COLORPOLICY downcolorize, float colorize_start, float colorize_stop):
-  DrawQWidget(new DrawGraph_Sheigen(graphopts_t::goInterp(0.0f, DE_LINTERP), colorize_start, colorize_stop, downcolorize), graphs, OR_LRBT),
-  m_graphopts(graphopts_t::goInterp(0.0f, DE_LINTERP)), m_colorpolicy(downcolorize)
+DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, coloropts_t copts):
+  DrawQWidget(new DrawGraph_Sheigen(graphopts_t::goInterp(0.0f, DE_LINTERP), copts), graphs, OR_LRBT)
+//  ,m_graphopts(graphopts_t::goInterp(0.0f, DE_LINTERP)), m_coloropts(copts)
 { reConstructor(samples); }
-DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, COLORPOLICY downcolorize, float colorize_start, float colorize_stop):
-  DrawQWidget(new DrawGraph_Sheigen(graphopts, colorize_start, colorize_stop, downcolorize), graphs, OR_LRBT), 
-  m_graphopts(graphopts), m_colorpolicy(downcolorize)
+DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, coloropts_t copts):
+  DrawQWidget(new DrawGraph_Sheigen(graphopts, copts), graphs, OR_LRBT)
+//  ,m_graphopts(graphopts), m_coloropts(copts)
 { reConstructor(samples); }
 
+const graphopts_t&DrawGraph::graphopts() const {  return ((DrawGraph_Sheigen*)m_pcsh)->graphopts;   }
+const coloropts_t&DrawGraph::coloropts() const {  return ((DrawGraph_Sheigen*)m_pcsh)->coloropts;   }
 
-void DrawGraph::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB)
+void DrawGraph::setOpts(const graphopts_t& go)
+{
+  ((DrawGraph_Sheigen*)m_pcsh)->graphopts = go;
+  vmanUpInit();
+}
+
+void DrawGraph::setOpts(const coloropts_t& co)
+{
+  ((DrawGraph_Sheigen*)m_pcsh)->coloropts = co;
+  vmanUpInit();
+}
+
+void DrawGraph::setOpts(const graphopts_t& go, const coloropts_t& co)
+{
+  ((DrawGraph_Sheigen*)m_pcsh)->graphopts = go;
+  ((DrawGraph_Sheigen*)m_pcsh)->coloropts = co;
+  vmanUpInit();
+}
+
+void DrawGraph::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
 {
   *matrixDimmA = m_matrixDimmA;
   *scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
@@ -438,18 +460,21 @@ void DrawGraph::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA
 
 unsigned int DrawGraph::colorBack() const
 {
-  return m_graphopts.backcolor == 0xFFFFFFFF? DrawQWidget::colorBack() : m_graphopts.backcolor;
+  unsigned int bc = ((DrawGraph_Sheigen*)m_pcsh)->coloropts.backcolor;
+  if (bc == 0xFFFFFFFF)
+    return DrawQWidget::colorBack();
+  return bc;
 }
 
 ////////////////////////////////////////////////////////////////
 
-DrawGraphMove::DrawGraphMove(unsigned int samples, unsigned int stepsamples, unsigned int graphs, COLORPOLICY downcolorize, float colorize_base, float colorize_step):
-  DrawGraph(samples, graphs, downcolorize, colorize_base, colorize_step), m_stepSamples(stepsamples)
+DrawGraphMove::DrawGraphMove(unsigned int samples, unsigned int stepsamples, unsigned int graphs, coloropts_t copts):
+  DrawGraph(samples, graphs, copts), m_stepSamples(stepsamples)
 {
 }
 
-DrawGraphMove::DrawGraphMove(unsigned int samples, unsigned int stepsamples, unsigned int graphs, const graphopts_t& graphopts, COLORPOLICY downcolorize, float colorize_base, float colorize_step):
-  DrawGraph(samples, graphs, graphopts, downcolorize, colorize_base, colorize_step), m_stepSamples(stepsamples)
+DrawGraphMove::DrawGraphMove(unsigned int samples, unsigned int stepsamples, unsigned int graphs, const graphopts_t& graphopts, coloropts_t copts):
+  DrawGraph(samples, graphs, graphopts, copts), m_stepSamples(stepsamples)
 {
 }
 
@@ -481,15 +506,17 @@ void DrawGraphMove::setData(const float* data, DataDecimator* decim)
 
 ////////////////////////////////////////////////////////////////
 
-DrawGraphMoveEx::DrawGraphMoveEx(unsigned int samples, unsigned int stepsamples, unsigned int extmemory, unsigned int graphs, COLORPOLICY downcolorize, float colorize_base, float colorize_step):
-  DrawGraph(samples, graphs, downcolorize, colorize_base, colorize_step), m_stepSamples(stepsamples), m_stopped(0), m_memory(graphs, samples, extmemory)
+DrawGraphMoveEx::DrawGraphMoveEx(unsigned int samples, unsigned int stepsamples, unsigned int extmemory, unsigned int graphs, coloropts_t copts, bool resizeExpanding):
+  DrawGraph(samples, graphs, graphs*(resizeExpanding? 3840 : samples), graphopts_t::goInterp(0.0f, DE_LINTERP), copts), m_stepSamples(stepsamples), m_stopped(0), m_memory(graphs, samples, extmemory),
+  m_resizeExpanding(resizeExpanding)
 {
   if (extmemory)
     m_matrixLmSize = samples + extmemory;
 }
 
-DrawGraphMoveEx::DrawGraphMoveEx(unsigned int samples, unsigned int stepsamples, unsigned int extmemory, unsigned int graphs, const graphopts_t& graphopts, COLORPOLICY downcolorize, float colorize_base, float colorize_step):
-  DrawGraph(samples, graphs, graphopts, downcolorize, colorize_base, colorize_step), m_stepSamples(stepsamples), m_stopped(0), m_memory(graphs, samples, extmemory)
+DrawGraphMoveEx::DrawGraphMoveEx(unsigned int samples, unsigned int stepsamples, unsigned int extmemory, unsigned int graphs, const graphopts_t& graphopts, coloropts_t copts, bool resizeExpanding):
+  DrawGraph(samples, graphs, graphs*(resizeExpanding? 3840 : samples), graphopts, copts), m_stepSamples(stepsamples), m_stopped(0), m_memory(graphs, samples, extmemory),
+  m_resizeExpanding(resizeExpanding)
 {
   if (extmemory)
     m_matrixLmSize = samples + extmemory;
@@ -519,6 +546,28 @@ void DrawGraphMoveEx::clearData()
 {
   m_memory.onClearData();
   DrawQWidget::vmanUpData();
+}
+
+void DrawGraphMoveEx::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
+{
+  if (m_resizeExpanding == false)
+    DrawGraph::sizeAndScaleHint(sizeA, sizeB, matrixDimmA, matrixDimmB, scalingA, scalingB);
+  else
+  {
+    *matrixDimmA = sizeA;
+    *scalingA = 1;
+    *scalingB = m_scalingB;
+    clampScaling(scalingA, scalingB);
+    *matrixDimmB = sizeB / *scalingB;
+    if (*matrixDimmB == 0)
+      *matrixDimmB = 1;
+  }
+}
+
+void DrawGraphMoveEx::sizeAndScaleChanged()
+{
+  m_portionSize = m_matrixDimmA;
+  m_memory.reinit(m_matrixDimmA);
 }
 
 void DrawGraphMoveEx::fillMatrix()

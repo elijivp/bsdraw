@@ -134,6 +134,7 @@ protected:
   public:
     MemExpand1D(unsigned int portionsCount, unsigned int portionSize, unsigned int memorySize);
     ~MemExpand1D();
+    void  reinit(unsigned int portionSize);
   public:
     void  onSetData(const float* data, unsigned int newsize);
     void  onSetData(const float* data, unsigned int newsize, DataDecimator* decim);

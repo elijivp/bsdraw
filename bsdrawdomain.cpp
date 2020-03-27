@@ -182,7 +182,7 @@ unsigned int DrawDomain::domainsCount() const
   return m_portionSize;
 }
 
-void DrawDomain::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB)
+void DrawDomain::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
 {
   *matrixDimmA = m_matrixDimmA;
   *matrixDimmB = m_matrixDimmB;

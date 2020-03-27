@@ -1,5 +1,5 @@
 #include "bssnowflake.h"
-#include "../core/sheigen/bsshgentrace.h"
+#include "../../core/sheigen/bsshgentrace.h"
 
 #include <qmath.h>
 #include <memory.h>

@@ -10,7 +10,7 @@ protected:
   MemExpand2D             m_memory;
   unsigned int            m_resizelim;
 public:
-  DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory=1000, unsigned int portions=1, ORIENTATION orient=OR_LRTB, unsigned int resizeLimit=1440);
+  DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory=1000, unsigned int portions=1, ORIENTATION orient=OR_LRTB, unsigned int resizeLimit=2160);
 public:
   virtual void            setData(const float*);
   virtual void            setData(const float*, DataDecimator* decim);
@@ -18,7 +18,7 @@ public:
 protected:
   virtual DATADIMMUSAGE   getDataDimmUsage() const { return DDU_15D; }
   virtual void            resizeGL(int w, int h);
-  virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB);
+  virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
 protected:
           void            fillMatrix();
   virtual void            slideLmHeight(int);

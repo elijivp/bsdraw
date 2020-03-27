@@ -148,7 +148,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     for (unsigned int i=0; i<sizeof(gopts)/sizeof(graphopts_t); i++)
     {
-      draws[3*i + 1] = new DrawGraph(SAMPLES, PORTIONS, gopts[i], DrawGraph::CP_SINGLE);
+      draws[3*i + 1] = new DrawGraph(SAMPLES, PORTIONS, gopts[i]);
       draws[3*i + 1]->ovlPushBack(new OTextColored(gnames[i], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, OO_INHERITED, 0x00000000, 0x77FFFFFF, 0x00000000));
     }
     
@@ -156,12 +156,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
       gopts[i].dotsize = i == 0? 3 : 2;
       gopts[i].dotsmooth = i == 0? 0.5f : 0.1f;
-      gopts[i].backcolor = 0x00777777;
-      draws[3*i + 2] = new DrawGraph(SAMPLES, PORTIONS, gopts[i], DrawGraph::CP_RANGE);
+      draws[3*i + 2] = new DrawGraph(SAMPLES, PORTIONS, gopts[i], coloropts_t::copts(CP_RANGE, 1.0f, 0.5f, 0x00777777));
       draws[3*i + 2]->ovlPushBack(new OTextColored(gnames[i], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, OO_INHERITED, 0x00000000, 0x77FFFFFF, 0x00000000));
     }
     
-    draws[8] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(0.3f, DE_NONE, 0x00777777, 0.15f), DrawGraph::CP_SINGLE);
+    draws[8] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(0.3f, DE_NONE, 0.15f));
     draws[8]->ovlPushBack(new OTextColored(gnames[2], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, OO_INHERITED, 0x00000000, 0x77FFFFFF, 0x00000000));
     
     sigtype = ST_SINXX;
@@ -199,13 +198,13 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     for (unsigned int i=0; i<sizeof(gopts)/sizeof(graphopts_t); i++)
     {
-      draws[3*i + 1] = new DrawGraph(SAMPLES, PORTIONS, gopts[i], DrawGraph::CP_SINGLE);
+      draws[3*i + 1] = new DrawGraph(SAMPLES, PORTIONS, gopts[i]);
       draws[3*i + 1]->setPostMask(dpmcontour);
     }
     
     for (unsigned int i=0; i<sizeof(gopts)/sizeof(graphopts_t); i++)
     {
-      draws[3*i + 2] = new DrawGraph(SAMPLES, PORTIONS, gopts[i], DrawGraph::CP_SINGLE);
+      draws[3*i + 2] = new DrawGraph(SAMPLES, PORTIONS, gopts[i]);
       if (i == 0)
         draws[3*i + 2]->setPostMask(DPostmask(DPostmask::PO_ALL, DPostmask::PM_PSEUDOCIRCLE, 0, 0.0f,0.1f,0.0f));
       else
@@ -223,7 +222,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     for (unsigned int i=0; i<dccount; i++)
     {
       draws[i*drcount + 0] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
-      draws[i*drcount + 1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.0f, DE_NONE), DrawGraph::CP_SINGLE);
+      draws[i*drcount + 1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.0f, DE_NONE));
       draws[i*drcount + 2] = new DrawRecorder(SAMPLES, MAXLINES, 1000, PORTIONS);
     }
     
@@ -235,14 +234,14 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     MAXLINES = 100;
     PORTIONS = 3;
     PRECREATE(3, 2);
-    graphopts_t gopts = graphopts_t::goInterp(0.0f, DE_NONE, 0x00111111);
+    graphopts_t gopts = graphopts_t::goInterp(0.0f, DE_NONE);
     for (unsigned int i=0; i<dccount; i++)
     {
       draws[i*drcount + 0] = new DrawIntensity(SAMPLES, MAXLINES, i == 1? 1 : PORTIONS);
       if (i == 0)
-        draws[i*drcount + 1] = new DrawGraph(SAMPLES, PORTIONS, gopts, DrawGraph::CP_SINGLE, 0.332f, 1.0f);
+        draws[i*drcount + 1] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(CP_SINGLE, 0.332f, 1.0f, 0x00111111));
       else
-        draws[i*drcount + 1] = new DrawGraph(SAMPLES, 1, gopts, DrawGraph::CP_RANGE, 0.0f, 1.0f);
+        draws[i*drcount + 1] = new DrawGraph(SAMPLES, 1, gopts, coloropts_t::copts(CP_RANGE, 0.0f, 1.0f, 0x00111111));
       draws[i*drcount + 2] = new DrawRecorder(SAMPLES, MAXLINES, 1000, i == 1? 1 : PORTIONS);
     }
     
@@ -380,20 +379,20 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     MAXLINES = 1;
     PORTIONS = 2;
     PRECREATE(3, 3);
-    BSGRAPHTYPE  gts[] = { GT_HISTOGRAM_CROSSMAX, GT_LINTERP, GT_DOTS };
-    DrawGraph::COLORPOLICY   dclr[] = { DrawGraph::CP_SINGLE, DrawGraph::CP_SINGLE, DrawGraph::CP_RANGE };
+    BSGRAPHTYPE     gts[] = { GT_HISTOGRAM_CROSSMAX, GT_LINTERP, GT_DOTS };
+    BSCOLORPOLICY   dclr[] = { CP_SINGLE, CP_SINGLE, CP_RANGE };
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
       {
         graphopts_t  gopts = {      gts[i],  DE_NONE,
                                     i == 0? c == dccount-1? 0.4f : 0.3f : 0.0f,
-                                    c == 1? 0xFFFFFFFF : 0x00999999,
                                     i != 2? 0 : 2, 
                                     0.5f,
                                     i < 2? 0.25f : 0.0f,
                                     PR_STANDARD
                            };
-        draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gopts, dclr[c]);
+        coloropts_t copts = {   dclr[c], 1.0f, 0.5f, c == 1? 0xFFFFFFFF : 0x00999999 };
+        draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gopts, copts);
       }
   
     sigtype = ST_SINXX;
@@ -405,22 +404,23 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 2;
     PRECREATE(3, 3);
     BSGRAPHTYPE gts[] = { GT_HISTOGRAM, GT_LINTERP, GT_DOTS };
-    DrawGraph::COLORPOLICY   dclr[] = { DrawGraph::CP_SINGLE, DrawGraph::CP_SINGLE, DrawGraph::CP_RANGE };
+    BSCOLORPOLICY   dclr[] = { CP_SINGLE, CP_SINGLE, CP_RANGE };
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
       {
         graphopts_t  gopts = {      gts[i],  DE_NONE,
                                     i == 0? c == dccount-1? 0.4f : 0.3f : 0.0f,
-                                    c == 1? 0xFFFFFFFF : 0x00999999, 
                                     i != 2? 0 : 2,
                                     0.5f,
                                     0.0f,
                                     PR_STANDARD
                               };
-        draws[c*drcount + i] = new DrawGraphMoveEx(SAMPLES, 5, SAMPLES*2, PORTIONS, gopts, dclr[c]);
+        coloropts_t copts = {   dclr[c], 1.0f, 0.5f, c == 1? 0xFFFFFFFF : 0x00999999 };
+        draws[c*drcount + i] = new DrawGraphMoveEx(SAMPLES, 5, SAMPLES*2, PORTIONS, gopts, copts);
       }
 
     sigtype = ST_GEN_NORM;
+    sp = SP_FASTEST;
   }
   else if (MW_TEST == DRAW_HISTOGRAMS)   /// pixelation
   {
@@ -446,7 +446,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         gts[i].postrect = PR_VALUEAROUND;
       else
         gts[i].opacity = 0.8f;
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, gts[i], DrawGraph::CP_SINGLE, 1.0f, 0.5f);
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, gts[i]);
       draws[i]->setPostMask(fsp[i]);
       
       draws[i]->ovlPushBack(new OTextColored(gnames[i], CR_XABS_YREL_NOSCALED_SCALED, 10.0f, 0.85f, 12, OO_INHERITED, 0x00000000, 0x33FFFFFF, 0x00000000));
@@ -467,7 +467,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       {
 //        gts[c].postrect = prs[i];
 //        gts[c].smooth = 0.05f;
-        draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gts[c] + prs[i], DrawGraph::CP_SINGLE);
+        draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gts[c] + prs[i] );
         draws[c*drcount + i]->setScalingLimitsHorz(c == 2? 5 : 12);
         draws[c*drcount + i]->setScalingLimitsVert(c == 0 && i == 1? 12 : 5);
         draws[c*drcount + i]->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_CONTOUR, c == 1? i == 2? 4 : 1 : 0));
@@ -502,8 +502,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 3;
     PRECREATE(3, 1);
     
-    graphopts_t  gopts = { GT_LINTERP, DE_LINTERP, 0.0f, 0xFFFFFFFF, 0, 0.0f, 0.2f, PR_STANDARD };
-    draws[0] = new DrawGraph(SAMPLES, PORTIONS, gopts, DrawGraph::CP_SINGLE, 0.332f, 1.0f);
+    graphopts_t  gopts = { GT_LINTERP, DE_LINTERP, 0.0f, 0, 0.0f, 0.2f, PR_STANDARD };
+    draws[0] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(CP_SINGLE, 0.332f, 1.0f));
     draws[0]->setScalingLimitsHorz(4,4);
     
     draws[1] = new DrawRecorder(SAMPLES, 100, 100, PORTIONS);
@@ -528,7 +528,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                            0.2f,  0.3f,  0.4f,
                            0.6f,  0.8f,  1.0f
                          };
-    graphopts_t  gopts = { GT_LINTERP, DE_NONE, 0.0f, 0xFFFFFFFF, 0, 0.0f, 0.5f, PR_STANDARD };
+    graphopts_t  gopts = { GT_LINTERP, DE_NONE, 0.0f, 0, 0.0f, 0.5f, PR_STANDARD };
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
       {
@@ -557,7 +557,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     const char* ornames[] = { "LRBT",  "TBLR",  "BTRL",  "BTLR",  "TBRL",  "RLTB" };
     for (unsigned int i=0; i<drawscount; i++)
     {
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp2(0.0, DE_NONE, 0x00111111), DrawGraph::CP_SINGLE);
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp2(0.0, DE_NONE), coloropts_t::copts(0x00111111));
       draws[i]->setOrientation(orients[i]);
       draws[i]->ovlPushBack(new OTextColored(ornames[i], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f,
                                              12, i == 0 || i == drawscount-1? OO_BTRL : OO_LRBT, 0x00000000, 0x00FFFFFF, 0x00000000));
@@ -572,7 +572,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 2;
     PRECREATE(4, 1);
     
-    graphopts_t  gopts[] = { graphopts_t::goDots(0, 0.0f, 0xFFFFFFFF, DE_NONE), 
+    graphopts_t  gopts[] = { graphopts_t::goDots(0, 0.0f, DE_NONE), 
                              graphopts_t::goInterp(0.0, DE_LINTERP), 
                              graphopts_t::goInterp(0.0, DE_SINTERP), 
                              graphopts_t::goInterp(0.0, DE_QINTERP), 
@@ -659,7 +659,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     sigtype = ST_RAND;
     defaultPalette = (const IPalette*)ppalettes_adv[69];
   }
-  else if (MW_TEST == FEATURE_COLORPOLICY)
+  else if (MW_TEST == FEATURE_COLOR_POLICY)
   {
     SAMPLES = 180;
     MAXLINES = 70;
@@ -667,12 +667,12 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(6, 1);
 //    syncscaling = 4;
     
-    DrawGraph::COLORPOLICY cps[] = { DrawGraph::CP_SINGLE, DrawGraph::CP_OWNRANGE, DrawGraph::CP_OWNRANGE_GROSS, DrawGraph::CP_OWNRANGE_SYMMETRIC, DrawGraph::CP_RANGE, DrawGraph::CP_SUBPAINTED };
+    BSCOLORPOLICY cps[] = { CP_SINGLE, CP_OWNRANGE, CP_OWNRANGE_GROSS, CP_OWNRANGE_SYMMETRIC, CP_RANGE, CP_SUBPAINTED };
     const char* cpnames[] = { "CP_SINGLE", "CP_OWNRANGE", "CP_OWNRANGE_GROSS", "CP_OWNRANGE_SYMMETRIC", "CP_RANGE", "CP_SUBPAINTED" };
     
     for (unsigned int i=0; i<drawscount; i++)
     {
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.5f, DE_QINTERP), cps[i], 1.0f, 0.3f);
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.5f, DE_QINTERP), coloropts_t::copts(cps[i], 1.0f, 0.3f));
 //      draws[i]->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f));
       draws[i]->setScalingLimitsHorz(7);
       
@@ -689,15 +689,15 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     MAXLINES = 200;
     PORTIONS = 2;
     PRECREATE(4, 1);
-    draws[0] = new DrawGraph(SAMPLES/8, PORTIONS, graphopts_t::goHistogram(), DrawGraph::CP_SINGLE);
+    draws[0] = new DrawGraph(SAMPLES/8, PORTIONS, graphopts_t::goHistogram());
     draws[0]->setScalingLimitsB(8,8);
     draws[0]->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_CONTOUR, 0, 0.3f,0.3f,0.3f));
     
-    draws[1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.0f, DE_NONE), DrawGraph::CP_SINGLE);
+    draws[1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.0f, DE_NONE));
     
     draws[2] = new DrawRecorder(SAMPLES, MAXLINES, 1000, PORTIONS);
     
-    draws[3] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogramCrossMin(), DrawGraph::CP_SINGLE);
+    draws[3] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogramCrossMin());
     
     for (unsigned int i=0; i<drawscount; i++)
     {
@@ -715,12 +715,12 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(4, 1);
 //    syncscaling = 4;
     
-//    DrawGraph::COLORPOLICY cps[] = { DrawGraph::CP_SINGLE, DrawGraph::CP_OWNRANGE, DrawGraph::CP_OWNRANGE_GROSS, DrawGraph::CP_OWNRANGE_SYMMETRIC, DrawGraph::CP_RANGE, DrawGraph::CP_SUBPAINTED };
+//    DrawGraph::BSCOLORPOLICY cps[] = { CP_SINGLE, CP_OWNRANGE, CP_OWNRANGE_GROSS, CP_OWNRANGE_SYMMETRIC, CP_RANGE, CP_SUBPAINTED };
 //    const char* cpnames[] = { "CP_SINGLE", "CP_OWNRANGE", "CP_OWNRANGE_GROSS", "CP_OWNRANGE_SYMMETRIC", "CP_RANGE", "CP_SUBPAINTED" };
     
     for (unsigned int i=0; i<drawscount; i++)
     {
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.0f, DE_QINTERP, i == 2? 0x00AAAAAA : 0xFFFFFFFF), DrawGraph::CP_SINGLE, 1.0f, 0.3f);
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.0f, DE_QINTERP), coloropts_t::copts(CP_SINGLE, 1.0f, 0.3f, i == 2? 0x00AAAAAA : 0xFFFFFFFF));
 //      draws[i]->setScalingLimitsHorz(7);
 //      draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.8f, 0.7f, 12, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
     }
@@ -765,8 +765,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(12, 4);
     for (unsigned int i=0; i<drawscount; i++)
     {
-//      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(GT_LINTERPSMOOTH, 0.0, 0x00111111), DrawGraph::CP_SINGLE, 1.0, -0.5);
-      draws[i] = new DrawGraphMove(SAMPLES, 1, PORTIONS, graphopts_t::goInterp2(DE_NONE, 0x00111111), DrawGraph::CP_SINGLE, 1.0, -0.5);
+//      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(GT_LINTERPSMOOTH, 0.0, 0x00111111), CP_SINGLE, 1.0, -0.5);
+      draws[i] = new DrawGraphMove(SAMPLES, 1, PORTIONS, graphopts_t::goInterp2(DE_NONE), coloropts_t::copts(CP_SINGLE, 1.0, 0.5, 0x00111111));
     }
     
     sigtype = ST_10;
@@ -876,11 +876,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     MAXLINES = 200;
     PORTIONS = 1;
     PRECREATE(1, 1);
-    DrawGraph::COLORPOLICY cps[] = { /*DrawGraph::CP_SINGLE, DrawGraph::CP_OWNRANGE, DrawGraph::CP_OWNRANGE_GROSS, 
-                                     DrawGraph::CP_OWNRANGE_SYMMETRIC, */DrawGraph::CP_RANGE, DrawGraph::CP_SUBPAINTED };
+    BSCOLORPOLICY cps[] = { /*CP_SINGLE, CP_OWNRANGE, CP_OWNRANGE_GROSS, 
+                                     CP_OWNRANGE_SYMMETRIC, */CP_RANGE, CP_SUBPAINTED };
     for (int i=0; i < 1; i++)
     {
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(0.0f, DE_NONE, 0x00000000), cps[i], 1.0f, 0.0f);
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(0.0f, DE_NONE), coloropts_t::copts(cps[i], 1.0f, 0.0f, 0x00000000));
 //      draws[i]->setScalingLimitsHorz(5);
       draws[i]->setDataPaletteDiscretion(true);
     }
@@ -2974,9 +2974,8 @@ void MainWindow::createOverlaySTD(int id)
     case COS_COVERH:
     {
 //      draws[i]->ovlPushBack(new OCover(0.7f, 1.0f, 0.2f, 0.2f, 0.2f, OCover::COP_COVER));
-      draws[i]->ovlPushBack(new OCover(0.7f, 1.0f, 0, OCover::COP_COVER));
+      draws[i]->ovlPushBack(new OCover(0.7f, 1.0f, 2, OCover::COP_COVER));
 //      draws[i]->ovlPushBack(new OSlice(5.0, 0.0f, 0.4f, 0.0));
-//      draws[i]->ovlPushBack(new OSlice(0.0, 1));
       break;
     }
     case COS_CONTOUR:
@@ -3164,7 +3163,7 @@ void MainWindow::changeOVLFeatures(int id)
       if (povl)
       {
         linestyle_t kls = povl->getLineStyle();
-        kls.inversive = id == BTO_NOINV? -1 : (id - BTO_INV1);
+        kls.inversive = id == BTO_NOINV? 0 : (id - BTO_NOINV);
         povl->setLineStyle(kls);
       }
     }

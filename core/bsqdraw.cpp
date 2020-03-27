@@ -709,6 +709,8 @@ void DrawQWidget::resizeGL(int w, int h)
   m_scalingA = scalingA;
   m_scalingB = scalingB;
   
+  sizeAndScaleChanged();
+  
   pendResize(false);
 }
 
@@ -977,6 +979,10 @@ DrawQWidget::MemExpand1D::~MemExpand1D()
   delete []m_extendeddataarr;
 }
 
+void DrawQWidget::MemExpand1D::reinit(unsigned int portionSize)
+{
+  ps = portionSize;
+}
 
 void DrawQWidget::MemExpand1D::onSetData(const float *data, unsigned int size)
 {

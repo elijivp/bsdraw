@@ -114,7 +114,7 @@ bool DrawSDPicture::isNull() const
   return m_pImage->isNull();
 }
 
-void DrawSDPicture::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB)
+void DrawSDPicture::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
 {
   *matrixDimmA = m_matrixDimmA;
   *matrixDimmB = m_matrixDimmB;

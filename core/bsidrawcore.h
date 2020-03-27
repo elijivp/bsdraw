@@ -224,14 +224,14 @@ struct  linestyle_t
   unsigned int  lenspace;
   unsigned int  countdot;
   float         r,g,b;
-  int           inversive;  /// -1 - off, 0-4 algos
+  int           inversive;  /// 0 - off, 1-5 algos
   OUTSIDELINE   outside;
   linestyle_t(unsigned int lstroke, unsigned int lspace, unsigned int dots, float red, float green, float blue, OUTSIDELINE ols): 
-    lenstroke(lstroke), lenspace(lspace), countdot(dots), r(red), g(green), b(blue), inversive(-1), outside(ols){}
+    lenstroke(lstroke), lenspace(lspace), countdot(dots), r(red), g(green), b(blue), inversive(0), outside(ols){}
 };
-inline linestyle_t    linestyle_inverse_1(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ linestyle_t result(lstroke, lspace, dots, 0,0,0, ols); result.inversive = 0; return result; }
-inline linestyle_t    linestyle_inverse_2(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ linestyle_t result(lstroke, lspace, dots, 0,0,0, ols); result.inversive = 1; return result; }
-inline linestyle_t    linestyle_inverse_3(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ linestyle_t result(lstroke, lspace, dots, 0,0,0, ols); result.inversive = 2; return result; }
+inline linestyle_t    linestyle_inverse_1(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ linestyle_t result(lstroke, lspace, dots, 0,0,0, ols); result.inversive = 1; return result; }
+inline linestyle_t    linestyle_inverse_2(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ linestyle_t result(lstroke, lspace, dots, 0,0,0, ols); result.inversive = 2; return result; }
+inline linestyle_t    linestyle_inverse_3(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ linestyle_t result(lstroke, lspace, dots, 0,0,0, ols); result.inversive = 3; return result; }
 
 inline linestyle_t    linestyle_white(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(lstroke, lspace, dots, 1,1,1, ols); }
 inline linestyle_t    linestyle_yellow(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(lstroke, lspace, dots, 1,1,0, ols); }
@@ -254,9 +254,9 @@ inline linestyle_t    linestyle_dots(float red, float green, float blue, OUTSIDE
 inline linestyle_t    linestyle_strdot(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(4, 2, 1, red,green,blue, ols); }
 inline linestyle_t    linestyle_strdotdot(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(4, 2, 2, red,green,blue, ols); }
 
-inline linestyle_t&   linestyle_update(linestyle_t* ls, float red, float green, float blue){ ls->r = red; ls->g = green; ls->b = blue; ls->inversive = -1; return *ls; }
-inline linestyle_t    linestyle_update(linestyle_t ls, float red, float green, float blue){ ls.r = red; ls.g = green; ls.b = blue; ls.inversive = -1; return ls; }
-inline linestyle_t    linestyle_update(linestyle_t ls, unsigned int clr){   ls.b = ((clr >> 16) & 0xFF)/255.0f;    ls.g = ((clr >> 8) & 0xFF)/255.0f; ls.r = ((clr) & 0xFF)/255.0f; ls.inversive = -1; return ls; }
+inline linestyle_t&   linestyle_update(linestyle_t* ls, float red, float green, float blue){ ls->r = red; ls->g = green; ls->b = blue; ls->inversive = 0; return *ls; }
+inline linestyle_t    linestyle_update(linestyle_t ls, float red, float green, float blue){ ls.r = red; ls.g = green; ls.b = blue; ls.inversive = 0; return ls; }
+inline linestyle_t    linestyle_update(linestyle_t ls, unsigned int clr){   ls.b = ((clr >> 16) & 0xFF)/255.0f;    ls.g = ((clr >> 8) & 0xFF)/255.0f; ls.r = ((clr) & 0xFF)/255.0f; ls.inversive = 0; return ls; }
 inline linestyle_t    linestyle_update_inverse(linestyle_t ls, int inv){   ls.r = ls.g = ls.b = 0; ls.inversive = inv; return ls; }
 
 

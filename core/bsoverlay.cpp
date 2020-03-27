@@ -5,7 +5,7 @@ int IOverlaySimple::fshColor(int overlay, char* to) const
 {
   FshColorGenerator ocg(overlay, to);
   ocg.goto_func_begin(FshColorGenerator::CGV_COLORED);
-  if (m_inversive != -1)
+  if (m_inversive != 0)
     ocg.color_by_inversive(m_inversive);
   ocg.goto_func_end();
   return ocg.written();

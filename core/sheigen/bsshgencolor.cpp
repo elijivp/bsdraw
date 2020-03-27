@@ -7,13 +7,6 @@
 
 extern int msprintf(char* to, const char* format, ...);
 
-static const char* decl_inversive[] = {     "result = 1.0 - undercolor;" SHNL,
-                                            "result = step(0.5, undercolor); result = (vec3(0.5,0.5,0.5) - result) + undercolor;" SHNL,
-                                            "result.x = step(0.5, (undercolor.r + undercolor.g + undercolor.b)/3.0); result = (1.0 - result.x) * vec3(1.0,1.0,1.0);" SHNL, 
-                                            "result = vec3(1.0 - undercolor.g, 1.0 - undercolor.b, 1.0 - undercolor.r);" SHNL, 
-                                            "result = step(0.5, undercolor); result = (vec3(0.5,0.5,0.5) - result) + vec3(1.0 - undercolor.g, 1.0 - undercolor.b, 1.0 - undercolor.r);" SHNL,
-                                      };
-
 FshColorGenerator::FshColorGenerator(int overlay, char* deststring, int ovlctr): m_overlay(overlay), m_writebase(deststring), m_to(deststring), m_offset(0), m_paramsctr(ovlctr)
 {
 }
@@ -100,16 +93,23 @@ void FshColorGenerator::color_by_rgb(float r, float g, float b)
 
 void FshColorGenerator::color_by_inversive(int idx)
 {
+  static const char* decl_inversive[] = {     "result = 1.0 - undercolor;" SHNL,
+                                              "result = step(0.5, undercolor); result = (vec3(0.5,0.5,0.5) - result) + undercolor;" SHNL,
+                                              "result.x = step(0.5, (undercolor.r + undercolor.g + undercolor.b)/3.0); result = (1.0 - result.x) * vec3(1.0,1.0,1.0);" SHNL, 
+                                              "result = vec3(1.0 - undercolor.g, 1.0 - undercolor.b, 1.0 - undercolor.r);" SHNL, 
+                                              "result = step(0.5, undercolor); result = (vec3(0.5,0.5,0.5) - result) + vec3(1.0 - undercolor.g, 1.0 - undercolor.b, 1.0 - undercolor.r);" SHNL,
+                                        };
+  
   const int limidx = sizeof(decl_inversive)/sizeof(const char*);
-  if (idx < 0 || idx >= limidx)
+  if (idx <= 0 || idx > limidx)
     m_offset += msprintf(&m_to[m_offset], "result = undercolor;");  // fake eba
   else
-    m_offset += msprintf(&m_to[m_offset], "%s", decl_inversive[idx]);
+    m_offset += msprintf(&m_to[m_offset], "%s", decl_inversive[idx-1]);
 }
 
 void FshColorGenerator::color_by_traced(const linestyle_t &kls)
 {
-  if (kls.inversive == -1)
+  if (kls.inversive == 0)
     color_by_rgb(kls.r, kls.g, kls.b);
   else
     color_by_inversive(kls.inversive);

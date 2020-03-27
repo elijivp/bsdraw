@@ -7,7 +7,7 @@
 
 #include "bsidrawcore.h"
 #include "bsoverlay.h"
-#include "palettes/bsipalette.h"
+#include "../palettes/bsipalette.h"
 
 //#########################
 struct  bounds_t
@@ -212,8 +212,8 @@ public:
   void                  setScalingLimitsVert(unsigned int scmin, unsigned int scmax=0){ if (!m_matrixSwitchAB) setScalingLimitsB(scmin, scmax); else setScalingLimitsA(scmin, scmax); }
   void                  setScalingLimitsSynced(unsigned int scmin, unsigned int scmax=0){ m_scalingIsSynced = true; m_scalingAMin = m_scalingBMin = scmin < 1? 1 : scmin; m_scalingAMax = m_scalingBMax = scmax; clampScalingManually(); pendResize(true); }
 public:
-  virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB)=0;
-  void                  sizeAndScaleHint(int width_in, int height_in, int* actualwidth, int* actualheight)
+  virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const =0;
+  void                  sizeAndScaleHint(int width_in, int height_in, int* actualwidth, int* actualheight) const
   {
     unsigned int dimmA, dimmB, scalingA, scalingB;
     if (m_matrixSwitchAB)
@@ -224,7 +224,9 @@ public:
     *actualheight = dimmB*scalingB;
   }
 protected:
-  void  clampScaling(unsigned int* scalingA, unsigned int* scalingB)
+  virtual void          sizeAndScaleChanged() { }
+protected:
+  void  clampScaling(unsigned int* scalingA, unsigned int* scalingB) const
   {
     if (*scalingA < m_scalingAMin) *scalingA = m_scalingAMin;
     if (m_scalingAMax && *scalingA > m_scalingAMax) *scalingA = m_scalingAMax;
@@ -327,6 +329,7 @@ public:
     return m_matrixData;
   }
 protected:
+  void  vmanUpInit(){ m_bitmaskPendingChanges |= PC_INIT; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();  }
   void  vmanUpData(){ m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();  }
   enum  DATADIMMUSAGE { DDU_2D, DDU_15D, DDU_1D, DDU_DD };
   virtual DATADIMMUSAGE   getDataDimmUsage() const =0;

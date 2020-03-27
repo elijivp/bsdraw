@@ -32,7 +32,7 @@ DrawEmpty::DrawEmpty(unsigned int samplesHorz, unsigned int samplesVert, unsigne
   deployMemory();
 }
 
-void DrawEmpty::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB)
+void DrawEmpty::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
 {
   *matrixDimmA = m_matrixDimmA;
   *matrixDimmB = m_matrixDimmB;

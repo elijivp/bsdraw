@@ -10,7 +10,7 @@ DrawIntensity::DrawIntensity(unsigned int samplesHorz, unsigned int samplesVert,
   deployMemory();
 }
 
-void DrawIntensity::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB)
+void DrawIntensity::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
 {
   *matrixDimmA = m_matrixDimmA;
   *matrixDimmB = m_matrixDimmB;

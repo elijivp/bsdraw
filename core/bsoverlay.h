@@ -14,8 +14,8 @@ class IOverlaySimple: public IOverlay
 {
   int   m_inversive;
 public:
-  IOverlaySimple(int inversive_algo=-1): m_inversive(inversive_algo){}
-  void    setInversiveAlgo(int ia){ m_inversive = ia; }
+  IOverlaySimple(int inversive_algo=0): m_inversive(inversive_algo){}
+//  void    setInversiveAlgo(int ia){ m_inversive = ia; }
 protected:
   virtual int fshColor(int overlay, char *to) const;
 };

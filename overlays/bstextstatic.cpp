@@ -318,6 +318,7 @@ int OTextPaletted::fshTrace(int overlay, bool rotated, char* to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, m_orient);
+  ocg.param_pass(); // Kostyl
   {
     ocg.goto_normed();
     ocg.var_const_fixed("rect_size", (int)dmti.w, (int)dmti.h);

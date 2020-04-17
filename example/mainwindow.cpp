@@ -1230,6 +1230,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                                     QSpinBox*   _sb = new QSpinBox(); \
                                     _sb->setRange(0, 10); \
                                     _sb->setUserData(0, new BSUOD_0(var)); \
+                                    _sb->setMaximumWidth(80); \
                                     BSADD(_sb, ##__VA_ARGS__); \
                                     QObject::connect(_sb, SIGNAL(valueChanged(int)), this, slot); \
                                   }
@@ -1254,6 +1255,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BS_STRETCH
               BSAUTO_TEXT_ADD(tr("setContentMargins:"), 0, Qt::AlignLeft);
               QSpinBox*   _sb = new QSpinBox();
+              _sb->setMaximumWidth(80);
               BSADD(_sb, 0, Qt::AlignRight);
               QObject::connect(_sb, SIGNAL(valueChanged(int)), this, SLOT(changeMargins(int)));
               BS_STRETCH
@@ -1400,6 +1402,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                       BSAUTO_TEXT_ADD(tr("Weight:"));
                       QSpinBox*   psb = new QSpinBox();
                       psb->setRange(0, 10);
+                      psb->setMaximumWidth(80);
                       BSADD(psb)
                       QObject::connect(psb, SIGNAL(valueChanged(int)), this, SLOT(changeOVLWeight(int)));
                     }
@@ -1577,6 +1580,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 BSAUTO_TEXT_ADD(QString::fromUtf8("Weight: "))
                 QSpinBox* qcb3 = new QSpinBox;
                 qcb3->setRange(0, 100);
+                qcb3->setMaximumWidth(80);
                 qcb3->setUserData(1, new BSUOD_DPM(2, dpm));
                 QObject::connect(qcb3, SIGNAL(valueChanged(int)), this, SLOT(changePostmask(int)));
                 BSADD(qcb3);
@@ -1589,6 +1593,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 BSAUTO_TEXT_ADD(QString::fromUtf8("Palette color idx (0..20 -> 0.0..1.0): "));
                 QSpinBox* qcb4 = new QSpinBox;
                 qcb4->setRange(-20, 20);
+                qcb4->setMaximumWidth(80);
                 qcb4->setUserData(1, new BSUOD_DPM(3, dpm));
                 QObject::connect(qcb4, SIGNAL(valueChanged(int)), this, SLOT(changePostmask(int)));
                 BSADD(qcb4);
@@ -1598,6 +1603,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 BSAUTO_TEXT_ADD(QString::fromUtf8("Thrs.: "))
                 QSpinBox* qcb5 = new QSpinBox;
                 qcb5->setRange(0, 10);
+                qcb5->setMaximumWidth(80);
                 qcb5->setUserData(1, new BSUOD_DPM(4, dpm));
                 QObject::connect(qcb5, SIGNAL(valueChanged(int)), this, SLOT(changePostmask(int)));
                 BSADD(qcb5);

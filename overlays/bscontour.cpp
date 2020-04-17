@@ -70,6 +70,7 @@ int OContourPal::fshTrace(int overlay, bool rotated, char *to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_GETVALUE);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  ocg.param_pass(); // Kostyl
   {
     ocg.var_const_fixed("bnd", m_from, m_to);
     ocg.push( contour_constants1 );

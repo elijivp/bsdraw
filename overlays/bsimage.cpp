@@ -6,7 +6,7 @@
 #include <QApplication>
 #include <QPainter>
 
-#include <QDebug>
+//#include <QDebug>
 
 /////////////////////////////////////////////////////////
 

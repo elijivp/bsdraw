@@ -32,6 +32,7 @@ int OMarkDashs::fshTrace(int overlay, bool rotated, char *to) const
 { 
   FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  ocg.param_pass(); // Kostyl
   {
     ocg.goto_normed();
     ocg.var_fixed("marksize", m_marksize);
@@ -102,6 +103,7 @@ int OMarkFigures::fshTrace(int overlay, bool rotated, char *to) const
 { 
   FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  ocg.param_pass(); // Kostyl
   {
     ocg.goto_normed();
     ocg.var_fixed("fsize", m_figsize);

@@ -5,7 +5,7 @@
 #include <qmath.h>
 #include <memory.h>
 
-#include <QDebug>
+//#include <QDebug>
 
 OSprites::OSprites(QImage *image, IMAGECONVERT icvt, float sizemultiplier, unsigned int count, COLOR_SPRITE cr, CENTER_BY cb): 
   OVLQImage(image, icvt, false), 

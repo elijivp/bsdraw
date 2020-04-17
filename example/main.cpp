@@ -42,7 +42,8 @@ int main(int argc, char *argv[])
     tname = tname.replace('_', " ");
     tests<<QString::number(i) + ". " + tname;
   }
-  QString result = QInputDialog::getItem(nullptr, "bsdraw", "Choose test:", tests, 1, false, &ok);
+  QString prepend = "You can change GLSL version\nby changing BSGLSLVER in .pro file *\n\n";
+  QString result = QInputDialog::getItem(nullptr, "bsdraw", prepend + "Choose test:", tests, 1, false, &ok);
   if (!ok)  return 0;
   MW_TEST = (tests_t)tests.indexOf(result);
 #endif

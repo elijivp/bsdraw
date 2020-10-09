@@ -1,7 +1,9 @@
 #ifndef _IDL_PRISM_H
 #define _IDL_PRISM_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_prism[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_prism[] = {
                                          0x00000001, 0x00000005, 0x00000009, 0x0000000d, 0x00000011, 0x00000014, 0x00000018, 0x0000001c, 
                                          0x00000020, 0x00000024, 0x00000027, 0x0000002b, 0x0000002f, 0x00000033, 0x00000036, 0x0000003a, 
                                          0x0000003e, 0x00000042, 0x00000046, 0x00000049, 0x0000004d, 0x00000051, 0x00000055, 0x00000059, 
@@ -35,7 +37,10 @@
                                          0x003f0000, 0x003b0000, 0x00370000, 0x00330000, 0x002f0000, 0x002b0000, 0x00270000, 0x00230000, 
                                          0x001f0000, 0x001b0000, 0x00170000, 0x00130000, 0x000f0000, 0x000b0000, 0x00070000, 0x00030000
 };
-const PaletteConstFWD<sizeof(colors_idl_prism) / sizeof(unsigned int)> palette_idl_prism(colors_idl_prism);
+
+const PaletteConstFWD<sizeof(colors_idl_prism) / sizeof(unsigned int)> palette_idl_prism(colors_idl_prism);
 const PaletteConstBWD<sizeof(colors_idl_prism) / sizeof(unsigned int)> palette_idl_prism_inv(colors_idl_prism);
-typedef PaletteConstFWD<sizeof(colors_idl_prism) / sizeof(unsigned int)> palette_idl_prism_t;
-#endif // _IDL_PRISM_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_prism) / sizeof(unsigned int)> palette_idl_prism_t;
+
+#endif // _IDL_PRISM_H

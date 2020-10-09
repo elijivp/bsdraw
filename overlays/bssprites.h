@@ -1,8 +1,11 @@
 #ifndef BSSPRITES_H
 #define BSSPRITES_H
 
-#include "bsimage.h"
+/// Overlays:   simple sprites, drawed each on own place
+///   OSprites: with QImage as source
+/// Created By: Elijah Vlasov
 
+#include "bsimage.h"
 
 struct kpdc_t
 {
@@ -11,7 +14,7 @@ struct kpdc_t
   float   color;
 };
 
-class OSprites: public IOverlay, public OVLQImage, public OVLCoordsOff, public OVLDimmsOff
+class OSprites: public DrawOverlay, public OVLQImage, public OVLCoordsOff, public OVLDimmsOff
 {
 public:
   enum  CENTER_BY { CB_LEFTTOP, CB_CENTER };

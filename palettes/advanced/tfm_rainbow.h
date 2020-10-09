@@ -1,7 +1,9 @@
 #ifndef _TFM_RAINBOW_H
 #define _TFM_RAINBOW_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_rainbow[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_rainbow[] = {
                                            0x00ff007d, 0x00ff0079, 0x00ff0074, 0x00ff0070, 0x00ff006b, 0x00ff0067, 0x00ff0062, 0x00ff005e, 
                                            0x00ff0059, 0x00ff0055, 0x00ff0050, 0x00ff004c, 0x00ff0047, 0x00ff0043, 0x00ff003f, 0x00ff003a, 
                                            0x00ff0036, 0x00ff0031, 0x00ff002d, 0x00ff0028, 0x00ff0024, 0x00ff001f, 0x00ff001b, 0x00ff0016, 
@@ -35,7 +37,10 @@
                                            0x000045ff, 0x000041ff, 0x00003dff, 0x000038ff, 0x000034ff, 0x00002fff, 0x00002bff, 0x000026ff, 
                                            0x000022ff, 0x00001dff, 0x000019ff, 0x000014ff, 0x000010ff, 0x00000bff, 0x000007ff, 0x000002ff
 };
-const PaletteConstFWD<sizeof(colors_tfm_rainbow) / sizeof(unsigned int)> palette_tfm_rainbow(colors_tfm_rainbow);
+
+const PaletteConstFWD<sizeof(colors_tfm_rainbow) / sizeof(unsigned int)> palette_tfm_rainbow(colors_tfm_rainbow);
 const PaletteConstBWD<sizeof(colors_tfm_rainbow) / sizeof(unsigned int)> palette_tfm_rainbow_inv(colors_tfm_rainbow);
-typedef PaletteConstFWD<sizeof(colors_tfm_rainbow) / sizeof(unsigned int)> palette_tfm_rainbow_t;
-#endif // _TFM_RAINBOW_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_rainbow) / sizeof(unsigned int)> palette_tfm_rainbow_t;
+
+#endif // _TFM_RAINBOW_H

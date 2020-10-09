@@ -1,10 +1,15 @@
 #ifndef OIMAGE_H
 #define OIMAGE_H
 
+/// Overlays:   images through QImage
+///   OImageOriginal. View: image with fixed size
+///   OImageStretched. View: image with size depended of draw
+/// Created By: Elijah Vlasov
+
 #include "../core/bsoverlay.h"
+
+
 class QImage;
-
-
 class OVLQImage
 {
 public:
@@ -29,12 +34,13 @@ protected:
   bool            m_imageowner;
   bool            m_banalpha;
 };
-/////////////////
 
-class IOverlaySimpleImage: public IOverlaySimple, public OVLQImage
+
+
+class DrawOverlaySimpleImage: public DrawOverlaySimple, public OVLQImage
 {
 public:
-  IOverlaySimpleImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach=false): 
+  DrawOverlaySimpleImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach=false): 
     OVLQImage(image, icvt, autorotated, detach){}
   
   void  reUpdate();
@@ -42,7 +48,7 @@ public:
 };
 
 
-class OImageOriginal: public IOverlaySimpleImage, public OVLCoordsDynamic, public OVLDimms2Dynamic
+class OImageOriginal: public DrawOverlaySimpleImage, public OVLCoordsDynamic, public OVLDimms2Dynamic
 {
 public:
   OImageOriginal(QImage* image, IMAGECONVERT icvt, bool autorotated, COORDINATION cn, float x, float y, float mult_w=1.0f, float mult_h=1.0f);
@@ -52,7 +58,7 @@ protected:
   float           m_sizemultiplier[2];
 };
 
-class OImageStretched: public IOverlaySimpleImage, public OVLCoordsStatic, public OVLDimms2Static
+class OImageStretched: public DrawOverlaySimpleImage, public OVLCoordsStatic, public OVLDimms2Static
 {
 public:
   OImageStretched(QImage* image, IMAGECONVERT icvt, bool autorotated, COORDINATION cn=CR_RELATIVE, float x=0.0f, float y=0.0f, float mult_w=1.0f, float mult_h=1.0f);
@@ -60,7 +66,6 @@ public:
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
-
 
 void  bs_detachFutureImagesInConstructors(bool);
 

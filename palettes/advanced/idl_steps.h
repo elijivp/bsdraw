@@ -1,7 +1,9 @@
 #ifndef _IDL_STEPS_H
 #define _IDL_STEPS_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_steps[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_steps[] = {
                                          0x00000000, 0x00002a00, 0x00005400, 0x00007f00, 0x0000a900, 0x0000d300, 0x0000fe00, 0x0000f600, 
                                          0x0000ec00, 0x0000e200, 0x0000d900, 0x0000cf00, 0x0000c500, 0x0000bb00, 0x0000b200, 0x0000a800, 
                                          0x00009e00, 0x00009400, 0x00008b00, 0x00008100, 0x00007700, 0x00006d00, 0x00006300, 0x00005a00, 
@@ -35,7 +37,10 @@
                                          0x007990ff, 0x008196ff, 0x00899cff, 0x0091a2ff, 0x009aa9ff, 0x00a3b0ff, 0x00abb6ff, 0x00b4bdff, 
                                          0x00bdc5ff, 0x00c6ccff, 0x00ced4ff, 0x00d7dcff, 0x00e0e4ff, 0x00e8ecff, 0x00f0f4ff, 0x00f8fdff
 };
-const PaletteConstFWD<sizeof(colors_idl_steps) / sizeof(unsigned int)> palette_idl_steps(colors_idl_steps);
+
+const PaletteConstFWD<sizeof(colors_idl_steps) / sizeof(unsigned int)> palette_idl_steps(colors_idl_steps);
 const PaletteConstBWD<sizeof(colors_idl_steps) / sizeof(unsigned int)> palette_idl_steps_inv(colors_idl_steps);
-typedef PaletteConstFWD<sizeof(colors_idl_steps) / sizeof(unsigned int)> palette_idl_steps_t;
-#endif // _IDL_STEPS_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_steps) / sizeof(unsigned int)> palette_idl_steps_t;
+
+#endif // _IDL_STEPS_H

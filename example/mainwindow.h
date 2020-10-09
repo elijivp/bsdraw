@@ -1,6 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+/// MainWindow for main example
+/// Created By: Elijah Vlasov
+
 #include <QMainWindow>
 
 #define REGTEST(A) A,
@@ -37,7 +40,7 @@ private:
   int                   ovl_visir, ovl_marks, ovl_figures, ovl_snowflake;
   int                   ovl_active_mark;
   bool                  ovl_is_synced;
-  enum    ED_DRAW     {  ED_UNKNOWN, ED_LOW, ED_HIGH, ED_CONTRAST, ED_OFFSET, ED_SIGB, ED_SIGK };
+  enum    ED_DRAW     {  ED_HIGH, ED_LOW, ED_CONTRAST, ED_OFFSET, ED_SIGB, ED_SIGK, ED_RESET };
 
   QTimer*               speedDataTimer, *speedUpdateTimer;
   
@@ -64,8 +67,9 @@ private:
   float   sig_k, sig_b;
 private:
   enum    OSS           { COS_OFF, COS_DEKART, COS_GRIDS, COS_GRIDSAXES, COS_CIRCULAR, 
-                          COS_SELECTOR, COS_DROPLINES, COS_CLUSTER, COS_FOLLOWERS, 
+                          COS_DROPLINES, COS_BRUSH, COS_CLUSTER, COS_FOLLOWERS, 
                           COS_INSIDE, COS_COVERL, COS_COVERH, COS_CONTOUR, 
+                          COS_SELECTOR, COS_SELECTOR2, COS_OBJECTIF,
                           COS_SPRITEALPHA, COS_FOREGROUND, COS_BACKGROUND };
 private slots:
   void    changeMargins(int value);

@@ -1,7 +1,9 @@
 #ifndef _MAT_HSV_H
 #define _MAT_HSV_H
-#include "../bstexpalette.h"
-const unsigned int colors_mat_hsv[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_mat_hsv[] = {
                                        0x000000ff, 0x000000ff, 0x000000ff, 0x000000ff, 0x000003ff, 0x000009ff, 0x00000fff, 0x000015ff, 
                                        0x00001bff, 0x000021ff, 0x000027ff, 0x00002dff, 0x000033ff, 0x000039ff, 0x00003fff, 0x000045ff, 
                                        0x00004bff, 0x000051ff, 0x000057ff, 0x00005dff, 0x000063ff, 0x000069ff, 0x00006fff, 0x000075ff, 
@@ -35,7 +37,10 @@
                                        0x007500b2, 0x006f00b8, 0x006900be, 0x006300c4, 0x005d00ca, 0x005700d0, 0x005100d6, 0x004b00dc, 
                                        0x004500e2, 0x003f00e8, 0x003900ee, 0x003300f4, 0x002d00fa, 0x002700ff, 0x002100ff, 0x001b00ff
 };
-const PaletteConstFWD<sizeof(colors_mat_hsv) / sizeof(unsigned int)> palette_mat_hsv(colors_mat_hsv);
+
+const PaletteConstFWD<sizeof(colors_mat_hsv) / sizeof(unsigned int)> palette_mat_hsv(colors_mat_hsv);
 const PaletteConstBWD<sizeof(colors_mat_hsv) / sizeof(unsigned int)> palette_mat_hsv_inv(colors_mat_hsv);
-typedef PaletteConstFWD<sizeof(colors_mat_hsv) / sizeof(unsigned int)> palette_mat_hsv_t;
-#endif // _MAT_HSV_H
+
+typedef PaletteConstFWD<sizeof(colors_mat_hsv) / sizeof(unsigned int)> palette_mat_hsv_t;
+
+#endif // _MAT_HSV_H

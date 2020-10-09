@@ -1,7 +1,9 @@
 #ifndef _IDL_BEACH_H
 #define _IDL_BEACH_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_beach[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_beach[] = {
                                          0x0000fa00, 0x0000f800, 0x0000f600, 0x0000f400, 0x0000f200, 0x0000f000, 0x0000ee00, 0x0000ec00, 
                                          0x0000e900, 0x0000e700, 0x0000e500, 0x0000e300, 0x0000e100, 0x0000df00, 0x0000dd00, 0x0000db00, 
                                          0x0000d900, 0x0000d700, 0x0000d500, 0x0000d200, 0x0000d000, 0x0000ce00, 0x0000cc00, 0x0000ca00, 
@@ -35,7 +37,10 @@
                                          0x00b90000, 0x00bd0000, 0x00c00000, 0x00c40000, 0x00c70000, 0x00cb0000, 0x00ce0000, 0x00d20000, 
                                          0x00d50000, 0x00d90000, 0x00dc0000, 0x00e00000, 0x00e30000, 0x00e70000, 0x00ea0000, 0x00ee0000
 };
-const PaletteConstFWD<sizeof(colors_idl_beach) / sizeof(unsigned int)> palette_idl_beach(colors_idl_beach);
+
+const PaletteConstFWD<sizeof(colors_idl_beach) / sizeof(unsigned int)> palette_idl_beach(colors_idl_beach);
 const PaletteConstBWD<sizeof(colors_idl_beach) / sizeof(unsigned int)> palette_idl_beach_inv(colors_idl_beach);
-typedef PaletteConstFWD<sizeof(colors_idl_beach) / sizeof(unsigned int)> palette_idl_beach_t;
-#endif // _IDL_BEACH_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_beach) / sizeof(unsigned int)> palette_idl_beach_t;
+
+#endif // _IDL_BEACH_H

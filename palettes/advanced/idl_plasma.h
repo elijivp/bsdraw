@@ -1,7 +1,9 @@
 #ifndef _IDL_PLASMA_H
 #define _IDL_PLASMA_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_plasma[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_plasma[] = {
                                           0x00091302, 0x000d1503, 0x00101704, 0x00141b05, 0x00181e06, 0x001c2308, 0x00202809, 0x00242e0a, 
                                           0x0028350b, 0x002c3c0c, 0x0030430d, 0x00344b0e, 0x0038530f, 0x003c5c10, 0x00406412, 0x00446d13, 
                                           0x00487514, 0x004c7e15, 0x004f8616, 0x00538e17, 0x00579618, 0x005a9d19, 0x005ea41b, 0x0061aa1c, 
@@ -35,7 +37,10 @@
                                           0x00c075f7, 0x00bd6df8, 0x00b964f8, 0x00b55cf8, 0x00b053f9, 0x00ab4bfa, 0x00a543fa, 0x009f3cfb, 
                                           0x009835fc, 0x00912efd, 0x008928fe, 0x008123fe, 0x00781efd, 0x006f1bfb, 0x006617fa, 0x005c15f8
 };
-const PaletteConstFWD<sizeof(colors_idl_plasma) / sizeof(unsigned int)> palette_idl_plasma(colors_idl_plasma);
+
+const PaletteConstFWD<sizeof(colors_idl_plasma) / sizeof(unsigned int)> palette_idl_plasma(colors_idl_plasma);
 const PaletteConstBWD<sizeof(colors_idl_plasma) / sizeof(unsigned int)> palette_idl_plasma_inv(colors_idl_plasma);
-typedef PaletteConstFWD<sizeof(colors_idl_plasma) / sizeof(unsigned int)> palette_idl_plasma_t;
-#endif // _IDL_PLASMA_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_plasma) / sizeof(unsigned int)> palette_idl_plasma_t;
+
+#endif // _IDL_PLASMA_H

@@ -1,7 +1,9 @@
 #ifndef _IDL_EXPONENTIALGNWH_H
 #define _IDL_EXPONENTIALGNWH_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_exponentialGnWh[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_exponentialGnWh[] = {
                                                    0x00000001, 0x00000101, 0x00000101, 0x00000202, 0x00010302, 0x00010303, 0x00010403, 0x00020503, 
                                                    0x00020504, 0x00020604, 0x00020705, 0x00030705, 0x00030805, 0x00030906, 0x00030906, 0x00040a06, 
                                                    0x00040b07, 0x00040b07, 0x00040c08, 0x00050d08, 0x00050d08, 0x00050e09, 0x00050f09, 0x00060f09, 
@@ -35,7 +37,10 @@
                                                    0x00d1eae2, 0x00d4ebe4, 0x00d7ece5, 0x00daeee7, 0x00ddefe9, 0x00e0f0eb, 0x00e3f2ed, 0x00e6f3ef, 
                                                    0x00e9f4f1, 0x00ecf6f2, 0x00eff7f4, 0x00f1f8f6, 0x00f4faf8, 0x00f7fbfa, 0x00fafcfc, 0x00fdfefe
 };
-const PaletteConstFWD<sizeof(colors_idl_exponentialGnWh) / sizeof(unsigned int)> palette_idl_exponentialGnWh(colors_idl_exponentialGnWh);
+
+const PaletteConstFWD<sizeof(colors_idl_exponentialGnWh) / sizeof(unsigned int)> palette_idl_exponentialGnWh(colors_idl_exponentialGnWh);
 const PaletteConstBWD<sizeof(colors_idl_exponentialGnWh) / sizeof(unsigned int)> palette_idl_exponentialGnWh_inv(colors_idl_exponentialGnWh);
-typedef PaletteConstFWD<sizeof(colors_idl_exponentialGnWh) / sizeof(unsigned int)> palette_idl_exponentialGnWh_t;
-#endif // _IDL_EXPONENTIALGNWH_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_exponentialGnWh) / sizeof(unsigned int)> palette_idl_exponentialGnWh_t;
+
+#endif // _IDL_EXPONENTIALGNWH_H

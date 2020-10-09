@@ -1,7 +1,9 @@
 #ifndef _MAT_SPRING_H
 #define _MAT_SPRING_H
-#include "../bstexpalette.h"
-const unsigned int colors_mat_spring[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_mat_spring[] = {
                                           0x00ff00ff, 0x00fe01ff, 0x00fd02ff, 0x00fc03ff, 0x00fb04ff, 0x00fa05ff, 0x00f906ff, 0x00f807ff, 
                                           0x00f708ff, 0x00f609ff, 0x00f50aff, 0x00f40bff, 0x00f30cff, 0x00f20dff, 0x00f10eff, 0x00f00fff, 
                                           0x00ef10ff, 0x00ee11ff, 0x00ed12ff, 0x00ec13ff, 0x00eb14ff, 0x00ea15ff, 0x00e916ff, 0x00e817ff, 
@@ -35,7 +37,10 @@
                                           0x000ff0ff, 0x000ef1ff, 0x000df2ff, 0x000cf3ff, 0x000bf4ff, 0x000af5ff, 0x0009f6ff, 0x0008f7ff, 
                                           0x0007f8ff, 0x0006f9ff, 0x0005faff, 0x0004fbff, 0x0003fcff, 0x0002fdff, 0x0001feff, 0x0000ffff
 };
-const PaletteConstFWD<sizeof(colors_mat_spring) / sizeof(unsigned int)> palette_mat_spring(colors_mat_spring);
+
+const PaletteConstFWD<sizeof(colors_mat_spring) / sizeof(unsigned int)> palette_mat_spring(colors_mat_spring);
 const PaletteConstBWD<sizeof(colors_mat_spring) / sizeof(unsigned int)> palette_mat_spring_inv(colors_mat_spring);
-typedef PaletteConstFWD<sizeof(colors_mat_spring) / sizeof(unsigned int)> palette_mat_spring_t;
-#endif // _MAT_SPRING_H
+
+typedef PaletteConstFWD<sizeof(colors_mat_spring) / sizeof(unsigned int)> palette_mat_spring_t;
+
+#endif // _MAT_SPRING_H

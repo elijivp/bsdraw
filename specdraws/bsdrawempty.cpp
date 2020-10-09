@@ -1,3 +1,6 @@
+/// This file contains special derived class for trivial cases
+/// DrawEmpty does nothing, just holds actual for 2D draws space (throught sizeAndScaleHint)
+/// Created By: Elijah Vlasov
 #include "bsdrawempty.h"
 
 #include "../core/sheigen/bsshgenmain.h"
@@ -14,9 +17,11 @@ public:
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
   virtual unsigned int  shfragment_pendingSize(unsigned int ovlscount) const { return FshMainGenerator::basePendingSize(ovlscount); }
-  virtual unsigned int  shfragment_store(unsigned int /*allocatedPortions*/, const DPostmask& fsp, ORIENTATION orient, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
+  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, 
+                                         ORIENTATION orient, SPLITPORTIONS splitPortions, 
+                                         unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
-    FshMainGenerator fmg(to, orient, ovlscount, ovlsinfo);
+    FshMainGenerator fmg(to, allocatedPortions, orient, splitPortions, ovlscount, ovlsinfo);
     fmg.goto_func_begin(FshMainGenerator::INIT_BYVALUE, emptyclr, fsp);
     fmg.goto_func_end(fsp);
     return fmg.written();

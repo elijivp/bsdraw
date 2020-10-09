@@ -1,9 +1,10 @@
+/// King of draws!
+/// DrawDomain its a draw, who allow you to mark a canvas by markers
+/// which will be paitned on colors, corresponding with data
+/// Created By: Elijah Vlasov
 #include "bsdrawdomain.h"
 
-#include <QResizeEvent>
-
 #include <memory.h>
-
 #include "core/sheigen/bsshei2d.h"
 
 void DIDomain::_init(unsigned int width, unsigned int height, bool incbackground, unsigned int* count, float* dataptr)

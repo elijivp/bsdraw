@@ -1,7 +1,9 @@
 #ifndef _GNU_COFFEE_H
 #define _GNU_COFFEE_H
-#include "../bstexpalette.h"
-const unsigned int colors_gnu_coffee[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_gnu_coffee[] = {
                                           0x00000001, 0x00000004, 0x00000007, 0x0000000a, 0x0000000d, 0x00000010, 0x00000013, 0x00000016, 
                                           0x00000019, 0x0000001c, 0x0000001f, 0x00000022, 0x00000025, 0x00000028, 0x0000002b, 0x0000002e, 
                                           0x00000031, 0x00000034, 0x00000037, 0x0000003a, 0x0000003d, 0x00000040, 0x00000043, 0x00000046, 
@@ -35,7 +37,10 @@
                                           0x00d1ffff, 0x00d4ffff, 0x00d7ffff, 0x00daffff, 0x00ddffff, 0x00e0ffff, 0x00e3ffff, 0x00e6ffff, 
                                           0x00e9ffff, 0x00ecffff, 0x00efffff, 0x00f2ffff, 0x00f5ffff, 0x00f8ffff, 0x00fbffff, 0x00feffff
 };
-const PaletteConstFWD<sizeof(colors_gnu_coffee) / sizeof(unsigned int)> palette_gnu_coffee(colors_gnu_coffee);
+
+const PaletteConstFWD<sizeof(colors_gnu_coffee) / sizeof(unsigned int)> palette_gnu_coffee(colors_gnu_coffee);
 const PaletteConstBWD<sizeof(colors_gnu_coffee) / sizeof(unsigned int)> palette_gnu_coffee_inv(colors_gnu_coffee);
-typedef PaletteConstFWD<sizeof(colors_gnu_coffee) / sizeof(unsigned int)> palette_gnu_coffee_t;
-#endif // _GNU_COFFEE_H
+
+typedef PaletteConstFWD<sizeof(colors_gnu_coffee) / sizeof(unsigned int)> palette_gnu_coffee_t;
+
+#endif // _GNU_COFFEE_H

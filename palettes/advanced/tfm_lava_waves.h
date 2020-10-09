@@ -1,7 +1,9 @@
 #ifndef _TFM_LAVA_WAVES_H
 #define _TFM_LAVA_WAVES_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_lava_waves[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_lava_waves[] = {
                                               0x00826d81, 0x0085847d, 0x0088957a, 0x008b9f77, 0x008e9f74, 0x00919671, 0x0094856e, 0x00976f6b, 
                                               0x009a5668, 0x009d4065, 0x00a02e62, 0x00a3245f, 0x00a6235c, 0x00a92b59, 0x00ac3c56, 0x00af5253, 
                                               0x00b26a50, 0x00b5814d, 0x00b8934a, 0x00ba9e47, 0x00bd9f44, 0x00c09842, 0x00c3883f, 0x00c5723c, 
@@ -35,7 +37,10 @@
                                               0x004b3fb5, 0x004d56b2, 0x00506eaf, 0x005385ac, 0x005696aa, 0x00599fa7, 0x005c9fa4, 0x005f95a1, 
                                               0x0062849e, 0x00656e9a, 0x00685597, 0x006b3f94, 0x006e2d91, 0x0071238e, 0x0075238b, 0x00782c88
 };
-const PaletteConstFWD<sizeof(colors_tfm_lava_waves) / sizeof(unsigned int)> palette_tfm_lava_waves(colors_tfm_lava_waves);
+
+const PaletteConstFWD<sizeof(colors_tfm_lava_waves) / sizeof(unsigned int)> palette_tfm_lava_waves(colors_tfm_lava_waves);
 const PaletteConstBWD<sizeof(colors_tfm_lava_waves) / sizeof(unsigned int)> palette_tfm_lava_waves_inv(colors_tfm_lava_waves);
-typedef PaletteConstFWD<sizeof(colors_tfm_lava_waves) / sizeof(unsigned int)> palette_tfm_lava_waves_t;
-#endif // _TFM_LAVA_WAVES_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_lava_waves) / sizeof(unsigned int)> palette_tfm_lava_waves_t;
+
+#endif // _TFM_LAVA_WAVES_H

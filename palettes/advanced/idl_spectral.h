@@ -1,7 +1,9 @@
 #ifndef _IDL_SPECTRAL_H
 #define _IDL_SPECTRAL_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_spectral[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_spectral[] = {
                                             0x0043029f, 0x004304a1, 0x004407a3, 0x004409a6, 0x00450ca8, 0x00450eaa, 0x004611ac, 0x004613ae, 
                                             0x004715b1, 0x004718b3, 0x00481ab5, 0x00481db7, 0x00491fb9, 0x004922bc, 0x004a24be, 0x004a26c0, 
                                             0x004b29c2, 0x004b2bc4, 0x004c2ec7, 0x004c30c9, 0x004d33cb, 0x004d35cd, 0x004e38cf, 0x004e3ad2, 
@@ -35,7 +37,10 @@
                                             0x00b37342, 0x00b27144, 0x00b16f46, 0x00b06d47, 0x00af6a49, 0x00ae684b, 0x00ad664c, 0x00ac644e, 
                                             0x00ab6150, 0x00a95f51, 0x00a85d53, 0x00a75b55, 0x00a65856, 0x00a55658, 0x00a4545a, 0x00a3525b
 };
-const PaletteConstFWD<sizeof(colors_idl_spectral) / sizeof(unsigned int)> palette_idl_spectral(colors_idl_spectral);
+
+const PaletteConstFWD<sizeof(colors_idl_spectral) / sizeof(unsigned int)> palette_idl_spectral(colors_idl_spectral);
 const PaletteConstBWD<sizeof(colors_idl_spectral) / sizeof(unsigned int)> palette_idl_spectral_inv(colors_idl_spectral);
-typedef PaletteConstFWD<sizeof(colors_idl_spectral) / sizeof(unsigned int)> palette_idl_spectral_t;
-#endif // _IDL_SPECTRAL_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_spectral) / sizeof(unsigned int)> palette_idl_spectral_t;
+
+#endif // _IDL_SPECTRAL_H

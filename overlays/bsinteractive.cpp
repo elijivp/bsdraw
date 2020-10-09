@@ -1,7 +1,14 @@
+/// Overlays:   invisible reactions for user events (mouse clicks, kbd keys). Use as root overlays
+///   OActivePoint. Effect: invisible source of coords, dynamic, movable
+///   OActiveCursor. Effect: mouse clicks reaction
+///   OActiveCursorCarrier. Effect: mouse clicks reaction with attached client
+///   OActiveCursorCarrier2. Effect: mouse clicks reaction with attached 2 clients
+///   OActiveRandom. Effect: point moves after update() calls
+/// Created By: Elijah Vlasov
 #include "bsinteractive.h"
 #include "../core/sheigen/bsshgentrace.h"
 
-OActivePoint::OActivePoint(COORDINATION cn, float center_x, float center_y): IOverlaySimple(),
+OActivePoint::OActivePoint(COORDINATION cn, float center_x, float center_y): DrawOverlaySimple(),
   OVLCoordsDynamic(cn, center_x, center_y), OVLDimmsOff(){}
 
 int   OActivePoint::fshTrace(int overlay, bool rotated, char* to) const
@@ -18,8 +25,11 @@ int   OActivePoint::fshTrace(int overlay, bool rotated, char* to) const
 
 /********************************************************************************************************************************************/
 /********************************************************************************************************************************************/
-OActiveCursor::OActiveCursor(bool linkToScaledCenter): IOverlaySimple(),
+OActiveCursor::OActiveCursor(bool linkToScaledCenter): DrawOverlaySimple(),
   OVLCoordsDynamic(CR_RELATIVE, 0.5, 0.5), OVLDimmsOff(), m_linked(linkToScaledCenter) {}
+
+OActiveCursor::OActiveCursor(COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter): DrawOverlaySimple(),
+  OVLCoordsDynamic(cn, default_x, default_y), OVLDimmsOff(), m_linked(linkToScaledCenter) {}
 
 int   OActiveCursor::fshTrace(int overlay, bool rotated, char* to) const
 {
@@ -48,12 +58,71 @@ bool OActiveCursor::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* 
 }
 
 
+OActiveCursorCarrier::OActiveCursorCarrier(DrawOverlayProactive* iop, bool linkToScaledCenter): OActiveCursor(linkToScaledCenter),
+  m_iop(iop)
+{
+}
+
+OActiveCursorCarrier::OActiveCursorCarrier(DrawOverlayProactive* iop, COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter):
+  OActiveCursor(cn, default_x, default_y, linkToScaledCenter),
+  m_iop(iop)
+{
+}
+
+bool OActiveCursorCarrier::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)
+{
+  m_iop->overlayReactionMouse(oreact, dataptr, doStop);
+  
+  if (oreact == ORM_LMPRESS || oreact == ORM_LMMOVE)
+  {
+    setCoordinates(((const float*)dataptr)[0], ((const float*)dataptr)[1]);
+    return true;
+  }
+  else if (oreact == ORM_RMPRESS)
+  {
+    setCoordinates(-1, -1);
+    return true;
+  }
+  return false;
+}
+
+OActiveCursorCarrier2::OActiveCursorCarrier2(DrawOverlayProactive* iop, DrawOverlayProactive* iop2, bool linkToScaledCenter): OActiveCursor(linkToScaledCenter),
+  m_iop(iop), m_iop2(iop2)
+{
+}
+
+OActiveCursorCarrier2::OActiveCursorCarrier2(DrawOverlayProactive* iop, DrawOverlayProactive* iop2, COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter):
+  OActiveCursor(cn, default_x, default_y, linkToScaledCenter),
+  m_iop(iop), m_iop2(iop2)
+{
+  
+}
+
+bool OActiveCursorCarrier2::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)
+{
+  m_iop->overlayReactionMouse(oreact, dataptr, doStop);
+  m_iop2->overlayReactionMouse(oreact, dataptr, doStop);
+  
+  if (oreact == ORM_LMPRESS || oreact == ORM_LMMOVE)
+  {
+    setCoordinates(((const float*)dataptr)[0], ((const float*)dataptr)[1]);
+    return true;
+  }
+  else if (oreact == ORM_RMPRESS)
+  {
+    setCoordinates(-1, -1);
+    return true;
+  }
+  return false;
+}
+
+
 /********************************************************************************************************************************************/
 /********************************************************************************************************************************************/
 
 #include <time.h>
 
-OActiveRandom::OActiveRandom(): IOverlaySimple(), OVLCoordsDynamic(CR_RELATIVE, 0.0, 0.0)
+OActiveRandom::OActiveRandom(): DrawOverlaySimple(), OVLCoordsDynamic(CR_RELATIVE, 0.0, 0.0)
 {
   m_ctr = 10;
   m_seed[0] = m_seed[1] = clock();
@@ -85,7 +154,7 @@ int   OActiveRandom::fshTrace(int overlay, bool rotated, char* to) const
 /********************************************************************************************************************************************/
 /********************************************************************************************************************************************/
 
-//Interactive1DMaxMin::Interactive1DMaxMin(POINTERTYPE pt): IOverlaySimple(), m_pointerType(pt)
+//Interactive1DMaxMin::Interactive1DMaxMin(POINTERTYPE pt): DrawOverlaySimple(), m_pointerType(pt)
 //{
 //}
 
@@ -131,3 +200,4 @@ int   OActiveRandom::fshTrace(int overlay, bool rotated, char* to) const
 //  ocg.goto_func_end(false);
 //  return ocg.written();
 //}
+

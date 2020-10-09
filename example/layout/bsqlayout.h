@@ -1,6 +1,9 @@
 #ifndef BSQLAYOUT_H
 #define BSQLAYOUT_H
 
+/// Technical file, old version, need to be replaced by new
+/// Created By: Elijah Vlasov
+
 #include <QBoxLayout>
 #include <QStack>
 #include <QString>

@@ -1,6 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+/// MainWindow for simple example
+/// Created By: Elijah Vlasov
+
 #include <QMainWindow>
 
 class DrawQWidget;

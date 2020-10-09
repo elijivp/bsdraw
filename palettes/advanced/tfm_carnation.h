@@ -1,7 +1,9 @@
 #ifndef _TFM_CARNATION_H
 #define _TFM_CARNATION_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_carnation[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_carnation[] = {
                                              0x000701ff, 0x000e02ff, 0x001503ff, 0x001c04ff, 0x002305ff, 0x002a06ff, 0x003007ff, 0x003708ff, 
                                              0x003e09ff, 0x00440aff, 0x004b0bff, 0x00510cff, 0x00570dff, 0x005e0eff, 0x00640fff, 0x006a10ff, 
                                              0x007011ff, 0x007712ff, 0x007d13ff, 0x008314ff, 0x008915ff, 0x008f16ff, 0x009517ff, 0x009a18ff, 
@@ -35,7 +37,10 @@
                                              0x00ecf4ff, 0x00edf4ff, 0x00eef4ff, 0x00eff5ff, 0x00f0f5ff, 0x00f0f5ff, 0x00f1f6ff, 0x00f2f6ff, 
                                              0x00f3f6ff, 0x00f4f7ff, 0x00f5f8ff, 0x00f6f8ff, 0x00f7f9ff, 0x00f8f9ff, 0x00f9faff, 0x00fafbff
 };
-const PaletteConstFWD<sizeof(colors_tfm_carnation) / sizeof(unsigned int)> palette_tfm_carnation(colors_tfm_carnation);
+
+const PaletteConstFWD<sizeof(colors_tfm_carnation) / sizeof(unsigned int)> palette_tfm_carnation(colors_tfm_carnation);
 const PaletteConstBWD<sizeof(colors_tfm_carnation) / sizeof(unsigned int)> palette_tfm_carnation_inv(colors_tfm_carnation);
-typedef PaletteConstFWD<sizeof(colors_tfm_carnation) / sizeof(unsigned int)> palette_tfm_carnation_t;
-#endif // _TFM_CARNATION_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_carnation) / sizeof(unsigned int)> palette_tfm_carnation_t;
+
+#endif // _TFM_CARNATION_H

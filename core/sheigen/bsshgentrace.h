@@ -1,6 +1,10 @@
 #ifndef BSSHGENTRACE
 #define BSSHGENTRACE
 
+/// This file is a part of shader-code-generation subsystem
+/// You dont need to use classes from this file directly
+/// Created By: Elijah Vlasov
+
 #include "../bsoverlay.h"
 
 struct _bs_unzip_t
@@ -47,11 +51,10 @@ class FshTraceGenerator
   int                                 m_prmmemory[10];
   int                                 m_prmmemoryiter;
 public:
-  enum  OCG_INCLUDE_BITS  {  OINC_NONE=0, OINC_GETVALUE=1, OINC_RANDOM=2/*OINC_BOUNDS=4  */};
+  enum  OCG_INCLUDE_BITS  {  OINC_NONE=0, OINC_GETVALUE=1, OINC_RANDOM=2, OINC_DATABOUNDS=4 /*, OINC_PORTIONS=4*/ };
 public:
-  FshTraceGenerator(const AbstractOverlay::uniforms_t& ufms, int overlay, bool rotated, char* deststring, int ocg_include_bits = 0);
+  FshTraceGenerator(const AbstractDrawOverlay::uniforms_t& ufms, int overlay, bool rotated, char* deststring, int ocg_include_bits = 0);
   int  written() const { return m_offset; }
-//  enum  ROTATION { ROT_FOLLOW, ROT_HORZ, ROT_VERT, ROT_NONE };
 private:
   void  _gtb(OVL_ORIENTATION orient);
   void  _gtb_coords(const _bs_unzip_t& bsu);
@@ -96,21 +99,28 @@ public:
 public:
   void  var_fixed(const char* name, float value);
   void  var_const_fixed(const char* name, float value);
+  void  var_inline(const char* name, float v);
   void  var_fixed(const char* name, int value);
   void  var_const_fixed(const char* name, int value);
+  void  var_inline(const char* name, int v);
   
   void  var_fixed(const char* name, float v1, float v2);
   void  var_const_fixed(const char* name, float v1, float v2);
+  void  var_inline(const char* name, float v1, float v2);
   void  var_fixed(const char* name, int v1, int v2);
   void  var_const_fixed(const char* name, int v1, int v2);
+  void  var_inline(const char* name, int v1, int v2);
   
   void  var_fixed(const char* name, float v1, float v2, float v3);
   void  var_const_fixed(const char* name, float v1, float v2, float v3);
+  void  var_inline(const char* name, float v1, float v2, float v3);
   void  var_fixed(const char* name, int v1, int v2, int v3);
   void  var_const_fixed(const char* name, int v1, int v2, int v3);
+  void  var_inline(const char* name, int v1, int v2, int v3);
   
   void  var_fixed(const char* name, float v1, float v2, float v3, float v4);
   void  var_const_fixed(const char* name, float v1, float v2, float v3, float v4);
+  
 public:
   void  var_static(DTYPE type, const char* name_eq_value);
   void  var_static(const char* name, const char* value);
@@ -127,7 +137,8 @@ public:
   void  pop_cs_rel_y(const char* name);
   void  pop_cs_rel(const char* name);
 public:
-  void  push(const char* text);
+  void  push(const char* sztext);
+  void  push(const char* text, unsigned int len);
 public:
   void  inside_begin1(const char* limrad1);
   void  inside_begin2(const char* limits2);
@@ -161,16 +172,16 @@ public:           /// TRACES  from inormed
   void  trace_circle_cc_begin(const char* radius, const char* border);
   void  trace_circle_cc_end(float fillcoeff/*, bool notraceinside=false*/);
   
-  void  trace_2linehorz_c(const char* size = nullptr, const char* gap = nullptr, const char* offset = nullptr, const char* crosslimit=nullptr);
-  void  trace_2linevert_c(const char* size = nullptr, const char* gap = nullptr, const char* offset = nullptr, const char* crosslimit=nullptr);
-  void  trace_linehorz_l(const char* size = nullptr, const char* gap = nullptr, const char* offset = nullptr, const char* crosslimit=nullptr);
-  void  trace_linehorz_r(const char* size = nullptr, const char* gap = nullptr, const char* offset = nullptr, const char* crosslimit=nullptr);
-  void  trace_linevert_t(const char* size = nullptr, const char* gap = nullptr, const char* offset = nullptr, const char* crosslimit=nullptr);
-  void  trace_linevert_b(const char* size = nullptr, const char* gap = nullptr, const char* offset = nullptr, const char* crosslimit=nullptr);
+  void  trace_2linehorz_c(const char* isize = nullptr, const char* igap = nullptr, const char* ioffset = nullptr, const char* icrosslimit=nullptr);
+  void  trace_2linevert_c(const char* size = nullptr, const char* gap = nullptr, const char* ioffset = nullptr, const char* crosslimit=nullptr);
+  void  trace_linehorz_l(const char* isize = nullptr, const char* igap = nullptr, const char* ioffset = nullptr, const char* icrosslimit=nullptr);
+  void  trace_linehorz_r(const char* isize = nullptr, const char* igap = nullptr, const char* ioffset = nullptr, const char* icrosslimit=nullptr);
+  void  trace_linevert_t(const char* isize = nullptr, const char* igap = nullptr, const char* ioffset = nullptr, const char* icrosslimit=nullptr);
+  void  trace_linevert_b(const char* isize = nullptr, const char* igap = nullptr, const char* ioffset = nullptr, const char* icrosslimit=nullptr);
   
-  void  trace_lines_x(const char* size = nullptr, const char* gap = nullptr, const char* crosslimit=nullptr);
+  void  trace_lines_x(const char* size = nullptr, const char* igap = nullptr, const char* icrosslimit=nullptr);
 public:
-  void  trace_line_from_normed_to(const char* normedendpoint);
+  void  trace_line_from_normed_to(const char* inormedendpoint);
 public:
   void  tex_pickcolor(int palette_param_idx, const char* pickvalue, const char* result="result");
   void  tex_addcolor(int palette_param_idx, const char* pickvalue, const char* weight, const char* result="result");
@@ -178,8 +189,6 @@ public:
 public:
   void  goto_func_end(bool traced);
 };
-
-
 
 #endif // BSSHGENTRACE
 

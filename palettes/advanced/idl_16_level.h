@@ -1,7 +1,9 @@
 #ifndef _IDL_16_LEVEL_H
 #define _IDL_16_LEVEL_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_16_level[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_16_level[] = {
                                             0x00005400, 0x00005400, 0x00005400, 0x00005400, 0x00005400, 0x00005400, 0x00005400, 0x00005400, 
                                             0x00005400, 0x00005400, 0x00005400, 0x00005400, 0x00005400, 0x00005400, 0x00005400, 0x00005400, 
                                             0x0000a800, 0x0000a800, 0x0000a800, 0x0000a800, 0x0000a800, 0x0000a800, 0x0000a800, 0x0000a800, 
@@ -35,7 +37,10 @@
                                             0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 
                                             0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff
 };
-const PaletteConstFWD<sizeof(colors_idl_16_level) / sizeof(unsigned int)> palette_idl_16_level(colors_idl_16_level);
+
+const PaletteConstFWD<sizeof(colors_idl_16_level) / sizeof(unsigned int)> palette_idl_16_level(colors_idl_16_level);
 const PaletteConstBWD<sizeof(colors_idl_16_level) / sizeof(unsigned int)> palette_idl_16_level_inv(colors_idl_16_level);
-typedef PaletteConstFWD<sizeof(colors_idl_16_level) / sizeof(unsigned int)> palette_idl_16_level_t;
-#endif // _IDL_16_LEVEL_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_16_level) / sizeof(unsigned int)> palette_idl_16_level_t;
+
+#endif // _IDL_16_LEVEL_H

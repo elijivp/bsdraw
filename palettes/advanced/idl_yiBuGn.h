@@ -1,7 +1,9 @@
 #ifndef _IDL_YIBUGN_H
 #define _IDL_YIBUGN_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_yiBuGn[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_yiBuGn[] = {
                                           0x00d9fdfe, 0x00d8fdfd, 0x00d6fdfd, 0x00d5fdfd, 0x00d4fdfc, 0x00d2fdfc, 0x00d1fdfb, 0x00d0fdfb, 
                                           0x00cefdfa, 0x00cdfdfa, 0x00ccfdf9, 0x00cafdf9, 0x00c9fdf8, 0x00c8fdf8, 0x00c7fcf7, 0x00c5fcf7, 
                                           0x00c4fcf6, 0x00c3fcf6, 0x00c1fcf5, 0x00c0fcf4, 0x00bffbf4, 0x00befbf3, 0x00bcfbf2, 0x00bbfbf1, 
@@ -35,7 +37,10 @@
                                           0x00752717, 0x00742716, 0x00722615, 0x006d2614, 0x006c2514, 0x00692413, 0x00672412, 0x00682311, 
                                           0x00662310, 0x0065220f, 0x0061220e, 0x0060220d, 0x005f210c, 0x005a210c, 0x005b210b, 0x0057210a
 };
-const PaletteConstFWD<sizeof(colors_idl_yiBuGn) / sizeof(unsigned int)> palette_idl_yiBuGn(colors_idl_yiBuGn);
+
+const PaletteConstFWD<sizeof(colors_idl_yiBuGn) / sizeof(unsigned int)> palette_idl_yiBuGn(colors_idl_yiBuGn);
 const PaletteConstBWD<sizeof(colors_idl_yiBuGn) / sizeof(unsigned int)> palette_idl_yiBuGn_inv(colors_idl_yiBuGn);
-typedef PaletteConstFWD<sizeof(colors_idl_yiBuGn) / sizeof(unsigned int)> palette_idl_yiBuGn_t;
-#endif // _IDL_YIBUGN_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_yiBuGn) / sizeof(unsigned int)> palette_idl_yiBuGn_t;
+
+#endif // _IDL_YIBUGN_H

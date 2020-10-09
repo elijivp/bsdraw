@@ -1,7 +1,9 @@
 #ifndef _IDL_NATURE_H
 #define _IDL_NATURE_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_nature[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_nature[] = {
                                           0x00e5f86c, 0x00d7ff71, 0x00c8f876, 0x00baf27c, 0x00acec81, 0x009fe786, 0x0091e28a, 0x0085de8f, 
                                           0x0079da93, 0x006ed798, 0x0063d59c, 0x0059d39f, 0x004fd2a3, 0x0047d2a6, 0x003fd2a9, 0x0038d3ab, 
                                           0x0031d4ae, 0x002cd6b0, 0x0027d9b1, 0x0024ddb3, 0x0021e1b4, 0x001fe6b4, 0x001eebb5, 0x001ef0b5, 
@@ -35,7 +37,10 @@
                                           0x00d60052, 0x00d60052, 0x00d60052, 0x00d60052, 0x00d60052, 0x00d60052, 0x00d60052, 0x00d60052, 
                                           0x00d60052, 0x00d60052, 0x00d60052, 0x00d60052, 0x00d60052, 0x00d60052, 0x00d60052, 0x00d60052
 };
-const PaletteConstFWD<sizeof(colors_idl_nature) / sizeof(unsigned int)> palette_idl_nature(colors_idl_nature);
+
+const PaletteConstFWD<sizeof(colors_idl_nature) / sizeof(unsigned int)> palette_idl_nature(colors_idl_nature);
 const PaletteConstBWD<sizeof(colors_idl_nature) / sizeof(unsigned int)> palette_idl_nature_inv(colors_idl_nature);
-typedef PaletteConstFWD<sizeof(colors_idl_nature) / sizeof(unsigned int)> palette_idl_nature_t;
-#endif // _IDL_NATURE_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_nature) / sizeof(unsigned int)> palette_idl_nature_t;
+
+#endif // _IDL_NATURE_H

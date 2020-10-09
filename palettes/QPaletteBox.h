@@ -1,9 +1,26 @@
 #ifndef QPALETTEBOX_H
 #define QPALETTEBOX_H
 
+/// ComboBox with non-standard palettes in dropped list
+/// You need include resource file with all non-standard palettes
+/// Usage:
+/// 
+///     QPaletteBoxSg* qpb = new QPaletteBoxSg();
+///     QObject::connect(qpb, SIGNAL(currentChanged(const IPalette*)), some_bsdraw, SLOT(slot_setDataPalette(const IPalette*)));
+///     some_layout->addWidget(qpb);
+/// 
+///     QAbstractButton*  qcbPalInverted = new QCheckBox("invert Palettes");
+///     QObject::connect(qcbPalInverted, SIGNAL(toggled(bool)), qpb, SLOT(setInverted(bool)));
+///     some_layout->addWidget(qcbPalInverted);
+/// 
+/// 
+/// Created By: Elijah Vlasov
+
 #include <QComboBox>
 
 class QPaletteBoxPrivate;
+
+class IPalette;
 
 class QPaletteBox : public QComboBox
 {
@@ -12,6 +29,7 @@ public:
   explicit QPaletteBox(QWidget *parent = 0);
   ~QPaletteBox();
   bool  isInverted() const;
+  const IPalette* currentPalette() const;
 public slots:
   void  setInverted(bool inverted);
 protected:
@@ -21,7 +39,6 @@ protected:
 };
 
 
-class IPalette;
 class QPaletteBoxSg: public QPaletteBox
 {
   Q_OBJECT

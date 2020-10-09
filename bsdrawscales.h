@@ -1,50 +1,36 @@
 #ifndef BSDRAWSCALES_H
 #define BSDRAWSCALES_H
 
+/// This file contains special class who describes Bars around bsdraws
+/// Each Bar, or margin, allow you to locate scales, labels, lines, etc.. near bsdraw
+/// Each Bar is a mini layout. He eats in one turn two special interfaces:
+///   - MarginElement for place and draw
+///   - MEQWrapper for control
+/// Background and foreground ColorPolicy can be bsdraw-depended. Or You can make is standard by QPalette
+/// 
+/// Example:
+/// #include "bsdrawgraph.h"
+/// #include "bsdrawscales.h"
+/// #include "palettes/bspalettes_std.h"
+/// 
+/// DrawGraph* draw = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp());
+/// draw->setDataPalette(&paletteBkGrWh);
+/// ...
+/// DrawBars* dbar = new DrawBars(draw, DrawBars::CP_FROM_DRAWBACK);
+/// dbar->addScaleDrawUniSide(AT_TOP, 0, 21);
+/// dbar->addScaleDrawGraphB(AT_LEFT, 0 | DBF_NOTESINSIDE, 21, 20);
+/// ...
+/// draw->setData(some_float_data);
+/// 
+/// Created By: Elijah Vlasov
+
 #include <QWidget>
 
-//#include "core/bsqdraw.h"
-
 class DrawQWidget;
-class MarginElement;
+class QScrollBar;
 class DrawBars;
 
-class MarginHolder: public QObject
-{
-  Q_OBJECT
-protected:
-  MarginElement*  m_pme;
-  DrawBars*       m_premote;
-  MarginHolder(MarginElement* pme, DrawBars* remote): m_pme(pme), m_premote(remote){}
-  friend class DrawBars;
-protected:
-  void remoteUpdate();
-  void remoteRebound();
-public:
-  MarginHolder(const MarginHolder& cpy);
-  virtual ~MarginHolder();
-  
-  bool  empty() const { return m_pme == nullptr; }
-  bool  assigned() const { return m_premote != nullptr; }
-  
-public slots:
-  /// remote recall functions (no own operations because of async removing)
-  void  remove();
-  void  removeAndLeftSpace();
-  void  setVisible(bool);
-  void  moveToAnotherSide();
-};
 
-typedef void  (*mtap_qstring_fn)(int marknum, QString& reservedResult);
-
-
-template <int recycle>
-void  standard_tap_symbolate(int marknum, QString& reservedResult)
-{
-  const char* latins = "abcdefghijklmnopqrstuvwxyz";
-  const int   latinslen = recycle < 0 || recycle > 26? 26 : recycle;
-  reservedResult = latins[marknum % latinslen];
-}
 
 enum  ATTACHED_TO { AT_LEFT, AT_RIGHT, AT_TOP, AT_BOTTOM };
 
@@ -53,6 +39,7 @@ class MarginElement
 public:
   virtual ~MarginElement();
 protected:
+  enum UPDATEFOR { UF_NONE=-2, UF_APPEND=-1, UF_RESIZE=0, UF_LVL1, UF_LVL2, UF_LVL3,      UF_FORCED=99999  };
   struct uarea_t
   {
     ATTACHED_TO atto;
@@ -65,27 +52,59 @@ protected:
       return cmp.atto == atto && cmp.atto_begin == atto_begin && cmp.atto_end == atto_end && cmp.dlytotal == dlytotal && cmp.dly1 == dly1 && cmp.dly2 == dly2 && cmp.dly3 == dly3 && cmp.mirrored == mirrored;
     }
   };
-protected:
-  enum UPDATEFOR { UF_NONE=-2, UF_APPEND=-1, UF_RESIZE=0, UF_LVL1, UF_LVL2, UF_LVL3,      UF_FORCED=99999  };
   virtual bool  updateArea(const uarea_t& uarea, int UPDATEFOR)=0;
-  virtual void  draw(QPainter&, const QColor& /*foregroundColor*/)=0;
+  virtual void  draw(QPainter&)=0;
   virtual void  sizeHint(ATTACHED_TO atto, int* atto_size, int* mindly, int* mindly1, int* mindly2) const =0;
   virtual void  relatedInit(const DrawQWidget*) {  }
+  virtual void  changeColor(const QColor&)=0;
   friend class DrawBars;
   friend class DrawBars_impl;
+  friend class MEQWrapper;
 };
 
-//bool operator==(const MarginElement::uarea_t& cmp, const MarginElement::uarea_t& cmp2)
-//{
-//  return cmp.atto == cmp2.atto && cmp.atto_pt == cmp2.atto_pt && cmp.atto_pt_shared == cmp2.atto_pt_shared && cmp.dlytotal == cmp2.dlytotal && cmp.dly1 == cmp2.dly1 && cmp.dly2 == cmp2.dly2 && cmp.mirrored == cmp2.mirrored;
-//}
+class MEQWrapper: public QObject
+{
+  Q_OBJECT
+protected:
+  friend class DrawBars;
+  MarginElement*  m_pme;
+  DrawBars*       m_premote;
+  MEQWrapper();
+  virtual ~MEQWrapper();
+  void remoteUpdate();
+  void remoteRebound();
+public slots:
+  void  remove();
+  void  removeAndLeftSpace();
+  void  setVisible(bool);
+  void  moveToAnotherSide();
+  void  changeColor(const QColor& clr);
+};
 
-class MELabel;
-class MESpace;
-class MEScaleNN;      // NN - 1 note per 1 mark
-class MEScaleNM;      // NM notes between marks
-class MEScaleTAP;
-class MarginHolderMark;
+
+
+
+typedef void  (*mtap_qstring_fn)(int mark, int dimmarea, int reloffset, const void*, QString& reservedResult);
+
+template <int recycle>
+void  standard_tap_symbolate(int mark, int dimmarea, int reloffset, const void*, QString& reservedResult)
+{
+  const char* latins = "abcdefghijklmnopqrstuvwxyz";
+  const int   latinslen = recycle < 0 || recycle > 26? 26 : recycle;
+  reservedResult = latins[mark % int(latinslen + latinslen*(float(reloffset)/dimmarea))];
+}
+
+
+
+
+
+class MEWLabel;
+class MEWSpace;
+class MEWPointer;
+class MEWScaleNN;      // NN - 1 note per 1 mark
+class MEWScaleNM;      // NM notes between marks
+class MEWScaleTAP;
+class MEWScale;
 
 enum   // DrawBarsFlags
 {
@@ -120,7 +139,10 @@ public:
   enum  COLORS {  CP_DEFAULT,       // use default widget palette
                   CP_FROM_DRAWBACK,     // use DrawQWidget colorBack function
                   CP_FROM_DRAWPALETTE,      // use DrawQWidget dataPalette colors
-                  CP_FROM_DRAWPALETTE_INV   // use DrawQWidget dataPalette inversed colors
+                  CP_FROM_DRAWPALETTE_INV,   // use DrawQWidget dataPalette inversed colors
+                  
+                  CP_WHITE,
+                  CP_BLACK
                };
   
   explicit DrawBars(DrawQWidget* pdraw, COLORS colors=CP_FROM_DRAWPALETTE, /*bool expandNeighborBarsIfNeed=false, */QWidget *parent = nullptr);
@@ -139,42 +161,48 @@ public:
   int                 barSizeTop() const { return barSize(AT_TOP); }
   int                 barSizeBottom() const { return barSize(AT_BOTTOM); }
 public:
-  void                addMarginElement(ATTACHED_TO atto, MarginElement* me, bool sharedWithPrev, bool interventBanned);
-  bool                addMarginElement(ATTACHED_TO atto, MarginHolder* me, bool sharedWithPrev=false);
+  MEQWrapper*         addMarginElement(ATTACHED_TO atto, MarginElement* pme, MEQWrapper* pwp, bool sharedWithPrev, bool interventBanned);
 public:
-  MELabel             addLabel(ATTACHED_TO atto, int flags, QString text, Qt::Alignment  align=Qt::AlignCenter, Qt::Orientation orient=Qt::Horizontal/*, float orientAngleGrad=0.0f*/);
-  MESpace             addSpace(ATTACHED_TO atto, int space);
-  MESpace             addContour(ATTACHED_TO atto, int space=0, bool maxzone=false);
-  MarginHolderMark    addScaleEmpty(ATTACHED_TO atto, int flags, int fixedCount=11, int pixStep_pixSpacing=30, int miniPerMaxiLIMIT=9);
-  MEScaleNN           addScaleFixed(ATTACHED_TO atto, int flags, float LL, float HL, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9);
-  MEScaleNM           addScaleEnumerator(ATTACHED_TO atto, int flags, int marksCount, int pixStep_pixSpacing, unsigned int step=1, bool alwaysShowLast=false);
+  MEWLabel*           addLabel(ATTACHED_TO atto, int flags, QString text, Qt::Alignment  align=Qt::AlignCenter, Qt::Orientation orient=Qt::Horizontal/*, float orientAngleGrad=0.0f*/);
+  MEWSpace*           addSpace(ATTACHED_TO atto, int space);
+  MEWSpace*           addContour(ATTACHED_TO atto, int space=0, bool maxzone=false);
   
-  MEScaleNN           addScaleTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, int marksCount=11, int pixStep_pixSpacing=30);
-  MEScaleNM           addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, int marksCount=11, int pixStep_pixSpacing=30);
+  MEWPointer*         addPointerFixed(ATTACHED_TO atto, int flags, float LL, float HL);
+  MEWPointer*         addPointerDrawUniSide(ATTACHED_TO atto, int flags);
+  MEWPointer*         addPointerDrawGraphB(ATTACHED_TO atto, int flags);
   
-  MarginHolderMark    addScaleDrawUniSide(ATTACHED_TO atto, int flags, int pixSpacing, unsigned int step=1);
-  MarginHolderMark    addScaleDrawUniSide(ATTACHED_TO atto, int flags, float LL, float HL, int pixSpacing, int miniPerMaxiLIMIT=9);
-  MarginHolderMark    addScaleDrawGraphB(ATTACHED_TO atto, int flags, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9);
-  MarginHolderMark    addScaleDrawGraphB(ATTACHED_TO atto, int flags, float LL, float HL, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9);
+  MEWScale*           addScaleEmpty(ATTACHED_TO atto, int flags, int fixedCount=11, int pixStep_pixSpacing=30, int miniPerMaxiLIMIT=9);
+  MEWScaleNN*         addScaleFixed(ATTACHED_TO atto, int flags, float LL, float HL, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9);
+  MEWScaleNM*         addScaleEnumerator(ATTACHED_TO atto, int flags, int marksCount, int pixStep_pixSpacing, unsigned int step=1, bool alwaysShowLast=false);
   
-  MEScaleTAP          addScaleDrawRecorderB(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, int miniPerMaxiLIMIT=0);
-  MEScaleTAP          addScaleDrawRecorderNM(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, int miniPerMaxiLIMIT=0);
+  MEWScaleNN*         addScaleTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30);
+  MEWScaleNM*         addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30);
+  
+  MEWScale*           addScaleDrawUniSide(ATTACHED_TO atto, int flags, int pixSpacing, unsigned int step=1);
+  MEWScale*           addScaleDrawUniSide(ATTACHED_TO atto, int flags, float LL, float HL, int pixSpacing, int miniPerMaxiLIMIT=9);
+  MEWScale*           addScaleDrawGraphB(ATTACHED_TO atto, int flags, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9);
+  MEWScale*           addScaleDrawGraphB(ATTACHED_TO atto, int flags, float LL, float HL, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9);
+  
+  MEWScaleTAP*        addScaleDrawRecorderB(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, const void* param=nullptr, int miniPerMaxiLIMIT=0);
+  MEWScaleTAP*        addScaleDrawRecorderNM(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, const void* param=nullptr, int miniPerMaxiLIMIT=0);
 public:
-  void                retrieveMarginHolder(MarginHolder*, bool replaceWithEqSpace);
-  void                setVisible(MarginElement*, bool);
-  void                switchToAnotherSide(MarginElement*);
+  void                retrieveMElement(MEQWrapper*, bool replaceWithEqSpace);
+  void                setVisible(MEQWrapper*, bool);
+  void                switchToAnotherSide(MEQWrapper*);
+  void                changeColor(MEQWrapper*, const QColor& clr);
   void                swapBars(ATTACHED_TO);
-  
-  void                removeAllMarginElements(bool squeeze=false);
+  void                removeAllMElements(bool squeeze=false);
 protected:
   void                elemSizeHintChanged(MarginElement* me);
-  friend class        MarginHolder;
+  friend class        MEQWrapper;
 protected:
   virtual QSize minimumSizeHint() const;
 //  virtual QSize sizeHint() const;
   virtual void  resizeEvent(QResizeEvent *event);
   virtual void  paintEvent(QPaintEvent *event);
+  virtual bool  event(QEvent*);
 public:
+  void    connectScrollBar(QScrollBar*, bool staticView=false, bool setOrientation=true);
 signals:
   void    sig_allo();
 public slots:
@@ -203,7 +231,7 @@ public slots:
   void    slot_enableAutoUpdateByData(bool);
   void    slot_disableAutoUpdateByData(bool);
 public slots:
-  void    slot_setBackgroundColor(const QColor& color);
+//  void    slot_setBackgroundColor(const QColor& color);
   void    slot_setForegroundColor(const QColor& color);
   
   void    slot_swapBarsLR();
@@ -212,93 +240,83 @@ public slots:
   void    slot_updatedDataPalette();
   void    slot_updatedBounds();
   void    slot_updatedOrientation();
+protected slots:
+  void    scrollDataTo(int);
 };
 
 /**********************************************************************************************************************/
 /**********************************************************************************************************************/
 
 
-class MarginHolderTexted: public MarginHolder
+class MEQWTexted: public MEQWrapper
 {
   Q_OBJECT
-protected:
-//  using MarginHolder::MarginHolder;   // awwww fuck you C11
+//  using MEQWrapper::MEQWrapper;   // awwww fuck you C11
   friend class DrawBars;
-  MarginHolderTexted(MarginElement* pme, DrawBars* remote);
-public:
-  MarginHolderTexted(const MarginHolderTexted& cpy);
 public slots:
   void  setFont(const QFont& font);
 };
 
-class MELabel: public MarginHolderTexted
+class MEWLabel: public MEQWTexted
 {
   Q_OBJECT
-protected:
   friend class DrawBars;
-  MELabel(MarginElement* pme, DrawBars* remote);
 public slots:
   void  setText(const QString& text);
 };
 
-class MESpace: public MarginHolder
+class MEWSpace: public MEQWrapper
 {
   Q_OBJECT
-protected:
   friend class DrawBars;
-  MESpace(MarginElement* pme, DrawBars* remote);
-public:
-  MESpace(const MESpace& cpy);
 public slots:
   void  setSpace(int space);
 };
 
-class MarginHolderMark: public MarginHolder
+
+class DrawOverlayProactive;
+class MEWPointer: public MEQWrapper
 {
   Q_OBJECT
-protected:
   friend class DrawBars;
-  MarginHolderMark(MarginElement* pme, DrawBars* remote);
 public:
-  MarginHolderMark(const MarginHolderMark& cpy);
+  DrawOverlayProactive*    createProactive();
+  DrawOverlayProactive*    createProactive(float start_x, float start_y);
+public slots:
+  void  setPosition(float pos01);
+};
+
+class MEWScale: public MEQWrapper
+{
+  Q_OBJECT
+  friend class DrawBars;
 public slots:
   void  setFont(const QFont& font);
   void  setMarkLen(int mlen);
-  void  setMarkColor(const QColor& clr);
+//  void  setMarkColor(const QColor& clr);
   void  setMarkMiniLen(int mlen);
+//public slots:
+//  void  scroll(int);
 };
 
-class MEScaleNN: public MarginHolderMark
+class MEWScaleNN: public MEWScale
 {
   Q_OBJECT
-//  int   owntype;
-protected:
   friend class DrawBars;
-  MEScaleNN(MarginElement* pme, DrawBars* remote);
-public:
-  MEScaleNN(const MEScaleNN& cpy);
 public slots:
   void  setBounds(float LL, float HL);
 };
 
-class MEScaleNM: public MarginHolderMark
+class MEWScaleNM: public MEWScale
 {
   Q_OBJECT
-protected:
   friend class DrawBars;
-  MEScaleNM(MarginElement* pme, DrawBars* remote);
-public:
-  MEScaleNM(const MEScaleNM& cpy);
 };
 
-class MEScaleTAP: public MarginHolderMark
+class MEWScaleTAP: public MEWScale
 {
   Q_OBJECT
-protected:
   friend class DrawBars;
-  MEScaleTAP(MarginElement* pme, DrawBars* remote);
-public:
-  MEScaleTAP(const MEScaleTAP& cpy);
 public slots:
   void  tap();
 };

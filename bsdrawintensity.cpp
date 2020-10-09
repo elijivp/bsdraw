@@ -2,7 +2,8 @@
 
 #include "core/sheigen/bsshei2d.h"
 
-DrawIntensity::DrawIntensity(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, ORIENTATION orient): DrawQWidget(new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient)
+DrawIntensity::DrawIntensity(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): 
+  DrawQWidget(new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient, splitPortions)
 {
   m_matrixDimmA = samplesHorz;
   m_matrixDimmB = samplesVert;
@@ -23,8 +24,8 @@ void DrawIntensity::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixD
 ////
 ///
 
-DrawIntensePoints::DrawIntensePoints(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, ORIENTATION orient, int dcip):
-  DrawIntensity(samplesHorz, samplesVert, portions, orient), m_dcip(dcip), m_clearBuf(nullptr)
+DrawIntensePoints::DrawIntensePoints(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions, int dcip):
+  DrawIntensity(samplesHorz, samplesVert, portions, orient, splitPortions), m_dcip(dcip), m_clearBuf(nullptr)
 {
 }
 

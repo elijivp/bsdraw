@@ -1,3 +1,5 @@
+/// MainWindow for main example
+/// Created By: Elijah Vlasov
 #include "mainwindow.h"
 
 #include <QTimer>
@@ -28,6 +30,7 @@
 #include "overlays/bsborder.h"
 #include "overlays/bscontour.h"
 #include "overlays/bsimage.h"
+#include "overlays/special/bsbounded.h"
 
 #include "overlays/special/bstestprecision.h"
 
@@ -337,7 +340,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           ddm.finish();
         }
       }
-//      qDebug()<<"Total spiral _1_ points: "<<ddm.count();
+//      qDebug()<<"Example: Total spiral _1_ points: "<<ddm.count();
       draws[2] = dd;
     }
     {
@@ -356,7 +359,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           ddm.finish();
         }
       }
-//      qDebug()<<"Total spiral _2_ points: "<<ddm.count();
+//      qDebug()<<"Example: Total spiral _2_ points: "<<ddm.count();
       draws[3] = dd;
     }
     SAMPLES = SAMPLES + MAXLINES - 1; /// reinit SAMPLES for future DSAMPLES data calculation
@@ -497,26 +500,36 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   }
   else if (MW_TEST == FEATURE_PORTIONS)
   {
-    SAMPLES = 400;
-    MAXLINES = 1;
-    PORTIONS = 3;
-    PRECREATE(3, 1);
+    SAMPLES = 300;
+    MAXLINES = 10;
+    int PORTIONS_MIN = 3;
+    PORTIONS = 29;
+    PRECREATE(5, 1);
     
     graphopts_t  gopts = { GT_LINTERP, DE_LINTERP, 0.0f, 0, 0.0f, 0.2f, PR_STANDARD };
-    draws[0] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(CP_SINGLE, 0.332f, 1.0f));
-    draws[0]->setScalingLimitsHorz(4,4);
+//    graphopts_t  gopts = { GT_DOTS, DE_NONE, 0.0f, 0, 0.0f, 0.2f, PR_STANDARD };
+    draws[0] = new DrawGraph(SAMPLES, PORTIONS_MIN, gopts, coloropts_t::copts(CP_SINGLE, 0.332f, 1.0f));
+    draws[0]->setScalingLimitsVert(1);
     
-    draws[1] = new DrawRecorder(SAMPLES, 100, 100, PORTIONS);
+    draws[1] = new DrawRecorder(SAMPLES, 100, 100, PORTIONS_MIN);
     draws[1]->setDataTextureInterpolation(true);
     
-    draws[2] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
+    draws[2] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS_MIN);
     draws[2]->setDataTextureInterpolation(true);
     draws[2]->setScalingLimitsVert(10,10);
-    
-//    setMinimumWidth(1200);
 
+    draws[3] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(CP_SINGLE, 0.332f, 1.0f), SL_VERT);
+//    draws[3]->ovlPushBack(new OFLine(OFLine::LT_VERT_BYBOTTOM, CR_RELATIVE, 0.5f, 0.0f, CR_ABSOLUTE, 0));
+    
+    draws[4] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS, OR_LRBT, SL_VERT2);
+    draws[4]->ovlPushBack(new OBorder(1, linestyle_solid(1.0f, 1.0f, 1.0f)));
+//    setMinimumWidth(1200); ??? 
+
+//    sigtype = ST_RAMP;
+    for (int i=0; i<drawscount; i++)
+      draws[i]->setDataPalette(i<3? (const IPalette*)&paletteRGB: (const IPalette*)&palette_mat_hot);
+    
     sigtype = ST_MOVE;
-    defaultPalette = (const IPalette*)&paletteRGB;
   }
   else if (MW_TEST == FEATURE_GRAPH_SMOOTH)
   {
@@ -852,7 +865,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //      colors[dm*3 + i] = 0xFF << 8 | gnd;
 //    }
 //#endif
-//    static PalettePTR pptr(colors, clc, false);
+//    static PalettePArray pptr(colors, clc, false);
     
 //    qDebug()<<"const unsigned int colorsSemaphore [] = { ";
 //    QString result="  ";
@@ -889,6 +902,21 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     static PaletteBORDS<100> pptr(0x000000ff, 0.15f, 0x0000ff00, 0.85f, 0x000000ff);
     defaultPalette = &pptr;
+    
+//    SAMPLES = 3;
+//    MAXLINES = 100;
+//    PORTIONS = 1;
+//    PRECREATE(1, 1);
+//    for (int i=0; i < 1; i++)
+//    {
+//      draws[i] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
+//      draws[i]->setDataPaletteDiscretion(true);
+//    }
+//    sigtype = ST_RAMP;
+//    sp = SP_ONCE;
+    
+//    static PaletteBORDS<100> pptr(0x000000ff, 0.3333f, 0x0000ff00, 0.6666f, 0x000000ff);
+//    defaultPalette = &pptr;
   }
   
 //  else if (MW_TEST == PROGRESS_BAR)   /// progress
@@ -932,7 +960,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
 //      draws[i]->setRawResizeModeNoScaled(true);
       
-      if (MW_TEST != ADV_PALETTES)
+      if (MW_TEST != FEATURE_PORTIONS && MW_TEST != ADV_PALETTES)
         draws[i]->setDataPalette(defaultPalette);
       
       if (syncscaling > 0)
@@ -946,7 +974,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //      draws[i]->setClearByPalette();
       if (MW_TEST == LET_IT_SNOW)
       {
-        IOverlay* oimg = new OImageStretched(new QImage(img_path_mikey), OVLQImage::IC_BLOCKALPHA, false);
+        DrawOverlay* oimg = new OImageStretched(new QImage(img_path_mikey), OVLQImage::IC_BLOCKALPHA, false);
         oimg->setSlice(0.35);
         oimg->setOpacity(0.1);
         draws[i]->ovlPushBack(oimg);
@@ -955,14 +983,14 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       }
       else if (MW_TEST == DRAW_BRIGHT && i == 0)
       {
-        IOverlay* oimg = new OImageStretched(new QImage(img_path_normal), OVLQImage::IC_BLOCKALPHA, false);
+        DrawOverlay* oimg = new OImageStretched(new QImage(img_path_normal), OVLQImage::IC_BLOCKALPHA, false);
         oimg->setSlice(0.35);
         oimg->setOpacity(0.15);
         draws[i]->ovlPushBack(oimg);
       }
       else if (MW_TEST == VOCAB)
       {
-        IOverlay* oimg = new OImageStretched(new QImage(img_path_normal), OVLQImage::IC_ASIS, false);
+        DrawOverlay* oimg = new OImageStretched(new QImage(img_path_normal), OVLQImage::IC_ASIS, false);
         oimg->setSlice(0.35);
         oimg->setOpacity(0.15);
         draws[i]->ovlPushBack(oimg);
@@ -979,7 +1007,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       for (unsigned int i=0; i<drawscount; i++)
       {
         QImage  img(img_path_normal);
-        IOverlay* ovl = new OImageStretched(&img, OVLQImage::IC_AUTO, false);
+        DrawOverlay* ovl = new OImageStretched(&img, OVLQImage::IC_AUTO, false);
         ovl->setSlice(i != 1? 0.25f : 0.0f);
         draws[i]->ovlPushBack(ovl);
         draws[i]->ovlPushBack(new OGridRegular(OGridRegular::REGULAR_HORZ, CR_RELATIVE, 0.05, 0.05, linestyle_greydark(5,1,0),-1));
@@ -994,8 +1022,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     QLabel*       lab;
     
     const unsigned int btnMinWidth = 80, btnMaxWidth = 120;
-    const unsigned int edMinWidth = 40, edMaxWidth = 40;
-    const unsigned int sbUniWidth = 40;
+    const unsigned int edMinWidth = 48, edMaxWidth = 48;
+    const unsigned int sbUniWidth = 48;
     
     QBoxLayout *mainLayout = new QHBoxLayout();
     mainLayout->setContentsMargins(0,0,0,0);
@@ -1100,7 +1128,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             BS_STOP
             
             {
-              BSFieldSetup fseds[] = { 
+              BSFieldSetup fseds[] = {
                 BSFieldSetup("1.0", &fntSTD, ED_HIGH, 0, edMinWidth, edMaxWidth),
                 BSFieldSetup("0.0", &fntSTD, ED_LOW, 0, edMinWidth, edMaxWidth),
                 BSFieldSetup("1.0", &fntSTD, ED_CONTRAST, 0, edMinWidth, edMaxWidth),
@@ -1125,6 +1153,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                     BSAUTO_EDIT_ADDMAPPED(fseds[i], edMapper, 0, Qt::AlignRight);
                 BS_STOP
                 BS_STRETCH
+                    
+                BSAUTO_BTN_ADDMAPPED(BSFieldSetup("reset", nullptr, ED_RESET, 0, 44,44), edMapper);
               BS_STOP
               QObject::connect(edMapper, SIGNAL(mapped(int)), this, SLOT(changeFloats(int)));
             } 
@@ -1294,22 +1324,27 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                   BSFieldSetup(tr("Grids"), &fntSTD, COS_GRIDS, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                   BSFieldSetup(tr("Grids+Axes"), &fntSTD, COS_GRIDSAXES, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                   BSFieldSetup(tr("Circular"), &fntSTD, COS_CIRCULAR, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
-                  BSFieldSetup(tr("Selector"), &fntSTD, COS_SELECTOR, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                   BSFieldSetup(tr("Drop Lines"), &fntSTD, COS_DROPLINES, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Brush"), &fntSTD, COS_BRUSH, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                   BSFieldSetup(tr("Cluster"), &fntSTD, COS_CLUSTER, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                   BSFieldSetup(tr("Followers"), &fntSTD, COS_FOLLOWERS, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                   BSFieldSetup(tr("Inside"), &fntSTD, COS_INSIDE, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                   BSFieldSetup(tr("CoverL"), &fntSTD, COS_COVERL, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                   BSFieldSetup(tr("CoverH"), &fntSTD, COS_COVERH, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                   BSFieldSetup(tr("Contour"), &fntSTD, COS_CONTOUR, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Selector"), &fntSTD, COS_SELECTOR, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Selector o"), &fntSTD, COS_SELECTOR2, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Objectif"), &fntSTD, COS_OBJECTIF, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                   BSFieldSetup(tr("Sprite\nalpha opaque"), &fntSTD, COS_SPRITEALPHA, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                   BSFieldSetup(tr("Foreground\nstretchable"), &fntSTD, COS_FOREGROUND, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                   BSFieldSetup(tr("Background\nstatic"), &fntSTD, COS_BACKGROUND, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                 };
                 
+                BSLAYOUT->setSpacing(2);
                 BS_FORFOR_P(3, l, lim, sizeof(fseds)/sizeof(BSFieldSetup)-1)
                 {
-                  BS_START_LAYOUT(QHBoxLayout)
+                  BS_START_LAYOUT_HMAX_VMAX(QHBoxLayout)
+                    BSLAYOUT->setSpacing(2);
                     BS_CHEAT_VMIN
                     for (int i=0; i < lim; i++)
                     {
@@ -1399,7 +1434,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
                   BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
                     {
-                      BSAUTO_TEXT_ADD(tr("Weight:"));
+                      BSAUTO_TEXT_ADD(tr("Thick:"));
                       QSpinBox*   psb = new QSpinBox();
                       psb->setRange(0, 10);
                       psb->setMaximumWidth(80);
@@ -1822,21 +1857,42 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   //      }
         else if (MW_TEST == FEATURE_PORTIONS)
         {
+          QSpinBox* psb = new QSpinBox;
+          psb->setRange(0, PORTIONS);
+          psb->setValue(PORTIONS);
           BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
-            for (int i=0; i<drawscount; i++)
-              BSADD(draws[i], i==0? 1 : 0)
+            BS_START_LAYOUT_HMAX_VMAX(QHBoxLayout)
+              BS_START_LAYOUT_HMAX_VMAX(QVBoxLayout)
+                for (int i=0; i<3; i++)
+                  BSADD(draws[i], i==0? 1 : 0);
+              BS_STOP
+              BSADD(draws[3]);
+              BSADD(draws[4]);
+            BS_STOP
             BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_SUNKEN, 2)
               BSAUTO_TEXT_ADD("Change portions count:");
-              QSpinBox* psb = new QSpinBox;
-              psb->setRange(0, PORTIONS);
-              psb->setValue(PORTIONS);
               BSADD(psb);
               for (int i=0; i<drawscount; i++)
                 QObject::connect(psb, SIGNAL(valueChanged(int)), draws[i], SLOT(slot_setPortionsCount(int)));
-              BSAUTO_TEXT_ADD(" ; Note, your upper limit is fixed, cause of already allocated data");
+              BSAUTO_TEXT_ADD(" ; Note, your upper limit is fixed (cause of already allocated data)");
               BS_STRETCH
             BS_STOP
-          BS_STOP;
+//            BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
+//              for (int i=0; i<3; i++)
+//                BSADD(draws[3 + i], i==0? 1 : 0)
+//              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_SUNKEN, 2)
+//                BSAUTO_TEXT_ADD("Change portions count:");
+//                QSpinBox* psb = new QSpinBox;
+//                psb->setRange(0, PORTIONS);
+//                psb->setValue(PORTIONS);
+//                BSADD(psb);
+//                for (int i=0; i<drawscount; i++)
+//                  QObject::connect(psb, SIGNAL(valueChanged(int)), draws[3 + i], SLOT(slot_setPortionsCount(int)));
+//                BSAUTO_TEXT_ADD(" ; Note, your upper limit is fixed,\n(cause of already allocated data)");
+//                BS_STRETCH
+//              BS_STOP
+//            BS_STOP
+          BS_STOP
         }
         else if (MW_TEST == FEATURE_ORIENTS)
         {
@@ -1881,13 +1937,28 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               if (i == 0)
                 pDB->addScaleDrawUniSide(AT_TOP, DBF_ENUMERATE_FROMZERO | DBF_ENUMERATE_SHOWLAST, 20);
               else if (i == 1)
-                pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED, 0.0, SAMPLES, SAMPLES);
+                pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED, 0.0, SAMPLES-1, SAMPLES);
               else if (i == 2)
-                pDB->addScaleTapNM(AT_TOP, DBMODE_STATIC, standard_tap_symbolate<-1>, 4, SAMPLES, 20);
+                pDB->addScaleTapNM(AT_TOP, DBMODE_STATIC, standard_tap_symbolate<-1>, 4, nullptr, SAMPLES, 20);
               else
                 pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED_POW2 | DBF_ONLY2NOTES | DBF_NOTESINSIDE, 0.0, 1.0, SAMPLES, 10);
               
+//              pDB->getDraw()->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_LINERIGHT, 0, 0.3f, 0.3f, 0.3f));
+//              MEPointer mpH = pDB->addPointerFixed(AT_BOTTOM, 0, 180);
+              MEWPointer* mpH = pDB->addPointerDrawUniSide(AT_BOTTOM, DBF_NOTESINSIDE);
+//              MEPointer mpV = pDB->addPointerDrawUniSide(AT_RIGHT);
+              MEWPointer* mpV = pDB->addPointerDrawGraphB(AT_RIGHT, DBF_NOTESINSIDE);
+//              mpH.setPosition(0.7f);
+              int oapH = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpH->createProactive()));
+              pDB->getDraw()->ovlPushBack(new OFLine(OFLine::LT_VERT_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_stroks(1.0f,0.0f,0.0f)), oapH);
               
+//              mpV.setPosition(0.7f);
+              int oapV = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpV->createProactive()));
+              pDB->getDraw()->ovlPushBack(new OFLine(OFLine::LT_HORZ_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_stroks(1.0f,0.0f,0.0f)), oapV);
+//              pDB->getDraw()->ovlPushBack(new OFDouble(true, CR_RELATIVE, 0, CR_ABSOLUTE, 6, linestyle_stroks(1.0f,1.0f,0.0f)), oap);
+//              pDB->getDraw()->ovlPushBack(new OFDouble(false, CR_RELATIVE, 0, CR_ABSOLUTE, 6, linestyle_stroks(1.0f,1.0f,0.0f)), oap);
+              
+
               if (i == drawscount - 1)
               {
 //                pDB->addContour(AT_LEFT, 40);
@@ -1947,39 +2018,49 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             {
               if (MW_TEST == DRAW_RECORDER)
                 qsb = new QScrollBar();
+              
               BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
-  //            BS_START_FRAME_V_HMIN_VMIN(BS_FRAME_PANEL, 2)
-              for (unsigned int j=0; j<drcount; j++)
-              {
-                if (i*drcount + j >= drawscount)
-                  break;
+                  
+                if (MW_TEST == DEMO_4_portions)
+                  BSAUTO_TEXT_ADD(i == 0? "One palette, three portions" : "One palette, one portion", 0, Qt::AlignHCenter)
+                else if (MW_TEST == DRAW_HISTOGRAMS)
+                  BSAUTO_TEXT_ADD(QString::number(PORTIONS) + 
+                                  QString(" portions with different colors. See tab Addit. section Postmask for more settings"), 
+                                  0, Qt::AlignHCenter)
                 
-                int lwresult = 0;
-                if (lw == LW_1) lwresult = 1;
-                else if (lw == LW_1000) lwresult = j == 0? 1 : 0;
-                else if (lw == LW_0111) lwresult = j == 0? 0 : 1;
-                else if (lw == LW_012)  lwresult = j;
-                else if (lw == LW_1110) lwresult = j < 3? 1 : 0;
-    
-                if (qsb)
-                  draws[i*drcount + j]->connectScrollBar(qsb, false);
-                
-#ifdef USESCALES
-#define BS_SCALED_ALIAS(draw, drdre)  DrawBars* drdre = new DrawBars(draw, DrawBars::CP_FROM_DRAWBACK); \
-                                      drdre->addScaleDrawUniSide(AT_TOP, 0, 21); \
-                                      if (draw->directions() == 2)  drdre->addScaleDrawUniSide(AT_LEFT, 0, 21); \
-                                      else                          drdre->addScaleDrawGraphB(AT_LEFT, 0 | DBF_NOTESINSIDE, 21, 20);
-#else
-#define BS_SCALED_ALIAS(draw, drdre)  DrawQWidget* drdre = draw;
-#endif
-                
-                BS_SCALED_ALIAS(draws[i*drcount + j], pDraw)
-                BSADD(pDraw, lwresult);
-//                BSADD(draws[i*drcount + j], lwresult);
-              }
-              if (MW_TEST == DRAW_BRIGHT)
-                BS_STRETCH
+                for (unsigned int j=0; j<drcount; j++)
+                {
+                  if (i*drcount + j >= drawscount)
+                    break;
+                  
+                  int lwresult = 0;
+                  if (lw == LW_1) lwresult = 1;
+                  else if (lw == LW_1000) lwresult = j == 0? 1 : 0;
+                  else if (lw == LW_0111) lwresult = j == 0? 0 : 1;
+                  else if (lw == LW_012)  lwresult = j;
+                  else if (lw == LW_1110) lwresult = j < 3? 1 : 0;
+      
+                  if (qsb)
+                    draws[i*drcount + j]->connectScrollBar(qsb, false);
+                  
+  #ifdef USESCALES
+  #define BS_SCALED_ALIAS(draw, drdre)  DrawBars* drdre = new DrawBars(draw, DrawBars::CP_FROM_DRAWBACK); \
+                                        drdre->addScaleDrawUniSide(AT_TOP, 0, 21); \
+                                        if (draw->directions() == 2)  drdre->addScaleDrawUniSide(AT_LEFT, 0, 21); \
+                                        else                          drdre->addScaleDrawGraphB(AT_LEFT, 0 | DBF_NOTESINSIDE, 21, 20);
+  #else
+  #define BS_SCALED_ALIAS(draw, drdre)  DrawQWidget* drdre = draw;
+  #endif
+                  
+                  BS_SCALED_ALIAS(draws[i*drcount + j], pDraw)
+                  BSADD(pDraw, lwresult);
+  //                BSADD(draws[i*drcount + j], lwresult);
+                }
+                if (MW_TEST == DRAW_BRIGHT)
+                  BS_STRETCH
+                      
               BS_STOP
+                      
               if (qsb && i == dccount - 1 && MW_TEST == DRAW_RECORDER)
                 BSADD(qsb);
               
@@ -2695,15 +2776,16 @@ void MainWindow::changeDataTextureInterpolation(bool v)
 void  MainWindow::changeFloats(int edid)
 {
   float value;
+  QSignalMapper* psm = (QSignalMapper*)sender();
+  if (edid != ED_RESET)
   {
-    QSignalMapper* pMap = (QSignalMapper*)sender();
-    QLineEdit* pEd = (QLineEdit*)pMap->mapping(edid);
+    QLineEdit* pEd = (QLineEdit*)psm->mapping(edid);
     QString text = pEd->text();
     bool ok;
     value = text.toFloat(&ok);
     if (!ok)
     {
-      qDebug()<<"Conversion to float failed!";
+      qDebug()<<"Example: Conversion to float failed!";
       return;
     }
   }
@@ -2713,21 +2795,49 @@ void  MainWindow::changeFloats(int edid)
     else if (edid == ED_SIGK)  sig_k = value;
     return;
   }
-  
-  for (unsigned int i=0; i<drawscount; i++)
+  else if (drawscount != 0)
   {
+    QLineEdit*  qle[] = {  
+      (QLineEdit*)psm->mapping(ED_HIGH), 
+      (QLineEdit*)psm->mapping(ED_LOW), 
+      (QLineEdit*)psm->mapping(ED_CONTRAST), 
+      (QLineEdit*)psm->mapping(ED_OFFSET)
+    };
     if (edid == ED_LOW || edid == ED_HIGH)
     {
-      if (edid == ED_LOW) draws[i]->setBoundLow(value);
-      else if (edid == ED_HIGH) draws[i]->setBoundHigh(value);
+      if (edid == ED_HIGH)        for (unsigned int i=0; i<drawscount; i++) draws[i]->setBoundHigh(value);
+      else if (edid == ED_LOW)    for (unsigned int i=0; i<drawscount; i++) draws[i]->setBoundLow(value);
+      qle[ED_CONTRAST]->setText(QString::number(draws[0]->contrastK(), 'g', 3));
+      qle[ED_OFFSET]->setText(QString::number(draws[0]->contrastB(), 'g', 3));
     }
     else if (edid == ED_CONTRAST || edid == ED_OFFSET)
     {
-      contrast_t cur = draws[i]->contrast();
-      if (edid == ED_CONTRAST) cur.contrast = value;
-      else if (edid == ED_OFFSET) cur.offset = value;
-      draws[i]->setContrast(cur);
+      if (edid == ED_CONTRAST)    for (unsigned int i=0; i<drawscount; i++) draws[i]->setContrastK(value);
+      else if (edid == ED_OFFSET) for (unsigned int i=0; i<drawscount; i++) draws[i]->setContrastB(value);
+      qle[ED_HIGH]->setText(QString::number(draws[0]->bounds().HL, 'g', 3));
+      qle[ED_LOW]->setText(QString::number(draws[0]->bounds().LL, 'g', 3));
     }
+    else if (edid == ED_RESET)
+    {
+      for (unsigned int i=0; i<drawscount; i++) draws[i]->setBounds(0, 1);
+      qle[ED_HIGH]->setText("1.0");
+      qle[ED_LOW]->setText("0.0");
+      qle[ED_CONTRAST]->setText("1.0");
+      qle[ED_OFFSET]->setText("0.0");
+    }
+//    for (unsigned int i=0; i<drawscount; i++)
+//    {
+//      if (edid == ED_LOW || edid == ED_HIGH)
+//      {
+//        if (edid == ED_LOW)         draws[i]->setBoundLow(value);
+//        else if (edid == ED_HIGH)   draws[i]->setBoundHigh(value);
+//      }
+//      else if (edid == ED_CONTRAST || edid == ED_OFFSET)
+//      {
+//        if (edid == ED_CONTRAST)    draws[i]->setContrastK(value);
+//        else if (edid == ED_OFFSET) draws[i]->setContrastB(value);
+//      }
+//    }
   }
 }
 
@@ -2771,7 +2881,7 @@ void  MainWindow::changeFeatures(int id)
       for (int j=0; j<DrawCore::OVLLIMIT; j++)
         if (j + 1 != ovl_visir)
         {
-          IOverlay* povl = draws[i]->ovlGet(j + 1);
+          DrawOverlay* povl = draws[i]->ovlGet(j + 1);
           if (povl) povl->setOpacity(1.0f);
         }
     }
@@ -2909,16 +3019,6 @@ void MainWindow::createOverlaySTD(int id)
       draws[i]->ovlPushBack(new OToons(CR_RELATIVE, 0.95, 1, linestyle_greydark(1,0,0)));
       break;
     }
-    case COS_SELECTOR:
-    {
-      if (!ovl_is_synced || i == 0)
-        ovl_tmp = draws[i]->ovlPushBack(new OSelector(linestyle_bluelight(13,2,2), 0.2f));
-      else
-        draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_tmp));
-      
-      draws[i]->ovlPushBack(new OTextTraced("Press left mouse button and move", CR_RELATIVE, 0.05, 0.05, 12, OO_INHERITED, true, linestyle_white(5,2,0)));
-      break;
-    }
     case COS_DROPLINES:
     {
       if (!ovl_is_synced || i == 0)
@@ -2928,6 +3028,16 @@ void MainWindow::createOverlaySTD(int id)
         draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_tmp));
       
       draws[i]->ovlPushBack(new OTextTraced("Press left mouse button", CR_RELATIVE, 0.05, 0.05, 12, OO_INHERITED, true, linestyle_white(5,2,0)));
+      break;
+    }
+    case COS_BRUSH:
+    {
+      if (!ovl_is_synced || i == 0)
+        ovl_tmp = draws[i]->ovlPushBack(new OBrush(1000, linestyle_solid(1.0f,0,0)));
+      else
+        draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_tmp));
+      
+      draws[i]->ovlPushBack(new OTextTraced("Draw with your new brush", CR_RELATIVE, 0.05, 0.05, 12, OO_INHERITED, true, linestyle_white(5,2,0)));
       break;
     }
     case COS_CLUSTER:
@@ -2967,7 +3077,7 @@ void MainWindow::createOverlaySTD(int id)
       float opacity = 0.1f;
       for (int j=7; j>=0; j--)
       {
-        IOverlay* ovl = new OFSquareCC(opacity, CR_RELATIVE, 0.5f, 0.5f, CR_SAME, 0.04*(j+1), linestyle_redlight(1,0,0));
+        DrawOverlay* ovl = new OFSquareCC(opacity, CR_RELATIVE, 0.5f, 0.5f, CR_SAME, 0.04f*(j+1), linestyle_redlight(1,0,0));
         draws[i]->ovlPushBack(ovl);
       }
       break;
@@ -2987,6 +3097,25 @@ void MainWindow::createOverlaySTD(int id)
     case COS_CONTOUR:
     {
       draws[i]->ovlPushBack(new OContour(0.95f, 1.0f, linestyle_inverse_1(2,1,0)));
+      break;
+    }
+    case COS_SELECTOR: case COS_SELECTOR2:
+    {
+      if (!ovl_is_synced || i == 0)
+        ovl_tmp = draws[i]->ovlPushBack(id == COS_SELECTOR? 
+                                          (DrawOverlay*)new OSelector(linestyle_bluelight(13,2,2), 0.2f) :
+                                          (DrawOverlay*)new OSelectorCirc(linestyle_bluelight(13,2,2), 0.2f, true));
+      else
+        draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_tmp));
+      
+      draws[i]->ovlPushBack(new OTextTraced("Press left mouse button and move", CR_RELATIVE, 0.05f, 0.05f, 11, OO_INHERITED, true, linestyle_white(5,2,0)));
+      break;
+    }
+    case COS_OBJECTIF:
+    {
+//      draws[i]->ovlPushBack(new OFFactor(CR_RELATIVE, 0.5f, 0.5f, CR_RELATIVE, 0.25f, 0.45f, linestyle_inverse_1(2,1,0)));
+//      draws[i]->ovlPushBack(new OFObjectif(CR_RELATIVE, 0.5f, 0.5f, CR_RELATIVE, 0.4f, 0.4f, 0.1f, 0.1f, linestyle_inverse_1(2,1,0)));
+      draws[i]->ovlPushBack(new OFObjectif(CR_RELATIVE, 0.5f, 0.5f, CR_RELATIVE, 0.45f, 0.45f, 0.25f, 0.25f, linestyle_solid(0,1,1)));
       break;
     }
     case COS_SPRITEALPHA:
@@ -3010,7 +3139,7 @@ void MainWindow::createOverlaySTD(int id)
     case COS_BACKGROUND:
     {
       QImage  img(img_path_normal);
-      IOverlay* ovl = new OImageOriginal(&img, OVLQImage::IC_AUTO, false, CR_RELATIVE, 0.0f, 0.0f);
+      DrawOverlay* ovl = new OImageOriginal(&img, OVLQImage::IC_AUTO, false, CR_RELATIVE, 0.0f, 0.0f);
       ovl->setSlice(0.0f);
       draws[i]->ovlPushBack(ovl);
       break;
@@ -3038,7 +3167,7 @@ void MainWindow::createOverlayADD()
     float abssize = 10;
     linestyle_t kls = linestyle_green(1,0,0);
     
-    IOverlay* ovl = nullptr;
+    DrawOverlay* ovl = nullptr;
     switch (qbgForm->checkedId())
     {
     case 0: ovl = new OFCircle(opacity, CR_RELATIVE, centerX, centerY, CR_ABSOLUTE, abssize, kls); break;
@@ -3069,7 +3198,7 @@ void MainWindow::changeOVLOpacity(int op)
 {
   for (unsigned int i=0; i<drawscount; i++)
   {
-    IOverlay* povl = draws[i]->ovlGet(active_ovl);
+    DrawOverlay* povl = draws[i]->ovlGet(active_ovl);
     if (povl)
       povl->setOpacity(op/100.0f);
   }
@@ -3079,7 +3208,7 @@ void MainWindow::changeOVLSlice(int op)
 {
   for (unsigned int i=0; i<drawscount; i++)
   {
-    IOverlay* povl = draws[i]->ovlGet(active_ovl);
+    DrawOverlay* povl = draws[i]->ovlGet(active_ovl);
     if (povl)
       povl->setSlice(op/100.0f);
   }
@@ -3089,9 +3218,9 @@ void MainWindow::changeOVLWeight(int op)
 {
   for (unsigned int i=0; i<drawscount; i++)
   {
-    IOverlay* povl = draws[i]->ovlGet(active_ovl);
+    DrawOverlay* povl = draws[i]->ovlGet(active_ovl);
     if (povl)
-      povl->setDensity(op);
+      povl->setThickness(op);
   }
 }
 
@@ -3099,7 +3228,7 @@ void MainWindow::changeOVLForm(int value)
 {
   for (unsigned int i=0; i<drawscount; i++)
   {
-    _IOverlayLined* povl = dynamic_cast<_IOverlayLined*>(draws[i]->ovlGet(active_ovl));
+    _DrawOverlayLined* povl = dynamic_cast<_DrawOverlayLined*>(draws[i]->ovlGet(active_ovl));
     if (povl)
     {
       linestyle_t kls = povl->getLineStyle();
@@ -3129,7 +3258,7 @@ void MainWindow::changeOVLPos(int id)
         povl->setCoordinates(x + (id == BTOP_LEFT? -0.05f : id == BTOP_RIGHT? 0.05f : 0.0f), y + (id == BTOP_UP? 0.05f : id == BTOP_DOWN? -0.05f : 0.0f));
     }
     else
-      qDebug()<<"OVL Position: dynamic_cast failure!";
+      qDebug()<<"Example: Overlay Position dynamic_cast failure!";
   }
 }
 
@@ -3149,7 +3278,7 @@ void MainWindow::changeOVLFeatures(int id)
     
     for (unsigned int i=0; i<drawscount; i++)
     {
-      _IOverlayLined* povl = dynamic_cast<_IOverlayLined*>(draws[i]->ovlGet(active_ovl));
+      _DrawOverlayLined* povl = dynamic_cast<_DrawOverlayLined*>(draws[i]->ovlGet(active_ovl));
       if (povl)
       {
         linestyle_t kls = linestyle_update(povl->getLineStyle(), clr.redF(), clr.greenF(), clr.blueF());
@@ -3157,7 +3286,7 @@ void MainWindow::changeOVLFeatures(int id)
       }
       else
       {
-        qDebug()<<"OVL Features: dynamic_cast failure!";
+        qDebug()<<"Example: Overlay Features dynamic_cast failure!";
       }
     }
   }
@@ -3165,7 +3294,7 @@ void MainWindow::changeOVLFeatures(int id)
   {
     for (unsigned int i=0; i<drawscount; i++)
     {
-      _IOverlayLined* povl = dynamic_cast<_IOverlayLined*>(draws[i]->ovlGet(active_ovl));
+      _DrawOverlayLined* povl = dynamic_cast<_DrawOverlayLined*>(draws[i]->ovlGet(active_ovl));
       if (povl)
       {
         linestyle_t kls = povl->getLineStyle();
@@ -3176,9 +3305,9 @@ void MainWindow::changeOVLFeatures(int id)
   }
 }
 
-//IOverlay* MainWindow::createNewOverlay(BTN_VISIR btv)
+//DrawOverlay* MainWindow::createNewOverlay(BTN_VISIR btv)
 //{
-//  IOverlay*  newOverlay = nullptr;
+//  DrawOverlay*  newOverlay = nullptr;
 //  switch (vistype)
 //  {
 //    case BTV_CIRCLE:  newOverlay = new OFCircle(false, ocs, 0.0, 0.0, true, 100, linestyle_green(1,0,0)); break;
@@ -3204,14 +3333,14 @@ void MainWindow::metaOVLReplace(int vistype)
         draws[i]->ovlRemove(active_ovl);
       else
       {
-        IOverlay* ovl = draws[i]->ovlGet(active_ovl);
+        DrawOverlay* ovl = draws[i]->ovlGet(active_ovl);
         OVLCoordsStatic* ocs = dynamic_cast<OVLCoordsStatic*>(ovl);
         if (ocs == nullptr)
         {
-          qDebug()<<"OVL Replace: dynamic_cast failure!";
+          qDebug()<<"Example: Overlay Replace dynamic_cast failure!";
           continue;
         }
-        IOverlay*  newOverlay = nullptr;
+        DrawOverlay*  newOverlay = nullptr;
         switch (vistype)
         {
           case BTV_CIRCLE:  newOverlay = new OFCircle(false, ocs, 0.0, 0.0, CR_ABSOLUTE, 100, linestyle_green(1,0,0)); break;
@@ -3239,7 +3368,7 @@ void MainWindow::metaOVLCreate(int vistype)
   {
     for (unsigned int i=0; i<drawscount; i++)
     {
-      IOverlay*  newOverlay = nullptr;
+      DrawOverlay*  newOverlay = nullptr;
       COORDINATION cr = CR_RELATIVE;
       switch (vistype)
       {
@@ -3325,7 +3454,7 @@ void MainWindow::changeClusterPalette()
   {
     for (unsigned int i=0; i<drawscount; i++)
     {
-      IOverlayHard* povl= dynamic_cast<IOverlayHard*>(draws[i]->ovlGet(1));
+      DrawOverlayHard* povl= dynamic_cast<DrawOverlayHard*>(draws[i]->ovlGet(1));
       if (povl)
       {
         povl->setPalette(ppalettes_adv[rand() % sizeof(ppalettes_adv)/sizeof(ppalettes_adv[0])], false);

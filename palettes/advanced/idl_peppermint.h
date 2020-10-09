@@ -1,7 +1,9 @@
 #ifndef _IDL_PEPPERMINT_H
 #define _IDL_PEPPERMINT_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_peppermint[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_peppermint[] = {
                                               0x00000000, 0x00500000, 0x00a00000, 0x00f00000, 0x00000050, 0x00500050, 0x00a00050, 0x00f00050, 
                                               0x000000a0, 0x005000a0, 0x00a000a0, 0x00f000a0, 0x000000f0, 0x005000f0, 0x00a000f0, 0x00f000f0, 
                                               0x00001000, 0x00501000, 0x00a01000, 0x00f01000, 0x00001050, 0x00501050, 0x00a01050, 0x00f01050, 
@@ -35,7 +37,10 @@
                                               0x0000f000, 0x0050f000, 0x00a0f000, 0x00f0f000, 0x0000f050, 0x0050f050, 0x00a0f050, 0x00f0f050, 
                                               0x0000f0a0, 0x0050f0a0, 0x00a0f0a0, 0x00f0f0a0, 0x0000f0f0, 0x0050f0f0, 0x00a0f0f0, 0x00f0f0f0
 };
-const PaletteConstFWD<sizeof(colors_idl_peppermint) / sizeof(unsigned int)> palette_idl_peppermint(colors_idl_peppermint);
+
+const PaletteConstFWD<sizeof(colors_idl_peppermint) / sizeof(unsigned int)> palette_idl_peppermint(colors_idl_peppermint);
 const PaletteConstBWD<sizeof(colors_idl_peppermint) / sizeof(unsigned int)> palette_idl_peppermint_inv(colors_idl_peppermint);
-typedef PaletteConstFWD<sizeof(colors_idl_peppermint) / sizeof(unsigned int)> palette_idl_peppermint_t;
-#endif // _IDL_PEPPERMINT_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_peppermint) / sizeof(unsigned int)> palette_idl_peppermint_t;
+
+#endif // _IDL_PEPPERMINT_H

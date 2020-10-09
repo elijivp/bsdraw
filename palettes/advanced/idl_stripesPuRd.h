@@ -1,7 +1,9 @@
 #ifndef _IDL_STRIPESPURD_H
 #define _IDL_STRIPESPURD_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_stripesPuRd[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_stripesPuRd[] = {
                                                0x00bf00b8, 0x00c000b0, 0x00c100a8, 0x00c1009f, 0x00c20097, 0x00c3008f, 0x00c40087, 0x0092005e, 
                                                0x00920058, 0x00c6006f, 0x00c70067, 0x00c8005f, 0x00c80057, 0x00c90050, 0x00ca0048, 0x00cb0040, 
                                                0x00cb0039, 0x00990025, 0x009a001f, 0x00ce0022, 0x00cf001a, 0x00cf0013, 0x00d0000c, 0x00d10004, 
@@ -35,7 +37,10 @@
                                                0x00183cff, 0x001636ff, 0x001331ff, 0x00112bff, 0x000f25ff, 0x000c1fff, 0x000a19ff, 0x000610cc, 
                                                0x00040bcc, 0x000308ff, 0x000102ff
 };
-const PaletteConstFWD<sizeof(colors_idl_stripesPuRd) / sizeof(unsigned int)> palette_idl_stripesPuRd(colors_idl_stripesPuRd);
+
+const PaletteConstFWD<sizeof(colors_idl_stripesPuRd) / sizeof(unsigned int)> palette_idl_stripesPuRd(colors_idl_stripesPuRd);
 const PaletteConstBWD<sizeof(colors_idl_stripesPuRd) / sizeof(unsigned int)> palette_idl_stripesPuRd_inv(colors_idl_stripesPuRd);
-typedef PaletteConstFWD<sizeof(colors_idl_stripesPuRd) / sizeof(unsigned int)> palette_idl_stripesPuRd_t;
-#endif // _IDL_STRIPESPURD_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_stripesPuRd) / sizeof(unsigned int)> palette_idl_stripesPuRd_t;
+
+#endif // _IDL_STRIPESPURD_H

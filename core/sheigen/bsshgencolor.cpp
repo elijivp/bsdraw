@@ -1,21 +1,34 @@
+/// This file is a part of shader-code-generation subsystem
+/// You dont need to use classes from this file directly
+/// Created By: Elijah Vlasov
 #include "bsshgencolor.h"
 
 #include <memory.h>
 #include <stdio.h>
-
-#define SHNL "\n"
-
-extern int msprintf(char* to, const char* format, ...);
+#include "bsshgenparams.h"
 
 FshColorGenerator::FshColorGenerator(int overlay, char* deststring, int ovlctr): m_overlay(overlay), m_writebase(deststring), m_to(deststring), m_offset(0), m_paramsctr(ovlctr)
-{
-}
-
-void FshColorGenerator::goto_func_begin(CGV cgv)
 {
 #ifdef BSGLSLVER
   m_offset += msprintf(&m_to[m_offset],  "#version %d" SHNL, BSGLSLVER);
 #endif
+  loc_uniformsCount = 0;
+  loc_uniforms = nullptr;
+}
+
+FshColorGenerator::FshColorGenerator(const AbstractDrawOverlay::uniforms_t& ufms, int overlay, char* deststring, int ovlctr): m_overlay(overlay), m_writebase(deststring), m_to(deststring), m_offset(0), m_paramsctr(ovlctr)
+{
+#ifdef BSGLSLVER
+  m_offset += msprintf(&m_to[m_offset],  "#version %d" SHNL, BSGLSLVER);
+#endif
+  loc_uniformsCount = ufms.count;
+  loc_uniforms = ufms.arr;
+  
+  m_offset += msexpandParams(&m_to[m_offset], m_overlay, loc_uniformsCount, loc_uniforms);
+}
+
+void FshColorGenerator::goto_func_begin(CGV cgv)
+{
   if (cgv == CGV_EMPTY)
     m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 overcolor, in vec3 undercolor) {" SHNL
                                             "vec3 result;" SHNL
@@ -43,6 +56,25 @@ void FshColorGenerator::goto_func_begin(CGV cgv)
                         );
     m_paramsctr++;
   }
+}
+
+void FshColorGenerator::param_alias(const char *name)
+{
+//  Q_ASSERT(loc_uniforms != nullptr);
+  m_offset += msprintf(&m_to[m_offset], "%s %s = opm%D_%D;" SHNL, glsl_types[loc_uniforms[m_paramsctr].type], name, m_overlay, m_paramsctr);
+  m_paramsctr++;
+}
+
+void FshColorGenerator::paramarr_alias(const char* name, const char* idxname)
+{
+  m_offset += msprintf(&m_to[m_offset], "%s %s = opm%D_%D[%s];" SHNL, glsl_types[loc_uniforms[m_paramsctr].type], name, m_overlay, m_paramsctr, idxname);
+  m_paramsctr++;
+}
+
+void FshColorGenerator::param_get()
+{
+  m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr);
+  m_paramsctr++;
 }
 
 void FshColorGenerator::mixwell_by_alpha(float alpha)

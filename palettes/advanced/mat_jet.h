@@ -1,7 +1,9 @@
 #ifndef _MAT_JET_H
 #define _MAT_JET_H
-#include "../bstexpalette.h"
-const unsigned int colors_mat_jet[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_mat_jet[] = {
                                        0x00810000, 0x00850000, 0x00890000, 0x008d0000, 0x00910000, 0x00950000, 0x00990000, 0x009d0000, 
                                        0x00a10000, 0x00a50000, 0x00a90000, 0x00ad0000, 0x00b10000, 0x00b50000, 0x00b90000, 0x00bd0000, 
                                        0x00c10000, 0x00c50000, 0x00c90000, 0x00cd0000, 0x00d10000, 0x00d50000, 0x00d90000, 0x00dd0000, 
@@ -35,7 +37,10 @@
                                        0x000000bd, 0x000000b9, 0x000000b5, 0x000000b1, 0x000000ad, 0x000000a9, 0x000000a5, 0x000000a1, 
                                        0x0000009d, 0x00000099, 0x00000095, 0x00000091, 0x0000008d, 0x00000089, 0x00000085, 0x00000081
 };
-const PaletteConstFWD<sizeof(colors_mat_jet) / sizeof(unsigned int)> palette_mat_jet(colors_mat_jet);
+
+const PaletteConstFWD<sizeof(colors_mat_jet) / sizeof(unsigned int)> palette_mat_jet(colors_mat_jet);
 const PaletteConstBWD<sizeof(colors_mat_jet) / sizeof(unsigned int)> palette_mat_jet_inv(colors_mat_jet);
-typedef PaletteConstFWD<sizeof(colors_mat_jet) / sizeof(unsigned int)> palette_mat_jet_t;
-#endif // _MAT_JET_H
+
+typedef PaletteConstFWD<sizeof(colors_mat_jet) / sizeof(unsigned int)> palette_mat_jet_t;
+
+#endif // _MAT_JET_H

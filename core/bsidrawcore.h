@@ -1,7 +1,8 @@
 #ifndef BSDRAWDEF_H
 #define BSDRAWDEF_H
 
-/// Technical header
+/// This file contains useful/technical types, base classes, conversion functions for all types of draws
+/// Created By: Elijah Vlasov
 
 inline int bscolor3fToint(float r, float g, float b)
 {
@@ -28,6 +29,15 @@ inline void bsintTocolor4f(int clr, float rgb[])
 
 enum  ORIENTATION       { OR_LRBT=0,  OR_RLBT,  OR_LRTB,  OR_RLTB,    // order for +4 work
                           OR_TBLR,    OR_BTLR,  OR_TBRL,  OR_BTRL 
+                        };
+
+enum  SPLITPORTIONS     { SL_NONE=0,
+                          SL_VERT =0x0001,  SL_HORZ =0x0101,  SL_VERT2=0x0002,  SL_HORZ2=0x0102,
+                          SL_VERT3=0x0003,  SL_HORZ3=0x0103,  SL_VERT4=0x0004,  SL_HORZ4=0x0104,
+                          SL_VERT5=0x0005,  SL_HORZ5=0x0105,  SL_VERT6=0x0006,  SL_HORZ6=0x0106,
+                          SL_VERT7=0x0007,  SL_HORZ7=0x0107,  SL_VERT8=0x0008,  SL_HORZ8=0x0108,
+                          SL_VERT9=0x0009,  SL_HORZ9=0x0109,  SL_VERT10=0x000A,  SL_HORZ10=0x010A,
+                          SL_VERT11=0x000B,  SL_HORZ11=0x010B,  SL_VERT12=0x000C,  SL_HORZ12=0x010C,
                         };
 
 inline bool orientationMirroredHorz(ORIENTATION ort)
@@ -64,37 +74,19 @@ struct  DPostmask
   over(over_), postmask(mask), weight(weight_), colorManual(-1), colorPalette(colorByPalette), threshold(emptyThreshold){}
 };
 
-struct ovlfraginfo_t
+enum  DTYPE       /// Trace/simple shader datatypes
 {
-  int   link;
-};
-
-class ISheiGenerator
-{
-public:
-  virtual   const char*   shaderName() const =0;
-  virtual   unsigned int  shvertex_pendingSize() const =0;
-  virtual   unsigned int  shvertex_store(char* to) const =0;
-  virtual   unsigned int  shfragment_pendingSize(unsigned int ovlscount) const =0;
-  virtual   unsigned int  shfragment_store(unsigned int allocPortions, const DPostmask&, ORIENTATION orient, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const =0;
-  
-public:
-  enum      { PMT_PSEUDO2D, PMT_FORCE1D }; /// PORTION_MESH_TYPE
-  virtual   int           portionMeshType() const =0;
-  virtual   ~ISheiGenerator(){}
-};
-
-enum  DTYPE { /// Trace/simple shader datatypes
               DT_1F, DT_2F, DT_3F, DT_4F, 
               DT_ARR,   DT_ARR2,  DT_ARR3, DT_ARR4, 
               DT_ARRI, DT_ARRI2, DT_ARRI3, DT_ARRI4, 
               DT_SAMP4, DT_1I, DT_2I, DT_3I, DT_4I,
-              DT_TEXTURE,
+              DT_TEXTURE, DT_PALETTE,
               
               /// special Color shader datatypes (Hard)
-              DT__HC_SPECIAL_TYPES=100, DT__HC_PALETTE };
+              DT__HC_SPECIAL_TYPES=100, DT__HC_PALETTE
+};
 
-inline bool dtIsTexture(DTYPE dtype) { return dtype == DT_SAMP4 || dtype == DT_TEXTURE || dtype == DT__HC_PALETTE; }
+inline bool dtIsTexture(DTYPE dtype) { return dtype == DT_SAMP4 || dtype == DT_TEXTURE || dtype == DT_PALETTE || dtype == DT__HC_PALETTE; }
 
 struct dmtype_t
 {
@@ -143,7 +135,7 @@ enum  COORDINATION      { CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
                           CR_PIXEL=CR_ABSOLUTE_NOSCALED
                         };
 
-class AbstractOverlay
+class AbstractDrawOverlay
 {
 public:
   enum { MAXUNIFORMS = 10 };
@@ -151,8 +143,8 @@ private:
   dmtype_t          m_uniforms[MAXUNIFORMS];
   unsigned int      m_uniformsCount;
 public:
-  AbstractOverlay(): m_uniformsCount(0) {}
-  virtual ~AbstractOverlay(){}
+  AbstractDrawOverlay(): m_uniformsCount(0) {}
+  virtual ~AbstractDrawOverlay(){}
 public:
   struct    uniforms_t
   {
@@ -168,16 +160,18 @@ protected:
     m_uniformsCount++;
   }
   virtual void overlayUpdateParameter(bool recreate=false) =0;
-  friend class IOverlayUpdater;
+  friend class DrawOverlayUpdater;
 };
 
+class DrawOverlay;
 class IDrawOverlayFriendly
 {
 protected:
+  friend class DrawOverlay;
   IDrawOverlayFriendly(){}  // no vdestructor, closed constructor
   virtual void overlayUpdate(int overlay, bool internal, bool noupdate, bool recreate)=0;
-  virtual void innerOverlayRemove(int overlay)=0;
-  friend class IOverlay;
+  virtual void innerOverlayReplace(int ovlid, DrawOverlay* ovl, bool owner)=0;
+  virtual void innerOverlayRemove(int ovlid)=0;
 };
 
 class DataDecimator
@@ -226,33 +220,40 @@ struct  linestyle_t
   float         r,g,b;
   int           inversive;  /// 0 - off, 1-5 algos
   OUTSIDELINE   outside;
-  linestyle_t(unsigned int lstroke, unsigned int lspace, unsigned int dots, float red, float green, float blue, OUTSIDELINE ols): 
-    lenstroke(lstroke), lenspace(lspace), countdot(dots), r(red), g(green), b(blue), inversive(0), outside(ols){}
 };
-inline linestyle_t    linestyle_inverse_1(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ linestyle_t result(lstroke, lspace, dots, 0,0,0, ols); result.inversive = 1; return result; }
-inline linestyle_t    linestyle_inverse_2(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ linestyle_t result(lstroke, lspace, dots, 0,0,0, ols); result.inversive = 2; return result; }
-inline linestyle_t    linestyle_inverse_3(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ linestyle_t result(lstroke, lspace, dots, 0,0,0, ols); result.inversive = 3; return result; }
 
-inline linestyle_t    linestyle_white(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(lstroke, lspace, dots, 1,1,1, ols); }
-inline linestyle_t    linestyle_yellow(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(lstroke, lspace, dots, 1,1,0, ols); }
-inline linestyle_t    linestyle_black(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(lstroke, lspace, dots, 0,0,0, ols); }
-inline linestyle_t    linestyle_red(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(lstroke, lspace, dots, 1,0,0, ols); }
-inline linestyle_t    linestyle_orange(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(lstroke, lspace, dots, 1,0.6,0.3, ols); }
-inline linestyle_t    linestyle_redlight(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(lstroke, lspace, dots, 1,0.6,0.6, ols); }
-inline linestyle_t    linestyle_green(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(lstroke, lspace, dots, 0,1,0, ols); }
-inline linestyle_t    linestyle_bluelight(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(lstroke, lspace, dots, 0.6,1,1, ols); }
-inline linestyle_t    linestyle_purple(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(lstroke, lspace, dots, 1,0,1, ols); }
-inline linestyle_t    linestyle_grey(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(lstroke, lspace, dots, 0.5,0.5,0.5, ols); }
-inline linestyle_t    linestyle_greylight(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(lstroke, lspace, dots, 0.7,0.7,0.7, ols); }
-inline linestyle_t    linestyle_greydark(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(lstroke, lspace, dots, 0.2,0.2,0.2, ols); }
+#if __cplusplus > 19971
+#define __linestyle__(lstroke, lspace, dots, red, green, blue, inversive, ols) {lstroke, lspace, dots, red,green,blue, inversive, ols}
+#else
+inline linestyle_t    __linestyle__(unsigned int lstroke, unsigned int lspace, unsigned int dots, float red, float green, float blue, int inversive, OUTSIDELINE ols)
+{   linestyle_t result = {lstroke, lspace, dots, red,green,blue, inversive, ols};   return result;    }
+#endif
 
-inline linestyle_t    linestyle_solid(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(1, 0, 0, red,green,blue, ols); }
-inline linestyle_t    linestyle_slimstroks(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(3, 1, 0, red,green,blue, ols); }
-inline linestyle_t    linestyle_stroks(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(5, 2, 0, red,green,blue, ols); }
-inline linestyle_t    linestyle_widestroks(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(10, 2, 0, red,green,blue, ols); }
-inline linestyle_t    linestyle_dots(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(1, 1, 0, red,green,blue, ols); }
-inline linestyle_t    linestyle_strdot(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(4, 2, 1, red,green,blue, ols); }
-inline linestyle_t    linestyle_strdotdot(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return linestyle_t(4, 2, 2, red,green,blue, ols); }
+inline linestyle_t    linestyle_inverse_1(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0,0,0, 1, ols); }
+inline linestyle_t    linestyle_inverse_2(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0,0,0, 2, ols); }
+inline linestyle_t    linestyle_inverse_3(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0,0,0, 3, ols); }
+
+inline linestyle_t    linestyle_white(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 1,1,1, 0, ols); }
+inline linestyle_t    linestyle_yellow(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 1,1,0, 0, ols); }
+inline linestyle_t    linestyle_black(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0,0,0, 0, ols); }
+inline linestyle_t    linestyle_red(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 1,0,0, 0, ols); }
+inline linestyle_t    linestyle_blue(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0,0,1, 0, ols); }
+inline linestyle_t    linestyle_orange(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 1,0.6f,0.3f, 0, ols); }
+inline linestyle_t    linestyle_redlight(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 1,0.6f,0.6f, 0, ols); }
+inline linestyle_t    linestyle_green(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0,1,0, 0, ols); }
+inline linestyle_t    linestyle_bluelight(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0.6f,1,1, 0, ols); }
+inline linestyle_t    linestyle_purple(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 1,0,1, 0, ols); }
+inline linestyle_t    linestyle_grey(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0.5f,0.5f,0.5f, 0, ols); }
+inline linestyle_t    linestyle_greylight(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0.7f,0.7f,0.7f, 0, ols); }
+inline linestyle_t    linestyle_greydark(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0.2f,0.2f,0.2f, 0, ols); }
+
+inline linestyle_t    linestyle_solid(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(1, 0, 0, red,green,blue, 0, ols); }
+inline linestyle_t    linestyle_slimstroks(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(3, 1, 0, red,green,blue, 0, ols); }
+inline linestyle_t    linestyle_stroks(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(5, 2, 0, red,green,blue, 0, ols); }
+inline linestyle_t    linestyle_widestroks(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(10, 2, 0, red,green,blue, 0, ols); }
+inline linestyle_t    linestyle_dots(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(1, 1, 0, red,green,blue, 0, ols); }
+inline linestyle_t    linestyle_strdot(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(4, 2, 1, red,green,blue, 0, ols); }
+inline linestyle_t    linestyle_strdotdot(float red, float green, float blue, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(4, 2, 2, red,green,blue, 0, ols); }
 
 inline linestyle_t&   linestyle_update(linestyle_t* ls, float red, float green, float blue){ ls->r = red; ls->g = green; ls->b = blue; ls->inversive = 0; return *ls; }
 inline linestyle_t    linestyle_update(linestyle_t ls, float red, float green, float blue){ ls.r = red; ls.g = green; ls.b = blue; ls.inversive = 0; return ls; }
@@ -260,14 +261,23 @@ inline linestyle_t    linestyle_update(linestyle_t ls, unsigned int clr){   ls.b
 inline linestyle_t    linestyle_update_inverse(linestyle_t ls, int inv){   ls.r = ls.g = ls.b = 0; ls.inversive = inv; return ls; }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-enum  OVL_REACTION_MOUSE { ORM_LMPRESS, ORM_LMMOVE, ORM_LMRELEASE };
+enum  OVL_REACTION_MOUSE { 
+  ORM_LMPRESS, ORM_LMMOVE, ORM_LMRELEASE, ORM_LMDOUBLE,
+  ORM_RMPRESS, ORM_RMMOVE, ORM_RMRELEASE
+};
 enum  OVL_MODIFIER_KEYBOARD {  OMK_NONE=0, OMK_SHIFT=2, OMK_CONTROL=4, OMK_ALT=8 };
 
-class IOverlay: virtual public AbstractOverlay
+struct ovlbasics_t
+{
+  float   opacity;
+  float   thickness;
+  float   slice;
+};
+
+class DrawOverlay: virtual public AbstractDrawOverlay
 {
 public:
   enum    { MAXDRAWERS = 50 };
@@ -279,30 +289,41 @@ private:
     bool                  delowner;
   } m_drawers[MAXDRAWERS];
   unsigned int            m_drawersCount;
-  float                   m_opacity, m_density;
-  float                   m_slice;                // big float by default
+  ovlbasics_t             m_ots;
   bool                    m_repaintban;
 protected:
-  IOverlay(): m_drawersCount(0), m_opacity(0.0f), m_density(0.0f), 
-    m_slice(1.0f), //m_slice(1e+9f), 
-    m_repaintban(false) {}
+  DrawOverlay(): m_drawersCount(0), m_repaintban(false)
+  {
+    m_ots.opacity = 0.0f;
+    m_ots.thickness = 0.0f;
+    m_ots.slice = 1.0f;
+  }
 public:
-  virtual ~IOverlay(){ for (unsigned int i=0; i<m_drawersCount; i++)  m_drawers[i].repaintable->innerOverlayRemove(m_drawers[i].idoverlay); }
+  virtual ~DrawOverlay(){ for (unsigned int i=0; i<m_drawersCount; i++)  m_drawers[i].repaintable->innerOverlayRemove(m_drawers[i].idoverlay); }
+  void  eject(DrawOverlay* ovl, bool owner)
+  {
+    for (unsigned int i=0; i<m_drawersCount; i++)
+      m_drawers[i].repaintable->innerOverlayReplace(m_drawers[i].idoverlay, ovl, owner); // this method calls assign for ovl
+    m_drawersCount = 0;
+  }
+  void  eject()
+  {
+    for (unsigned int i=0; i<m_drawersCount; i++)
+      m_drawers[i].repaintable->innerOverlayRemove(m_drawers[i].idoverlay);
+    m_drawersCount = 0;
+  }
 private:
   friend class DrawCore;
   bool  assign(int overlay, IDrawOverlayFriendly* idr, bool delowner)
   {
     if (m_drawersCount >= MAXDRAWERS) return false;
-    
-//    overlayAttaching(m_drawersCount);
-    
     m_drawers[m_drawersCount].idoverlay = overlay;
     m_drawers[m_drawersCount].repaintable = idr;
     m_drawers[m_drawersCount].delowner = delowner;
     m_drawersCount++;
     return true;
   }
-  bool  overlayPreDelete(IDrawOverlayFriendly* idr)
+  bool  preDelete(IDrawOverlayFriendly* idr)
   {
     int  ownermask = 0;
     bool move=false;
@@ -318,45 +339,78 @@ private:
         if (m_drawers[i].delowner == true)
           ownermask |= 1;
         if (move)
-          m_drawers[i - 1] = m_drawers[i];
+          m_drawers[i-1] = m_drawers[i];
       }
     if (move)
       m_drawersCount -= 1;
     return ownermask == 2;
   }
 public:
-  void  setOpacity(float opacity){ m_opacity = opacity; updateParameter(false); } /// 0 for invisible
-  float getOpacity() const { return m_opacity; }
-  bool  opaque() const {  return m_opacity >= 1.0f; }
-  void  setDensity(float density){ m_density = density; updateParameter(false); }
-  float getDensity() const { return m_density; }
-  void  setSlice(float value) { m_slice = value;  updateParameter(false); }
-  float getSlice() const { return m_slice; }
+  void  setOpacity(float opacity){ m_ots.opacity = opacity; updateParameter(false); } /// 0 for invisible
+  float getOpacity() const { return m_ots.opacity; }
+  bool  opaque() const {  return m_ots.opacity >= 1.0f; }
+  void  setThickness(float thickness){ m_ots.thickness = thickness; updateParameter(false); }
+  float getThickness() const { return m_ots.thickness; }
+  void  setSlice(float value) { m_ots.slice = value;  updateParameter(false); }
+  float getSlice() const { return m_ots.slice; }
+public:
+  void  setOTS(const ovlbasics_t& ob){ m_ots = ob; updateParameter(false); }
+  void  setOTS(float opacity, float thickness, float slice=1.0f){ m_ots.opacity = opacity; m_ots.thickness = thickness; m_ots.slice = slice; updateParameter(false); }
 public:
   void  setUpdateBan(bool updateban) { m_repaintban = updateban; }
 protected:
   void updatePublic(){ for (unsigned int i=0; i<m_drawersCount; i++)  m_drawers[i].repaintable->overlayUpdate(m_drawers[i].idoverlay, true, false, false); }
   void updateParameter(bool recreate){ for (unsigned int i=0; i<m_drawersCount; i++)  m_drawers[i].repaintable->overlayUpdate(m_drawers[i].idoverlay, false, m_repaintban, recreate); }
   virtual void overlayUpdateParameter(bool recreate=false){ updateParameter(recreate); }
-  friend class IOverlayUpdater;
+  friend class DrawOverlayUpdater;
 protected:    /// EXTERNAL interface
   friend class DrawQWidget;
   virtual int   fshTrace(int overlay, bool rotated, char* to) const =0;
   virtual int   fshColor(int overlay, char* to) const =0;
   virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void*, bool* /*doStop*/){  return false; }
   virtual bool  overlayReactionKey(int /*key*/, int /*modifiersOMK*/, bool* /*doStop*/){  return false; }
-protected:
-//  virtual void  overlayAttaching(unsigned int /*ctr*/){}
 };
 
-class IOverlayUpdater
+class DrawOverlayUpdater
 {
-  IOverlay*   pOvl;
+  DrawOverlay*   pOvl;
 public:
-  IOverlayUpdater(IOverlay* povl): pOvl(povl){}
+  DrawOverlayUpdater(DrawOverlay* povl): pOvl(povl){}
   void updatePublic(){  pOvl->updatePublic(); }
   void updateParameter(bool recreate){ pOvl->updateParameter(recreate); }
   void appendUniform(DTYPE type, const void* value){  pOvl->appendUniform(type, value); }
+};
+
+class DrawOverlayProactive
+{
+public:
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void*, bool* /*doStop*/){  return false; }
+  virtual bool  overlayReactionKey(int /*key*/, int /*modifiersOMK*/, bool* /*doStop*/){  return false; }
+  virtual ~DrawOverlayProactive(){}
+};
+
+/////////////////////////////////////////////
+/////////////////////////////////////////////
+
+
+struct ovlfraginfo_t
+{
+  int   link;
+};
+
+class ISheiGenerator
+{
+public:
+  virtual   const char*   shaderName() const =0;
+  virtual   unsigned int  shvertex_pendingSize() const =0;
+  virtual   unsigned int  shvertex_store(char* to) const =0;
+  virtual   unsigned int  shfragment_pendingSize(unsigned int ovlscount) const =0;
+  virtual   unsigned int  shfragment_store(unsigned int allocPortions, const DPostmask&, ORIENTATION orient, SPLITPORTIONS splitPortions, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const =0;
+  
+public:
+  enum      { PMT_PSEUDO2D, PMT_FORCE1D }; /// PORTION_MESH_TYPE
+  virtual   int           portionMeshType() const =0;
+  virtual   ~ISheiGenerator(){}
 };
 
 #endif // BSDRAWDEF_H

@@ -1,7 +1,9 @@
 #ifndef _TFM_MALACHITE_H
 #define _TFM_MALACHITE_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_malachite[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_malachite[] = {
                                              0x0000fc00, 0x0000fa00, 0x0000f800, 0x0000f600, 0x0000f400, 0x0000f200, 0x0000ef00, 0x0000ed00, 
                                              0x0000eb00, 0x0000e900, 0x0000e700, 0x0000e500, 0x0000e300, 0x0000e100, 0x0000de00, 0x0000dc00, 
                                              0x0000da00, 0x0000d800, 0x0000d600, 0x0000d400, 0x0000d200, 0x0000d000, 0x0000cd00, 0x0000cb00, 
@@ -35,7 +37,10 @@
                                              0x00bf0000, 0x00c30000, 0x00c60000, 0x00ca0000, 0x00ce0000, 0x00d10000, 0x00d50000, 0x00d80000, 
                                              0x00dc0000, 0x00df0000, 0x00e30000, 0x00e60000, 0x00ea0000, 0x00ee0000, 0x00f10000, 0x00f50000
 };
-const PaletteConstFWD<sizeof(colors_tfm_malachite) / sizeof(unsigned int)> palette_tfm_malachite(colors_tfm_malachite);
+
+const PaletteConstFWD<sizeof(colors_tfm_malachite) / sizeof(unsigned int)> palette_tfm_malachite(colors_tfm_malachite);
 const PaletteConstBWD<sizeof(colors_tfm_malachite) / sizeof(unsigned int)> palette_tfm_malachite_inv(colors_tfm_malachite);
-typedef PaletteConstFWD<sizeof(colors_tfm_malachite) / sizeof(unsigned int)> palette_tfm_malachite_t;
-#endif // _TFM_MALACHITE_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_malachite) / sizeof(unsigned int)> palette_tfm_malachite_t;
+
+#endif // _TFM_MALACHITE_H

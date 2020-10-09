@@ -1,7 +1,9 @@
 #ifndef _MAT_WINTER_H
 #define _MAT_WINTER_H
-#include "../bstexpalette.h"
-const unsigned int colors_mat_winter[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_mat_winter[] = {
                                           0x00ff0000, 0x00fe0100, 0x00fe0200, 0x00fd0300, 0x00fd0400, 0x00fc0500, 0x00fc0600, 0x00fb0700, 
                                           0x00fb0800, 0x00fa0900, 0x00fa0a00, 0x00f90b00, 0x00f90c00, 0x00f80d00, 0x00f80e00, 0x00f70f00, 
                                           0x00f71000, 0x00f61100, 0x00f61200, 0x00f51300, 0x00f51400, 0x00f41500, 0x00f41600, 0x00f31700, 
@@ -35,7 +37,10 @@
                                           0x0087f000, 0x0087f100, 0x0086f200, 0x0086f300, 0x0085f400, 0x0085f500, 0x0084f600, 0x0084f700, 
                                           0x0083f800, 0x0083f900, 0x0082fa00, 0x0082fb00, 0x0081fc00, 0x0081fd00, 0x0080fe00, 0x0080ff00
 };
-const PaletteConstFWD<sizeof(colors_mat_winter) / sizeof(unsigned int)> palette_mat_winter(colors_mat_winter);
+
+const PaletteConstFWD<sizeof(colors_mat_winter) / sizeof(unsigned int)> palette_mat_winter(colors_mat_winter);
 const PaletteConstBWD<sizeof(colors_mat_winter) / sizeof(unsigned int)> palette_mat_winter_inv(colors_mat_winter);
-typedef PaletteConstFWD<sizeof(colors_mat_winter) / sizeof(unsigned int)> palette_mat_winter_t;
-#endif // _MAT_WINTER_H
+
+typedef PaletteConstFWD<sizeof(colors_mat_winter) / sizeof(unsigned int)> palette_mat_winter_t;
+
+#endif // _MAT_WINTER_H

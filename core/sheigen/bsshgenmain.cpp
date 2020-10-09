@@ -1,3 +1,6 @@
+/// This file is a part of shader-code-generation subsystem
+/// You dont need to use classes from this file directly
+/// Created By: Elijah Vlasov
 #include "bsshgenmain.h"
 
 #include <memory.h>
@@ -17,6 +20,7 @@ int msprintf(char* to, const char* format, ...)
 {
   char* t=to;
   const char* fp=format;
+  const char* pps[9] = { nullptr };
 
   va_list vl;
   va_start( vl, format );
@@ -26,6 +30,15 @@ int msprintf(char* to, const char* format, ...)
     {
       switch (*++fp)
       {
+      case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': 
+      {
+        int idx = *fp - '1';
+        if (pps[idx] == nullptr)
+          pps[idx] = va_arg(vl, const char*);
+        for (const char* f=pps[idx]; *f != '\0'; f++)
+          *t++ = *f;
+        break;
+      }
       case 's':
       {
         for (const char* f=va_arg(vl, const char*); *f != '\0'; f++)
@@ -70,9 +83,9 @@ int msprintf(char* to, const char* format, ...)
           }
           
           nums[0] = (int)value;
-          int arrsizes[] = {  100000, 10000, 1000, 100, 10, 1, 0  };
-          int arridx = *fp == 'f' ? 0 : 2;
-          nums[1] = (nums[0] < 0? -1 : 1)*(value - nums[0])*arrsizes[arridx] + 0.499;
+          int arrsizes[] = {  1000000, 100000, 10000, 1000, 100, 10, 1, 0  };
+          int arridx = *fp == 'f' ? 0 : 3;
+          nums[1] = (nums[0] < 0? -1 : 1)*(value - nums[0])*arrsizes[arridx] + 0.49;
           if (nums[1] == 0)
             nums[2] = 0;
           else
@@ -118,7 +131,7 @@ int msprintf(char* to, const char* format, ...)
   }
   va_end(vl);
   *t = '\0';
-  return t - to;
+  return int(t - to);
 }
 
 
@@ -157,8 +170,8 @@ unsigned int FshMainGenerator::basePendingSize(unsigned int ovlscount)
   return 1750 + ovlscount*540;
 }
 
-FshMainGenerator::FshMainGenerator(char *deststring, ORIENTATION orient, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]): 
-  m_writebase(deststring), m_to(deststring), m_offset(0), m_orient(orient), m_ovlscount(ovlscount), m_ovls(ovlsinfo)
+FshMainGenerator::FshMainGenerator(char *deststring, unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]): 
+  m_writebase(deststring), m_to(deststring), m_allocatedPortions(allocatedPortions), m_offset(0), m_orient(orient), m_splitPortions(splitPortions), m_ovlscount(ovlscount), m_ovls(ovlsinfo)
 {
 #ifdef BSGLSLVER
   m_offset += msprintf(&m_to[m_offset],  "#version %d" SHNL, BSGLSLVER);
@@ -192,7 +205,7 @@ FshMainGenerator::FshMainGenerator(char *deststring, ORIENTATION orient, unsigne
   for (unsigned int i=0; i<m_ovlscount; i++)
   {
     m_offset += msprintf(&m_to[m_offset],  "uniform highp vec4 ovl_exsettings%D;" SHNL
-                                          "vec4 overlayTrace%d(in vec4 coords, in float density, in ivec2 mastercoords, out ivec2 shapeself);" SHNL
+                                          "vec4 overlayTrace%d(in ivec2 icell, in vec4 coords, in float thick, in ivec2 mastercoords, out ivec2 shapeself);" SHNL
                                           "vec3 overlayColor%d(in vec4 trace, in vec3 color);" SHNL,
                         i+1, i+1, i+1);
   }
@@ -212,15 +225,64 @@ void FshMainGenerator::goto_func_begin(int initback, unsigned int backcolor, con
                                     "vec4  loc_f4_sets;" SHNL
                                     "ivec2 loc_i2_pos;" SHNL
                                     "float ovMix = 0.0;" SHNL
-                                    "ivec2 iscaling = ivec2(scaling_a, scaling_b);" SHNL
                                   
                                     "ivec2 ibounds_noscaled = ivec2(datadimm_a, datadimm_b);" SHNL
-                                    "ivec2 ibounds = ibounds_noscaled*iscaling;" SHNL
-                                  
                                     "vec2  fbounds_noscaled = vec2(datadimm_a, datadimm_b);" SHNL
+                                  
+                                    "ivec2 iscaling = ivec2(scaling_a, scaling_b);" SHNL
+                                    "ivec2 ibounds = ibounds_noscaled*iscaling;" SHNL
                                     "vec2  fbounds = vec2(ibounds);" SHNL
+                                  
+                                    "vec2  relcoords = rotater(vec2(coords.xy*0.5 + vec2(0.5,0.5)));" SHNL
+                                  ;
   
+  memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
+  {
+    int spDirection = (m_splitPortions >> 8)&0xFF;
+    int spDivider = m_splitPortions&0xFF;
+    if (spDivider == 0)
+    {
+      static const char fsh_portion_summary[] = "ivec2 icell = ivec2(0,0);" SHNL
+                                                "vec4  ocoords = vec4(coords.xy*0.5 + vec2(0.5,0.5), relcoords);" SHNL;
+      memcpy(&m_to[m_offset], fsh_portion_summary, sizeof(fsh_portion_summary) - 1);  m_offset += sizeof(fsh_portion_summary) - 1;
+    }
+    else
+    {
+      if (spDivider == 1)
+      {
+        m_offset += msprintf(&m_to[m_offset],   "ivec2 icell = ivec2(relcoords.%1/(1.0/%d), %d);" SHNL
+                                                "relcoords.%1 = (relcoords.%1 - (icell[0])*(1.0/icell[1])) / (1.0/icell[1]);" SHNL
+                                                "relcoords = mix(relcoords, vec2(-1.0), step(countPortions, float(icell[0])));" SHNL
+                                                "vec4  ocoords = vec4(coords.xy*0.5 + vec2(0.5,0.5), relcoords);" SHNL,
+                             spDirection == 0? "y" : "x",
+                             m_allocatedPortions, m_allocatedPortions
+                             );
+      }
+      else
+      {
+        m_offset += msprintf(&m_to[m_offset],   "int spDivider = %d;" SHNL
+                                                "ivec2 icell = ivec2(0, %d);" SHNL, spDivider, m_allocatedPortions);
+        
+        m_offset += msprintf(&m_to[m_offset],   "vec2  spdvs = vec2(1.0/spDivider, 1.0/int(icell[1]/float(spDivider) + 0.99) );" SHNL
+                                                "ivec2 ispcell = ivec2(relcoords.x/spdvs[%1], relcoords.y/spdvs[%2]);" SHNL
+                                                "icell[0] = ispcell[%1]+ispcell[%2]*spDivider;" SHNL
+                                                "relcoords.x = (relcoords.x - ispcell.x*spdvs[%1]) / spdvs[%1];" SHNL
+                                                "relcoords.y = (relcoords.y - ispcell.y*spdvs[%2]) / spdvs[%2];" SHNL
+                                                "relcoords = mix(relcoords, vec2(-1.0), step(countPortions, float(icell[0])));" SHNL
+                                                "vec4  ocoords = vec4(coords.xy*0.5 + vec2(0.5,0.5), relcoords);" SHNL,
+                             spDirection == 0? "0" : "1", 
+                             spDirection == 0? "1" : "0");
+      }
+    }
+  }
   
+  static const char fsh_lastlocals[] = 
+                                    "vec2  fcoords = (relcoords*(fbounds));" SHNL   /// ! no floor.
+                                    "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled));" SHNL
+                                    "ivec2 imoded = ivec2( int(mod(fcoords.x, float(iscaling.x))), int(mod(fcoords.y, float(iscaling.y))));" SHNL
+                                  ;
+  memcpy(&m_to[m_offset], fsh_lastlocals, sizeof(fsh_lastlocals) - 1);  m_offset += sizeof(fsh_lastlocals) - 1;
+      
 //  const char* rotates[] = { "vec2 relcoords = vec2(coords.x*0.5 + 0.5, coords.y*0.5 + 0.5);",
 //                            "vec2 relcoords = vec2(1.0 - (coords.x*0.5 + 0.5), coords.y*0.5 + 0.5);",
 //                            "vec2 relcoords = vec2(coords.x*0.5 + 0.5, 1.0 - (coords.y*0.5 + 0.5));",
@@ -232,8 +294,6 @@ void FshMainGenerator::goto_func_begin(int initback, unsigned int backcolor, con
 //                          };
 //  m_offset += msprintf(&m_to[m_offset], rotates[m_orient] SHNL);
 
-                                    "vec2  relcoords = rotater(vec2(coords.xy*0.5 + vec2(0.5,0.5)));" SHNL
-                                    "vec4  ocoords = vec4(coords.xy*0.5 + vec2(0.5,0.5), relcoords);" SHNL
                                   
 //                                  "vec2  fcoords = floor((coords.xy+vec2(1,1))*fbounds/vec2(2.0,2.0) + vec2(0.49, 0.49));" SHNL
 //                                  "vec2  fcoords_noscaled = floor((coords.xy+vec2(1,1))*fbounds_noscaled/vec2(2.0,2.0) + vec2(0.49, 0.49));" SHNL
@@ -257,19 +317,16 @@ void FshMainGenerator::goto_func_begin(int initback, unsigned int backcolor, con
                                   
                                   
 
-                                    "vec2  fcoords = (relcoords*(fbounds));" SHNL   /// ! no floor.
-                                    "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled));" SHNL
+                                    
                                   
                                   
 //                                    "ivec2 icoords = ivec2(fcoords);" SHNL
 //                                    "ivec2 icoords_noscaled = ivec2(fcoords_noscaled);" SHNL
                                   
-                                    "ivec2 imoded = ivec2( int(mod(fcoords.x, float(iscaling.x))), int(mod(fcoords.y, float(iscaling.y))));" SHNL
+                                    
                                   
                                     ;
 
-  memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
-  
   if (initback == INITBACK_BYZERO || initback == INIT_BYZERO)
     m_offset += msprintf(&m_to[m_offset], "vec3  backcolor = vec3(0.0, 0.0, 0.0);" SHNL);
   else if (initback == INITBACK_BYVALUE || initback == INIT_BYVALUE)
@@ -360,7 +417,7 @@ void FshMainGenerator::goto_func_end(const DPostmask &fsp)
       m_offset += msprintf(&m_to[m_offset],  "loc_f4_sets = ovl_exsettings%D;" SHNL
                                             "loc_i2_pos = ivec2(0,0);" SHNL
                                             "if (step(1.0, loc_f4_sets[0]) != 1){" SHNL
-                                              "ovTrace = overlayTrace%d(ocoords, loc_f4_sets[1], ovl_position%d, loc_i2_pos);" SHNL
+                                              "ovTrace = overlayTrace%d(icell, ocoords, loc_f4_sets[1], ovl_position%d, loc_i2_pos);" SHNL
                                               "if (sign(ovTrace[3]) != 0.0 && step(ovMix, loc_f4_sets[2]) == 1.0) result = mix(result, overlayColor%d(ovTrace, result), 1.0 - loc_f4_sets[0]);" SHNL 
                                             "}" SHNL
                                             "ivec2 ovl_position%d = loc_i2_pos;" SHNL,
@@ -371,7 +428,7 @@ void FshMainGenerator::goto_func_end(const DPostmask &fsp)
       m_offset += msprintf(&m_to[m_offset],  "loc_f4_sets = ovl_exsettings%D;" SHNL
                                             "loc_i2_pos = ivec2(0,0);" SHNL
                                             "if (step(1.0, loc_f4_sets[0]) != 1){" SHNL
-                                              "ovTrace = overlayTrace%d(ocoords, loc_f4_sets[1], ivec2(0,0), loc_i2_pos);" SHNL
+                                              "ovTrace = overlayTrace%d(icell, ocoords, loc_f4_sets[1], ivec2(0,0), loc_i2_pos);" SHNL
                                               "if (sign(ovTrace[3]) != 0.0 && step(ovMix, loc_f4_sets[2]) == 1.0) result = mix(result, overlayColor%d(ovTrace, result), 1.0 - loc_f4_sets[0]);" SHNL
                                             "}" SHNL
                                             "ivec2 ovl_position%d = loc_i2_pos;" SHNL,
@@ -392,15 +449,9 @@ void FshMainGenerator::push(const char *text)
     m_to[m_offset++] = *text++;
 }
 
-//inline void push_const_podifier(char* strstart, int* offset)
-//{
-//  static const char fsh_const_modifier[] = "const ";
-//  memcpy(&strstart[*offset], fsh_const_modifier, sizeof(fsh_const_modifier) - 1); *offset += sizeof(fsh_const_modifier) - 1;
-//}
-
 void FshMainGenerator::cfloatvar(const char *name, float value)
 {
-  m_offset += msprintf(&m_to[m_offset], "const float %s = %F;" SHNL, name, value);
+  m_offset += msprintf(&m_to[m_offset], "const float %s = %f;" SHNL, name, value);
 }
 
 void FshMainGenerator::ccolor(const char *name, unsigned int value)

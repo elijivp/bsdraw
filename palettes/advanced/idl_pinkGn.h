@@ -1,7 +1,9 @@
 #ifndef _IDL_PINKGN_H
 #define _IDL_PINKGN_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_pinkGn[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_pinkGn[] = {
                                           0x00000000, 0x00000000, 0x00000a00, 0x00001400, 0x00001e00, 0x00002800, 0x00003200, 0x00003c00, 
                                           0x00004600, 0x00004f00, 0x00005900, 0x00006300, 0x00006d00, 0x00007700, 0x00008100, 0x00008b00, 
                                           0x00009500, 0x00009f00, 0x0000a900, 0x0000b300, 0x0000b500, 0x0001b400, 0x0003b300, 0x0005b200, 
@@ -35,7 +37,10 @@
                                           0x00f0cafc, 0x00f1cefc, 0x00f2d2fc, 0x00f3d6fc, 0x00f4dafc, 0x00f5defc, 0x00f6e2fc, 0x00f7e6fc, 
                                           0x00f7eafc, 0x00f8eefc, 0x00f9f2fc, 0x00faf6fc, 0x00fbfafc, 0x00fcfefc, 0x00fdfffc, 0x00fefffc
 };
-const PaletteConstFWD<sizeof(colors_idl_pinkGn) / sizeof(unsigned int)> palette_idl_pinkGn(colors_idl_pinkGn);
+
+const PaletteConstFWD<sizeof(colors_idl_pinkGn) / sizeof(unsigned int)> palette_idl_pinkGn(colors_idl_pinkGn);
 const PaletteConstBWD<sizeof(colors_idl_pinkGn) / sizeof(unsigned int)> palette_idl_pinkGn_inv(colors_idl_pinkGn);
-typedef PaletteConstFWD<sizeof(colors_idl_pinkGn) / sizeof(unsigned int)> palette_idl_pinkGn_t;
-#endif // _IDL_PINKGN_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_pinkGn) / sizeof(unsigned int)> palette_idl_pinkGn_t;
+
+#endif // _IDL_PINKGN_H

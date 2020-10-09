@@ -1,6 +1,12 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
+/// Overlays:   static text, not optimal, (no texture atlas)
+///   OTextTraced: with traced algo for frame
+///   OTextColored: simple colored
+///   OTextPaletted: colorized by palette
+/// Created By: Elijah Vlasov
+
 #include "../core/bsoverlay.h"
 
 class QImage;
@@ -27,15 +33,15 @@ struct otextopts_t
 class OITextStatic
 {
 protected:
-  IOverlayUpdater m_ovllink;
+  DrawOverlayUpdater m_ovllink;
   dmtype_image_t  dmti;
   QImage*         m_pImage;
   OVL_ORIENTATION m_orient;
   
-  OITextStatic(IOverlay* ovllink, const char* text, unsigned int fontSize, OVL_ORIENTATION orient);
-  OITextStatic(IOverlay* ovllink, const char* text, const QFont& font, OVL_ORIENTATION orient);
-  OITextStatic(IOverlay* ovllink, const otextopts_t& text, unsigned int fontSize, OVL_ORIENTATION orient);
-  OITextStatic(IOverlay* ovllink, const otextopts_t& text, const QFont& font, OVL_ORIENTATION orient);
+  OITextStatic(DrawOverlay* ovllink, const char* text, unsigned int fontSize, OVL_ORIENTATION orient);
+  OITextStatic(DrawOverlay* ovllink, const char* text, const QFont& font, OVL_ORIENTATION orient);
+  OITextStatic(DrawOverlay* ovllink, const otextopts_t& text, unsigned int fontSize, OVL_ORIENTATION orient);
+  OITextStatic(DrawOverlay* ovllink, const otextopts_t& text, const QFont& font, OVL_ORIENTATION orient);
 public:
   virtual       ~OITextStatic();
 public:
@@ -45,7 +51,7 @@ protected:
   void          innerSetText(const otextopts_t& ot, const QFont& font);
 };
 
-class OTextTraced: public IOverlayTraced, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
+class OTextTraced: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
 {
 public:
   OTextTraced(const char* text, COORDINATION cn, float xpos, float ypos,
@@ -71,7 +77,7 @@ protected:
   bool m_rectangled;
 };
 
-class OTextColored: public IOverlaySimple, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
+class OTextColored: public DrawOverlaySimple, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
 {
 public:
   OTextColored(const char* text, COORDINATION cn, float xpos, float ypos,
@@ -105,7 +111,7 @@ protected:
 };
 
 
-class OTextPaletted: public IOverlayHard, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
+class OTextPaletted: public DrawOverlayHard, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
 {
 public:
   OTextPaletted(const char* text, COORDINATION cn, float xpos, float ypos,

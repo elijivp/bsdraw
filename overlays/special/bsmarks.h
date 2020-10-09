@@ -1,9 +1,14 @@
 #ifndef BSMARKS_H
 #define BSMARKS_H
 
+/// Overlays:   set of little figures
+///   OMarkDashs. View: little lines like | || | ||   | |
+///   OMarkFigures. View: little figures, types described by FFORM
+/// Created By: Elijah Vlasov
+
 #include "../../core/bsoverlay.h"
 
-class OMarkDashs: public IOverlayHard, public OVLCoordsStatic, public OVLDimmsOff
+class OMarkDashs: public DrawOverlayHard, public OVLCoordsStatic, public OVLDimmsOff
 {
 protected:
   unsigned int      m_maxmarks;
@@ -22,15 +27,15 @@ public:
 public:
   void  updateMarkColor(unsigned int mark, float tcolor){ if (mark < m_maxmarks)  m_marks[mark].tcolor = tcolor; }
   void  updateMarkPos(unsigned int mark, float pos){ if (mark < m_maxmarks)  m_marks[mark].pos = pos; }
-  void  updateMark(unsigned int mark, float tcolor, float pos){ if (mark < m_maxmarks) m_marks[mark] = { tcolor, pos}; }
-  void  updateFinished(){ IOverlay::overlayUpdateParameter(); }
+  void  updateMark(unsigned int mark, float tcolor, float pos){ if (mark < m_maxmarks){   m_marks[mark].tcolor = tcolor; m_marks[mark].pos = pos; } }
+  void  updateFinished(){ DrawOverlay::overlayUpdateParameter(); }
   unsigned int countMarks() const { return m_maxmarks; }
 };
 
 
 
 /// max figures count limited by videoadapter
-class OMarkFigures: public IOverlayHard, public OVLCoordsStatic, public OVLDimmsOff
+class OMarkFigures: public DrawOverlayHard, public OVLCoordsStatic, public OVLDimmsOff
 {
 protected:
   unsigned int      m_maxfigures;
@@ -58,8 +63,6 @@ public:
   void  updateFinished();
 public:
   unsigned  int countFigures() const { return m_maxfigures; }
-public:
-//  void  updatePalette(const IPalette* ipal, bool discrete);
 };
 
 

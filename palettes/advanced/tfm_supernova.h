@@ -1,7 +1,9 @@
 #ifndef _TFM_SUPERNOVA_H
 #define _TFM_SUPERNOVA_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_supernova[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_supernova[] = {
                                              0x00619b00, 0x00679b01, 0x006e9c01, 0x00759c02, 0x007c9d02, 0x00829e03, 0x00899e03, 0x00909f04, 
                                              0x0097a004, 0x009da005, 0x00a19d05, 0x00a29806, 0x00a29206, 0x00a38c07, 0x00a38707, 0x00a48108, 
                                              0x00a57b08, 0x00a57609, 0x00a67009, 0x00a76a0a, 0x00a7650a, 0x00a85f0b, 0x00a9590b, 0x00a9540c, 
@@ -35,7 +37,10 @@
                                              0x00acf4ed, 0x00adf4ed, 0x00aef4ed, 0x00aef4ed, 0x00aff4ed, 0x00b0f4ed, 0x00b1f4ed, 0x00b1f4ed, 
                                              0x00b2f4ed, 0x00b3f4ed, 0x00b3f4ee, 0x00b4f4ee, 0x00b5f4ee, 0x00b6f4ee, 0x00b6f4ee, 0x00b7f4ee
 };
-const PaletteConstFWD<sizeof(colors_tfm_supernova) / sizeof(unsigned int)> palette_tfm_supernova(colors_tfm_supernova);
+
+const PaletteConstFWD<sizeof(colors_tfm_supernova) / sizeof(unsigned int)> palette_tfm_supernova(colors_tfm_supernova);
 const PaletteConstBWD<sizeof(colors_tfm_supernova) / sizeof(unsigned int)> palette_tfm_supernova_inv(colors_tfm_supernova);
-typedef PaletteConstFWD<sizeof(colors_tfm_supernova) / sizeof(unsigned int)> palette_tfm_supernova_t;
-#endif // _TFM_SUPERNOVA_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_supernova) / sizeof(unsigned int)> palette_tfm_supernova_t;
+
+#endif // _TFM_SUPERNOVA_H

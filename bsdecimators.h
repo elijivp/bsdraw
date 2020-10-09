@@ -1,6 +1,9 @@
 #ifndef BSDECIMATORS_H
 #define BSDECIMATORS_H
 
+/// This file contains set of decimators: special procedures who reduce count of input data
+/// Created By: Elijah Vlasov
+
 template <class T>
 void  decimate_bywindow(const float* from, unsigned int fromsize, T& decimator, float* to, unsigned int tosize, unsigned int portionsCount)
 {

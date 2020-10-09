@@ -1,7 +1,9 @@
 #ifndef _IDL_MAC_STYLE_H
 #define _IDL_MAC_STYLE_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_mac_style[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_mac_style[] = {
                                              0x00ff007a, 0x00fe0075, 0x00ff0071, 0x00fe006c, 0x00ff0068, 0x00fe0064, 0x00ff005f, 0x00fe005b, 
                                              0x00ff0057, 0x00fe0052, 0x00ff004e, 0x00fe0049, 0x00ff0045, 0x00fe0040, 0x00ff003c, 0x00fe0037, 
                                              0x00ff0033, 0x00fe002e, 0x00ff002a, 0x00fe0025, 0x00ff0021, 0x00fe001d, 0x00ff0018, 0x00fe0014, 
@@ -35,7 +37,10 @@
                                              0x00004aff, 0x000045fe, 0x000041ff, 0x00003cfe, 0x000038ff, 0x000033fe, 0x00002fff, 0x00002afe, 
                                              0x000026ff, 0x000021fe, 0x00001dff, 0x000019fe, 0x000014ff, 0x000010fe, 0x00000bff, 0x000007fe
 };
-const PaletteConstFWD<sizeof(colors_idl_mac_style) / sizeof(unsigned int)> palette_idl_mac_style(colors_idl_mac_style);
+
+const PaletteConstFWD<sizeof(colors_idl_mac_style) / sizeof(unsigned int)> palette_idl_mac_style(colors_idl_mac_style);
 const PaletteConstBWD<sizeof(colors_idl_mac_style) / sizeof(unsigned int)> palette_idl_mac_style_inv(colors_idl_mac_style);
-typedef PaletteConstFWD<sizeof(colors_idl_mac_style) / sizeof(unsigned int)> palette_idl_mac_style_t;
-#endif // _IDL_MAC_STYLE_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_mac_style) / sizeof(unsigned int)> palette_idl_mac_style_t;
+
+#endif // _IDL_MAC_STYLE_H

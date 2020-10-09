@@ -1,7 +1,9 @@
 #ifndef _TFM_HOT_METAL_H
 #define _TFM_HOT_METAL_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_hot_metal[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_hot_metal[] = {
                                              0x00000001, 0x00000003, 0x00000004, 0x00000006, 0x00000008, 0x0000000a, 0x0000000b, 0x0000000d, 
                                              0x0000000f, 0x00000011, 0x00000012, 0x00000014, 0x00000016, 0x00000018, 0x00000019, 0x0000001b, 
                                              0x0000001d, 0x0000001f, 0x00000020, 0x00000022, 0x00000024, 0x00000025, 0x00000027, 0x00000029, 
@@ -35,7 +37,10 @@
                                              0x0000f7ff, 0x0000faff, 0x0000fdff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 
                                              0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff, 0x0000ffff
 };
-const PaletteConstFWD<sizeof(colors_tfm_hot_metal) / sizeof(unsigned int)> palette_tfm_hot_metal(colors_tfm_hot_metal);
+
+const PaletteConstFWD<sizeof(colors_tfm_hot_metal) / sizeof(unsigned int)> palette_tfm_hot_metal(colors_tfm_hot_metal);
 const PaletteConstBWD<sizeof(colors_tfm_hot_metal) / sizeof(unsigned int)> palette_tfm_hot_metal_inv(colors_tfm_hot_metal);
-typedef PaletteConstFWD<sizeof(colors_tfm_hot_metal) / sizeof(unsigned int)> palette_tfm_hot_metal_t;
-#endif // _TFM_HOT_METAL_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_hot_metal) / sizeof(unsigned int)> palette_tfm_hot_metal_t;
+
+#endif // _TFM_HOT_METAL_H

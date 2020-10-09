@@ -1,7 +1,9 @@
 #ifndef _IDL_DARK2_H
 #define _IDL_DARK2_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_dark2[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_dark2[] = {
                                          0x00759d1e, 0x00729b23, 0x006f9a28, 0x006c982d, 0x00699633, 0x00659438, 0x0062933d, 0x005f9142, 
                                          0x005c8f47, 0x00588d4d, 0x00558c52, 0x00528a57, 0x004f885c, 0x004c8762, 0x00488567, 0x0045836c, 
                                          0x00428171, 0x003f8077, 0x003b7e7c, 0x00387c81, 0x00357a86, 0x0032798c, 0x002f7791, 0x002b7596, 
@@ -35,7 +37,10 @@
                                          0x00466d82, 0x00486d80, 0x004a6c7f, 0x004b6c7d, 0x004d6b7b, 0x004f6b79, 0x00516a78, 0x00536a76, 
                                          0x00556a74, 0x00576972, 0x00596971, 0x005b686f, 0x005d686d, 0x005f676b, 0x0061676a, 0x00636668
 };
-const PaletteConstFWD<sizeof(colors_idl_dark2) / sizeof(unsigned int)> palette_idl_dark2(colors_idl_dark2);
+
+const PaletteConstFWD<sizeof(colors_idl_dark2) / sizeof(unsigned int)> palette_idl_dark2(colors_idl_dark2);
 const PaletteConstBWD<sizeof(colors_idl_dark2) / sizeof(unsigned int)> palette_idl_dark2_inv(colors_idl_dark2);
-typedef PaletteConstFWD<sizeof(colors_idl_dark2) / sizeof(unsigned int)> palette_idl_dark2_t;
-#endif // _IDL_DARK2_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_dark2) / sizeof(unsigned int)> palette_idl_dark2_t;
+
+#endif // _IDL_DARK2_H

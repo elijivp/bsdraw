@@ -1,7 +1,9 @@
 #ifndef _IDL_HUE_SAT_VALUE_1_H
 #define _IDL_HUE_SAT_VALUE_1_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_hue_sat_value_1[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_hue_sat_value_1[] = {
                                                    0x000300ff, 0x000a01ff, 0x001102ff, 0x001803ff, 0x001e04ff, 0x002505ff, 0x002c06ff, 0x003207ff, 
                                                    0x003908ff, 0x003f09ff, 0x00460aff, 0x004c0bff, 0x00520cff, 0x00590dff, 0x005f0eff, 0x00650fff, 
                                                    0x006b10ff, 0x007111ff, 0x007712ff, 0x007d13ff, 0x008314ff, 0x008915ff, 0x008f16ff, 0x009517ff, 
@@ -35,7 +37,10 @@
                                                    0x00edf5ff, 0x00eef5ff, 0x00eff5ff, 0x00f0f5ff, 0x00f1f6ff, 0x00f2f6ff, 0x00f3f7ff, 0x00f4f7ff, 
                                                    0x00f5f7ff, 0x00f6f8ff, 0x00f7f8ff, 0x00f8f9ff, 0x00f9f9ff, 0x00fafaff, 0x00fbfaff, 0x00fcfbff
 };
-const PaletteConstFWD<sizeof(colors_idl_hue_sat_value_1) / sizeof(unsigned int)> palette_idl_hue_sat_value_1(colors_idl_hue_sat_value_1);
+
+const PaletteConstFWD<sizeof(colors_idl_hue_sat_value_1) / sizeof(unsigned int)> palette_idl_hue_sat_value_1(colors_idl_hue_sat_value_1);
 const PaletteConstBWD<sizeof(colors_idl_hue_sat_value_1) / sizeof(unsigned int)> palette_idl_hue_sat_value_1_inv(colors_idl_hue_sat_value_1);
-typedef PaletteConstFWD<sizeof(colors_idl_hue_sat_value_1) / sizeof(unsigned int)> palette_idl_hue_sat_value_1_t;
-#endif // _IDL_HUE_SAT_VALUE_1_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_hue_sat_value_1) / sizeof(unsigned int)> palette_idl_hue_sat_value_1_t;
+
+#endif // _IDL_HUE_SAT_VALUE_1_H

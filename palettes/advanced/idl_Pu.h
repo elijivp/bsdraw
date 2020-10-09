@@ -1,7 +1,9 @@
 #ifndef _IDL_PU_H
 #define _IDL_PU_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_Pu[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_Pu[] = {
                                       0x00fefcf9, 0x00fdfbf9, 0x00fdfbf9, 0x00fdfaf9, 0x00fcfaf9, 0x00fcf9f9, 0x00fcf9f9, 0x00fbf8f8, 
                                       0x00fbf8f8, 0x00fbf7f8, 0x00fbf7f8, 0x00faf6f8, 0x00faf6f7, 0x00faf5f7, 0x00faf5f7, 0x00f9f4f6, 
                                       0x00f9f4f6, 0x00f9f3f6, 0x00f8f3f5, 0x00f8f2f5, 0x00f8f2f5, 0x00f8f1f4, 0x00f7f1f4, 0x00f7f0f3, 
@@ -35,7 +37,10 @@
                                       0x0086144a, 0x00851349, 0x00851149, 0x00841048, 0x00840f47, 0x00830e47, 0x00830d46, 0x00820b45, 
                                       0x00820a45, 0x00810944, 0x00810843, 0x00810743, 0x00800542, 0x00800441, 0x00800341, 0x007f0240
 };
-const PaletteConstFWD<sizeof(colors_idl_Pu) / sizeof(unsigned int)> palette_idl_Pu(colors_idl_Pu);
+
+const PaletteConstFWD<sizeof(colors_idl_Pu) / sizeof(unsigned int)> palette_idl_Pu(colors_idl_Pu);
 const PaletteConstBWD<sizeof(colors_idl_Pu) / sizeof(unsigned int)> palette_idl_Pu_inv(colors_idl_Pu);
-typedef PaletteConstFWD<sizeof(colors_idl_Pu) / sizeof(unsigned int)> palette_idl_Pu_t;
-#endif // _IDL_PU_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_Pu) / sizeof(unsigned int)> palette_idl_Pu_t;
+
+#endif // _IDL_PU_H

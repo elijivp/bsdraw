@@ -1,7 +1,12 @@
+/// DrawRecorder is a draw for 2D painting by 1D lines
+/// Input: 1D array who moves in top of draw
+/// Created By: Elijah Vlasov
 #include "bsdrawrecorder.h"
 #include "core/sheigen/bsshei2d.h"
 
-DrawRecorder::DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory, unsigned int portions, ORIENTATION orient, unsigned int resizeLimit): DrawQWidget(new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient),
+DrawRecorder::DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory, 
+                           unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions, unsigned int resizeLimit): 
+  DrawQWidget(new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient, splitPortions),
   m_stopped(0), m_memory(portions, samplesHorz, linesMemory), m_resizelim(resizeLimit)
 {
   m_matrixDimmA = samplesHorz;
@@ -64,28 +69,6 @@ void DrawRecorder::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDi
     *matrixDimmB = m_resizelim;
 }
 
-//void DrawRecorder::resizeEvent(QResizeEvent* event)
-//{
-//  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
-  
-//  int w = event->size().width() - (m_cttrLeft + m_cttrRight);
-//  int h = event->size().height() - (m_cttrTop + m_cttrBottom);
-  
-//  int& sizeA = m_matrixSwitchAB? h : w;
-//  int& sizeB = m_matrixSwitchAB? w : h;
-  
-//  /*int differentAB = */clampScaling(, m_scalingB);
-//  unsigned int old_dimmB = m_matrixDimmB;
-//  m_matrixDimmB = sizeB / m_scalingB;
-//  if (m_matrixDimmB > m_resizelim) m_matrixDimmB = m_resizelim;
-//  if (m_matrixDimmB > old_dimmB  || (m_matrixDimmB < old_dimmB  && (m_countPortions > 1)))
-//    fillMatrix();
-////  pendResize(differentAB != 0);
-//  pendResize(false);
-  
-//  DrawQWidget::resizeEvent(event);
-//}
-
 void DrawRecorder::fillMatrix()
 {
   for (unsigned int p = 0; p < m_countPortions; ++p)
@@ -101,7 +84,12 @@ void DrawRecorder::fillMatrix()
     }
 }
 
-void DrawRecorder::slideLmHeight(int pp)
+int DrawRecorder::scrollValue() const
+{
+  return m_stopped;
+}
+
+void DrawRecorder::scrollDataTo(int pp)
 {
   if (m_matrixLmSize < m_matrixDimmB*m_scalingB)
     m_stopped = 0;

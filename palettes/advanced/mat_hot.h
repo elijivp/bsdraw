@@ -1,7 +1,9 @@
 #ifndef _MAT_HOT_H
 #define _MAT_HOT_H
-#include "../bstexpalette.h"
-const unsigned int colors_mat_hot[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_mat_hot[] = {
                                        0x00000001, 0x00000004, 0x00000007, 0x00000009, 0x0000000c, 0x0000000f, 0x00000011, 0x00000014, 
                                        0x00000017, 0x00000019, 0x0000001c, 0x0000001f, 0x00000021, 0x00000024, 0x00000027, 0x00000029, 
                                        0x0000002c, 0x0000002e, 0x00000031, 0x00000034, 0x00000036, 0x00000039, 0x0000003c, 0x0000003e, 
@@ -35,7 +37,10 @@
                                        0x00c1ffff, 0x00c5ffff, 0x00c9ffff, 0x00cdffff, 0x00d1ffff, 0x00d5ffff, 0x00d9ffff, 0x00ddffff, 
                                        0x00e1ffff, 0x00e5ffff, 0x00e9ffff, 0x00edffff, 0x00f1ffff, 0x00f5ffff, 0x00f9ffff, 0x00fdffff
 };
-const PaletteConstFWD<sizeof(colors_mat_hot) / sizeof(unsigned int)> palette_mat_hot(colors_mat_hot);
+
+const PaletteConstFWD<sizeof(colors_mat_hot) / sizeof(unsigned int)> palette_mat_hot(colors_mat_hot);
 const PaletteConstBWD<sizeof(colors_mat_hot) / sizeof(unsigned int)> palette_mat_hot_inv(colors_mat_hot);
-typedef PaletteConstFWD<sizeof(colors_mat_hot) / sizeof(unsigned int)> palette_mat_hot_t;
-#endif // _MAT_HOT_H
+
+typedef PaletteConstFWD<sizeof(colors_mat_hot) / sizeof(unsigned int)> palette_mat_hot_t;
+
+#endif // _MAT_HOT_H

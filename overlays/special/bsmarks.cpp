@@ -1,8 +1,12 @@
+/// Overlays:   set of little figures
+///   OMarkDashs. View: little lines like | || | ||   | |
+///   OMarkFigures. View: little figures, types described by FFORM
+/// Created By: Elijah Vlasov
 #include "bsmarks.h"
 
 #include "../../core/sheigen/bsshgentrace.h"
 
-OMarkDashs::OMarkDashs(unsigned int maxmarks, COORDINATION cn, float areaPos, COORDINATION featcn, float marksize, const IPalette *ipal, bool discrete): IOverlayHard(ipal, discrete), 
+OMarkDashs::OMarkDashs(unsigned int maxmarks, COORDINATION cn, float areaPos, COORDINATION featcn, float marksize, const IPalette *ipal, bool discrete): DrawOverlayHard(ipal, discrete), 
   OVLCoordsStatic(cn, 0.0f, areaPos),
   OVLDimmsOff(),
   m_maxmarks(maxmarks), m_featcn(featcn), m_marksize(marksize)
@@ -71,7 +75,7 @@ struct    OMarkFigures::figinfo_t
   float   form_color;
 };
 
-OMarkFigures::OMarkFigures(unsigned int maxfigures, COORDINATION featcn, float figsize, const IPalette* ipal, bool discrete, float figopacity): IOverlayHard(ipal, discrete), 
+OMarkFigures::OMarkFigures(unsigned int maxfigures, COORDINATION featcn, float figsize, const IPalette* ipal, bool discrete, float figopacity): DrawOverlayHard(ipal, discrete), 
   OVLCoordsStatic(CR_RELATIVE, 0.5f, 0.5f),
   OVLDimmsOff(),
   m_maxfigures(maxfigures), m_featcn(featcn), m_figsize(figsize), m_figopc(figopacity)
@@ -150,9 +154,9 @@ int OMarkFigures::fshTrace(int overlay, bool rotated, char *to) const
       ocg.push("}");
       
       
-      ocg.push("_densvar = sign(result[0]);");
-      ocg.push("result = mix(resultold, result, _densvar);");
-      ocg.push("mixwell = mix(mixwell, fig[3], _densvar);");
+      ocg.push("_fvar = sign(result[0]);");
+      ocg.push("result = mix(resultold, result, _fvar);");
+      ocg.push("mixwell = mix(mixwell, fig[3], _fvar);");
     }
     ocg.param_for_end();
   }
@@ -180,5 +184,5 @@ void  OMarkFigures::updateFigure(unsigned int idx, float x, float y, float color
 
 void OMarkFigures::updateFinished()
 {
-  IOverlay::overlayUpdateParameter();
+  DrawOverlay::overlayUpdateParameter();
 }

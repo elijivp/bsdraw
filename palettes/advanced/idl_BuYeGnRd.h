@@ -1,7 +1,9 @@
 #ifndef _IDL_BUYEGNRD_H
 #define _IDL_BUYEGNRD_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_BuYeGnRd[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_BuYeGnRd[] = {
                                             0x00010000, 0x00030000, 0x00050000, 0x00070000, 0x00090000, 0x000b0000, 0x000d0000, 0x000f0000, 
                                             0x00110000, 0x00130000, 0x00150000, 0x00170000, 0x001a0000, 0x001c0000, 0x001e0000, 0x00200000, 
                                             0x00220000, 0x00240000, 0x00260000, 0x00280000, 0x002a0000, 0x002c0000, 0x002e0000, 0x00300000, 
@@ -35,7 +37,10 @@
                                             0x0000dcf8, 0x0000def8, 0x0000e0f9, 0x0000e3f9, 0x0000e5fa, 0x0000e7fa, 0x0000eafb, 0x0000ecfb, 
                                             0x0000eefc, 0x0000f1fc, 0x0000f3fd, 0x0000f5fd, 0x0000f7fd, 0x0000fafe, 0x0000fcfe, 0x0000feff
 };
-const PaletteConstFWD<sizeof(colors_idl_BuYeGnRd) / sizeof(unsigned int)> palette_idl_BuYeGnRd(colors_idl_BuYeGnRd);
+
+const PaletteConstFWD<sizeof(colors_idl_BuYeGnRd) / sizeof(unsigned int)> palette_idl_BuYeGnRd(colors_idl_BuYeGnRd);
 const PaletteConstBWD<sizeof(colors_idl_BuYeGnRd) / sizeof(unsigned int)> palette_idl_BuYeGnRd_inv(colors_idl_BuYeGnRd);
-typedef PaletteConstFWD<sizeof(colors_idl_BuYeGnRd) / sizeof(unsigned int)> palette_idl_BuYeGnRd_t;
-#endif // _IDL_BUYEGNRD_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_BuYeGnRd) / sizeof(unsigned int)> palette_idl_BuYeGnRd_t;
+
+#endif // _IDL_BUYEGNRD_H

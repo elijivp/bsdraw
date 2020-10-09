@@ -1,7 +1,9 @@
 #ifndef _IDL_YIBROR_H
 #define _IDL_YIBROR_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_yiBrOr[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_yiBrOr[] = {
                                           0x00e3ffff, 0x00e1feff, 0x00e0feff, 0x00dffeff, 0x00defeff, 0x00dcfdff, 0x00dbfdff, 0x00dafdff, 
                                           0x00d8fdff, 0x00d7fcff, 0x00d6fcff, 0x00d5fcff, 0x00d3fcff, 0x00d2fbff, 0x00d1fbff, 0x00cffbff, 
                                           0x00cefbff, 0x00cdfaff, 0x00cbfaff, 0x00cafaff, 0x00c9f9ff, 0x00c8f9ff, 0x00c6f9ff, 0x00c5f8ff, 
@@ -35,7 +37,10 @@
                                           0x00052d7f, 0x00052c7e, 0x00052c7c, 0x00052b7a, 0x00052b79, 0x00062a77, 0x00062a76, 0x00062974, 
                                           0x00062973, 0x00062871, 0x00062870, 0x0006276e, 0x0006276d, 0x0006276c, 0x0006266a, 0x00062669
 };
-const PaletteConstFWD<sizeof(colors_idl_yiBrOr) / sizeof(unsigned int)> palette_idl_yiBrOr(colors_idl_yiBrOr);
+
+const PaletteConstFWD<sizeof(colors_idl_yiBrOr) / sizeof(unsigned int)> palette_idl_yiBrOr(colors_idl_yiBrOr);
 const PaletteConstBWD<sizeof(colors_idl_yiBrOr) / sizeof(unsigned int)> palette_idl_yiBrOr_inv(colors_idl_yiBrOr);
-typedef PaletteConstFWD<sizeof(colors_idl_yiBrOr) / sizeof(unsigned int)> palette_idl_yiBrOr_t;
-#endif // _IDL_YIBROR_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_yiBrOr) / sizeof(unsigned int)> palette_idl_yiBrOr_t;
+
+#endif // _IDL_YIBROR_H

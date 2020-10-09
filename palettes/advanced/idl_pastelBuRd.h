@@ -1,7 +1,9 @@
 #ifndef _IDL_PASTELBURD_H
 #define _IDL_PASTELBURD_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_pastelBuRd[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_pastelBuRd[] = {
                                               0x00610021, 0x00620020, 0x0063001f, 0x0064001e, 0x0066001d, 0x0067001c, 0x0068001c, 0x0069001b, 
                                               0x006b001a, 0x006c0019, 0x006d0018, 0x006e0017, 0x006f0016, 0x00710015, 0x00720013, 0x00730012, 
                                               0x00740011, 0x00750010, 0x0077000f, 0x0078000d, 0x0079000c, 0x007a000b, 0x007b0009, 0x007d0008, 
@@ -35,7 +37,10 @@
                                               0x000009ae, 0x000008af, 0x000007b0, 0x000006b2, 0x000005b3, 0x000005b4, 0x000004b5, 0x000003b7, 
                                               0x000003b8, 0x000002b9, 0x000002bb, 0x000001bc, 0x000001bd, 0x000000bf, 0x000000c0, 0x000000c1
 };
-const PaletteConstFWD<sizeof(colors_idl_pastelBuRd) / sizeof(unsigned int)> palette_idl_pastelBuRd(colors_idl_pastelBuRd);
+
+const PaletteConstFWD<sizeof(colors_idl_pastelBuRd) / sizeof(unsigned int)> palette_idl_pastelBuRd(colors_idl_pastelBuRd);
 const PaletteConstBWD<sizeof(colors_idl_pastelBuRd) / sizeof(unsigned int)> palette_idl_pastelBuRd_inv(colors_idl_pastelBuRd);
-typedef PaletteConstFWD<sizeof(colors_idl_pastelBuRd) / sizeof(unsigned int)> palette_idl_pastelBuRd_t;
-#endif // _IDL_PASTELBURD_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_pastelBuRd) / sizeof(unsigned int)> palette_idl_pastelBuRd_t;
+
+#endif // _IDL_PASTELBURD_H

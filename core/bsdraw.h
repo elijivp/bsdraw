@@ -1,6 +1,11 @@
 #ifndef DRAWCORE_H
 #define DRAWCORE_H
 
+/// This file contains base class for all types of draws
+/// You dont need to use classes from this file directly
+/// For deriving your subclasses use DrawQWidget, this class better shows interface
+/// Created By: Elijah Vlasov
+
 #ifndef BSOVERLAYSLIMIT
 // Using default bigsized overlay
 #endif
@@ -15,39 +20,42 @@ struct  bounds_t
   float   LL, HL;             /// Lowest and highest colors from palette
   bounds_t(float ll=0, float hl=1): LL(ll), HL(hl){}
 };
-struct  contrast_t
-{
-  float   contrast, offset;   /// k*x + b
-  contrast_t(float c=1, float o=0): contrast(c), offset(o){}
-};
 
-inline  void  _bsdraw_update_kb(const bounds_t& bnd, const contrast_t& cnt, float* k, float *b)
+inline  void  _bsdraw_update_kb(const bounds_t& bnd, float* k, float *b)
 {
-  // (x - bounds.x)/(bounds.y-bounds.x)*contrast + offset
-  // k = contrast/(bounds.y-bounds.x); b = -bounds.x*contrast/(bounds.y-bounds.x) + offset
-  *k = cnt.contrast/(bnd.HL - bnd.LL);
-  *b = -bnd.LL*cnt.contrast/(bnd.HL - bnd.LL) + cnt.offset;
+  *k = 1.0f/(bnd.HL - bnd.LL);
+  *b = -bnd.LL*1.0f/(bnd.HL - bnd.LL);
+}
+inline  void  _bsdraw_update_bnd(const float k, const float b, bounds_t* bnd)
+{
+  bnd->LL = -b/k;
+  bnd->HL = (1.0f - b)/k;
 }
 
-//inline  void  _bsdraw_recalced_bounds(const contrast_t& cnt, float k, float b, bounds_t* bnd)
-//{
-//  bnd->LL = (cnt.offset - b)/k;
-//  bnd->HL = cnt.contrast/k + bnd->LL;
-//}
-
 //#########################
+class IProactive
+{
+public:
+  virtual bool  overlayReactionMouse(class DrawQWidget*, OVL_REACTION_MOUSE, const void*, bool* /*doStop*/){  return false; }
+  virtual bool  overlayReactionKey(class DrawQWidget*, int /*key*/, int /*modifiersOMK*/, bool* /*doStop*/){  return false; }
+  virtual ~IProactive(){}
+};
+//#########################
+
+
 
 class DrawCore: public IDrawOverlayFriendly
 {
 protected:
   bounds_t              m_bounds;
-  contrast_t            m_contrast;
   float                 m_loc_k, m_loc_b;
   unsigned int          m_portionSize;        /// inner sizeof data
   unsigned int          m_allocatedPortions;
   unsigned int          m_countPortions;      /// count of parallel drawings in one
   
   ORIENTATION           m_orient;
+  SPLITPORTIONS         m_splitPortions;
+  int                   m_spDirection, m_spDivider;
   
   float*                m_matrixData;
   float*                m_matrixDataCached;
@@ -74,7 +82,7 @@ protected:
   GROUNDTYPE            m_groundType;
   void*                 m_groundData;
   unsigned int          m_groundDataWidth, m_groundDataHeight;
-  bool                  m_groundDataFastFree;
+  bool                  m_groundDataFastFree, m_groundMipMapping;
 protected:
   int                   m_bitmaskUpdateBan;
   int                   m_bitmaskPendingChanges;
@@ -119,20 +127,22 @@ protected:
   
   struct overlays_t
   {
-    IOverlay*           povl;
+    DrawOverlay*           povl;
     int                 upcount;
     int                 outloc;
     unsigned int        uf_count;
     uniform_located_t*  uf_arr;
     msstruct_t          olinks;
-    void                _reinit(IOverlay* p, unsigned int ufcount){ povl = p; upcount = 1; outloc = -1;  if (uf_count) delete []uf_arr;  uf_count = ufcount; if(uf_count) uf_arr = new uniform_located_t[ufcount]; olinks.type = msstruct_t::MS_SELF; }
+    void                _reinit(DrawOverlay* p, unsigned int ufcount){ povl = p; upcount = 1; outloc = -1;  if (uf_count) delete []uf_arr;  uf_count = ufcount; if(uf_count) uf_arr = new uniform_located_t[ufcount]; olinks.type = msstruct_t::MS_SELF; }
     void                _setdriven(int driverid){ olinks.type = msstruct_t::MS_DRIVEN;  olinks.details.drivenid = driverid; }
     overlays_t(): povl(nullptr), uf_count(0){}
     ~overlays_t() { if (uf_count) delete[]uf_arr; }
     
   }                     m_overlays[OVLLIMIT];
-  unsigned int          m_overlaysCount;  
-  class OverlayEmpty: public IOverlay
+  unsigned int          m_overlaysCount;
+  IProactive*           m_proactive;
+  bool                  m_proactiveOwner;
+  class OverlayEmpty: public DrawOverlay
   {
   public:
     virtual int  fshTrace(int, bool, char*) const;
@@ -140,7 +150,8 @@ protected:
   };
   OverlayEmpty          m_overlaySingleEmpty;
 public:
-  DrawCore(unsigned int portions, ORIENTATION orient):  m_portionSize(0), m_allocatedPortions(portions), m_countPortions(portions), m_orient(orient),
+  DrawCore(unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions):  m_portionSize(0), m_allocatedPortions(portions), 
+                                                        m_countPortions(portions), m_orient(orient), m_splitPortions(splitPortions),
                                                         m_matrixData(nullptr), m_matrixDataCached(nullptr),
                                                         m_matrixSwitchAB(orient > OR_RLTB),
                                                         m_dataTextureInterp(false), m_rawResizeModeNoScaled(false),
@@ -149,13 +160,24 @@ public:
                                                         m_scalingBMin(1), m_scalingBMax(0), m_scalingIsSynced(false),
                                                         m_ppal(nullptr), m_ppaldiscretise(false), m_clearbypalette(true), 
                                                         m_groundType(GND_NONE), m_groundData(nullptr), m_groundDataFastFree(true),
-                                                        m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
+                                                        m_groundMipMapping(false), m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
                                                         m_postMask(DPostmask::PO_OFF, DPostmask::PM_CONTOUR, 0, 0.0f, 0.0f, 0.0f),
-                                                        m_overlaysCount(0)
+                                                        m_overlaysCount(0), m_proactive(nullptr), m_proactiveOwner(true)
   {
-    _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);
+    _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);
+    m_spDirection = (m_splitPortions >> 8)&0xFF;
+    m_spDivider = m_splitPortions&0xFF;
   }
-  virtual ~DrawCore(){ _ovlRemoveAll(); if (m_matrixData) delete []m_matrixData; if (m_matrixDataCached)  delete []m_matrixDataCached; }
+  virtual ~DrawCore()
+  {
+    if (m_proactiveOwner && m_proactive)
+      delete m_proactive;
+    _ovlRemoveAll();
+    if (m_matrixData)
+      delete []m_matrixData;
+    if (m_matrixDataCached)
+      delete []m_matrixDataCached;
+  }
 protected:
   void    deployMemory()
   {
@@ -166,25 +188,24 @@ protected:
     m_matrixDataCached = new float[total];
   }
   void    deployMemory(unsigned int total) {  m_matrixData = new float[total]; for (unsigned int i=0; i<total; i++) m_matrixData[i] = 0; m_matrixDataCached = new float[total]; }
-public:
-  
+  int     _divider2() const {  return m_spDivider == 0? 0 : m_allocatedPortions / m_spDivider + (m_allocatedPortions % m_spDivider? 1 : 0); }
 public:
                     /// Access methods
   unsigned int          allocatedPortions() const { return m_allocatedPortions; }
   unsigned int          countPortions() const { return m_countPortions; }
   unsigned int          portionSize() const { return m_portionSize; }
   
-  void                  setBounds(const bounds_t& d){ m_bounds = d; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
+  void                  setBounds(const bounds_t& d){ m_bounds = d; _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);    m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
   void                  setBounds(float LL, float HL){ setBounds(bounds_t(LL, HL)); }
-  void                  setBoundLow(float LL){ m_bounds.LL = LL; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA;    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
-  void                  setBoundHigh(float HL){ m_bounds.HL = HL; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA;   if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
+  void                  setBoundLow(float LL){ m_bounds.LL = LL; _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);       m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
+  void                  setBoundHigh(float HL){ m_bounds.HL = HL; _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);      m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
   bounds_t              bounds() const { return m_bounds; }
   
-  void                  setContrast(const contrast_t& c){ m_contrast = c; _bsdraw_update_kb(m_bounds, m_contrast, &m_loc_k, &m_loc_b);  m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
-  void                  setContrast(float k, float b){ setContrast(contrast_t(k, b)); }
-  contrast_t            contrast()const{ return m_contrast; }
-  
-//  bounds_t              boundsReal() const {  bounds_t result; _bsdraw_recalced_bounds(m_contrast, m_loc_k, m_loc_b, &result); return result; }
+  void                  setContrast(float k, float b){ m_loc_k = k; m_loc_b = b; _bsdraw_update_bnd(m_loc_k, m_loc_b, &m_bounds); m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
+  void                  setContrastK(float k){ m_loc_k = k; _bsdraw_update_bnd(m_loc_k, m_loc_b, &m_bounds);            m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
+  void                  setContrastB(float b){ m_loc_b = b; _bsdraw_update_bnd(m_loc_k, m_loc_b, &m_bounds);            m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
+  float                 contrastK() const { return m_loc_k; }
+  float                 contrastB() const { return m_loc_b; }
 public:
   unsigned int          scalingA() const { return m_scalingA; }
   unsigned int          scalingB() const { return m_scalingB; }
@@ -212,16 +233,26 @@ public:
   void                  setScalingLimitsVert(unsigned int scmin, unsigned int scmax=0){ if (!m_matrixSwitchAB) setScalingLimitsB(scmin, scmax); else setScalingLimitsA(scmin, scmax); }
   void                  setScalingLimitsSynced(unsigned int scmin, unsigned int scmax=0){ m_scalingIsSynced = true; m_scalingAMin = m_scalingBMin = scmin < 1? 1 : scmin; m_scalingAMax = m_scalingBMax = scmax; clampScalingManually(); pendResize(true); }
 public:
+  int                   splitPortionsDivider() const { return m_spDivider; }
+  int                   splitPortionsDirection() const { return m_spDirection; }
+public:
   virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const =0;
-  void                  sizeAndScaleHint(int width_in, int height_in, int* actualwidth, int* actualheight) const
+  void                  adjustSizeAndScale(int sizeA, int sizeB)
   {
-    unsigned int dimmA, dimmB, scalingA, scalingB;
-    if (m_matrixSwitchAB)
-      sizeAndScaleHint(height_in, width_in, &dimmB, &dimmA, &scalingB, &scalingA);
+    unsigned int matrixDimmA, matrixDimmB, scalingA, scalingB;
+    if (m_spDivider == 0 || m_countPortions == 0)
+      sizeAndScaleHint(sizeA, sizeB, &matrixDimmA, &matrixDimmB, &scalingA, &scalingB);
     else
-      sizeAndScaleHint(width_in, height_in, &dimmA, &dimmB, &scalingA, &scalingB);
-    *actualwidth = dimmA*scalingA;
-    *actualheight = dimmB*scalingB;
+    {
+      int splitA = m_spDirection == 1? _divider2() : m_spDivider;
+      int splitB = m_spDirection == 1? m_spDivider : _divider2();
+      sizeAndScaleHint(sizeA/splitA, sizeB/splitB, &matrixDimmA, &matrixDimmB, &scalingA, &scalingB);
+    }
+    m_matrixDimmA = matrixDimmA;
+    m_matrixDimmB = matrixDimmB;
+    m_scalingA = scalingA;
+    m_scalingB = scalingB;
+    sizeAndScaleChanged();
   }
 protected:
   virtual void          sizeAndScaleChanged() { }
@@ -265,6 +296,14 @@ public:
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
   bool  rawResizeModeNoScaled() const { return m_rawResizeModeNoScaled; }
+  
+  void  setGroundMipMapping(bool v)
+  { 
+    m_groundMipMapping = v;
+    m_bitmaskPendingChanges |= PC_GROUND;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+  }
+  bool  groundMipMapping() const { return m_groundMipMapping; }
 public:
   void  setDataPalette(const IPalette* ppal)
   {
@@ -295,7 +334,7 @@ public:
   {
     for (unsigned int p=0; p<m_countPortions; p++)
       for (unsigned int i=0; i<m_portionSize; i++)
-        m_matrixData[p*m_portionSize + i] = decim->decimate(data, m_portionSize, i, p);
+        m_matrixData[p*m_portionSize + i] = decim->decimate(data, (int)m_portionSize, (int)i, (int)p);
     
     m_bitmaskPendingChanges |= PC_DATA;
     if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();
@@ -324,10 +363,9 @@ public:
     for (unsigned int i=0; i<total; i++)
       result[i] = m_matrixData[i];
   }
-  const float* getDataPtr() const
-  {
-    return m_matrixData;
-  }
+  const float*  getDataPtr() const {   return m_matrixData;    }
+  float*        getDataPtr() {    return m_matrixData;   }     // You need manual update after data change
+  void  manualDataPtrUpdate(){  vmanUpData(); }
 protected:
   void  vmanUpInit(){ m_bitmaskPendingChanges |= PC_INIT; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();  }
   void  vmanUpData(){ m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();  }
@@ -337,16 +375,15 @@ public:
   unsigned int directions() const { DATADIMMUSAGE ddu = getDataDimmUsage(); if (ddu == DDU_2D || ddu == DDU_DD) return 2; return 1; }
 public:
   /// 2. Delegated methods
-  bool  setPortionsCount(unsigned int portionsLessThanAlocated)
+  void  setPortionsCount(unsigned int portionsLessThanAlocated)
   {
-    if (/*portionsLessThanAlocated >= 0 && */portionsLessThanAlocated <= m_allocatedPortions)
-    {
-      m_countPortions = (unsigned int)portionsLessThanAlocated;
-      m_bitmaskPendingChanges |= PC_DATA | PC_PARAMS;
-      if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
-      return true;
-    }
-    return false;
+    if (portionsLessThanAlocated > m_allocatedPortions)
+      portionsLessThanAlocated = m_allocatedPortions;
+    m_countPortions = (unsigned int)portionsLessThanAlocated;
+    m_bitmaskPendingChanges |= PC_DATA | PC_SIZE | PC_PARAMS;
+    if (m_spDivider != 0)
+      innerRescale();
+    if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
 public:
   void  setOrientation(ORIENTATION orient)
@@ -378,8 +415,14 @@ public:
   bool  mirroredHorz() const { return orientationMirroredHorz(m_orient); }
   bool  mirroredVert() const { return orientationMirroredVert(m_orient); }
 public:
+  IProactive*  setProactive(IProactive* op, bool owner=true)
+  {
+    m_proactiveOwner = owner;
+    IProactive* result = m_proactive; m_proactive = op; return result;
+  }
+public:
   /// 3. Overlays
-  int             ovlPushBack(IOverlay* povl, bool owner=true)
+  int             ovlPushBack(DrawOverlay* povl, bool owner=true)
   {
     if (m_overlaysCount == OVLLIMIT) return -1;
     _ovlSet(m_overlaysCount, povl, owner, false, 0);
@@ -387,7 +430,7 @@ public:
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ++m_overlaysCount;
   }
-  int             ovlPushBack(IOverlay* povl, int ovlroot, bool owner=true)
+  int             ovlPushBack(DrawOverlay* povl, int ovlroot, bool owner=true)
   {
     if (m_overlaysCount == OVLLIMIT || ovlroot <= 0 || ovlroot > (int)m_overlaysCount) return -1;
     _ovlSet(m_overlaysCount, povl, owner, true, ovlroot-1);
@@ -395,7 +438,7 @@ public:
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ++m_overlaysCount;
   }
-  int             ovlReplace(int ovl, IOverlay* povl, bool owner, IOverlay** old=nullptr, bool followPrevRoot=true)
+  int             ovlReplace(int ovl, DrawOverlay* povl, bool owner, DrawOverlay** old=nullptr, bool followPrevRoot=true)
   {
     ovl--;
     msstruct_t prevroot = m_overlays[ovl].olinks;
@@ -406,7 +449,7 @@ public:
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ovl + 1;
   }
-  int             ovlReplace(int ovl, IOverlay* povl, bool owner, IOverlay** old, int ovlroot)
+  int             ovlReplace(int ovl, DrawOverlay* povl, bool owner, DrawOverlay** old, int ovlroot)
   {
     ovl--;  ovlroot--;
     if (ovlroot >= ovl) return -1;
@@ -417,10 +460,10 @@ public:
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ovl + 1;
   }
-  IOverlay*       ovlRemove(int ovl)
+  DrawOverlay*       ovlRemove(int ovl)
   {
     ovl--;
-    IOverlay* result = nullptr;
+    DrawOverlay* result = nullptr;
     if (_ovlRemove(ovl, &result) == false)
       return nullptr;
     m_bitmaskPendingChanges |= PC_INIT;
@@ -430,16 +473,16 @@ public:
         m_overlaysCount--;
     return result;
   }
-  IOverlay* ovlGet(int ovl) const
+  DrawOverlay* ovlGet(int ovl) const
   {
     ovl -= 1;
     if (ovl < 0 || (unsigned int)ovl >= m_overlaysCount) return nullptr;
     if (m_overlays[ovl].povl == &m_overlaySingleEmpty)  return nullptr;
     return m_overlays[ovl].povl;
   }
-  IOverlay* ovlPopBack()
+  DrawOverlay* ovlPopBack()
   {
-    IOverlay* result = nullptr;
+    DrawOverlay* result = nullptr;
     if (_ovlRemove((int)m_overlaysCount - 1, &result))
     {
       m_overlaysCount--;
@@ -455,32 +498,32 @@ public:
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
   }
 private:
-  void _ovlSet(int idx, IOverlay* povl, bool owner, bool doRoot, int rootidx)
+  void _ovlSet(int idx, DrawOverlay* povl, bool owner, bool doRoot, int rootidx)
   {
-    if (povl == nullptr)  povl = &m_overlaySingleEmpty;
+    if (povl == nullptr){  povl = &m_overlaySingleEmpty;  owner = false; }
     m_overlays[idx]._reinit(povl, povl->uniforms().count);
-    if (doRoot)
-      m_overlays[idx]._setdriven(rootidx);
-    povl->assign(idx, this, owner);
+    if (doRoot)   m_overlays[idx]._setdriven(rootidx);
+    if (povl != &m_overlaySingleEmpty)
+      povl->assign(idx, this, owner);
   }
   void _ovlRemoveAll()
   {
     for (unsigned int i=0; i<m_overlaysCount; i++)
       if (m_overlays[i].povl != &m_overlaySingleEmpty)
-        if (m_overlays[i].povl->overlayPreDelete(this) == true)
+        if (m_overlays[i].povl->preDelete(this) == true)
           delete m_overlays[i].povl;
     m_overlaysCount = 0;
   }
-  bool  _ovlRemove(int idx, IOverlay** old)
+  bool  _ovlRemove(int idx, DrawOverlay** old)
   {
     if (idx < 0 || idx >= (int)m_overlaysCount) return false;
-    IOverlay* removable = m_overlays[idx].povl;
+    DrawOverlay* removable = m_overlays[idx].povl;
     if (removable == &m_overlaySingleEmpty)
       removable = nullptr;
     else
     {
       m_overlays[idx]._reinit(&m_overlaySingleEmpty, 0);
-      if (removable->overlayPreDelete(this) == true)
+      if (removable->preDelete(this) == true)
       {
         delete removable;
         removable = nullptr;
@@ -507,9 +550,20 @@ protected:
       if (!autoUpdateBanned(RD_BYOVL_ACTIONS))
         callWidgetUpdate();
   }
-  virtual void            innerOverlayRemove(int ovl)
+  virtual void            innerOverlayReplace(int ovlid, DrawOverlay* novl, bool owner)
   {
-    m_overlays[ovl]._reinit(&m_overlaySingleEmpty, 0);
+    m_overlays[ovlid]._reinit(novl, novl->uniforms().count);  ///_setdriven derived
+    if (novl != &m_overlaySingleEmpty)
+    {
+      novl->assign(ovlid, this, owner);
+    }
+    m_overlays[ovlid].upcount = 1001;
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
+  }
+  virtual void            innerOverlayRemove(int ovlid)
+  {
+    m_overlays[ovlid]._reinit(&m_overlaySingleEmpty, 0);
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
   }
@@ -535,10 +589,12 @@ public:
   unsigned int    clearColor() const {  return (unsigned int)
         (int(m_clearcolor[0]*255.0f) + (int(m_clearcolor[1]*255.0f)<<8) + (int(m_clearcolor[2]*255.0f)<<16));
                                      }
-  virtual unsigned int colorBack() const { return m_ppal->first(); }
+  virtual unsigned int colorBack() const { return m_ppal? m_ppal->first() : 0x00000000; }
 protected:
   virtual void    callWidgetUpdate()=0;
+  virtual void    innerRescale()=0;
   virtual void    innerUpdateGeometry()=0;
 };
+
 
 #endif // DRAWCORE_H

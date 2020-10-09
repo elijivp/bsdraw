@@ -1,7 +1,9 @@
 #ifndef _GNU_RAINBOW_H
 #define _GNU_RAINBOW_H
-#include "../bstexpalette.h"
-const unsigned int colors_gnu_rainbow[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_gnu_rainbow[] = {
                                            0x00ff027f, 0x00ff057d, 0x00ff087b, 0x00ff0b79, 0x00ff0e77, 0x00ff1175, 0x00ff1473, 0x00ff1771, 
                                            0x00ff1b6f, 0x00ff1e6d, 0x00fe216b, 0x00fe2469, 0x00fe2767, 0x00fe2a65, 0x00fe2d63, 0x00fe3061, 
                                            0x00fe335f, 0x00fe365d, 0x00fd395b, 0x00fd3c59, 0x00fd3f57, 0x00fd4355, 0x00fd4653, 0x00fc4951, 
@@ -35,7 +37,10 @@
                                            0x001830ff, 0x00172dff, 0x00152aff, 0x001427ff, 0x001224ff, 0x001021ff, 0x000f1eff, 0x000d1bff, 
                                            0x000c17ff, 0x000a14ff, 0x000911ff, 0x00070eff, 0x00050bff, 0x000408ff, 0x000205ff, 0x000102ff
 };
-const PaletteConstFWD<sizeof(colors_gnu_rainbow) / sizeof(unsigned int)> palette_gnu_rainbow(colors_gnu_rainbow);
+
+const PaletteConstFWD<sizeof(colors_gnu_rainbow) / sizeof(unsigned int)> palette_gnu_rainbow(colors_gnu_rainbow);
 const PaletteConstBWD<sizeof(colors_gnu_rainbow) / sizeof(unsigned int)> palette_gnu_rainbow_inv(colors_gnu_rainbow);
-typedef PaletteConstFWD<sizeof(colors_gnu_rainbow) / sizeof(unsigned int)> palette_gnu_rainbow_t;
-#endif // _GNU_RAINBOW_H
+
+typedef PaletteConstFWD<sizeof(colors_gnu_rainbow) / sizeof(unsigned int)> palette_gnu_rainbow_t;
+
+#endif // _GNU_RAINBOW_H

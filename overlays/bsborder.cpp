@@ -1,16 +1,31 @@
+/// Overlays:     borders and other types of cover around draw
+///   OBorder. View: classical border
+///   OBorderSelected. View: border for subdraws, selectable 
+///   OToons. View: rounded border
+/// Created By: Elijah Vlasov
 #include "bsborder.h"
 #include "../core/sheigen/bsshgentrace.h"
 
-bool  AbstractBorder::overlayReactionMouse(OVL_REACTION_MOUSE, const void *dataptr, bool* doStop)
-{
-  if (m_banclicks)
-    *doStop = clickBanned(((const float*)dataptr)[0], ((const float*)dataptr)[1]);
-  return m_banclicks;
-}
+
+//class AbstractBorder: virtual public DrawOverlay
+//{
+//  bool    m_banclicks;
+//public:
+//  AbstractBorder(bool banclicks): m_banclicks(banclicks){}
+//protected:
+//  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void *dataptr, bool* doStop);
+//  virtual bool  clickBanned(float x, float y) const =0;
+//};
 
 
+//bool  AbstractBorder::overlayReactionMouse(OVL_REACTION_MOUSE, const void *dataptr, bool* doStop)
+//{
+//  if (m_banclicks)
+//    *doStop = clickBanned(((const float*)dataptr)[0], ((const float*)dataptr)[1]);
+//  return m_banclicks;
+//}
 
-OBorder::OBorder(unsigned int widthpixels, const linestyle_t &kls): IOverlayTraced(kls), OVLDimmsOff(),
+OBorder::OBorder(unsigned int widthpixels, const linestyle_t &kls): DrawOverlayTraced(kls), OVLDimmsOff(),
   m_width(widthpixels)
 {
 }
@@ -33,9 +48,41 @@ int OBorder::fshTrace(int overlay, bool rotated, char *to) const
 }
 
 
+OBorderSelected::OBorderSelected(unsigned int widthpixels, int default_selection, const linestyle_t &kls): DrawOverlayTraced(kls), OVLDimmsOff(),
+  m_selected(default_selection), m_width(widthpixels)
+{
+  appendUniform(DT_1I, &m_selected);
+}
+
+void OBorderSelected::setSelection(int select)
+{
+  m_selected = select;
+  overlayUpdateParameter();
+}
+
+int OBorderSelected::fshTrace(int overlay, bool rotated, char *to) const
+{
+  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.goto_normed_empty();
+    ocg.param_alias("selected");
+    ocg.var_const_fixed("border", (int)m_width);
+    ocg.push( "for (int i=0; i<2; i++){"
+                "result += (1.0 - step(float(border), float(icoords[i])))*insider(icoords[1-i], ivec2(0, ibounds[1-i]));"
+                "result += step(float(ibounds[i] - border), float(icoords[i]))*insider(icoords[1-i], ivec2(0, ibounds[1-i]));"
+              "}"
+              "result[0] = result[0]*step(float(selected), float(icell[0]))*step(float(icell[0]), float(selected));"
+          );
+  }  
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
+
+
 /*******************************************************************************************************************************************************/
 
-OToons::OToons(COORDINATION cr, float diameter, float border, const linestyle_t &kls, bool banclikcks): IOverlayTraced(kls),
+OToons::OToons(COORDINATION cr, float diameter, float border, const linestyle_t &kls, bool banclikcks): DrawOverlayTraced(kls),
   OVLCoordsStatic(CR_RELATIVE, 0.5f, 0.5f),
   OVLDimms1Static(cr, diameter/2.0f),
   m_radius2(diameter*diameter/4.0f), m_border(border), m_banclicks(banclikcks)

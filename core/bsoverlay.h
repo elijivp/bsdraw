@@ -1,26 +1,28 @@
 #ifndef OVERLAY_H
 #define OVERLAY_H
 
-#include "bsidrawcore.h"
+/// This file contains useful/technical types, base classes, conversion functions for all types of draws
+/// Midway realisations for Overlays
+/// If you need to create your own Overlay, use other overlays as examples
+/// Created By: Elijah Vlasov
 
+#include "bsidrawcore.h"
 
 enum  OVL_ORIENTATION   {  OO_INHERITED=0, OO_DEFAULT=1,
                            OO_LRBT=1, OO_RLBT, OO_LRTB, OO_RLTB, OO_TBLR, OO_BTLR, OO_TBRL, OO_BTRL,
                            OO_IHBT  , OO_IHTB, OO_LRIH, OO_RLIH
                         };
 
-
-class IOverlaySimple: public IOverlay
+class DrawOverlaySimple: public DrawOverlay
 {
   int   m_inversive;
 public:
-  IOverlaySimple(int inversive_algo=0): m_inversive(inversive_algo){}
-//  void    setInversiveAlgo(int ia){ m_inversive = ia; }
+  DrawOverlaySimple(int inversive_algo=0): m_inversive(inversive_algo){}
 protected:
   virtual int fshColor(int overlay, char *to) const;
 };
 
-class _IOverlayLined: public IOverlay
+class _DrawOverlayLined: public DrawOverlay
 {
 protected:
   linestyle_t       m_linestyle;
@@ -29,25 +31,25 @@ public:
   void              setLineStyle(const linestyle_t& linestyle){  m_linestyle = linestyle; updatePublic(); }
   linestyle_t       getLineStyle() const {  return m_linestyle;  }
 public:
-  _IOverlayLined(): m_linestyle(linestyle_solid(1,1,1)){}
-  _IOverlayLined(const linestyle_t& linestyle): m_linestyle(linestyle){}
+  _DrawOverlayLined(): m_linestyle(linestyle_solid(1,1,1)){}
+  _DrawOverlayLined(const linestyle_t& linestyle): m_linestyle(linestyle){}
 };
 
-class IOverlayTraced: public _IOverlayLined
+class DrawOverlayTraced: public _DrawOverlayLined
 {
 public:
-  IOverlayTraced(): _IOverlayLined(){}
-  IOverlayTraced(const linestyle_t& linestyle): _IOverlayLined(linestyle){}
+  DrawOverlayTraced(): _DrawOverlayLined(){}
+  DrawOverlayTraced(const linestyle_t& linestyle): _DrawOverlayLined(linestyle){}
 protected:
   virtual int fshColor(int overlay, char *to) const;
 };
 
-class IOverlayHard: public _IOverlayLined
+class DrawOverlayHard: public _DrawOverlayLined
 {
 private:
   dmtype_palette_t    m_dm_palette;
 public:
-  IOverlayHard(const IPalette* ipal, bool discrete, const linestyle_t& linestyle=linestyle_solid(1,1,1)): _IOverlayLined(linestyle)
+  DrawOverlayHard(const IPalette* ipal, bool discrete, const linestyle_t& linestyle=linestyle_solid(1,1,1)): _DrawOverlayLined(linestyle)
   {
     m_dm_palette.ppal = ipal;
     m_dm_palette.discrete = discrete;
@@ -57,7 +59,7 @@ public:
   {
     m_dm_palette.ppal = ipal;
     m_dm_palette.discrete = discrete;
-    IOverlay::overlayUpdateParameter(true); 
+    DrawOverlay::overlayUpdateParameter(true); 
   }
 protected:
   virtual int fshColor(int overlay, char *to) const;
@@ -69,7 +71,6 @@ protected:
 /// COINSIDE B: overlay form features
 ///
 ///
-
 
 struct  ovlcoords_t
 {
@@ -119,7 +120,7 @@ public:
   typedef   OVLCoordsStatic   coords_type_t;
 };
 
-class OVLCoordsDynamic: public OVLCoordsStatic, virtual protected AbstractOverlay
+class OVLCoordsDynamic: public OVLCoordsStatic, virtual protected AbstractDrawOverlay
 {
 public:
   OVLCoordsDynamic(COORDINATION cn, float x, float y): OVLCoordsStatic(cn, x, y) {  appendUniform(DT_2F, (const void*)&m_coords); }
@@ -150,7 +151,7 @@ public:
   typedef OVLDimms1Static   dimms_type_t;
 };
 
-class OVLDimms1Dynamic: public OVLDimms1Static, virtual protected AbstractOverlay
+class OVLDimms1Dynamic: public OVLDimms1Static, virtual protected AbstractDrawOverlay
 {
 public:
   void          setSide(float side) { m_side = side; overlayUpdateParameter(); }
@@ -174,7 +175,7 @@ public:
   typedef OVLDimms2Static   dimms_type_t;
 };
 
-class OVLDimms2Dynamic: public OVLDimms2Static, virtual protected AbstractOverlay
+class OVLDimms2Dynamic: public OVLDimms2Static, virtual protected AbstractDrawOverlay
 {
 public:
   OVLDimms2Dynamic(COORDINATION cn, float width, float height): OVLDimms2Static(cn, width, height){ appendUniform(DT_2F, (const void*)&m_sides); }
@@ -201,7 +202,7 @@ public:
   }
   typedef OVLDimmsStatic     dimms_type_t;
 };
-class OVLDimmsDynamic: virtual protected AbstractOverlay
+class OVLDimmsDynamic: virtual protected AbstractDrawOverlay
 {
 protected:
   COORDINATION  m_cn;
@@ -223,7 +224,7 @@ public:
 
 /////////
 
-class OVLCoordsDimmsLinked: virtual protected AbstractOverlay
+class OVLCoordsDimmsLinked: virtual protected AbstractDrawOverlay
 {
 protected:
   COORDINATION  m_cn;

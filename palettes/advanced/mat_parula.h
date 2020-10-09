@@ -1,7 +1,9 @@
 #ifndef _MAT_PARULA_H
 #define _MAT_PARULA_H
-#include "../bstexpalette.h"
-const unsigned int colors_mat_parula[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_mat_parula[] = {
                                           0x007c2534, 0x007f2734, 0x00822835, 0x00852a35, 0x00882b35, 0x008c2d35, 0x008f2e36, 0x00923036, 
                                           0x00953136, 0x00983336, 0x009b3436, 0x009e3636, 0x00a13736, 0x00a53936, 0x00a83a36, 0x00ab3c35, 
                                           0x00ae3e35, 0x00b13f34, 0x00b54133, 0x00b84332, 0x00bb4431, 0x00be4630, 0x00c2482e, 0x00c54a2d, 
@@ -35,7 +37,10 @@
                                           0x0021dff5, 0x0020e0f5, 0x001fe2f5, 0x001de3f5, 0x001ce5f4, 0x001be7f4, 0x001ae8f5, 0x0019eaf5, 
                                           0x0018ecf5, 0x0016eef5, 0x0015f0f6, 0x0014f2f6, 0x0013f4f7, 0x0011f6f7, 0x0010f8f8, 0x000efaf9
 };
-const PaletteConstFWD<sizeof(colors_mat_parula) / sizeof(unsigned int)> palette_mat_parula(colors_mat_parula);
+
+const PaletteConstFWD<sizeof(colors_mat_parula) / sizeof(unsigned int)> palette_mat_parula(colors_mat_parula);
 const PaletteConstBWD<sizeof(colors_mat_parula) / sizeof(unsigned int)> palette_mat_parula_inv(colors_mat_parula);
-typedef PaletteConstFWD<sizeof(colors_mat_parula) / sizeof(unsigned int)> palette_mat_parula_t;
-#endif // _MAT_PARULA_H
+
+typedef PaletteConstFWD<sizeof(colors_mat_parula) / sizeof(unsigned int)> palette_mat_parula_t;
+
+#endif // _MAT_PARULA_H

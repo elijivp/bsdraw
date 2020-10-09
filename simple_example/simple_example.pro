@@ -27,7 +27,11 @@ SOURCES += main.cpp\
     ../bsdrawgraph.cpp \
     ../bsdrawintensity.cpp \
     ../core/bsqdraw.cpp \
-    ../core/sheigen/bsshgenmain.cpp
+    ../core/sheigen/bsshgenmain.cpp \
+    ../overlays/bspoints.cpp \
+    ../core/bsoverlay.cpp \
+    ../core/sheigen/bsshgentrace.cpp \
+    ../core/sheigen/bsshgencolor.cpp
 
 HEADERS  += MainWindow.h \
     ../bsdrawintensity.h \
@@ -35,4 +39,8 @@ HEADERS  += MainWindow.h \
     ../core/bsdraw.h \
     ../core/bsidrawcore.h \
     ../core/bsqdraw.h \
-    ../core/sheigen/bsshgenmain.h
+    ../core/sheigen/bsshgenmain.h \
+    ../overlays/bspoints.h \
+    ../core/bsoverlay.h \
+    ../core/sheigen/bsshgentrace.h \
+    ../core/sheigen/bsshgencolor.h

@@ -1,7 +1,9 @@
 #ifndef _TFM_PEANUT_BUTTER_AND_JERRY_H
 #define _TFM_PEANUT_BUTTER_AND_JERRY_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_peanut_butter_and_jerry[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_peanut_butter_and_jerry[] = {
                                                            0x004a0002, 0x004c0104, 0x004d0105, 0x004f0207, 0x00500208, 0x0052030a, 0x0053030c, 0x0055040d, 
                                                            0x0056040f, 0x00580510, 0x00590512, 0x005b0614, 0x005c0615, 0x005e0717, 0x005f0718, 0x0061081a, 
                                                            0x0062091c, 0x0064091d, 0x00650a1f, 0x00670a20, 0x00680b22, 0x006a0b24, 0x006b0c25, 0x006d0c27, 
@@ -35,7 +37,10 @@
                                                            0x0031797d, 0x00327a7c, 0x00337a7a, 0x00357b79, 0x00367b77, 0x00377c75, 0x00387c74, 0x003a7d72, 
                                                            0x003b7d71, 0x003c7e6f, 0x003d7e6e, 0x003f7f6c, 0x00407f6a, 0x00428069, 0x00438067, 0x00448166
 };
-const PaletteConstFWD<sizeof(colors_tfm_peanut_butter_and_jerry) / sizeof(unsigned int)> palette_tfm_peanut_butter_and_jerry(colors_tfm_peanut_butter_and_jerry);
+
+const PaletteConstFWD<sizeof(colors_tfm_peanut_butter_and_jerry) / sizeof(unsigned int)> palette_tfm_peanut_butter_and_jerry(colors_tfm_peanut_butter_and_jerry);
 const PaletteConstBWD<sizeof(colors_tfm_peanut_butter_and_jerry) / sizeof(unsigned int)> palette_tfm_peanut_butter_and_jerry_inv(colors_tfm_peanut_butter_and_jerry);
-typedef PaletteConstFWD<sizeof(colors_tfm_peanut_butter_and_jerry) / sizeof(unsigned int)> palette_tfm_peanut_butter_and_jerry_t;
-#endif // _TFM_PEANUT_BUTTER_AND_JERRY_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_peanut_butter_and_jerry) / sizeof(unsigned int)> palette_tfm_peanut_butter_and_jerry_t;
+
+#endif // _TFM_PEANUT_BUTTER_AND_JERRY_H

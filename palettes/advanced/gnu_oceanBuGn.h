@@ -1,7 +1,9 @@
 #ifndef _GNU_OCEANBUGN_H
 #define _GNU_OCEANBUGN_H
-#include "../bstexpalette.h"
-const unsigned int colors_gnu_oceanBuGn[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_gnu_oceanBuGn[] = {
                                              0x00007f00, 0x00017d00, 0x00027c00, 0x00037a00, 0x00047900, 0x00057700, 0x00067600, 0x00077400, 
                                              0x00087300, 0x00097100, 0x000a7000, 0x000b6e00, 0x000c6d00, 0x000d6b00, 0x000e6a00, 0x000f6800, 
                                              0x00106700, 0x00116500, 0x00126400, 0x00136200, 0x00146100, 0x00155f00, 0x00165e00, 0x00175c00, 
@@ -35,7 +37,10 @@
                                              0x00f0e8d1, 0x00f1e9d4, 0x00f2ebd7, 0x00f3ecda, 0x00f4eedd, 0x00f5efe0, 0x00f6f1e3, 0x00f7f2e6, 
                                              0x00f8f4e9, 0x00f9f5ec, 0x00faf7ef, 0x00fbf8f2, 0x00fcfaf5, 0x00fdfbf8, 0x00fefdfb, 0x00fffefe
 };
-const PaletteConstFWD<sizeof(colors_gnu_oceanBuGn) / sizeof(unsigned int)> palette_gnu_oceanBuGn(colors_gnu_oceanBuGn);
+
+const PaletteConstFWD<sizeof(colors_gnu_oceanBuGn) / sizeof(unsigned int)> palette_gnu_oceanBuGn(colors_gnu_oceanBuGn);
 const PaletteConstBWD<sizeof(colors_gnu_oceanBuGn) / sizeof(unsigned int)> palette_gnu_oceanBuGn_inv(colors_gnu_oceanBuGn);
-typedef PaletteConstFWD<sizeof(colors_gnu_oceanBuGn) / sizeof(unsigned int)> palette_gnu_oceanBuGn_t;
-#endif // _GNU_OCEANBUGN_H
+
+typedef PaletteConstFWD<sizeof(colors_gnu_oceanBuGn) / sizeof(unsigned int)> palette_gnu_oceanBuGn_t;
+
+#endif // _GNU_OCEANBUGN_H

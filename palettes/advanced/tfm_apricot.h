@@ -1,7 +1,9 @@
 #ifndef _TFM_APRICOT_H
 #define _TFM_APRICOT_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_apricot[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_apricot[] = {
                                            0x00dc0001, 0x00d00102, 0x00c40103, 0x00b80204, 0x00ab0205, 0x009f0305, 0x00930306, 0x00880408, 
                                            0x007c0409, 0x0071050a, 0x0066050b, 0x005b060c, 0x0051070c, 0x0047070d, 0x003d080e, 0x00340810, 
                                            0x002b0811, 0x00230913, 0x001b0914, 0x00130a14, 0x000c0a14, 0x00060a15, 0x00000a16, 0x00050b18, 
@@ -35,7 +37,10 @@
                                            0x005c53f7, 0x006452ff, 0x006d51fa, 0x007650fd, 0x008050fb, 0x008a51f4, 0x009451f1, 0x009f52f4, 
                                            0x00aa54fd, 0x00b555f8, 0x00c157f2, 0x00cc59f3, 0x00d85cf9, 0x00e45ffd, 0x00f162f9, 0x00fd65fb
 };
-const PaletteConstFWD<sizeof(colors_tfm_apricot) / sizeof(unsigned int)> palette_tfm_apricot(colors_tfm_apricot);
+
+const PaletteConstFWD<sizeof(colors_tfm_apricot) / sizeof(unsigned int)> palette_tfm_apricot(colors_tfm_apricot);
 const PaletteConstBWD<sizeof(colors_tfm_apricot) / sizeof(unsigned int)> palette_tfm_apricot_inv(colors_tfm_apricot);
-typedef PaletteConstFWD<sizeof(colors_tfm_apricot) / sizeof(unsigned int)> palette_tfm_apricot_t;
-#endif // _TFM_APRICOT_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_apricot) / sizeof(unsigned int)> palette_tfm_apricot_t;
+
+#endif // _TFM_APRICOT_H

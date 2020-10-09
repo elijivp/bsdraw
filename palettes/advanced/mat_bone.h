@@ -1,7 +1,9 @@
 #ifndef _MAT_BONE_H
 #define _MAT_BONE_H
-#include "../bstexpalette.h"
-const unsigned int colors_mat_bone[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_mat_bone[] = {
                                         0x00000000, 0x00000000, 0x00000000, 0x00010000, 0x00020000, 0x00030101, 0x00040202, 0x00060303, 
                                         0x00070404, 0x00080505, 0x00090606, 0x000a0707, 0x000c0808, 0x000d0808, 0x000e0909, 0x000f0a0a, 
                                         0x00110b0b, 0x00120c0c, 0x00130d0d, 0x00140e0e, 0x00150f0f, 0x00170f0f, 0x00181010, 0x00191111, 
@@ -35,7 +37,10 @@
                                         0x00f1f1ea, 0x00f2f2eb, 0x00f3f3ec, 0x00f4f4ee, 0x00f5f5ef, 0x00f6f6f0, 0x00f7f7f2, 0x00f7f7f3, 
                                         0x00f8f8f5, 0x00f9f9f6, 0x00fafaf7, 0x00fbfbf9, 0x00fcfcfa, 0x00fdfdfc, 0x00fefefd, 0x00fffffe
 };
-const PaletteConstFWD<sizeof(colors_mat_bone) / sizeof(unsigned int)> palette_mat_bone(colors_mat_bone);
+
+const PaletteConstFWD<sizeof(colors_mat_bone) / sizeof(unsigned int)> palette_mat_bone(colors_mat_bone);
 const PaletteConstBWD<sizeof(colors_mat_bone) / sizeof(unsigned int)> palette_mat_bone_inv(colors_mat_bone);
-typedef PaletteConstFWD<sizeof(colors_mat_bone) / sizeof(unsigned int)> palette_mat_bone_t;
-#endif // _MAT_BONE_H
+
+typedef PaletteConstFWD<sizeof(colors_mat_bone) / sizeof(unsigned int)> palette_mat_bone_t;
+
+#endif // _MAT_BONE_H

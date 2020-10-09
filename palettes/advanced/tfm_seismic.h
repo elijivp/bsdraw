@@ -1,7 +1,9 @@
 #ifndef _TFM_SEISMIC_H
 #define _TFM_SEISMIC_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_seismic[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_seismic[] = {
                                            0x00150005, 0x00190006, 0x001c0008, 0x00200009, 0x0023000b, 0x0027000c, 0x002a000d, 0x002e000e, 
                                            0x00310010, 0x00350011, 0x00380012, 0x003c0013, 0x003f0014, 0x00430015, 0x00460016, 0x004a0016, 
                                            0x004e0017, 0x00510018, 0x00550018, 0x00580019, 0x005c0019, 0x0060001a, 0x0063001a, 0x0067001b, 
@@ -35,7 +37,10 @@
                                            0x001e007e, 0x001e007b, 0x001e0078, 0x001d0076, 0x001d0073, 0x001c0070, 0x001c006e, 0x001b006b, 
                                            0x001b0068, 0x001b0065, 0x001a0063, 0x001a0060, 0x0019005d, 0x0019005b, 0x00180058, 0x00170055
 };
-const PaletteConstFWD<sizeof(colors_tfm_seismic) / sizeof(unsigned int)> palette_tfm_seismic(colors_tfm_seismic);
+
+const PaletteConstFWD<sizeof(colors_tfm_seismic) / sizeof(unsigned int)> palette_tfm_seismic(colors_tfm_seismic);
 const PaletteConstBWD<sizeof(colors_tfm_seismic) / sizeof(unsigned int)> palette_tfm_seismic_inv(colors_tfm_seismic);
-typedef PaletteConstFWD<sizeof(colors_tfm_seismic) / sizeof(unsigned int)> palette_tfm_seismic_t;
-#endif // _TFM_SEISMIC_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_seismic) / sizeof(unsigned int)> palette_tfm_seismic_t;
+
+#endif // _TFM_SEISMIC_H

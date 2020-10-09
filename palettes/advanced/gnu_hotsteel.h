@@ -1,7 +1,9 @@
 #ifndef _GNU_HOTSTEEL_H
 #define _GNU_HOTSTEEL_H
-#include "../bstexpalette.h"
-const unsigned int colors_gnu_hotsteel[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_gnu_hotsteel[] = {
                                             0x00020000, 0x00060000, 0x000a0000, 0x000e0000, 0x00120000, 0x00160000, 0x001a0000, 0x001e0000, 
                                             0x00220000, 0x00260000, 0x002a0000, 0x002e0000, 0x00320000, 0x00360000, 0x003a0000, 0x003e0000, 
                                             0x00420000, 0x00460000, 0x004a0000, 0x004e0000, 0x00520000, 0x00560000, 0x005a0000, 0x005e0000, 
@@ -35,7 +37,10 @@
                                             0x003effff, 0x004affff, 0x0057ffff, 0x0063ffff, 0x0070ffff, 0x007cffff, 0x0089ffff, 0x0095ffff, 
                                             0x00a2ffff, 0x00aeffff, 0x00bbffff, 0x00c7ffff, 0x00d3ffff, 0x00e0ffff, 0x00ecffff, 0x00f9ffff
 };
-const PaletteConstFWD<sizeof(colors_gnu_hotsteel) / sizeof(unsigned int)> palette_gnu_hotsteel(colors_gnu_hotsteel);
+
+const PaletteConstFWD<sizeof(colors_gnu_hotsteel) / sizeof(unsigned int)> palette_gnu_hotsteel(colors_gnu_hotsteel);
 const PaletteConstBWD<sizeof(colors_gnu_hotsteel) / sizeof(unsigned int)> palette_gnu_hotsteel_inv(colors_gnu_hotsteel);
-typedef PaletteConstFWD<sizeof(colors_gnu_hotsteel) / sizeof(unsigned int)> palette_gnu_hotsteel_t;
-#endif // _GNU_HOTSTEEL_H
+
+typedef PaletteConstFWD<sizeof(colors_gnu_hotsteel) / sizeof(unsigned int)> palette_gnu_hotsteel_t;
+
+#endif // _GNU_HOTSTEEL_H

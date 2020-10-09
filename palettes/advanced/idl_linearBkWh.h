@@ -1,7 +1,9 @@
 #ifndef _IDL_LINEARBKWH_H
 #define _IDL_LINEARBKWH_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_linearBkWh[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_linearBkWh[] = {
                                               0x00000000, 0x00010101, 0x00020202, 0x00030303, 0x00040404, 0x00050505, 0x00060606, 0x00070707, 
                                               0x00080808, 0x00090909, 0x000a0a0a, 0x000b0b0b, 0x000c0c0c, 0x000d0d0d, 0x000e0e0e, 0x000f0f0f, 
                                               0x00101010, 0x00111111, 0x00121212, 0x00131313, 0x00141414, 0x00151515, 0x00161616, 0x00171717, 
@@ -35,7 +37,10 @@
                                               0x00f0f0f0, 0x00f1f1f1, 0x00f2f2f2, 0x00f3f3f3, 0x00f4f4f4, 0x00f5f5f5, 0x00f6f6f6, 0x00f7f7f7, 
                                               0x00f8f8f8, 0x00f9f9f9, 0x00fafafa, 0x00fbfbfb, 0x00fcfcfc, 0x00fdfdfd, 0x00fefefe, 0x00ffffff
 };
-const PaletteConstFWD<sizeof(colors_idl_linearBkWh) / sizeof(unsigned int)> palette_idl_linearBkWh(colors_idl_linearBkWh);
+
+const PaletteConstFWD<sizeof(colors_idl_linearBkWh) / sizeof(unsigned int)> palette_idl_linearBkWh(colors_idl_linearBkWh);
 const PaletteConstBWD<sizeof(colors_idl_linearBkWh) / sizeof(unsigned int)> palette_idl_linearBkWh_inv(colors_idl_linearBkWh);
-typedef PaletteConstFWD<sizeof(colors_idl_linearBkWh) / sizeof(unsigned int)> palette_idl_linearBkWh_t;
-#endif // _IDL_LINEARBKWH_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_linearBkWh) / sizeof(unsigned int)> palette_idl_linearBkWh_t;
+
+#endif // _IDL_LINEARBKWH_H

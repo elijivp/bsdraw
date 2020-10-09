@@ -1,7 +1,9 @@
 #ifndef _IDL_RAINBOW_H
 #define _IDL_RAINBOW_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_rainbow[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_rainbow[] = {
                                            0x00000000, 0x00050005, 0x0009000b, 0x000e0010, 0x00120015, 0x0017001a, 0x001c001f, 0x00200023, 
                                            0x00250028, 0x0029002c, 0x002e0030, 0x00320034, 0x00370037, 0x003c003b, 0x0040003e, 0x00450041, 
                                            0x00490044, 0x004e0046, 0x00520049, 0x0057004b, 0x005c004d, 0x0060004f, 0x00650050, 0x00690052, 
@@ -35,7 +37,10 @@
                                            0x000053ff, 0x00004dff, 0x000048ff, 0x000043ff, 0x00003eff, 0x000038ff, 0x000033ff, 0x00002eff, 
                                            0x000029ff, 0x000024ff, 0x00001eff, 0x000019ff, 0x000014ff, 0x00000fff, 0x000009ff, 0x000004ff
 };
-const PaletteConstFWD<sizeof(colors_idl_rainbow) / sizeof(unsigned int)> palette_idl_rainbow(colors_idl_rainbow);
+
+const PaletteConstFWD<sizeof(colors_idl_rainbow) / sizeof(unsigned int)> palette_idl_rainbow(colors_idl_rainbow);
 const PaletteConstBWD<sizeof(colors_idl_rainbow) / sizeof(unsigned int)> palette_idl_rainbow_inv(colors_idl_rainbow);
-typedef PaletteConstFWD<sizeof(colors_idl_rainbow) / sizeof(unsigned int)> palette_idl_rainbow_t;
-#endif // _IDL_RAINBOW_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_rainbow) / sizeof(unsigned int)> palette_idl_rainbow_t;
+
+#endif // _IDL_RAINBOW_H

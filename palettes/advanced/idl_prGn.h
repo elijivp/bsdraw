@@ -1,7 +1,9 @@
 #ifndef _IDL_PRGN_H
 #define _IDL_PRGN_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_prGn[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_prGn[] = {
                                         0x004a0141, 0x004d0243, 0x00500445, 0x00520647, 0x00550749, 0x0058094b, 0x005a0b4e, 0x005d0c50, 
                                         0x005f0e52, 0x00611054, 0x00641256, 0x00661358, 0x0068155b, 0x006a175d, 0x006c185f, 0x006e1a61, 
                                         0x00701c63, 0x00731d65, 0x00741f68, 0x0076216a, 0x0078226c, 0x007a246e, 0x007c2670, 0x007e2772, 
@@ -35,7 +37,10 @@
                                         0x002b6411, 0x002a6210, 0x0029600f, 0x00285e0e, 0x00275c0d, 0x00265a0c, 0x0025580b, 0x0024560a, 
                                         0x00245509, 0x00235308, 0x00225107, 0x00214f06, 0x00214d05, 0x00204b04, 0x00204902, 0x001f4801
 };
-const PaletteConstFWD<sizeof(colors_idl_prGn) / sizeof(unsigned int)> palette_idl_prGn(colors_idl_prGn);
+
+const PaletteConstFWD<sizeof(colors_idl_prGn) / sizeof(unsigned int)> palette_idl_prGn(colors_idl_prGn);
 const PaletteConstBWD<sizeof(colors_idl_prGn) / sizeof(unsigned int)> palette_idl_prGn_inv(colors_idl_prGn);
-typedef PaletteConstFWD<sizeof(colors_idl_prGn) / sizeof(unsigned int)> palette_idl_prGn_t;
-#endif // _IDL_PRGN_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_prGn) / sizeof(unsigned int)> palette_idl_prGn_t;
+
+#endif // _IDL_PRGN_H

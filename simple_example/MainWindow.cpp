@@ -1,3 +1,5 @@
+/// MainWindow for simple example
+/// Created By: Elijah Vlasov
 #include "MainWindow.h"
 
 #include "../bsdrawgraph.h"
@@ -53,6 +55,9 @@ MainWindow::MainWindow(QWidget *parent)
     pDraw->setData(arr_pseudonormal);
     pLayout->addWidget(pDraw);
   }
+  
+#define OTHERDRAWS
+#ifdef OTHERDRAWS
   {
     /// 2 row 1 column
     unsigned int scaling = 8;
@@ -161,6 +166,7 @@ MainWindow::MainWindow(QWidget *parent)
     pDraw->setData(arr_peaks);
     pLayout->addWidget(pDraw);
   }
+#endif
   
   {
     QWidget *central = new QWidget();

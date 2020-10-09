@@ -1,7 +1,9 @@
 #ifndef _IDL_TEMPERATURERD_H
 #define _IDL_TEMPERATURERD_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_temperatureRd[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_temperatureRd[] = {
                                                  0x00000000, 0x00000002, 0x00000003, 0x00000005, 0x00000006, 0x00000007, 0x00000009, 0x0000000a, 
                                                  0x0000000c, 0x0000000d, 0x0000000f, 0x00000010, 0x00000012, 0x00000013, 0x00000014, 0x00000016, 
                                                  0x00000017, 0x00000019, 0x0000001a, 0x0000001c, 0x0000001d, 0x0000001f, 0x00000020, 0x00000021, 
@@ -35,7 +37,10 @@
                                                  0x00c2e1ff, 0x00c6e3ff, 0x00cae5ff, 0x00cee7ff, 0x00d2e9ff, 0x00d6ebff, 0x00d9edff, 0x00ddefff, 
                                                  0x00e1f0ff, 0x00e5f2ff, 0x00e9f4ff, 0x00edf6ff, 0x00f1f8ff, 0x00f5faff, 0x00f9fcff, 0x00fdfeff
 };
-const PaletteConstFWD<sizeof(colors_idl_temperatureRd) / sizeof(unsigned int)> palette_idl_temperatureRd(colors_idl_temperatureRd);
+
+const PaletteConstFWD<sizeof(colors_idl_temperatureRd) / sizeof(unsigned int)> palette_idl_temperatureRd(colors_idl_temperatureRd);
 const PaletteConstBWD<sizeof(colors_idl_temperatureRd) / sizeof(unsigned int)> palette_idl_temperatureRd_inv(colors_idl_temperatureRd);
-typedef PaletteConstFWD<sizeof(colors_idl_temperatureRd) / sizeof(unsigned int)> palette_idl_temperatureRd_t;
-#endif // _IDL_TEMPERATURERD_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_temperatureRd) / sizeof(unsigned int)> palette_idl_temperatureRd_t;
+
+#endif // _IDL_TEMPERATURERD_H

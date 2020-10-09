@@ -1,3 +1,7 @@
+/// This file contains special derived class for show images
+/// DrawSDPicture with option SDPSIZE_NONE does nothing, just shows images on 2D place (space evals throught sizeAndScaleHint)
+/// DrawSDPicture with option SDPSIZE_MARKER analyse image for markers and fill them by corresponding colors
+/// Created By: Elijah Vlasov
 #include "bsdrawsdpicture.h"
 
 #include "core/sheigen/bsshgenmain.h"
@@ -6,7 +10,6 @@ class SheiGeneratorSDP: public ISheiGenerator
 {
 public:
   enum MODE { MODE_NONE, MODE_MARKER63 };
-private:
   MODE          m_mode;
   unsigned int  m_bckclr;
 public:
@@ -18,9 +21,11 @@ public:
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
   virtual unsigned int  shfragment_pendingSize(unsigned int ovlscount) const { return FshMainGenerator::basePendingSize(ovlscount); }
-  virtual unsigned int  shfragment_store(unsigned int /*allocatedPortions*/, const DPostmask& fsp, ORIENTATION orient, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
+  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, 
+                                         ORIENTATION orient, SPLITPORTIONS splitPortions, 
+                                         unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
-    FshMainGenerator fmg(to, orient, ovlscount, ovlsinfo);
+    FshMainGenerator fmg(to, allocatedPortions, orient, splitPortions, ovlscount, ovlsinfo);
     fmg.push( "uniform highp sampler2D texGround;"
               "uniform highp int       countGround;" );
     fmg.goto_func_begin(FshMainGenerator::INIT_BYVALUE, m_bckclr, fsp);
@@ -38,7 +43,7 @@ public:
     else if (m_mode == MODE_MARKER63)
     {
       fmg.push(
-                  "float marker = mod(pixsdp[2]*255.0, 4.0)*9.0 + mod(pixsdp[1]*255.0, 4.0)*3.0 + mod(pixsdp[0]*255.0, 4.0);"
+                  "float marker = mod(pixsdp[2]*255.0, 4.0)*16.0 + mod(pixsdp[1]*255.0, 4.0)*4.0 + mod(pixsdp[0]*255.0, 4.0);"
                   "float value = texture(texData, vec2((marker - 1.0)/float(countGround-1), 0.0)).r;"
                   "vec3  mmc = texture(texPalette, vec2(value, 0.0)).rgb;"
                   "result = mix(mix(result, pixsdp.bgr, pixsdp.a), mmc, 1.0 - step(marker, 0.0));"
@@ -62,7 +67,7 @@ void DrawSDPicture::reConstructor(unsigned int samplesHorz, unsigned int samples
 {
   m_matrixDimmA = samplesHorz;
   m_matrixDimmB = samplesVert;
-  m_portionSize = 63;
+  m_portionSize = SDPSIZE_MARKER;
   
   m_groundType = GND_SDP;
   m_groundData = m_pImage->bits();
@@ -121,4 +126,12 @@ void DrawSDPicture::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixD
   *scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
   *scalingB = (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB);
   clampScaling(scalingA, scalingB);
+}
+
+unsigned int DrawSDPicture::colorBack() const
+{
+  unsigned int bc = ((SheiGeneratorSDP*)m_pcsh)->m_bckclr;
+  if (bc == 0xFFFFFFFF)
+    return DrawQWidget::colorBack();
+  return bc;
 }

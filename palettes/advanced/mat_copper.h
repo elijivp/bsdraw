@@ -1,7 +1,9 @@
 #ifndef _MAT_COPPER_H
 #define _MAT_COPPER_H
-#include "../bstexpalette.h"
-const unsigned int colors_mat_copper[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_mat_copper[] = {
                                           0x00020006, 0x00030007, 0x00030008, 0x00040009, 0x0004000b, 0x0005010c, 0x0005020d, 0x0006030f, 
                                           0x00060410, 0x00070411, 0x00070512, 0x00080614, 0x00080715, 0x00090816, 0x00090817, 0x000a0919, 
                                           0x000a0a1a, 0x000b0b1b, 0x000b0b1c, 0x000c0c1e, 0x000c0d1f, 0x000d0e20, 0x000d0f22, 0x000e0f23, 
@@ -35,7 +37,10 @@
                                           0x007bbbff, 0x007cbcff, 0x007cbdff, 0x007dbdff, 0x007dbeff, 0x007ebfff, 0x007ec0ff, 0x007fc0ff, 
                                           0x007fc1ff, 0x0080c2ff, 0x0080c3ff, 0x0081c4ff, 0x0081c4ff, 0x0082c5ff, 0x0082c6ff, 0x0083c7ff
 };
-const PaletteConstFWD<sizeof(colors_mat_copper) / sizeof(unsigned int)> palette_mat_copper(colors_mat_copper);
+
+const PaletteConstFWD<sizeof(colors_mat_copper) / sizeof(unsigned int)> palette_mat_copper(colors_mat_copper);
 const PaletteConstBWD<sizeof(colors_mat_copper) / sizeof(unsigned int)> palette_mat_copper_inv(colors_mat_copper);
-typedef PaletteConstFWD<sizeof(colors_mat_copper) / sizeof(unsigned int)> palette_mat_copper_t;
-#endif // _MAT_COPPER_H
+
+typedef PaletteConstFWD<sizeof(colors_mat_copper) / sizeof(unsigned int)> palette_mat_copper_t;
+
+#endif // _MAT_COPPER_H

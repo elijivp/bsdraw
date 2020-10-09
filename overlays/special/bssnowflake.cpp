@@ -1,3 +1,6 @@
+/// Overlays:
+///   OSnowflake. View: snowflake lol
+/// Created By: Elijah Vlasov
 #include "bssnowflake.h"
 #include "../../core/sheigen/bsshgentrace.h"
 
@@ -54,19 +57,19 @@ int OSnowflake::fshTrace(int overlay, bool rotated, char *to) const
       /// randomer[1] & randomer[2] = just start x,y position
       ocg.push( "randomer = texture(");  ocg.param_mem(texrandomer); ocg.push(", vec2(float(i)/float(spritescount-1), 0.0)).rgba;");
       ocg.push( "ivec2 rect_size = ivec2(base_size*(mix(0.3 + randomer[0]*0.4, 1.0, step(0.99, randomer[0]))));"
-                "_insvar.xy = vec2(cos(counter*(0.3 + 1.0/(0.3+randomer[0]))/(2.0*3.1415))*5*((randomer[0] - 1.0)*0.5 + 0.6)*(2.0*mod(i, 2) - 1.0), counter*(randomer[0]*2.0 + 1.2));"
-                "_insvar.x = randomer[1]*ibounds.x + _insvar.x;"
-                "_insvar.y = mod((1.0-randomer[2])*ibounds.y - _insvar.y, ibounds.y + rect_size.y);"
+                "_mvar.xy = vec2(cos(counter*(0.3 + 1.0/(0.3+randomer[0]))/(2.0*3.1415))*5*((randomer[0] - 1.0)*0.5 + 0.6)*(2.0*mod(i, 2) - 1.0), counter*(randomer[0]*2.0 + 1.2));"
+                "_mvar.x = randomer[1]*ibounds.x + _mvar.x;"
+                "_mvar.y = mod((1.0-randomer[2])*ibounds.y - _mvar.y, ibounds.y + rect_size.y);"
                 
-                "_insvar.x = _insvar.x + (1.0-step(moveto[3], 0.0))*(counter - moveto[2])*(distance(vec2(moveto.x, 1.0 - moveto.y), vec2(_insvar.xy/ibounds)))*(1.0 - 2.0*step(moveto.x, _insvar.x/ibounds.x))*(randomer[0]*1.5+1.0);"
+                "_mvar.x = _mvar.x + (1.0-step(moveto[3], 0.0))*(counter - moveto[2])*(distance(vec2(moveto.x, 1.0 - moveto.y), vec2(_mvar.xy/ibounds)))*(1.0 - 2.0*step(moveto.x, _mvar.x/ibounds.x))*(randomer[0]*1.5+1.0);"
                 
-                "ivec2 inormed = icoords - ivec2(_insvar.x, ibounds.y - _insvar.y);"
-                "_densvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1.0-step(rect_size.x, float(inormed.x)))*(1.0-step(rect_size.y, float(inormed.y)));"
+                "ivec2 inormed = icoords - ivec2(_mvar.x, ibounds.y - _mvar.y);"
+                "_fvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1.0-step(rect_size.x, float(inormed.x)))*(1.0-step(rect_size.y, float(inormed.y)));"
                 "vec2  tcoords = inormed/vec2(rect_size.x-1, rect_size.y-1);");
       
       ocg.push("vec4 pixel = texture(");  ocg.param_get(); ocg.push(", vec2(tcoords.x, 1.0 - tcoords.y));");
-      ocg.push("result = mix(result, pixel.rgb, _densvar*pixel.a);"
-               "mixwell = max(mixwell, _densvar*pixel.a);");
+      ocg.push("result = mix(result, pixel.rgb, _fvar*pixel.a);"
+               "mixwell = max(mixwell, _fvar*pixel.a);");
     }
     ocg.push("}");
   }

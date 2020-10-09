@@ -1,7 +1,9 @@
 #ifndef _MAT_PINK_H
 #define _MAT_PINK_H
-#include "../bstexpalette.h"
-const unsigned int colors_mat_pink[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_mat_pink[] = {
                                         0x0000000c, 0x00000011, 0x00000016, 0x0000001b, 0x00040421, 0x000b0b26, 0x0012122b, 0x00181830, 
                                         0x001c1c34, 0x00202038, 0x0022223b, 0x0024243e, 0x00262641, 0x00282844, 0x002a2a47, 0x002c2c4a, 
                                         0x002e2e4d, 0x0030304f, 0x00323252, 0x00343454, 0x00353556, 0x00373759, 0x0038385b, 0x003a3a5d, 
@@ -35,7 +37,10 @@
                                         0x00effafa, 0x00f0fafa, 0x00f1fafa, 0x00f2fbfb, 0x00f3fbfb, 0x00f4fbfb, 0x00f5fcfc, 0x00f6fcfc, 
                                         0x00f7fcfc, 0x00f8fdfd, 0x00f9fdfd, 0x00fafdfd, 0x00fbfefe, 0x00fcfefe, 0x00fdfefe, 0x00feffff
 };
-const PaletteConstFWD<sizeof(colors_mat_pink) / sizeof(unsigned int)> palette_mat_pink(colors_mat_pink);
+
+const PaletteConstFWD<sizeof(colors_mat_pink) / sizeof(unsigned int)> palette_mat_pink(colors_mat_pink);
 const PaletteConstBWD<sizeof(colors_mat_pink) / sizeof(unsigned int)> palette_mat_pink_inv(colors_mat_pink);
-typedef PaletteConstFWD<sizeof(colors_mat_pink) / sizeof(unsigned int)> palette_mat_pink_t;
-#endif // _MAT_PINK_H
+
+typedef PaletteConstFWD<sizeof(colors_mat_pink) / sizeof(unsigned int)> palette_mat_pink_t;
+
+#endif // _MAT_PINK_H

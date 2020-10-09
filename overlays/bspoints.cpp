@@ -1,10 +1,19 @@
+/// Overlays:   lines and selectors, saved into array (care max 1024 size)
+///   OPTFill: same as OFPoint but with another realization
+///   ODropPoints: array of not linked points
+///   OPolyLine: array of linked points, base class
+///   ODropLine: click = new line from last point
+///   OBrush: move = new line from last point
+///   OSelector: rectangle-selector
+///   OSelectorCirc: circle-selector
+/// Created By: Elijah Vlasov
 #include "bspoints.h"
 
 #include "../core/sheigen/bsshgentrace.h"
 #include <math.h>
 #include <memory.h>
 
-OPTFill::OPTFill(const linestyle_t& kls): IOverlaySimple(),
+OPTFill::OPTFill(const linestyle_t& kls): DrawOverlaySimple(),
   OVLCoordsDynamic(CR_RELATIVE, 0.0f, 0.0f), OVLDimmsOff(), m_fill(kls)
 {
 }
@@ -26,7 +35,7 @@ int OPTFill::fshTrace(int overlay, bool rotated, char *to) const
 
 
 
-ODropPoints::ODropPoints(unsigned int ptlimit, COORDINATION, float, const linestyle_t& kls): IOverlayTraced(kls),
+ODropPoints::ODropPoints(unsigned int ptlimit, COORDINATION, float, const linestyle_t& kls): DrawOverlayTraced(kls),
   OVLCoordsOff(), OVLDimmsOff(), ptCountMax(ptlimit)
 {
   ptdrops = new ovlcoords_t[ptCountMax];
@@ -51,9 +60,9 @@ int ODropPoints::fshTrace(int overlay, bool rotated, char *to) const
     ocg.param_for_rarr_begin("point");
     {
       ocg.goto_normed("point.xy", ptpixing);
-      ocg.push("_densvar = (1.0+density - clamp(distance(vec2(inormed), vec2(0.0,0.0)), 0.0, 1.0+density))/(1.0+density);");
-      ocg.push("_insvar = vec3(_densvar, sign(_densvar), sign(_densvar)) * vec3(1, float(i)/float(rarr_len), rarr_len);");
-      ocg.push("result = mix(result, _insvar, 1 - step(abs(_insvar[0]) - abs(result[0]), 0.0) );");
+      ocg.push("_fvar = (1.0+thick - clamp(distance(vec2(inormed), vec2(0.0,0.0)), 0.0, 1.0+thick))/(1.0+thick);");
+      ocg.push("_mvar = vec3(_fvar, sign(_fvar), sign(_fvar)) * vec3(1, float(i)/float(rarr_len), rarr_len);");
+      ocg.push("result = mix(result, _mvar, 1 - step(abs(_mvar[0]) - abs(result[0]), 0.0) );");
     }
     ocg.param_for_end();
   }
@@ -84,7 +93,7 @@ bool ODropPoints::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* da
 
 /******************/
 
-DropsBase_::DropsBase_(unsigned int countPointsMax, const linestyle_t& kls): IOverlayTraced(kls),
+OPolyLine::OPolyLine(unsigned int countPointsMax, const linestyle_t& kls): DrawOverlayTraced(kls),
   OVLCoordsStatic(CR_RELATIVE, 0.0f, 0.0f), OVLDimmsOff(), ptCountMax(countPointsMax)
 {
   ptdrops = new ovlcoords_t[ptCountMax];
@@ -96,7 +105,7 @@ DropsBase_::DropsBase_(unsigned int countPointsMax, const linestyle_t& kls): IOv
   appendUniform(DT_1I, &ptCount);
 }
 
-int DropsBase_::fshTrace(int overlay, bool rotated, char *to) const
+int OPolyLine::fshTrace(int overlay, bool rotated, char *to) const
 { 
   FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
@@ -118,8 +127,24 @@ int DropsBase_::fshTrace(int overlay, bool rotated, char *to) const
   return ocg.written();
 }
 
+void  OPolyLine::setPointsCount(unsigned int newCount)
+{
+  ptCount = newCount;
+}
+
+void  OPolyLine::setPoint(int idx, float x, float y)
+{
+  if (idx < ptCountMax)
+    ptdrops[idx] = ovlcoords_t(x, y);
+}
+
+void  OPolyLine::updatePoints()
+{
+  overlayUpdateParameter();
+}
+
 ////////////////////////////////
-ODropLine::ODropLine(unsigned int maxpoints, bool lastFollowsMouse, const linestyle_t& kls): DropsBase_(maxpoints, kls), followMoving(lastFollowsMouse)
+ODropLine::ODropLine(unsigned int maxpoints, bool lastFollowsMouse, const linestyle_t& kls): OPolyLine(maxpoints, kls), followMoving(lastFollowsMouse)
 {
 }
 
@@ -161,54 +186,51 @@ bool ODropLine::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* data
 }
 
 /////////////////////////////////////
-OBrush::OBrush(unsigned int memoryPoints, const linestyle_t& kls): DropsBase_(memoryPoints, kls)
+OBrush::OBrush(unsigned int memoryPoints, const linestyle_t& kls): OPolyLine(memoryPoints, kls)
 {
 }
 
 bool OBrush::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
 {
+  bool result = false;
   if (oreact == ORM_LMPRESS || oreact == ORM_LMMOVE)
   {
     if (ptCount == ptCountMax)
-      return false;
-    if (fabs(((float*)dataptr)[0] - ((float*)dataptr)[1]) < 0.001f)
-      return false;
-    ptdrops[ptCount++] = ovlcoords_t(((float*)dataptr)[0], ((float*)dataptr)[1]);
-    return true;
+      result = false;
+    else
+    {
+      if (fabs(((float*)dataptr)[0] - ((float*)dataptr)[1]) >= 0.001f)
+      {
+        ptdrops[ptCount++] = ovlcoords_t(((float*)dataptr)[0], ((float*)dataptr)[1]);
+        result = true;
+      }
+    }
   }
   else if (oreact == ORM_LMRELEASE)
   {
-    
   }
-  return false;
+  else if (oreact == ORM_RMPRESS)
+  {
+    ptCount = 0;
+    result = true;
+  }
+  if (result)
+    overlayUpdateParameter();
+  return result;
 }
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-OSelector::OSelector(const linestyle_t &kls, float alpha): IOverlayTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f),
-  m_alpha(alpha), m_phase(-1), m_move(false)
+OSelectorReaction::OSelectorReaction(const linestyle_t &kls, float alpha, bool moveable): 
+  DrawOverlayTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f),
+  m_alpha(alpha), m_phase(-1), m_move(moveable)
 {
   if (alpha > 0.0f)
     m_linestyle.outside = OLS_OPACITY_LINEAR;
 }
 
-int OSelector::fshTrace(int overlay, bool rotated, char *to) const
-{
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
-  {
-    {
-      ocg.goto_normed();      
-      ocg.trace_rect_xywh_begin(nullptr);
-      ocg.trace_rect_xywh_end("idimms2", m_alpha);
-    }
-  }
-  ocg.goto_func_end(true);
-  return ocg.written();
-}
-
-bool OSelector::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
+bool OSelectorReaction::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
 {
   bool result = false;
   
@@ -237,9 +259,9 @@ bool OSelector::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* data
   
   if (result == false)
   {
-    if (oreact == ORM_LMPRESS)
+    if (oreact == ORM_LMPRESS || oreact == ORM_RMPRESS)
     {
-      m_phase = 1;
+      m_phase = oreact == ORM_LMPRESS? 1 : 0;
       m_xy = ovlcoords_t((const float*)dataptr);
       m_wh = ovldimms2_t(0.0f, 0.0f);
       m_dimmsready = false;
@@ -268,78 +290,47 @@ bool OSelector::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* data
 }
 
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-OSelectorCircular::OSelectorCircular(const linestyle_t &kls, float alpha): IOverlayTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f),
-  m_alpha(alpha), m_phase(-1)
+
+OSelector::OSelector(const linestyle_t& kls, float alpha, bool moveable): OSelectorReaction(kls, alpha, moveable)
 {
-  if (alpha > 0.0f)
-    m_linestyle.outside = OLS_OPACITY_LINEAR;
 }
 
-int OSelectorCircular::fshTrace(int overlay, bool rotated, char *to) const
+int OSelector::fshTrace(int overlay, bool rotated, char *to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     {
       ocg.goto_normed();      
-      ocg.trace_circle_cc_begin("idimms2.x", "2");
-      ocg.trace_circle_cc_end(m_alpha);
+      ocg.trace_rect_xywh_begin(nullptr);
+      ocg.trace_rect_xywh_end("idimms2", m_alpha);
     }
   }
   ocg.goto_func_end(true);
   return ocg.written();
 }
 
-bool OSelectorCircular::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
+OSelectorCirc::OSelectorCirc(const linestyle_t& kls, float alpha, bool moveable): OSelectorReaction(kls, alpha, moveable)
 {
-  bool result = false;
-  if (oreact == ORM_LMPRESS)
-  {
-    m_phase = 1;
-    m_xy = ovlcoords_t((const float*)dataptr);
-    m_wh = ovldimms2_t(0.0f, 0.0f);
-    m_dimmsready = false;
-    result = true;
-  }
-  else
-  {
-    if (m_phase == 1)
-    {
-      ovlcoords_t pdt((float*)dataptr);
-      m_wh.w = pdt.x - m_xy.x;  if (m_wh.w < 0) m_wh.w = -m_wh.w;
-      m_wh.h = pdt.y - m_xy.y;  if (m_wh.h < 0) m_wh.h = -m_wh.h;
-      result = true;
-    }
-    if (oreact == ORM_LMRELEASE)
-    {
-      m_phase = 0;
-      m_dimmsready = true;
-    }
-  }
-  if (result)
-    overlayUpdateParameter();
-  return result;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+int OSelectorCirc::fshTrace(int overlay, bool rotated, char *to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    {
+      ocg.goto_normed();
+      ocg.push("float rr = sqrt(float(idimms2.x*idimms2.x + idimms2.y*idimms2.y));");
+      ocg.push("if (rr > 0)");
+      ocg.push("{");
+        ocg.trace_circle_cc_begin("rr", "2");
+        ocg.trace_circle_cc_end(m_alpha);
+      ocg.push("}");
+    }
+  }
+  ocg.goto_func_end(true);
+  return ocg.written();
+}

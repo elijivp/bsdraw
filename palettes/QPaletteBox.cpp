@@ -1,3 +1,6 @@
+/// ComboBox with non-standard palettes in dropped list
+/// You need include resource file with all non-standard palettes
+/// Created By: Elijah Vlasov
 #include "QPaletteBox.h"
 
 #include <QAbstractItemDelegate>
@@ -81,6 +84,12 @@ bool QPaletteBox::isInverted() const
 {
   const Q_D(QPaletteBox);
   return d->bInverted;
+}
+
+const IPalette* QPaletteBox::currentPalette() const
+{
+  const Q_D(QPaletteBox);
+  return d->bInverted? ppalettes_adv_inv[currentIndex()] : ppalettes_adv[currentIndex()];
 }
 
 void QPaletteBox::setInverted(bool inverted)

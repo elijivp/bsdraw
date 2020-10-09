@@ -1,7 +1,9 @@
 #ifndef _TFM_ROSE_H
 #define _TFM_ROSE_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_rose[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_rose[] = {
                                         0x00380038, 0x003b003b, 0x003f003f, 0x00420042, 0x00450045, 0x00480048, 0x004c004c, 0x004f004f, 
                                         0x00520052, 0x00550055, 0x00590059, 0x005c005c, 0x005f005f, 0x00620062, 0x00660066, 0x00690069, 
                                         0x006c006c, 0x006f006f, 0x00720072, 0x00760076, 0x00790079, 0x007c007c, 0x007f007f, 0x007f0083, 
@@ -35,7 +37,10 @@
                                         0x00fff2ff, 0x00fff3ff, 0x00fff4ff, 0x00fff5ff, 0x00fff5ff, 0x00fff6ff, 0x00fff7ff, 0x00fff8ff, 
                                         0x00fff9ff, 0x00fffaff, 0x00fffaff, 0x00fffbff, 0x00fffcff, 0x00fffdff, 0x00fffeff, 0x00ffffff
 };
-const PaletteConstFWD<sizeof(colors_tfm_rose) / sizeof(unsigned int)> palette_tfm_rose(colors_tfm_rose);
+
+const PaletteConstFWD<sizeof(colors_tfm_rose) / sizeof(unsigned int)> palette_tfm_rose(colors_tfm_rose);
 const PaletteConstBWD<sizeof(colors_tfm_rose) / sizeof(unsigned int)> palette_tfm_rose_inv(colors_tfm_rose);
-typedef PaletteConstFWD<sizeof(colors_tfm_rose) / sizeof(unsigned int)> palette_tfm_rose_t;
-#endif // _TFM_ROSE_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_rose) / sizeof(unsigned int)> palette_tfm_rose_t;
+
+#endif // _TFM_ROSE_H

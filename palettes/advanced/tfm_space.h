@@ -1,7 +1,9 @@
 #ifndef _TFM_SPACE_H
 #define _TFM_SPACE_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_space[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_space[] = {
                                          0x00010100, 0x00030300, 0x00040400, 0x00060600, 0x00080800, 0x000a0900, 0x000c0b00, 0x000d0c00, 
                                          0x000f0d00, 0x00110f00, 0x00131000, 0x00151100, 0x00161200, 0x00181300, 0x001a1400, 0x001c1500, 
                                          0x001e1600, 0x001f1700, 0x00211800, 0x00231900, 0x00251900, 0x00271a00, 0x00281b00, 0x002a1b00, 
@@ -35,7 +37,10 @@
                                          0x00aeffff, 0x00b4ffff, 0x00b9ffff, 0x00beffff, 0x00c4ffff, 0x00c9ffff, 0x00ceffff, 0x00d3ffff, 
                                          0x00d9ffff, 0x00deffff, 0x00e3ffff, 0x00e8ffff, 0x00eeffff, 0x00f3ffff, 0x00f8ffff, 0x00fdffff
 };
-const PaletteConstFWD<sizeof(colors_tfm_space) / sizeof(unsigned int)> palette_tfm_space(colors_tfm_space);
+
+const PaletteConstFWD<sizeof(colors_tfm_space) / sizeof(unsigned int)> palette_tfm_space(colors_tfm_space);
 const PaletteConstBWD<sizeof(colors_tfm_space) / sizeof(unsigned int)> palette_tfm_space_inv(colors_tfm_space);
-typedef PaletteConstFWD<sizeof(colors_tfm_space) / sizeof(unsigned int)> palette_tfm_space_t;
-#endif // _TFM_SPACE_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_space) / sizeof(unsigned int)> palette_tfm_space_t;
+
+#endif // _TFM_SPACE_H

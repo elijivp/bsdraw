@@ -1,7 +1,9 @@
 #ifndef _IDL_LINEARBUWH_H
 #define _IDL_LINEARBUWH_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_linearBuWh[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_linearBuWh[] = {
                                               0x00020000, 0x00030000, 0x00040000, 0x00060000, 0x00070000, 0x00080000, 0x000a0000, 0x000b0000, 
                                               0x000c0000, 0x000e0000, 0x000f0000, 0x00100000, 0x00120000, 0x00130000, 0x00140000, 0x00160000, 
                                               0x00170000, 0x00180000, 0x001a0000, 0x001b0000, 0x001d0000, 0x001e0000, 0x001f0000, 0x00210000, 
@@ -35,7 +37,10 @@
                                               0x00ffe8c5, 0x00ffeac9, 0x00ffebcd, 0x00ffedd1, 0x00ffefd5, 0x00fff0d9, 0x00fff2dd, 0x00fff3e1, 
                                               0x00fff5e5, 0x00fff7e9, 0x00fff8ed, 0x00fffaf1, 0x00fffbf5, 0x00fffdf9, 0x00fffffd, 0x00ffffff
 };
-const PaletteConstFWD<sizeof(colors_idl_linearBuWh) / sizeof(unsigned int)> palette_idl_linearBuWh(colors_idl_linearBuWh);
+
+const PaletteConstFWD<sizeof(colors_idl_linearBuWh) / sizeof(unsigned int)> palette_idl_linearBuWh(colors_idl_linearBuWh);
 const PaletteConstBWD<sizeof(colors_idl_linearBuWh) / sizeof(unsigned int)> palette_idl_linearBuWh_inv(colors_idl_linearBuWh);
-typedef PaletteConstFWD<sizeof(colors_idl_linearBuWh) / sizeof(unsigned int)> palette_idl_linearBuWh_t;
-#endif // _IDL_LINEARBUWH_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_linearBuWh) / sizeof(unsigned int)> palette_idl_linearBuWh_t;
+
+#endif // _IDL_LINEARBUWH_H

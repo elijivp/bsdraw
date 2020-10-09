@@ -1,7 +1,9 @@
 #ifndef _IDL_EOS_A_H
 #define _IDL_EOS_A_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_eos_a[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_eos_a[] = {
                                          0x00c20079, 0x00c40074, 0x00c60070, 0x00b40062, 0x00b6005e, 0x00b8005a, 0x00cf0060, 0x00d1005c, 
                                          0x00d30057, 0x00d50053, 0x00d7004f, 0x00d9004b, 0x00c5003f, 0x00c7003c, 0x00c90038, 0x00e1003a, 
                                          0x00e30036, 0x00e60031, 0x00e8002d, 0x00ea0029, 0x00ec0025, 0x00ee0020, 0x00d80019, 0x00da0016, 
@@ -35,7 +37,10 @@
                                          0x0000009b, 0x00000099, 0x00000098, 0x00000096, 0x00000094, 0x00000093, 0x00000082, 0x00000081, 
                                          0x0000007f, 0x0000008c, 0x0000008a, 0x00000088, 0x00000087, 0x00000085, 0x00000083, 0x00000082
 };
-const PaletteConstFWD<sizeof(colors_idl_eos_a) / sizeof(unsigned int)> palette_idl_eos_a(colors_idl_eos_a);
+
+const PaletteConstFWD<sizeof(colors_idl_eos_a) / sizeof(unsigned int)> palette_idl_eos_a(colors_idl_eos_a);
 const PaletteConstBWD<sizeof(colors_idl_eos_a) / sizeof(unsigned int)> palette_idl_eos_a_inv(colors_idl_eos_a);
-typedef PaletteConstFWD<sizeof(colors_idl_eos_a) / sizeof(unsigned int)> palette_idl_eos_a_t;
-#endif // _IDL_EOS_A_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_eos_a) / sizeof(unsigned int)> palette_idl_eos_a_t;
+
+#endif // _IDL_EOS_A_H

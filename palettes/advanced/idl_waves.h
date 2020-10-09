@@ -1,7 +1,9 @@
 #ifndef _IDL_WAVES_H
 #define _IDL_WAVES_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_waves[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_waves[] = {
                                          0x0084837b, 0x00879578, 0x008a9e75, 0x008d9f72, 0x0090966f, 0x0093856c, 0x00966f69, 0x009a5766, 
                                          0x009d4063, 0x00a02e60, 0x00a2235d, 0x00a5225a, 0x00a82a57, 0x00ab3a54, 0x00ae5051, 0x00b1684e, 
                                          0x00b47f4b, 0x00b79248, 0x00b99d46, 0x00bc9f43, 0x00bf9840, 0x00c1893e, 0x00c4733b, 0x00c75b38, 
@@ -35,7 +37,10 @@
                                          0x004b41b4, 0x004e59b1, 0x005171ae, 0x005487ab, 0x005797a8, 0x005a9fa5, 0x005d9ea3, 0x006094a0, 
                                          0x0063829d, 0x00666b9a, 0x00695297, 0x006c3c93, 0x006f2b90, 0x0072228d, 0x0075238a, 0x00782c87
 };
-const PaletteConstFWD<sizeof(colors_idl_waves) / sizeof(unsigned int)> palette_idl_waves(colors_idl_waves);
+
+const PaletteConstFWD<sizeof(colors_idl_waves) / sizeof(unsigned int)> palette_idl_waves(colors_idl_waves);
 const PaletteConstBWD<sizeof(colors_idl_waves) / sizeof(unsigned int)> palette_idl_waves_inv(colors_idl_waves);
-typedef PaletteConstFWD<sizeof(colors_idl_waves) / sizeof(unsigned int)> palette_idl_waves_t;
-#endif // _IDL_WAVES_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_waves) / sizeof(unsigned int)> palette_idl_waves_t;
+
+#endif // _IDL_WAVES_H

@@ -1,7 +1,9 @@
 #ifndef _IDL_STANDARD_GAMMAII_H
 #define _IDL_STANDARD_GAMMAII_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_standard_gammaii[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_standard_gammaii[] = {
                                                     0x00070000, 0x000d0000, 0x00120000, 0x00170000, 0x001c0000, 0x00210000, 0x00260000, 0x002c0000, 
                                                     0x00310000, 0x00360000, 0x003b0000, 0x00400000, 0x00460000, 0x004b0000, 0x00500000, 0x00550000, 
                                                     0x005a0000, 0x005f0000, 0x00650000, 0x006a0000, 0x006f0000, 0x00740000, 0x00790000, 0x007f0000, 
@@ -35,7 +37,10 @@
                                                     0x00d0ffff, 0x00d3ffff, 0x00d6ffff, 0x00d9ffff, 0x00ddffff, 0x00e0ffff, 0x00e3ffff, 0x00e6ffff, 
                                                     0x00e9ffff, 0x00edffff, 0x00f0ffff, 0x00f3ffff, 0x00f6ffff, 0x00f9ffff, 0x00fdffff, 0x00ffffff
 };
-const PaletteConstFWD<sizeof(colors_idl_standard_gammaii) / sizeof(unsigned int)> palette_idl_standard_gammaii(colors_idl_standard_gammaii);
+
+const PaletteConstFWD<sizeof(colors_idl_standard_gammaii) / sizeof(unsigned int)> palette_idl_standard_gammaii(colors_idl_standard_gammaii);
 const PaletteConstBWD<sizeof(colors_idl_standard_gammaii) / sizeof(unsigned int)> palette_idl_standard_gammaii_inv(colors_idl_standard_gammaii);
-typedef PaletteConstFWD<sizeof(colors_idl_standard_gammaii) / sizeof(unsigned int)> palette_idl_standard_gammaii_t;
-#endif // _IDL_STANDARD_GAMMAII_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_standard_gammaii) / sizeof(unsigned int)> palette_idl_standard_gammaii_t;
+
+#endif // _IDL_STANDARD_GAMMAII_H

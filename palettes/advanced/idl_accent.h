@@ -1,7 +1,9 @@
 #ifndef _IDL_ACCENT_H
 #define _IDL_ACCENT_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_accent[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_accent[] = {
                                           0x0080c980, 0x0083c882, 0x0085c784, 0x0087c685, 0x008ac687, 0x008cc589, 0x008ec48b, 0x0091c48c, 
                                           0x0093c38e, 0x0095c290, 0x0098c191, 0x009ac193, 0x009cc095, 0x009fbf97, 0x00a1be98, 0x00a3be9a, 
                                           0x00a6bd9c, 0x00a8bc9e, 0x00aabb9f, 0x00adbba1, 0x00afbaa3, 0x00b1b9a5, 0x00b4b8a6, 0x00b6b8a8, 
@@ -35,7 +37,10 @@
                                           0x0043618d, 0x0045618b, 0x00476289, 0x00496286, 0x004c6284, 0x004e6381, 0x0050637f, 0x0052637d, 
                                           0x0054647a, 0x00566478, 0x00586475, 0x005a6573, 0x005d6571, 0x005f656e, 0x0061656c, 0x00636669
 };
-const PaletteConstFWD<sizeof(colors_idl_accent) / sizeof(unsigned int)> palette_idl_accent(colors_idl_accent);
+
+const PaletteConstFWD<sizeof(colors_idl_accent) / sizeof(unsigned int)> palette_idl_accent(colors_idl_accent);
 const PaletteConstBWD<sizeof(colors_idl_accent) / sizeof(unsigned int)> palette_idl_accent_inv(colors_idl_accent);
-typedef PaletteConstFWD<sizeof(colors_idl_accent) / sizeof(unsigned int)> palette_idl_accent_t;
-#endif // _IDL_ACCENT_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_accent) / sizeof(unsigned int)> palette_idl_accent_t;
+
+#endif // _IDL_ACCENT_H

@@ -1,7 +1,9 @@
 #ifndef _GNU_FLOWERS_H
 #define _GNU_FLOWERS_H
-#include "../bstexpalette.h"
-const unsigned int colors_gnu_flowers[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_gnu_flowers[] = {
                                            0x00007f00, 0x00007e01, 0x00007d02, 0x00007c03, 0x00007b04, 0x00007a05, 0x00007906, 0x00007807, 
                                            0x00007708, 0x00007609, 0x0000750a, 0x0000740b, 0x0000730c, 0x0000720d, 0x0000710e, 0x0000700f, 
                                            0x00006f10, 0x00006e11, 0x00006d12, 0x00006c13, 0x00006b14, 0x00006a15, 0x00006916, 0x00006817, 
@@ -35,7 +37,10 @@
                                            0x00c770f0, 0x00ca71f1, 0x00cd72f2, 0x00d173f3, 0x00d474f4, 0x00d875f5, 0x00db76f6, 0x00df77f7, 
                                            0x00e278f8, 0x00e679f9, 0x00ea7afa, 0x00ee7bfb, 0x00f17cfc, 0x00f57dfd, 0x00f97efe, 0x00fd7fff
 };
-const PaletteConstFWD<sizeof(colors_gnu_flowers) / sizeof(unsigned int)> palette_gnu_flowers(colors_gnu_flowers);
+
+const PaletteConstFWD<sizeof(colors_gnu_flowers) / sizeof(unsigned int)> palette_gnu_flowers(colors_gnu_flowers);
 const PaletteConstBWD<sizeof(colors_gnu_flowers) / sizeof(unsigned int)> palette_gnu_flowers_inv(colors_gnu_flowers);
-typedef PaletteConstFWD<sizeof(colors_gnu_flowers) / sizeof(unsigned int)> palette_gnu_flowers_t;
-#endif // _GNU_FLOWERS_H
+
+typedef PaletteConstFWD<sizeof(colors_gnu_flowers) / sizeof(unsigned int)> palette_gnu_flowers_t;
+
+#endif // _GNU_FLOWERS_H

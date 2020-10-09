@@ -1,7 +1,9 @@
 #ifndef _TFM_PURPLE_HAZE_H
 #define _TFM_PURPLE_HAZE_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_purple_haze[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_purple_haze[] = {
                                                0x0012000e, 0x00160011, 0x00190014, 0x001c0017, 0x00200019, 0x0023001c, 0x0027001f, 0x002a0022, 
                                                0x002e0025, 0x00310027, 0x0034002a, 0x0038002d, 0x003b0030, 0x003f0032, 0x00420035, 0x00460038, 
                                                0x0049003b, 0x004c003d, 0x00500040, 0x00530043, 0x00570046, 0x005a0048, 0x005e004b, 0x0061004e, 
@@ -35,7 +37,10 @@
                                                0x000231d6, 0x00022ed7, 0x00022bd9, 0x000228da, 0x000225db, 0x000223dc, 0x000220de, 0x00021ddf, 
                                                0x00021ae0, 0x000217e1, 0x000315e3, 0x000312e4, 0x00030fe5, 0x00030ce6, 0x000309e8, 0x000307e9
 };
-const PaletteConstFWD<sizeof(colors_tfm_purple_haze) / sizeof(unsigned int)> palette_tfm_purple_haze(colors_tfm_purple_haze);
+
+const PaletteConstFWD<sizeof(colors_tfm_purple_haze) / sizeof(unsigned int)> palette_tfm_purple_haze(colors_tfm_purple_haze);
 const PaletteConstBWD<sizeof(colors_tfm_purple_haze) / sizeof(unsigned int)> palette_tfm_purple_haze_inv(colors_tfm_purple_haze);
-typedef PaletteConstFWD<sizeof(colors_tfm_purple_haze) / sizeof(unsigned int)> palette_tfm_purple_haze_t;
-#endif // _TFM_PURPLE_HAZE_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_purple_haze) / sizeof(unsigned int)> palette_tfm_purple_haze_t;
+
+#endif // _TFM_PURPLE_HAZE_H

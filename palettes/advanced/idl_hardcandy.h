@@ -1,7 +1,9 @@
 #ifndef _IDL_HARDCANDY_H
 #define _IDL_HARDCANDY_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_hardcandy[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_hardcandy[] = {
                                              0x006a3701, 0x00603e03, 0x00554405, 0x004b4b07, 0x00425209, 0x0038580a, 0x00305f0c, 0x0028650d, 
                                              0x00206b0e, 0x0019720f, 0x00137810, 0x000e7e11, 0x00098311, 0x00068911, 0x00038f11, 0x00019411, 
                                              0x00009910, 0x00009e0f, 0x0001a30e, 0x0003a80d, 0x0005ac0b, 0x0009b009, 0x000db407, 0x0012b805, 
@@ -35,7 +37,10 @@
                                              0x00007b88, 0x0002756f, 0x00046f56, 0x0007683e, 0x000a6226, 0x000f5c10, 0x00155506, 0x001b4f1a, 
                                              0x0022482d, 0x002a413f, 0x00323a4e, 0x003b345c, 0x00442d68, 0x004e2672, 0x00581f7a, 0x00621880
 };
-const PaletteConstFWD<sizeof(colors_idl_hardcandy) / sizeof(unsigned int)> palette_idl_hardcandy(colors_idl_hardcandy);
+
+const PaletteConstFWD<sizeof(colors_idl_hardcandy) / sizeof(unsigned int)> palette_idl_hardcandy(colors_idl_hardcandy);
 const PaletteConstBWD<sizeof(colors_idl_hardcandy) / sizeof(unsigned int)> palette_idl_hardcandy_inv(colors_idl_hardcandy);
-typedef PaletteConstFWD<sizeof(colors_idl_hardcandy) / sizeof(unsigned int)> palette_idl_hardcandy_t;
-#endif // _IDL_HARDCANDY_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_hardcandy) / sizeof(unsigned int)> palette_idl_hardcandy_t;
+
+#endif // _IDL_HARDCANDY_H

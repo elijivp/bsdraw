@@ -1,7 +1,9 @@
 #ifndef _IDL_VOLCANO_H
 #define _IDL_VOLCANO_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_volcano[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_volcano[] = {
                                            0x006e2640, 0x00642a3d, 0x00592f3a, 0x004f3336, 0x00453833, 0x003c3c30, 0x0033412d, 0x002b452b, 
                                            0x00234928, 0x001c4e25, 0x00155223, 0x00105620, 0x000b5a1e, 0x00075e1c, 0x00046219, 0x00016617, 
                                            0x00006915, 0x00006d14, 0x00007012, 0x00017410, 0x0004770f, 0x00077a0d, 0x000b7d0c, 0x0010800b, 
@@ -35,7 +37,10 @@
                                            0x00006345, 0x00015f42, 0x00045b3e, 0x0007573b, 0x000b5337, 0x00104f34, 0x00154b30, 0x001c462c, 
                                            0x00234228, 0x002a3e24, 0x00333920, 0x003c351c, 0x00453018, 0x004f2c14, 0x00592710, 0x0064220c
 };
-const PaletteConstFWD<sizeof(colors_idl_volcano) / sizeof(unsigned int)> palette_idl_volcano(colors_idl_volcano);
+
+const PaletteConstFWD<sizeof(colors_idl_volcano) / sizeof(unsigned int)> palette_idl_volcano(colors_idl_volcano);
 const PaletteConstBWD<sizeof(colors_idl_volcano) / sizeof(unsigned int)> palette_idl_volcano_inv(colors_idl_volcano);
-typedef PaletteConstFWD<sizeof(colors_idl_volcano) / sizeof(unsigned int)> palette_idl_volcano_t;
-#endif // _IDL_VOLCANO_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_volcano) / sizeof(unsigned int)> palette_idl_volcano_t;
+
+#endif // _IDL_VOLCANO_H

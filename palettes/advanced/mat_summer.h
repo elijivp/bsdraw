@@ -1,7 +1,9 @@
 #ifndef _MAT_SUMMER_H
 #define _MAT_SUMMER_H
-#include "../bstexpalette.h"
-const unsigned int colors_mat_summer[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_mat_summer[] = {
                                           0x00668000, 0x00668001, 0x00668102, 0x00668103, 0x00668204, 0x00668205, 0x00668306, 0x00668307, 
                                           0x00668408, 0x00668409, 0x0066850a, 0x0066850b, 0x0066860c, 0x0066860d, 0x0066870e, 0x0066870f, 
                                           0x00668810, 0x00668811, 0x00668912, 0x00668913, 0x00668a14, 0x00668a15, 0x00668b16, 0x00668b17, 
@@ -35,7 +37,10 @@
                                           0x0066f7f0, 0x0066f8f1, 0x0066f8f2, 0x0066f9f3, 0x0066f9f4, 0x0066faf5, 0x0066faf6, 0x0066fbf7, 
                                           0x0066fbf8, 0x0066fcf9, 0x0066fcfa, 0x0066fdfb, 0x0066fdfc, 0x0066fefd, 0x0066fefe, 0x0066ffff
 };
-const PaletteConstFWD<sizeof(colors_mat_summer) / sizeof(unsigned int)> palette_mat_summer(colors_mat_summer);
+
+const PaletteConstFWD<sizeof(colors_mat_summer) / sizeof(unsigned int)> palette_mat_summer(colors_mat_summer);
 const PaletteConstBWD<sizeof(colors_mat_summer) / sizeof(unsigned int)> palette_mat_summer_inv(colors_mat_summer);
-typedef PaletteConstFWD<sizeof(colors_mat_summer) / sizeof(unsigned int)> palette_mat_summer_t;
-#endif // _MAT_SUMMER_H
+
+typedef PaletteConstFWD<sizeof(colors_mat_summer) / sizeof(unsigned int)> palette_mat_summer_t;
+
+#endif // _MAT_SUMMER_H

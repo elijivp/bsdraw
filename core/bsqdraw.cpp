@@ -1,3 +1,11 @@
+/// DrawCore does not contain any Qt code. DrawQWidget is an arrangement of DrawCore on Qt
+/// Based on QOpenGLWidget, DrawQWidget also rearrange DrawCore methods on Qt slots
+/// Qt Events also appears here
+/// 
+/// If you want operate pure bsdraws interface, use DrawCore
+/// But if you want operate a connective (bsdraws+QWidget), use DrawQWidget
+/// 
+/// Created By: Elijah Vlasov
 #include "bsqdraw.h"
 
 #include "../palettes/bsipalette.h"
@@ -8,7 +16,6 @@
 const char*   DrawQWidget::vardesc(SHEIFIELD sf)
 {
   if (sf == SF_DATA)            return "texData";
-//  if (sf == SF_BOUNDS)              return "bounds";
 //  if (sf == SF_CONTRAST)            return "contrast";
   if (sf == SF_PALETTE)         return "texPalette";
   if (sf == SF_DOMAIN)          return "texGround";
@@ -18,10 +25,12 @@ const char*   DrawQWidget::vardesc(SHEIFIELD sf)
   if (sf == SF_DIMM_B)          return "datadimm_b";
   if (sf == SF_CHNL_SCALING_A)  return "scaling_a";
   if (sf == SF_CHNL_SCALING_B)  return "scaling_b";
+  if (sf == SF_DATABOUNDS)      return "databounds";
   return nullptr;
 }
 
-DrawQWidget::DrawQWidget(ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient): DrawCore(portions, orient),
+DrawQWidget::DrawQWidget(ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): 
+  DrawCore(portions, orient, splitPortions),
   m_compileOnInitializeGL(true), m_vshalloc(0), m_fshalloc(0), m_pcsh(pcsh), 
   m_matrixLmSize(0), m_sbStatic(false), 
   m_cttrLeft(0), m_cttrTop(0), m_cttrRight(0), m_cttrBottom(0), m_texOvlCount(0)
@@ -29,10 +38,10 @@ DrawQWidget::DrawQWidget(ISheiGenerator* pcsh, unsigned int portions, ORIENTATIO
   for (int i=0; i<_SF_COUNT; i++)
     m_locations[i] = -1;
   
-  m_portionMeshType = m_pcsh->portionMeshType();  
-//  setMouseTracking(true);
+  m_portionMeshType = splitPortions == SL_NONE? m_pcsh->portionMeshType() : ISheiGenerator::PMT_FORCE1D;  // ntf: strange, non-intuitive
   
   setFocusPolicy(Qt::ClickFocus);
+//  setMouseTracking(true);
 }
 
 DrawQWidget::~DrawQWidget()
@@ -197,7 +206,7 @@ void DrawQWidget::initCollectAndCompileShader()
       else
         ovlsinfo[i].link = -1;
     }
-    unsigned int fsh_written = m_pcsh->shfragment_store(m_allocatedPortions, m_postMask, m_orient, m_overlaysCount, ovlsinfo, m_fshmem);
+    unsigned int fsh_written = m_pcsh->shfragment_store(m_allocatedPortions, m_postMask, m_orient, m_splitPortions, m_overlaysCount, ovlsinfo, m_fshmem);
     Q_UNUSED(fsh_written);
 //      qDebug()<<m_pcsh->shaderName()<<" fragment size "<<fsh_written<<" (had"<<m_fshalloc<<")";
   }
@@ -219,9 +228,9 @@ void DrawQWidget::initCollectAndCompileShader()
   for (unsigned int i=0; i<m_overlaysCount; i++)
   {     
     int fshtResult = m_overlays[i].povl->fshTrace(i + 1, m_matrixSwitchAB, ovlshaderbuf);
-    if (fshtResult == -1)
+    if (fshtResult <= 0)
       qDebug()<<Q_FUNC_INFO<<"OVL fshTrace failure!";
-    else if (fshtResult > 0)
+    else
       m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, ovlshaderbuf);
     
 #ifdef BSSHADER_DUMP
@@ -230,9 +239,9 @@ void DrawQWidget::initCollectAndCompileShader()
 #endif
     
     int fshcResult = m_overlays[i].povl->fshColor(i + 1, ovlshaderbuf);
-    if (fshcResult == -1)
+    if (fshcResult <= 0)
       qDebug()<<Q_FUNC_INFO<<"OVL fshColor failure!";
-    else if (fshcResult > 0)
+    else
       m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment,  ovlshaderbuf);
         
 #ifdef BSSHADER_DUMP
@@ -260,7 +269,7 @@ void DrawQWidget::initCollectAndCompileShader()
       {
         fastpaced_settings(_tempvd, i+1);
         m_overlays[i].outloc = m_ShaderProgram.uniformLocation(_tempvd);                  /// ! cannot hide by upcount
-        AbstractOverlay::uniforms_t  uf = m_overlays[i].povl->uniforms();
+        AbstractDrawOverlay::uniforms_t  uf = m_overlays[i].povl->uniforms();
         for (unsigned int j=0; j<uf.count; j++)
         {
           fastpaced_opm(_tempvd, i+1, j);
@@ -323,6 +332,10 @@ void DrawQWidget::initializeGL()
 void DrawQWidget::paintGL()
 { 
 //  qDebug("blublublu %04x", m_bitmaskPendingChanges);
+//  if (!havePending())
+//    return;
+  
+  
   glDisable(GL_DEPTH_TEST);
   {
 //    glDisable(GL_BLEND);
@@ -339,11 +352,16 @@ void DrawQWidget::paintGL()
     glDisable(GL_MULTISAMPLE);
 #endif
   }
+  {
+//    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+//    glEnable(GL_TEXTURE_2D);
+//    glDisable(GL_BLEND);
+//    glDisable(GL_ALPHA_TEST);
+  }
   glClearColor(m_clearcolor[0], m_clearcolor[1], m_clearcolor[2], 1.0f);
 //    glClear(GL_COLOR_BUFFER_BIT); // on initCollectAndCompileShader
 //    glEnable(GL_BLEND);
   
-//  qDebug()<<"paintGL visible:"<<isVisible();
   if (havePendOn(PC_INIT))
     initCollectAndCompileShader();
 
@@ -385,6 +403,10 @@ void DrawQWidget::paintGL()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_dataTextureInterp? GL_LINEAR : GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // GL_CLAMP_TO_EDGE
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        
+        
+        if ((loc = m_locations[SF_DATABOUNDS]) != -1)     m_ShaderProgram.setUniformValue(loc, (const QVector2D&)m_bounds);
+        
       }
       m_ShaderProgram.setUniformValue(loc, HT_MATRIX);
     }
@@ -397,8 +419,6 @@ void DrawQWidget::paintGL()
       {
 //        palettePrepare(m_ppal, m_ppaldiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_countPortions != 0? m_countPortions : 1);
         palettePrepare(m_ppal, m_ppaldiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_allocatedPortions != 0? m_allocatedPortions : 1);
-//        if (m_clearbypalette)
-//          _colorCvt(m_ppal->first());
         if (m_clearbypalette)
           _colorCvt(this->colorBack());
       }
@@ -429,8 +449,10 @@ void DrawQWidget::paintGL()
 #endif
                           m_matrixDimmA, m_matrixDimmB, 0, GL_RED, GL_FLOAT, groundDataCached);
   //          glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          
+          if (m_groundMipMapping) glGenerateMipmap( GL_TEXTURE_2D );
+          
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_groundMipMapping? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
           
@@ -440,9 +462,12 @@ void DrawQWidget::paintGL()
           break;
         }
         case GND_SDP:
-        { 
+        {
+          glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, m_groundDataWidth, m_groundDataHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_groundData);
+          if (m_groundMipMapping) glGenerateMipmap( GL_TEXTURE_2D );
+          
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_groundMipMapping? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
           glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
@@ -452,22 +477,6 @@ void DrawQWidget::paintGL()
           glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
           glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
           glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-          
-//          GLint   gl_internalFormat;
-//          GLenum  gl_format;
-//          GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
-//#if QT_VERSION >= 0x050000
-//          glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-//          glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
-//          if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
-//          else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA8;   gl_format = GL_RGBA;   }
-//          else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_ALPHA8;   gl_format = GL_ALPHA;   }
-//#elif QT_VERSION >= 0x040000
-//          if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
-//          else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
-//          else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
-//#endif
-          glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, m_groundDataWidth, m_groundDataHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_groundData);
           break;
         }
         default:  Q_ASSERT(havePendOn(PC_GROUND) && m_groundType != GND_NONE); break;
@@ -475,38 +484,6 @@ void DrawQWidget::paintGL()
       } // if pend on ground
       m_ShaderProgram.setUniformValue(loc, HT_GND);
     }
-    
-//    if ((loc = m_locations[SF_SDP]) != -1)
-//    {
-//      glActiveTexture(GL_TEXTURE0 + HT_SDP);
-//      glBindTexture(GL_TEXTURE_2D, m_texAll[HT_SDP]);
-      
-//      if (havePendOn(PC_SDP)) 
-//      {NIH! sdp->dd
-//        float* dataDomainsCached=m_groundDataFastFree? m_groundData : new float[m_matrixDimmA*m_matrixDimmB];
-//        for (unsigned int i=0; i<m_matrixDimmA*m_matrixDimmB; i++)
-//          dataDomainsCached[i] = m_groundData[i] / (m_portionSize+1);
-        
-//        glTexImage2D(   GL_TEXTURE_2D, 0, 
-//#if QT_VERSION >= 0x050000
-//                        GL_R32F, 
-//#elif QT_VERSION >= 0x040000
-//                        GL_RED, 
-//#endif
-//                        m_matrixDimmA, m_matrixDimmB, 0, GL_RED, GL_FLOAT, dataDomainsCached);
-////          glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        
-//        delete []dataDomainsCached;
-//        if (m_groundDataFastFree)
-//          m_groundData = nullptr;
-//      }
-//      m_ShaderProgram.setUniformValue(loc, HT_GND);
-      
-//    }
     
     if (havePendOn(PC_GROUND))
     {
@@ -527,8 +504,6 @@ void DrawQWidget::paintGL()
     if (havePendOn(PC_PARAMS))
     {
       if ((loc = m_locations[SF_COUNTPORTIONS]) != -1)  m_ShaderProgram.setUniformValue(loc, this->m_countPortions);
-//        if ((loc = m_locations[SF_BOUNDS]) != -1)                   m_ShaderProgram.setUniformValue(loc, (const QVector2D&)m_bounds);
-//        if ((loc = m_locations[SF_CONTRAST]) != -1)                 m_ShaderProgram.setUniformValue(loc, (const QVector2D&)m_contrast);
     }
     
     for (unsigned int i=0; i<m_texOvlCount; i++)
@@ -544,7 +519,7 @@ void DrawQWidget::paintGL()
         if (m_overlays[i].upcount > 0)
         {
           if ((loc = m_overlays[i].outloc) != -1)
-            m_ShaderProgram.setUniformValue(loc, QVector4D(m_overlays[i].povl->getOpacity(), m_overlays[i].povl->getDensity(), m_overlays[i].povl->getSlice(), 0.0f));
+            m_ShaderProgram.setUniformValue(loc, QVector4D(m_overlays[i].povl->getOpacity(), m_overlays[i].povl->getThickness(), m_overlays[i].povl->getSlice(), 0.0f));
           
           for (unsigned int j=0; j<m_overlays[i].uf_count; j++)
           {
@@ -635,7 +610,7 @@ void DrawQWidget::paintGL()
                 }
                 break;
               }
-              case DT__HC_PALETTE:
+              case DT_PALETTE: case DT__HC_PALETTE:
               {
                 if (m_overlays[i].upcount >= 1001)
                 {
@@ -660,12 +635,12 @@ void DrawQWidget::paintGL()
     
     if (!m_rawResizeModeNoScaled)
     {
+      int sizeA = m_matrixDimmA*m_scalingA*(m_spDivider == 0? 1 : m_spDirection == 1? _divider2() : m_spDivider);
+      int sizeB = m_matrixDimmB*m_scalingB*(m_spDivider == 0? 1 : m_spDirection == 1? m_spDivider : _divider2());
       if (m_matrixSwitchAB)
-        glViewport(0 + m_cttrLeft,            height() - (m_matrixDimmA*m_scalingA) - m_cttrTop, 
-                   m_matrixDimmB*m_scalingB,  m_matrixDimmA*m_scalingA );
+        glViewport(0 + m_cttrLeft, height() - sizeA - m_cttrTop, sizeB, sizeA);
       else
-        glViewport(0 + m_cttrLeft,            height() - (m_matrixDimmB*m_scalingB) - m_cttrTop, 
-                   m_matrixDimmA*m_scalingA,  m_matrixDimmB*m_scalingB );
+        glViewport(0 + m_cttrLeft, height() - sizeB - m_cttrTop, sizeA, sizeB);
     }
     
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -682,65 +657,42 @@ void DrawQWidget::resizeGL(int w, int h)
 {
   if (m_rawResizeModeNoScaled)
   {
+    int sizeA = m_matrixDimmA*m_scalingA*(m_spDivider == 0? 1 : m_spDirection == 1? _divider2() : m_spDivider);
+    int sizeB = m_matrixDimmB*m_scalingB*(m_spDivider == 0? 1 : m_spDirection == 1? m_spDivider : _divider2());
     if (m_matrixSwitchAB)
-      glViewport(0 + m_cttrLeft,            height() - (m_matrixDimmA*m_scalingA) - m_cttrTop, 
-                 m_matrixDimmB*m_scalingB,  m_matrixDimmA*m_scalingA );
+      glViewport(0 + m_cttrLeft, height() - sizeA - m_cttrTop, sizeB, sizeA);
     else
-      glViewport(0 + m_cttrLeft,            height() - (m_matrixDimmB*m_scalingB) - m_cttrTop, 
-                 m_matrixDimmA*m_scalingA,  m_matrixDimmB*m_scalingB );
+      glViewport(0 + m_cttrLeft, height() - sizeB - m_cttrTop, sizeA, sizeB);
   }
   
   getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
   w -= m_cttrLeft + m_cttrRight;
   h -= m_cttrTop + m_cttrBottom;
   
-  int& sizeA = m_matrixSwitchAB? h : w;
-  int& sizeB = m_matrixSwitchAB? w : h;
-  
 //  qDebug()<<"DrawQWidget PRE resizeEv: "<<QSize(w,h)<<m_matrixDimmA<<m_matrixDimmB<<m_scalingA<<m_scalingB;
-  
-  unsigned int matrixDimmA, matrixDimmB, scalingA, scalingB;
-  sizeAndScaleHint(sizeA, sizeB, &matrixDimmA, &matrixDimmB, &scalingA, &scalingB);
-  
-//  qDebug()<<"DrawQWidget POS resizeEv: "<<QSize(w,h)<<matrixDimmA<<matrixDimmB<<scalingA<<scalingB;
-  
-  m_matrixDimmA = matrixDimmA;
-  m_matrixDimmB = matrixDimmB;
-  m_scalingA = scalingA;
-  m_scalingB = scalingB;
-  
-  sizeAndScaleChanged();
+  if (m_matrixSwitchAB)
+    adjustSizeAndScale(h, w);
+  else
+    adjustSizeAndScale(w, h);
   
   pendResize(false);
 }
 
-/*
-void DrawQWidget::resizeEvent(QResizeEvent *event)    // calls after resizeGL anyway
-{
-  QOpenGLWidget::resizeEvent(event);
-//  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
-  
-  
-//  int w = event->size().width() - (m_cttrLeft + m_cttrRight);
-//  int h = event->size().height() - (m_cttrTop + m_cttrBottom);
-//  int& sizeA = m_matrixSwitchAB? h : w;
-//  int& sizeB = m_matrixSwitchAB? w : h;
-  
-//  qDebug()<<"DrawQWidget PRE resizeEv: "<<event->size()<<m_matrixDimmA<<m_matrixDimmB<<m_scalingA<<m_scalingB;
-  
-//  unsigned int matrixDimmA, matrixDimmB, scalingA, scalingB;
-//  sizeAndScaleHint(sizeA, sizeB, &matrixDimmA, &matrixDimmB, &scalingA, &scalingB);
-  
-//  qDebug()<<"DrawQWidget POS resizeEv: "<<event->size()<<matrixDimmA<<matrixDimmB<<scalingA<<scalingB;
-  
-//  m_matrixDimmA = matrixDimmA;
-//  m_matrixDimmB = matrixDimmB;
-//  m_scalingA = scalingA;
-//  m_scalingB = scalingB;
 
-//  pendResize(false);
+void DrawQWidget::fitSize(int width_in, int height_in, int* actualwidth, int* actualheight) const
+{
+  width_in -= m_cttrLeft + m_cttrRight;
+  height_in -= m_cttrTop + m_cttrBottom;
+  
+  unsigned int dimmA, dimmB, scalingA, scalingB;
+  if (m_matrixSwitchAB)
+    sizeAndScaleHint(height_in, width_in, &dimmB, &dimmA, &scalingB, &scalingA);
+  else
+    sizeAndScaleHint(width_in, height_in, &dimmA, &dimmB, &scalingA, &scalingB);
+  *actualwidth = dimmA*scalingA;
+  *actualheight = dimmB*scalingB;
 }
-*/
+
 
 void DrawQWidget::callWidgetUpdate()
 {
@@ -748,7 +700,20 @@ void DrawQWidget::callWidgetUpdate()
   QOpenGLWidget::update();
 //  setUpdatesEnabled(false);
 //  QOpenGLWidget::repaint();   /// better way: call banAutoUpdate for data, then explicitly call repaint in your GUI thread
-//  setUpdatesEnabled(true);
+  //  setUpdatesEnabled(true);
+}
+
+void DrawQWidget::innerRescale()
+{
+  int w = width(), h = height();
+  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
+  w -= m_cttrLeft + m_cttrRight;
+  h -= m_cttrTop + m_cttrBottom;
+  
+  if (m_matrixSwitchAB)
+    adjustSizeAndScale(h, w);
+  else
+    adjustSizeAndScale(w, h);
 }
 
 void DrawQWidget::innerUpdateGeometry()
@@ -758,65 +723,62 @@ void DrawQWidget::innerUpdateGeometry()
 
 QSize DrawQWidget::minimumSizeHint() const
 {
-  if (m_matrixSwitchAB)
-    return QSize( (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*m_scalingBMin + m_cttrLeft + m_cttrRight,
-                  m_matrixDimmA*m_scalingAMin + m_cttrTop + m_cttrBottom
-                  );
-  else
-    return QSize( m_matrixDimmA*m_scalingAMin + m_cttrLeft + m_cttrRight,
-                  (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*m_scalingBMin + m_cttrTop + m_cttrBottom
-                  );
-        //            ((getDataDimmUsage() != DDU_2D && getDataDimmUsage() != DDU_DD)? 1 : m_matrixDimmB)*m_scalingBMin + m_cttrTop + m_cttrBottom
+  int sizeA = m_scalingAMin * m_matrixDimmA*(m_spDivider == 0? 1 : m_spDirection == 1? _divider2() : m_spDivider);
+  int sizeB = m_scalingBMin * (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*(m_spDivider == 0? 1 : m_spDirection == 1? m_spDivider : _divider2());
+  return m_matrixSwitchAB ? QSize( sizeB + m_cttrLeft + m_cttrRight, sizeA + m_cttrTop + m_cttrBottom ) : QSize( sizeA + m_cttrLeft + m_cttrRight, sizeB + m_cttrTop + m_cttrBottom );
 }
 
 QSize DrawQWidget::sizeHint() const
 { 
-  if (m_matrixSwitchAB)
-    return QSize( (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*m_scalingB + m_cttrLeft + m_cttrRight, 
-                  m_matrixDimmA*m_scalingA + m_cttrTop + m_cttrBottom
-                  );
-  else
-    return QSize( m_matrixDimmA*m_scalingA + m_cttrLeft + m_cttrRight, 
-                  (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*m_scalingB + m_cttrTop + m_cttrBottom
-                  );
-//  return minimumSizeHint();
-        //            ((getDataDimmUsage() != DDU_2D && getDataDimmUsage() != DDU_DD)? 1 : m_matrixDimmB)*m_scalingB + m_cttrTop + m_cttrBottom
+  int sizeA = m_scalingA * m_matrixDimmA*(m_spDivider == 0? 1 : m_spDirection == 1? _divider2() : m_spDivider);
+  int sizeB = m_scalingB * (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*(m_spDivider == 0? 1 : m_spDirection == 1? m_spDivider : _divider2());
+  return m_matrixSwitchAB ? QSize( sizeB + m_cttrLeft + m_cttrRight, sizeA + m_cttrTop + m_cttrBottom ) : QSize( sizeA + m_cttrLeft + m_cttrRight, sizeB + m_cttrTop + m_cttrBottom );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+static const bool isPress[] = { true, false, false, true, true, false, true };
+
 void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
 {
-  int dimmWidth = sizeScaledHorz();
-  int dimmHeight = sizeScaledVert();
-  if (oreact != ORM_LMPRESS)
+  int singleDimmWidth = sizeScaledHorz();
+  int singleDimmHeight = sizeScaledVert();
+  int totalDimmWidth = singleDimmWidth * (m_spDivider == 0? 1 : m_spDirection == 1? _divider2() : m_spDivider);
+  int totalDimmHeight = singleDimmHeight * (m_spDivider == 0? 1 : m_spDirection == 1? m_spDivider : _divider2());
+
+  if (isPress[oreact] == false)
   {
-    if (x < 0)  x = 0; else if (x >= m_cttrLeft + dimmWidth) x = m_cttrLeft + dimmWidth - 1;
-    if (y < 0)  y = 0; else if (y >= m_cttrTop + dimmHeight) y = m_cttrTop + dimmHeight - 1;
+    if (x < 0)  x = 0; else if (x >= m_cttrLeft + totalDimmWidth) x = m_cttrLeft + totalDimmWidth - 1;
+    if (y < 0)  y = 0; else if (y >= m_cttrTop + totalDimmHeight) y = m_cttrTop + totalDimmHeight - 1;
   }
-  else if (x >= m_cttrLeft + dimmWidth || y >= m_cttrTop + dimmHeight)
+  else if (x >= m_cttrLeft + totalDimmWidth || y >= m_cttrTop + totalDimmHeight)
     return;
 
-  float dataptr[] = { float(x - m_cttrLeft) / (dimmWidth-1), 1.0f - float(y - m_cttrTop) / (dimmHeight-1) };
-//    qDebug()<<"Before: "<<dataptr[0]<<dataptr[1];
+//  float dataptr[] = { float(x - m_cttrLeft) / (dimmWidth-1), 1.0f - float(y - m_cttrTop) / (dimmHeight-1), float(x), float(y) };
+  float dataptr[] = { float((x - m_cttrLeft)%singleDimmWidth) / (singleDimmWidth-1), 
+                      1.0f - float((y - m_cttrTop)%singleDimmHeight) / (singleDimmHeight-1), 
+                      float(x), float(y)
+                    };
   float* (*pfns[])(float*) = {  ccode_rotateLRBT, ccode_rotateRLBT, ccode_rotateLRTB, ccode_rotateRLTB,
                                 ccode_rotateTBLR, ccode_rotateBTLR, ccode_rotateTBRL, ccode_rotateBTRL
                              };
   float* rslt = (*pfns[m_orient])(dataptr);
-//    float* rslt = dataptr;
-//    qDebug()<<"Aftere: "<<dataptr[0]<<dataptr[1];
   
   bool doStop = false, doUpdate = false;
-  for (int i=int(m_overlaysCount)-1; i>=0; i--)
-  {
-    if (m_overlays[i].povl->overlayReactionMouse(oreact, rslt, &doStop))
+  
+  if (m_proactive)  m_proactive->overlayReactionMouse(this, oreact, rslt, &doStop);
+  if (!doStop)
+    for (int i=int(m_overlaysCount)-1; i>=0; i--)
     {
-      m_overlays[i].upcount++;
-      doUpdate = true;
+      if (m_overlays[i].povl->overlayReactionMouse(oreact, rslt, &doStop))
+      {
+        m_overlays[i].upcount++;
+        doUpdate = true;
+      }
+      if (doStop)
+        break;
     }
-    if (doStop)
-      break;
-  }
+  
 //    if (!havePendOn(PC_PARAMSOVL) && doUpdate)
   if (doUpdate)
   {
@@ -826,37 +788,61 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
   }
 }
 
+#define BUTTONCHECK_DOGSHIT(action) Qt::MouseButton btn = event->button(); \
+                                    QPoint pos = event->pos(); \
+                                    if (btn == Qt::LeftButton)        store_crd_clk(ORM_LM##action, pos.x(), pos.y()); \
+                                    else if (btn == Qt::RightButton)  store_crd_clk(ORM_RM##action, pos.x(), pos.y());
+
+#define BUTTONCHECK_BULLSHIT(action)  Qt::MouseButtons btn = event->buttons(); \
+                                      QPoint pos = event->pos(); \
+                                      if (btn & Qt::LeftButton)        store_crd_clk(ORM_LM##action, pos.x(), pos.y()); \
+                                      else if (btn & Qt::RightButton)  store_crd_clk(ORM_RM##action, pos.x(), pos.y());
+
+
 void DrawQWidget::mousePressEvent(QMouseEvent *event)
 {
-  if (event->button() == Qt::LeftButton)  store_crd_clk(ORM_LMPRESS, event->pos().x(), event->pos().y());
+  BUTTONCHECK_DOGSHIT(PRESS)
+//  if (event->button() == Qt::LeftButton)  store_crd_clk(ORM_LMPRESS, event->pos().x(), event->pos().y());
+//  else if (event->button() == Qt::RightButton)  store_crd_clk(ORM_RMPRESS, event->pos().x(), event->pos().y());
 }
 
 void DrawQWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-  if (event->button() == Qt::LeftButton)  store_crd_clk(ORM_LMRELEASE, event->pos().x(), event->pos().y());
+  BUTTONCHECK_DOGSHIT(RELEASE)
+//  if (event->button() == Qt::LeftButton)  store_crd_clk(ORM_LMRELEASE, event->pos().x(), event->pos().y());
 }
 
 void DrawQWidget::mouseMoveEvent(QMouseEvent *event)
 {
-  if (event->buttons() & Qt::LeftButton)  store_crd_clk(ORM_LMMOVE, event->pos().x(), event->pos().y());
+  BUTTONCHECK_BULLSHIT(MOVE)
+//  if (event->buttons() & Qt::LeftButton)  store_crd_clk(ORM_LMMOVE, event->pos().x(), event->pos().y());
 //  store_crd_clk(ORM_LMMOVE, event->pos().x(), event->pos().y());
   //  setMouseTracking(tru!!);
 }
 
+void DrawQWidget::mouseDoubleClickEvent(QMouseEvent* event)
+{
+  if (event->button() == Qt::LeftButton)  store_crd_clk(ORM_LMDOUBLE, event->pos().x(), event->pos().y());
+}
+
 void DrawQWidget::keyPressEvent(QKeyEvent* event)
 {
-  bool doStop = false, doUpdate = false;
   int modifiers = int(event->modifiers()) >> 24;
-  for (int i=int(m_overlaysCount)-1; i>=0; i--)
-  {
-    if (m_overlays[i].povl->overlayReactionKey(event->key(), modifiers, &doStop))
+  int key = event->key();
+  bool doStop = false, doUpdate = false;
+  if (m_proactive)  m_proactive->overlayReactionKey(this, key, modifiers, &doStop);
+  if (!doStop)
+    for (int i=int(m_overlaysCount)-1; i>=0; i--)
     {
-      m_overlays[i].upcount++;
-      doUpdate = true;
+      if (m_overlays[i].povl->overlayReactionKey(key, modifiers, &doStop))
+      {
+        m_overlays[i].upcount++;
+        doUpdate = true;
+      }
+      if (doStop)
+        break;
     }
-    if (doStop)
-      break;
-  }
+  
   if (doUpdate)
   {
     m_bitmaskPendingChanges |= PC_PARAMSOVL;
@@ -886,8 +872,9 @@ void DrawQWidget::connectScrollBar(QScrollBar *qsb, bool staticView, bool setOri
     }
   }
   m_sbStatic = staticView;
-  QObject::connect(qsb, SIGNAL(valueChanged(int)), this, SLOT(slideLmHeight(int)));
+  QObject::connect(qsb, SIGNAL(valueChanged(int)), this, SLOT(scrollDataTo(int)));
 }
+
 
 void DrawQWidget::slot_setScalingH(int s){  setScalingLimitsHorz(s, s); }
 void DrawQWidget::slot_setScalingV(int s){  setScalingLimitsVert(s, s); }
@@ -895,9 +882,9 @@ void DrawQWidget::slot_setScalingV(int s){  setScalingLimitsVert(s, s); }
 void DrawQWidget::slot_setBounds(float low, float high){  setBounds(low, high); }
 void DrawQWidget::slot_setBoundLow(float value){  setBoundLow(value); }
 void DrawQWidget::slot_setBoundHigh(float value){ setBoundHigh(value);  }
-void DrawQWidget::slot_setContrast(float k, float b){ setContrast(contrast_t(k, b));  }
-void DrawQWidget::slot_setContrastK(float k){ setContrast(contrast_t(k, m_contrast.offset));  }
-void DrawQWidget::slot_setContrastB(float b){ setContrast(contrast_t(m_contrast.contrast, b));  }
+void DrawQWidget::slot_setContrast(float k, float b){ setContrast(k, b);  }
+void DrawQWidget::slot_setContrastK(float k){ setContrastK(k);  }
+void DrawQWidget::slot_setContrastB(float b){ setContrastB(b);  }
 void DrawQWidget::slot_setDataTextureInterpolation(bool d){ setDataTextureInterpolation(d); }
 void DrawQWidget::slot_setDataPalette(const IPalette* ppal){ setDataPalette(ppal); }
 void DrawQWidget::slot_setDataPaletteDiscretion(bool d){ setDataPaletteDiscretion(d); }
@@ -916,7 +903,13 @@ void DrawQWidget::slot_enableAutoUpdateByData(bool enabled){  banAutoUpdate(RD_B
 void DrawQWidget::slot_disableAutoUpdateByData(bool disabled){  banAutoUpdate(RD_BYDATA, disabled); }
 
 ////////////////////////////////////////////////////////////////////////
-void  DrawQWidget::slideLmHeight(int)
+
+int   DrawQWidget::scrollValue() const
+{
+  return 0;
+}
+
+void  DrawQWidget::scrollDataTo(int)
 {
 }
 
@@ -1081,7 +1074,7 @@ void DrawQWidget::MemExpand1D::onFillData(int pos, float *rslt, float emptyfill)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-class OverlayEmpty: public IOverlay
+class OverlayEmpty: public DrawOverlay
 {
 public:
   virtual int  fshTrace(int, char*) const;
@@ -1093,10 +1086,44 @@ extern int msprintf(char* to, const char* format, ...);
 
 int DrawCore::OverlayEmpty::fshTrace(int overlay, bool /*rotated*/, char* to) const
 {
-  return msprintf(to, "vec4 overlayTrace%d(in vec4 coords, in float density, in ivec2 mastercoords, out ivec2 selfposition){ return vec4(0.0,0.0,0.0,0.0); }\n", overlay);
+  return msprintf(to, "vec4 overlayTrace%d(in ivec2 icell, in vec4 coords, in float thick, in ivec2 mastercoords, out ivec2 selfposition){ return vec4(0.0,0.0,0.0,0.0); }\n", overlay);
 }
 
 int DrawCore::OverlayEmpty::fshColor(int overlay, char* to) const
 {
   return msprintf(to, "vec3 overlayColor%d(in vec4 overcolor, in vec3 undercolor) { return undercolor; }\n", overlay);
+}
+
+
+///////////////////////////////////////
+
+bool BSQDoubleClicker::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)
+{
+  if (oreact == ORM_LMDOUBLE)
+  {
+    *doStop = true;
+    emit doubleClicked();
+    emit doubleClicked(pwdg->mapToGlobal(QPoint(((const float*)dataptr)[0], ((const float*)dataptr)[1])));
+  }
+  return false;
+}
+
+bool BSQProactiveSelector::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)
+{
+  if (oreact == ORM_LMDOUBLE)
+  {
+    *doStop = true;
+    if (pwdg->splitPortionsDivider())
+    {
+      unsigned int ssA = pwdg->sizeScaledA(), ssB = pwdg->sizeScaledB();
+      int x = ((const float*)dataptr)[2], y = ((const float*)dataptr)[3];
+      int portion = 0;
+      if (pwdg->splitPortionsDirection() == 0)
+        portion = pwdg->allocatedPortions() - 1 - y / ssB;
+      else if (pwdg->splitPortionsDirection() == 0)
+        portion = x / ssA;
+      emit portionSelected(portion);
+    }
+  }
+  return false;
 }

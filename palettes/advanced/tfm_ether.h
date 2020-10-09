@@ -1,7 +1,9 @@
 #ifndef _TFM_ETHER_H
 #define _TFM_ETHER_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_ether[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_ether[] = {
                                          0x00fa0001, 0x00f10002, 0x00e80004, 0x00df0005, 0x00d60006, 0x00cd0007, 0x00c40008, 0x00bb0009, 
                                          0x00b3000a, 0x00aa000b, 0x00a2010c, 0x009a010e, 0x0092020f, 0x008b0210, 0x00830311, 0x007c0412, 
                                          0x00760413, 0x006f0514, 0x006a0615, 0x00640716, 0x005f0717, 0x005a0819, 0x0055091a, 0x00510a1b, 
@@ -35,7 +37,10 @@
                                          0x0090cbf3, 0x0089d2f2, 0x0083d9f1, 0x007ce0f0, 0x0074e8ef, 0x006df1ee, 0x0065faed, 0x005dfaeb, 
                                          0x0055f0ea, 0x004ce6e9, 0x0044dbe8, 0x003bd0e7, 0x0032c4e6, 0x0029b8e5, 0x0020ace4, 0x00179fe3
 };
-const PaletteConstFWD<sizeof(colors_tfm_ether) / sizeof(unsigned int)> palette_tfm_ether(colors_tfm_ether);
+
+const PaletteConstFWD<sizeof(colors_tfm_ether) / sizeof(unsigned int)> palette_tfm_ether(colors_tfm_ether);
 const PaletteConstBWD<sizeof(colors_tfm_ether) / sizeof(unsigned int)> palette_tfm_ether_inv(colors_tfm_ether);
-typedef PaletteConstFWD<sizeof(colors_tfm_ether) / sizeof(unsigned int)> palette_tfm_ether_t;
-#endif // _TFM_ETHER_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_ether) / sizeof(unsigned int)> palette_tfm_ether_t;
+
+#endif // _TFM_ETHER_H

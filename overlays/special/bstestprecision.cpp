@@ -1,9 +1,12 @@
+/// Overlays:
+///   OTestPrecision. View: technical overlay, need to be upgraded
+/// Created By: Elijah Vlasov
 #include "bstestprecision.h"
 #include "../../core/sheigen/bsshgentrace.h"
 
 //#include <QDebug>
 
-OTestPrecision::OTestPrecision(): IOverlaySimple(),
+OTestPrecision::OTestPrecision(): DrawOverlaySimple(),
   OVLCoordsOff(), OVLDimmsOff()
 {
 //  appendUniform(DT_1I, &m_blockstate);

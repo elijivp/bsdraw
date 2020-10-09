@@ -1,7 +1,9 @@
 #ifndef _GNU_PUYE_H
 #define _GNU_PUYE_H
-#include "../bstexpalette.h"
-const unsigned int colors_gnu_PuYe[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_gnu_PuYe[] = {
                                         0x0003000b, 0x00090014, 0x00100019, 0x0016001e, 0x001c0022, 0x00220025, 0x00290029, 0x002f002c, 
                                         0x0035002e, 0x003b0031, 0x00410034, 0x00470036, 0x004d0038, 0x0053003b, 0x0059003d, 0x005f003f, 
                                         0x00640041, 0x006a0043, 0x00700045, 0x00750046, 0x007b0048, 0x0080004a, 0x0086004c, 0x008b004d, 
@@ -35,7 +37,10 @@
                                         0x0000d3f7, 0x0000d6f8, 0x0000d9f8, 0x0000dbf9, 0x0000def9, 0x0000e1fa, 0x0000e4fa, 0x0000e6fb, 
                                         0x0000e9fb, 0x0000ecfc, 0x0000effc, 0x0000f2fd, 0x0000f5fd, 0x0000f8fe, 0x0000fbfe, 0x0000feff
 };
-const PaletteConstFWD<sizeof(colors_gnu_PuYe) / sizeof(unsigned int)> palette_gnu_PuYe(colors_gnu_PuYe);
+
+const PaletteConstFWD<sizeof(colors_gnu_PuYe) / sizeof(unsigned int)> palette_gnu_PuYe(colors_gnu_PuYe);
 const PaletteConstBWD<sizeof(colors_gnu_PuYe) / sizeof(unsigned int)> palette_gnu_PuYe_inv(colors_gnu_PuYe);
-typedef PaletteConstFWD<sizeof(colors_gnu_PuYe) / sizeof(unsigned int)> palette_gnu_PuYe_t;
-#endif // _GNU_PUYE_H
+
+typedef PaletteConstFWD<sizeof(colors_gnu_PuYe) / sizeof(unsigned int)> palette_gnu_PuYe_t;
+
+#endif // _GNU_PUYE_H

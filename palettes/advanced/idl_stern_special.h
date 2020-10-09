@@ -1,7 +1,9 @@
 #ifndef _IDL_STERN_SPECIAL_H
 #define _IDL_STERN_SPECIAL_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_stern_special[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_stern_special[] = {
                                                  0x00000000, 0x00010112, 0x00030224, 0x00050336, 0x00070448, 0x0009055a, 0x000b066c, 0x000d077e, 
                                                  0x000f0890, 0x001109a2, 0x00130ab4, 0x00150bc6, 0x00170cd8, 0x00190dea, 0x001b0efc, 0x001d0ff7, 
                                                  0x001f10f2, 0x002111ed, 0x002312e8, 0x002513e2, 0x002714dd, 0x002915d8, 0x002b16d3, 0x002d17ce, 
@@ -35,7 +37,10 @@
                                                  0x00c2f0f0, 0x00c6f1f1, 0x00c9f2f2, 0x00cdf3f3, 0x00d1f4f4, 0x00d5f5f5, 0x00d9f6f6, 0x00dcf7f7, 
                                                  0x00e0f8f8, 0x00e4f9f9, 0x00e8fafa, 0x00ecfbfb, 0x00effcfc, 0x00f3fdfd, 0x00f7fefe, 0x00fbffff
 };
-const PaletteConstFWD<sizeof(colors_idl_stern_special) / sizeof(unsigned int)> palette_idl_stern_special(colors_idl_stern_special);
+
+const PaletteConstFWD<sizeof(colors_idl_stern_special) / sizeof(unsigned int)> palette_idl_stern_special(colors_idl_stern_special);
 const PaletteConstBWD<sizeof(colors_idl_stern_special) / sizeof(unsigned int)> palette_idl_stern_special_inv(colors_idl_stern_special);
-typedef PaletteConstFWD<sizeof(colors_idl_stern_special) / sizeof(unsigned int)> palette_idl_stern_special_t;
-#endif // _IDL_STERN_SPECIAL_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_stern_special) / sizeof(unsigned int)> palette_idl_stern_special_t;
+
+#endif // _IDL_STERN_SPECIAL_H

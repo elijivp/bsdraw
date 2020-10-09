@@ -1,6 +1,31 @@
 #ifndef DRAWDOMAIN_H
 #define DRAWDOMAIN_H
 
+/// King of draws!
+/// DrawDomain its a draw, who allow you to mark a canvas by 'domains'
+/// each will be paitned on color, corresponding with 1D-array data
+/// 
+/// Example:
+/// DrawDomain* draw = new DrawDomain(SAMPLES, MAXLINES, 1, false, OR_LRBT, true);
+/// {
+///   DIDomain& ddm = *draw->domain();
+///   for (int j=0; j<SAMPLES; j++)
+///   {
+///     ddm.start();
+///     for (int r=0; r<MAXLINES/2; r++)
+///       ddm.includePixel(int(MAXLINES/2 + sin(j/(2.0*M_PI*8))*MAXLINES/4 - MAXLINES/4 + r), j);
+///     ddm.finish();
+///   }
+/// }
+/// ...
+/// draw->setData(some_float_data);
+/// 
+/// This will paint included_pixels by colors from palette, corresponding data
+/// In this example one domain is one of [SAMPLES] vertical lines
+/// 
+/// 
+/// Created By: Elijah Vlasov
+
 #include "core/bsqdraw.h"
 
 class DIDomain

@@ -1,14 +1,17 @@
 #ifndef BSSNOWFLAKE_H
 #define BSSNOWFLAKE_H
 
+/// Overlays:
+///   OSnowflake. View: snowflake lol
+/// Created By: Elijah Vlasov
+
 #include "../bsimage.h"
 
-class OSnowflake: public IOverlaySimple, public OVLQImage, public OVLCoordsOff, public OVLDimmsOff
+class OSnowflake: public DrawOverlaySimple, public OVLQImage, public OVLCoordsOff, public OVLDimmsOff
 {
 public:
   OSnowflake(QImage* image, IMAGECONVERT icvt, unsigned int count, float sizemultiplier);
   ~OSnowflake();
-//public slots:
   void    update();
 protected:
   unsigned int m_count;

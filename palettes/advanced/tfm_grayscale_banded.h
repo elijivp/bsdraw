@@ -1,7 +1,9 @@
 #ifndef _TFM_GRAYSCALE_BANDED_H
 #define _TFM_GRAYSCALE_BANDED_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_grayscale_banded[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_grayscale_banded[] = {
                                                     0x00373737, 0x00303030, 0x00252525, 0x00171717, 0x000c0c0c, 0x00050505, 0x00060606, 0x000d0d0d, 
                                                     0x001a1a1a, 0x002a2a2a, 0x00373737, 0x00404040, 0x00424242, 0x003c3c3c, 0x00313131, 0x00232323, 
                                                     0x00171717, 0x00101010, 0x00101010, 0x00171717, 0x00242424, 0x00333333, 0x00414141, 0x004a4a4a, 
@@ -35,7 +37,10 @@
                                                     0x00f6f6f6, 0x00efefef, 0x00efefef, 0x00f6f6f6, 0x00fcfcfc, 0x00efefef, 0x00e4e4e4, 0x00dedede, 
                                                     0x00dfdfdf, 0x00e8e8e8, 0x00f6f6f6, 0x00f9f9f9, 0x00ececec, 0x00e4e4e4, 0x00e3e3e3, 0x00eaeaea
 };
-const PaletteConstFWD<sizeof(colors_tfm_grayscale_banded) / sizeof(unsigned int)> palette_tfm_grayscale_banded(colors_tfm_grayscale_banded);
+
+const PaletteConstFWD<sizeof(colors_tfm_grayscale_banded) / sizeof(unsigned int)> palette_tfm_grayscale_banded(colors_tfm_grayscale_banded);
 const PaletteConstBWD<sizeof(colors_tfm_grayscale_banded) / sizeof(unsigned int)> palette_tfm_grayscale_banded_inv(colors_tfm_grayscale_banded);
-typedef PaletteConstFWD<sizeof(colors_tfm_grayscale_banded) / sizeof(unsigned int)> palette_tfm_grayscale_banded_t;
-#endif // _TFM_GRAYSCALE_BANDED_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_grayscale_banded) / sizeof(unsigned int)> palette_tfm_grayscale_banded_t;
+
+#endif // _TFM_GRAYSCALE_BANDED_H

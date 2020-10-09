@@ -1,6 +1,8 @@
+/// DrawGraph is a graph for standart 1D functions 
+/// Input: 1D array
+/// Scaling: vertical scaling is 1 by default, so You can easily resize Draw
+/// Created By: Elijah Vlasov
 #include "bsdrawgraph.h" 
-
-#include <QResizeEvent>
 
 #include "core/sheigen/bsshgenmain.h"
 
@@ -26,9 +28,11 @@ public:
   virtual unsigned int  shvertex_pendingSize() const { return VshMainGenerator1D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const { return VshMainGenerator1D()(to); }
   virtual unsigned int  shfragment_pendingSize(unsigned int ovlscount) const { return 4000 + FshMainGenerator::basePendingSize(ovlscount); }
-  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, ORIENTATION orient, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
+  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, 
+                                         ORIENTATION orient, SPLITPORTIONS splitGraphs, 
+                                         unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
-    FshMainGenerator fmg(to, orient, ovlscount, ovlsinfo);
+    FshMainGenerator fmg(to, allocatedPortions, orient, splitGraphs, ovlscount, ovlsinfo);
     float opacity = graphopts.opacity > 1.0f? 1.0f : graphopts.opacity < 0.0f? 0.0f : graphopts.opacity;
     fmg.cfloatvar("specopc", 1.0f - opacity);
     fmg.goto_func_begin(coloropts.backcolor != 0xFFFFFFFF? FshMainGenerator::INIT_BYVALUE:
@@ -55,9 +59,9 @@ public:
       
       if (needDots == 1)
       {
-        fmg.push( 
-                  "vec3  fx = vec3(relcoords.x, relcoords.x, relcoords.x);" SHNL
-                  "for (int i=0; i<countPortions; i++)" SHNL
+        fmg.push( "vec3  fx = vec3(relcoords.x, relcoords.x, relcoords.x);" SHNL );
+        fmg.push( splitGraphs == SL_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = icell[0];" SHNL );
+        fmg.push(
                   "{" SHNL
                     "vec3  ffy_spec = vec3(getValue1D(i, fx[0]));" SHNL
                     "ffy_spec.gb = vec2(ffy_spec[0], ffy_spec[0]);" SHNL
@@ -69,10 +73,12 @@ public:
       }
       else if (needDots == 3)
       {
-        fmg.push( 
-                  "vec3 fx = vec3(float(max(relcoords.x*ibounds_noscaled.x, 1) - 1)/ibounds_noscaled.x, relcoords.x, float(min(relcoords.x*ibounds_noscaled.x, ibounds_noscaled.x-1)  + 1)/ibounds_noscaled.x);" SHNL
-//                  "vec3  fx = vec3(float(max(icoords_noscaled.x, 1) - 1)/ibounds_noscaled.x, relcoords.x, float(min(icoords_noscaled.x, ibounds_noscaled.x-1) + 1)/ibounds_noscaled.x);" SHNL
-                  "for (int i=0; i<countPortions; i++)" SHNL
+        fmg.push( "vec3 fx = vec3(float(max(relcoords.x*ibounds_noscaled.x, 1) - 1)/ibounds_noscaled.x, "
+                    "relcoords.x, "
+                    "float(min(relcoords.x*ibounds_noscaled.x, ibounds_noscaled.x-1)  + 1)/ibounds_noscaled.x);" SHNL
+                  );
+        fmg.push( splitGraphs == SL_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = icell[0];" SHNL );
+        fmg.push(
                   "{" SHNL
                     "vec3  ffy_spec = vec3(getValue1D(i, fx[0]), getValue1D(i, fx[1]), getValue1D(i, fx[2]));" SHNL
                     "vec3  ffy = floor(ffy_spec*(ibounds_noscaled.y-1));" SHNL
@@ -83,12 +89,12 @@ public:
       }
       else if (needDots == 4)
       {
-        fmg.push( 
-                  "vec4 fx = vec4(float(max(relcoords.x*ibounds_noscaled.x, 1) - 1)/ibounds_noscaled.x, relcoords.x, " SHNL
-                                  "float(min(relcoords.x*ibounds_noscaled.x, ibounds_noscaled.x-1)  + 1)/ibounds_noscaled.x, " SHNL
-                                  "float(min(relcoords.x*ibounds_noscaled.x, ibounds_noscaled.x-2)  + 2)/ibounds_noscaled.x);" SHNL
-//                                  "float(max(relcoords.x*ibounds_noscaled.x, 2) - 2)/ibounds_noscaled.x);" SHNL
-                  "for (int i=0; i<countPortions; i++)" SHNL
+        fmg.push( "vec4 fx = vec4(float(max(relcoords.x*ibounds_noscaled.x, 1) - 1)/ibounds_noscaled.x, relcoords.x, " SHNL
+                    "float(min(relcoords.x*ibounds_noscaled.x, ibounds_noscaled.x-1)  + 1)/ibounds_noscaled.x, " SHNL
+                    "float(min(relcoords.x*ibounds_noscaled.x, ibounds_noscaled.x-2)  + 2)/ibounds_noscaled.x);" SHNL
+                  );
+        fmg.push( splitGraphs == SL_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = icell[0];" SHNL );
+        fmg.push(
                   "{" SHNL
                     "vec4  ffy_spec = vec4(getValue1D(i, fx[0]), getValue1D(i, fx[1]), getValue1D(i, fx[2]), getValue1D(i, fx[3]));" SHNL
                     "vec4  ffy = floor(ffy_spec*(ibounds_noscaled.y-1));" SHNL
@@ -190,7 +196,7 @@ public:
       if (isDots)
       {
         fmg.push( 
-                    "float MIXWELL = step(distance(fcoords_noscaled, vec2(fcoords_noscaled.x, ffy[1])), 0.0);" SHNL
+                    "float MIXWELL = step(distance(fcoords_noscaled, vec2(fcoords_noscaled.x, ffy[1])), 0.0);" SHNL // ??? 0.0?
                     "ppb_sfp[0] = ppb_sfp[0]*(1.0 - MIXWELL) + MIXWELL;" SHNL
                     "float VALCLR = ffy[1];" SHNL
                   );
@@ -397,8 +403,8 @@ DrawGraph_Sheigen::~DrawGraph_Sheigen()
 }
 
 
-DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, unsigned int memForDeploy, const graphopts_t& graphopts, const coloropts_t& coloropts):
-  DrawQWidget(new DrawGraph_Sheigen(graphopts, coloropts), graphs, OR_LRBT)
+DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, unsigned int memForDeploy, const graphopts_t& graphopts, const coloropts_t& coloropts, SPLITPORTIONS splitGraphs):
+  DrawQWidget(new DrawGraph_Sheigen(graphopts, coloropts), graphs, OR_LRBT, splitGraphs)
 {
   m_matrixDimmA = samples;
   m_matrixDimmB = 1;
@@ -416,12 +422,12 @@ void DrawGraph::reConstructor(unsigned int samples)
 }
 
 /// m_countPortions === graphs
-DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, coloropts_t copts):
-  DrawQWidget(new DrawGraph_Sheigen(graphopts_t::goInterp(0.0f, DE_LINTERP), copts), graphs, OR_LRBT)
+DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, coloropts_t copts, SPLITPORTIONS splitGraphs):
+  DrawQWidget(new DrawGraph_Sheigen(graphopts_t::goInterp(0.0f, DE_LINTERP), copts), graphs, OR_LRBT, splitGraphs)
 //  ,m_graphopts(graphopts_t::goInterp(0.0f, DE_LINTERP)), m_coloropts(copts)
 { reConstructor(samples); }
-DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, coloropts_t copts):
-  DrawQWidget(new DrawGraph_Sheigen(graphopts, copts), graphs, OR_LRBT)
+DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, coloropts_t copts, SPLITPORTIONS splitGraphs):
+  DrawQWidget(new DrawGraph_Sheigen(graphopts, copts), graphs, OR_LRBT, splitGraphs)
 //  ,m_graphopts(graphopts), m_coloropts(copts)
 { reConstructor(samples); }
 
@@ -468,13 +474,13 @@ unsigned int DrawGraph::colorBack() const
 
 ////////////////////////////////////////////////////////////////
 
-DrawGraphMove::DrawGraphMove(unsigned int samples, unsigned int stepsamples, unsigned int graphs, coloropts_t copts):
-  DrawGraph(samples, graphs, copts), m_stepSamples(stepsamples)
+DrawGraphMove::DrawGraphMove(unsigned int samples, unsigned int stepsamples, unsigned int graphs, coloropts_t copts, SPLITPORTIONS splitGraphs):
+  DrawGraph(samples, graphs, copts, splitGraphs), m_stepSamples(stepsamples)
 {
 }
 
-DrawGraphMove::DrawGraphMove(unsigned int samples, unsigned int stepsamples, unsigned int graphs, const graphopts_t& graphopts, coloropts_t copts):
-  DrawGraph(samples, graphs, graphopts, copts), m_stepSamples(stepsamples)
+DrawGraphMove::DrawGraphMove(unsigned int samples, unsigned int stepsamples, unsigned int graphs, const graphopts_t& graphopts, coloropts_t copts, SPLITPORTIONS splitGraphs):
+  DrawGraph(samples, graphs, graphopts, copts, splitGraphs), m_stepSamples(stepsamples)
 {
 }
 
@@ -506,16 +512,20 @@ void DrawGraphMove::setData(const float* data, DataDecimator* decim)
 
 ////////////////////////////////////////////////////////////////
 
-DrawGraphMoveEx::DrawGraphMoveEx(unsigned int samples, unsigned int stepsamples, unsigned int extmemory, unsigned int graphs, coloropts_t copts, bool resizeExpanding):
-  DrawGraph(samples, graphs, graphs*(resizeExpanding? 3840 : samples), graphopts_t::goInterp(0.0f, DE_LINTERP), copts), m_stepSamples(stepsamples), m_stopped(0), m_memory(graphs, samples, extmemory),
+DrawGraphMoveEx::DrawGraphMoveEx(unsigned int samples, unsigned int stepsamples, unsigned int extmemory, unsigned int graphs, 
+                                 coloropts_t copts, bool resizeExpanding, SPLITPORTIONS splitGraphs):
+  DrawGraph(samples, graphs, graphs*(resizeExpanding? 3840 : samples), graphopts_t::goInterp(0.0f, DE_LINTERP), copts, splitGraphs),
+  m_stepSamples(stepsamples), m_stopped(0), m_memory(graphs, samples, extmemory),
   m_resizeExpanding(resizeExpanding)
 {
   if (extmemory)
     m_matrixLmSize = samples + extmemory;
 }
 
-DrawGraphMoveEx::DrawGraphMoveEx(unsigned int samples, unsigned int stepsamples, unsigned int extmemory, unsigned int graphs, const graphopts_t& graphopts, coloropts_t copts, bool resizeExpanding):
-  DrawGraph(samples, graphs, graphs*(resizeExpanding? 3840 : samples), graphopts, copts), m_stepSamples(stepsamples), m_stopped(0), m_memory(graphs, samples, extmemory),
+DrawGraphMoveEx::DrawGraphMoveEx(unsigned int samples, unsigned int stepsamples, unsigned int extmemory, unsigned int graphs, 
+                                 const graphopts_t& graphopts, coloropts_t copts, bool resizeExpanding, SPLITPORTIONS splitGraphs):
+  DrawGraph(samples, graphs, graphs*(resizeExpanding? 3840 : samples), graphopts, copts, splitGraphs), 
+  m_stepSamples(stepsamples), m_stopped(0), m_memory(graphs, samples, extmemory),
   m_resizeExpanding(resizeExpanding)
 {
   if (extmemory)
@@ -575,7 +585,12 @@ void DrawGraphMoveEx::fillMatrix()
   m_memory.onFillData(m_stopped, m_matrixData, 0);
 }
 
-void DrawGraphMoveEx::slideLmHeight(int pp)
+int DrawGraphMoveEx::scrollValue() const
+{
+  return m_stopped;
+}
+
+void DrawGraphMoveEx::scrollDataTo(int pp)
 {
   if (m_matrixLmSize < m_matrixDimmA)
     m_stopped = 0;

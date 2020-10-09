@@ -1,7 +1,9 @@
 #ifndef _TFM_MORNING_GLORY_H
 #define _TFM_MORNING_GLORY_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_morning_glory[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_morning_glory[] = {
                                                  0x00507b01, 0x00527802, 0x00557603, 0x00587304, 0x005a7006, 0x005d6d07, 0x00606b08, 0x00636809, 
                                                  0x0065650a, 0x0068620b, 0x006b600c, 0x006e5d0d, 0x00705a0e, 0x0073570f, 0x00765510, 0x00795211, 
                                                  0x007b4f12, 0x007e4d13, 0x00814a14, 0x00844715, 0x00864516, 0x00894218, 0x008b4019, 0x008e3d1a, 
@@ -35,7 +37,10 @@
                                                  0x0092ecf4, 0x0094eef3, 0x0097f1f2, 0x0099f3f1, 0x009bf5f0, 0x009ef7ef, 0x00a0f9ee, 0x00a2fbed, 
                                                  0x00a5fdec, 0x00a7ffeb, 0x00a9fdea, 0x00abfbe9, 0x00adf9e8, 0x00aff7e7, 0x00b1f5e6, 0x00b3f3e5
 };
-const PaletteConstFWD<sizeof(colors_tfm_morning_glory) / sizeof(unsigned int)> palette_tfm_morning_glory(colors_tfm_morning_glory);
+
+const PaletteConstFWD<sizeof(colors_tfm_morning_glory) / sizeof(unsigned int)> palette_tfm_morning_glory(colors_tfm_morning_glory);
 const PaletteConstBWD<sizeof(colors_tfm_morning_glory) / sizeof(unsigned int)> palette_tfm_morning_glory_inv(colors_tfm_morning_glory);
-typedef PaletteConstFWD<sizeof(colors_tfm_morning_glory) / sizeof(unsigned int)> palette_tfm_morning_glory_t;
-#endif // _TFM_MORNING_GLORY_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_morning_glory) / sizeof(unsigned int)> palette_tfm_morning_glory_t;
+
+#endif // _TFM_MORNING_GLORY_H

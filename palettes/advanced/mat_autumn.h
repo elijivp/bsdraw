@@ -1,7 +1,9 @@
 #ifndef _MAT_AUTUMN_H
 #define _MAT_AUTUMN_H
-#include "../bstexpalette.h"
-const unsigned int colors_mat_autumn[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_mat_autumn[] = {
                                           0x000000ff, 0x000001ff, 0x000002ff, 0x000003ff, 0x000004ff, 0x000005ff, 0x000006ff, 0x000007ff, 
                                           0x000008ff, 0x000009ff, 0x00000aff, 0x00000bff, 0x00000cff, 0x00000dff, 0x00000eff, 0x00000fff, 
                                           0x000010ff, 0x000011ff, 0x000012ff, 0x000013ff, 0x000014ff, 0x000015ff, 0x000016ff, 0x000017ff, 
@@ -35,7 +37,10 @@
                                           0x0000f0ff, 0x0000f1ff, 0x0000f2ff, 0x0000f3ff, 0x0000f4ff, 0x0000f5ff, 0x0000f6ff, 0x0000f7ff, 
                                           0x0000f8ff, 0x0000f9ff, 0x0000faff, 0x0000fbff, 0x0000fcff, 0x0000fdff, 0x0000feff, 0x0000ffff
 };
-const PaletteConstFWD<sizeof(colors_mat_autumn) / sizeof(unsigned int)> palette_mat_autumn(colors_mat_autumn);
+
+const PaletteConstFWD<sizeof(colors_mat_autumn) / sizeof(unsigned int)> palette_mat_autumn(colors_mat_autumn);
 const PaletteConstBWD<sizeof(colors_mat_autumn) / sizeof(unsigned int)> palette_mat_autumn_inv(colors_mat_autumn);
-typedef PaletteConstFWD<sizeof(colors_mat_autumn) / sizeof(unsigned int)> palette_mat_autumn_t;
-#endif // _MAT_AUTUMN_H
+
+typedef PaletteConstFWD<sizeof(colors_mat_autumn) / sizeof(unsigned int)> palette_mat_autumn_t;
+
+#endif // _MAT_AUTUMN_H

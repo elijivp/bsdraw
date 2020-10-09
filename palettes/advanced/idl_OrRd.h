@@ -1,7 +1,9 @@
 #ifndef _IDL_ORRD_H
 #define _IDL_ORRD_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_OrRd[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_OrRd[] = {
                                         0x00ecf6fe, 0x00ebf6fe, 0x00eaf6fe, 0x00e9f5fe, 0x00e7f5fe, 0x00e6f4fe, 0x00e5f4fe, 0x00e4f3fe, 
                                         0x00e3f3fe, 0x00e1f3fe, 0x00e0f2fe, 0x00dff2fe, 0x00def1fe, 0x00dcf1fe, 0x00dbf0fe, 0x00daf0fe, 
                                         0x00d9effe, 0x00d8effe, 0x00d6eefe, 0x00d5eefe, 0x00d4edfe, 0x00d3edfe, 0x00d1ecfe, 0x00d0ecfe, 
@@ -35,7 +37,10 @@
                                         0x00000098, 0x00000097, 0x00000095, 0x00000093, 0x00000092, 0x00000090, 0x0000008f, 0x0000008d, 
                                         0x0000008b, 0x0000008a, 0x00000088, 0x00000086, 0x00000085, 0x00000083, 0x00000082, 0x00000080
 };
-const PaletteConstFWD<sizeof(colors_idl_OrRd) / sizeof(unsigned int)> palette_idl_OrRd(colors_idl_OrRd);
+
+const PaletteConstFWD<sizeof(colors_idl_OrRd) / sizeof(unsigned int)> palette_idl_OrRd(colors_idl_OrRd);
 const PaletteConstBWD<sizeof(colors_idl_OrRd) / sizeof(unsigned int)> palette_idl_OrRd_inv(colors_idl_OrRd);
-typedef PaletteConstFWD<sizeof(colors_idl_OrRd) / sizeof(unsigned int)> palette_idl_OrRd_t;
-#endif // _IDL_ORRD_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_OrRd) / sizeof(unsigned int)> palette_idl_OrRd_t;
+
+#endif // _IDL_ORRD_H

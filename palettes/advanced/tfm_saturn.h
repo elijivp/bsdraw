@@ -1,7 +1,9 @@
 #ifndef _TFM_SATURN_H
 #define _TFM_SATURN_H
-#include "../bstexpalette.h"
-const unsigned int colors_tfm_saturn[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_tfm_saturn[] = {
                                           0x00feffff, 0x00fcfffe, 0x00fafffd, 0x00f8fffc, 0x00f6fffc, 0x00f4fffb, 0x00f2fffb, 0x00f0fffa, 
                                           0x00eefffa, 0x00ecfffa, 0x00eafff9, 0x00e8fff9, 0x00e6fff9, 0x00e4fff9, 0x00e2fff9, 0x00e0fff9, 
                                           0x00defff9, 0x00dcfff9, 0x00dafff9, 0x00d8fff9, 0x00d6fffa, 0x00d4fffa, 0x00d2fffa, 0x00d0fffb, 
@@ -35,7 +37,10 @@
                                           0x001f1700, 0x001d1600, 0x001b1500, 0x00191400, 0x00171300, 0x00151200, 0x00131100, 0x00110f00, 
                                           0x000f0e00, 0x000d0c00, 0x000b0a00, 0x00090900, 0x00070700, 0x00050500, 0x00030300, 0x00010100
 };
-const PaletteConstFWD<sizeof(colors_tfm_saturn) / sizeof(unsigned int)> palette_tfm_saturn(colors_tfm_saturn);
+
+const PaletteConstFWD<sizeof(colors_tfm_saturn) / sizeof(unsigned int)> palette_tfm_saturn(colors_tfm_saturn);
 const PaletteConstBWD<sizeof(colors_tfm_saturn) / sizeof(unsigned int)> palette_tfm_saturn_inv(colors_tfm_saturn);
-typedef PaletteConstFWD<sizeof(colors_tfm_saturn) / sizeof(unsigned int)> palette_tfm_saturn_t;
-#endif // _TFM_SATURN_H
+
+typedef PaletteConstFWD<sizeof(colors_tfm_saturn) / sizeof(unsigned int)> palette_tfm_saturn_t;
+
+#endif // _TFM_SATURN_H

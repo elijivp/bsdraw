@@ -1,7 +1,9 @@
 #ifndef _GNU_LATTE_H
 #define _GNU_LATTE_H
-#include "../bstexpalette.h"
-const unsigned int colors_gnu_latte[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_gnu_latte[] = {
                                          0x00000001, 0x00000003, 0x00000005, 0x00000007, 0x00000009, 0x0000000b, 0x0000000d, 0x0000000f, 
                                          0x00000011, 0x00000013, 0x00000015, 0x00000017, 0x00000019, 0x0000001b, 0x0000001d, 0x0000001f, 
                                          0x00000021, 0x00000023, 0x00000025, 0x00000027, 0x00000029, 0x0000002b, 0x0000002d, 0x0000002f, 
@@ -35,7 +37,10 @@
                                          0x00e0ffff, 0x00e2ffff, 0x00e4ffff, 0x00e6ffff, 0x00e8ffff, 0x00eaffff, 0x00ecffff, 0x00eeffff, 
                                          0x00f0ffff, 0x00f2ffff, 0x00f4ffff, 0x00f6ffff, 0x00f8ffff, 0x00faffff, 0x00fcffff, 0x00feffff
 };
-const PaletteConstFWD<sizeof(colors_gnu_latte) / sizeof(unsigned int)> palette_gnu_latte(colors_gnu_latte);
+
+const PaletteConstFWD<sizeof(colors_gnu_latte) / sizeof(unsigned int)> palette_gnu_latte(colors_gnu_latte);
 const PaletteConstBWD<sizeof(colors_gnu_latte) / sizeof(unsigned int)> palette_gnu_latte_inv(colors_gnu_latte);
-typedef PaletteConstFWD<sizeof(colors_gnu_latte) / sizeof(unsigned int)> palette_gnu_latte_t;
-#endif // _GNU_LATTE_H
+
+typedef PaletteConstFWD<sizeof(colors_gnu_latte) / sizeof(unsigned int)> palette_gnu_latte_t;
+
+#endif // _GNU_LATTE_H

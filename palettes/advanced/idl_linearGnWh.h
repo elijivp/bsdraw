@@ -1,7 +1,9 @@
 #ifndef _IDL_LINEARGNWH_H
 #define _IDL_LINEARGNWH_H
-#include "../bstexpalette.h"
-const unsigned int colors_idl_linearGnWh[] = {
+
+#include "../bsipalette.h"
+
+const unsigned int colors_idl_linearGnWh[] = {
                                               0x00000200, 0x00000300, 0x00000400, 0x00000500, 0x00000500, 0x00000600, 0x00000700, 0x00000800, 
                                               0x00000900, 0x00000a00, 0x00000b00, 0x00000c00, 0x00000d00, 0x00000e00, 0x00000f00, 0x00001000, 
                                               0x00001100, 0x00001200, 0x00001300, 0x00001400, 0x00001500, 0x00001600, 0x00001700, 0x00001800, 
@@ -35,7 +37,10 @@
                                               0x00cdf1e7, 0x00d0f2e9, 0x00d3f3ea, 0x00d7f4ec, 0x00daf5ee, 0x00def6ef, 0x00e1f7f1, 0x00e5f7f2, 
                                               0x00e8f8f4, 0x00ebf9f6, 0x00effaf7, 0x00f2fbf9, 0x00f6fcfa, 0x00f9fdfc, 0x00fdfefe, 0x00ffffff
 };
-const PaletteConstFWD<sizeof(colors_idl_linearGnWh) / sizeof(unsigned int)> palette_idl_linearGnWh(colors_idl_linearGnWh);
+
+const PaletteConstFWD<sizeof(colors_idl_linearGnWh) / sizeof(unsigned int)> palette_idl_linearGnWh(colors_idl_linearGnWh);
 const PaletteConstBWD<sizeof(colors_idl_linearGnWh) / sizeof(unsigned int)> palette_idl_linearGnWh_inv(colors_idl_linearGnWh);
-typedef PaletteConstFWD<sizeof(colors_idl_linearGnWh) / sizeof(unsigned int)> palette_idl_linearGnWh_t;
-#endif // _IDL_LINEARGNWH_H
+
+typedef PaletteConstFWD<sizeof(colors_idl_linearGnWh) / sizeof(unsigned int)> palette_idl_linearGnWh_t;
+
+#endif // _IDL_LINEARGNWH_H

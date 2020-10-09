@@ -1,11 +1,12 @@
+/// Overlays:   simple sprites, drawed each on own place
+///   OSprites: with QImage as source
+/// Created By: Elijah Vlasov
 #include "bssprites.h"
 #include "../core/sheigen/bsshgentrace.h"
 #include "../core/sheigen/bsshgencolor.h"
 
 #include <qmath.h>
 #include <memory.h>
-
-//#include <QDebug>
 
 OSprites::OSprites(QImage *image, IMAGECONVERT icvt, float sizemultiplier, unsigned int count, COLOR_SPRITE cr, CENTER_BY cb): 
   OVLQImage(image, icvt, false), 
@@ -37,8 +38,6 @@ OSprites::OSprites(QImage* image, OVLQImage::IMAGECONVERT icvt, float sizemultip
   m_dm_palette.ppal = ipal;
   m_dm_palette.discrete = discrete;
   appendUniform(DT__HC_PALETTE, &m_dm_palette);
-  
-//  qDebug()<<uniforms().count;
 }
 
 OSprites::~OSprites()
@@ -69,7 +68,7 @@ int OSprites::fshTrace(int overlay, bool rotated, char *to) const
           ocg.push("ivec2 inormed = icoords - ivec2(kpdc[0]*ibounds.x, kpdc[1]*ibounds.y);");
       }
       
-      ocg.push( "_densvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1.0-step(rect_size.x, float(inormed.x)))*(1.0-step(rect_size.y, float(inormed.y)));"
+      ocg.push( "_fvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1.0-step(rect_size.x, float(inormed.x)))*(1.0-step(rect_size.y, float(inormed.y)));"
                 "vec2  tcoords = inormed/vec2(rect_size.x-1, rect_size.y-1);");
       ocg.push("vec4 pixel = texture(");  ocg.param_get(); ocg.push(", vec2(tcoords.x, tcoords.y));");
       
@@ -77,25 +76,24 @@ int OSprites::fshTrace(int overlay, bool rotated, char *to) const
       {   /// color
         if (m_cr == -1)
         {
-          ocg.push("result = mix(result, vec3(kpdc[3], 0.0, 0.0), _densvar*pixel.a);"
-                   "mixwell = max(mixwell, _densvar*pixel.a);");
+          ocg.push("result = mix(result, vec3(kpdc[3], 0.0, 0.0), _fvar*pixel.a);"
+                   "mixwell = max(mixwell, _fvar*pixel.a);");
         }
         else
         {
           if (m_cr == CR_OPACITY)
-            ocg.push("_densvar = _densvar * (1.0 - kpdc[3]);");
+            ocg.push("_fvar = _fvar * (1.0 - kpdc[3]);");
           else if (m_cr == CR_DISABLE)
             ocg.push("pixel.rgb = mix(pixel.rgb, vec3(0.2,0.2,0.2), kpdc[3]);");
           
-          ocg.push("result = mix(result, pixel.rgb, _densvar*pixel.a);"
-                   "mixwell = max(mixwell, _densvar*pixel.a);");
+          ocg.push("result = mix(result, pixel.rgb, _fvar*pixel.a);"
+                   "mixwell = max(mixwell, _fvar*pixel.a);");
         }
       }
     }
     ocg.push("}");
   }
   ocg.goto_func_end(false);
-//  qDebug()<<to;
 //  Q_ASSERT(false);
   return ocg.written();
 }
@@ -111,7 +109,6 @@ int OSprites::fshColor(int overlay, char* to) const
   else
     ocg.goto_func_begin(FshColorGenerator::CGV_COLORED);
   ocg.goto_func_end();
-//  qDebug()<<to;
 //  Q_ASSERT(false);
   return ocg.written();
 }
@@ -138,7 +135,7 @@ void OSprites::setPalette(const IPalette* ipal, bool discrete)
 {
   m_dm_palette.ppal = ipal;
   m_dm_palette.discrete = discrete;
-  IOverlay::overlayUpdateParameter(true); 
+  DrawOverlay::overlayUpdateParameter(true); 
 }
 
 void  OSprites::setKPDC(unsigned int idx, float x, float y){ ((kpdc_t*)m_kpdc.data)[idx].x = x; ((kpdc_t*)m_kpdc.data)[idx].y = y; }
@@ -157,7 +154,7 @@ void  OSprites::setKPDC(unsigned int idx, float x, float y, float zoom, float co
 
 void OSprites::updateKPDC()
 {
-  IOverlay::overlayUpdateParameter(true);
+  DrawOverlay::overlayUpdateParameter(true);
 //  updatePublic();
 }
 
@@ -173,7 +170,7 @@ void OSprites::setActiveCount(unsigned int count)
     if (count != m_countactive)
     {
       m_countactive = count;
-//      IOverlay::overlayUpdateParameter();
+//      DrawOverlay::overlayUpdateParameter();
     }
   }
 }

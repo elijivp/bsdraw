@@ -1,9 +1,13 @@
 #ifndef BSTESTPRECISION_H
 #define BSTESTPRECISION_H
 
+/// Overlays:
+///   OTestPrecision. View: technical overlay, need to be upgraded
+/// Created By: Elijah Vlasov
+
 #include "../../core/bsoverlay.h"
 
-class OTestPrecision: public IOverlaySimple, public OVLCoordsOff, public OVLDimmsOff
+class OTestPrecision: public DrawOverlaySimple, public OVLCoordsOff, public OVLDimmsOff
 {
 public:
   OTestPrecision();

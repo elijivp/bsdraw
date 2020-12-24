@@ -10,7 +10,7 @@
 
 static void make_contour_constants(FshTraceGenerator* ocg, unsigned char checkmask)
 {
-  const char cc[] = "ivec2 ibounds_noscaled = ivec2(datadimm_a, datadimm_b);"
+  const char cc[] = "ivec2 ibounds_noscaled = ivec2(viewdimm_a, viewdimm_b);"
                     "ivec2 inoscaled = ivec2(floor(coords.pq * ibounds_noscaled));"
                     "ivec2 iscaled = ivec2(floor(coords.pq * ibounds));";
   ocg->push(cc, sizeof(cc));

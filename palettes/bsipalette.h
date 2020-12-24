@@ -5,8 +5,13 @@
 /// Created By: Elijah Vlasov
 
 
-/// UInt -> R,G,B            RED                GREEN               BLUE
-#define DRAWCOLOR3(clr) (clr) & 0xFF, (clr >> 8) & 0xFF, (clr >> 16) & 0xFF
+/// UInt -> R,G,B                     RED                GREEN               BLUE
+#define DRAWCLREXTRACT_U3I(clr)    (clr) & 0xFF, (clr >> 8) & 0xFF, (clr >> 16) & 0xFF
+#define DRAWCLREXTRACT_U3F(clr)    ((clr) & 0xFF)/255.0f, ((clr >> 8) & 0xFF)/255.0f, ((clr >> 16) & 0xFF)/255.0f
+
+/// QColor -> R, G, B
+#define DRAWCLREXTRACT_Q3I(QColor) QColor.red(), QColor.green(), QColor.blue()
+#define DRAWCLREXTRACT_Q3F(QColor) float(QColor.redF()), float(QColor.greenF()), float(QColor.blueF())
 
 
 

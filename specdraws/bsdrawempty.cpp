@@ -16,14 +16,14 @@ public:
   virtual int           portionMeshType() const { return PMT_PSEUDO2D; }
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
-  virtual unsigned int  shfragment_pendingSize(unsigned int ovlscount) const { return FshMainGenerator::basePendingSize(ovlscount); }
+  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return FshMainGenerator::basePendingSize(imp, ovlscount); }
   virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, 
-                                         ORIENTATION orient, SPLITPORTIONS splitPortions, 
+                                         ORIENTATION orient, SPLITPORTIONS splitPortions, const impulsedata_t& imp,
                                          unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
-    FshMainGenerator fmg(to, allocatedPortions, orient, splitPortions, ovlscount, ovlsinfo);
-    fmg.goto_func_begin(FshMainGenerator::INIT_BYVALUE, emptyclr, fsp);
-    fmg.goto_func_end(fsp);
+    FshMainGenerator fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
+    fmg.main_begin(FshMainGenerator::INIT_BYVALUE, emptyclr, orient, fsp);
+    fmg.main_end(fsp);
     return fmg.written();
   }
 };

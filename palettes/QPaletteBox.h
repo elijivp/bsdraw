@@ -2,7 +2,7 @@
 #define QPALETTEBOX_H
 
 /// ComboBox with non-standard palettes in dropped list
-/// You need include resource file with all non-standard palettes
+/// You need include resource (!!) file with all non-standard palettes
 /// Usage:
 /// 
 ///     QPaletteBoxSg* qpb = new QPaletteBoxSg();

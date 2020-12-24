@@ -94,6 +94,14 @@ void  standard_tap_symbolate(int mark, int dimmarea, int reloffset, const void*,
   reservedResult = latins[mark % int(latinslen + latinslen*(float(reloffset)/dimmarea))];
 }
 
+typedef QWidget*  (*mtap_qwidget_fn)(int mark, int dimmarea, int reloffset, void*);
+//QWidget*  standard_tap_lablate(*mtap_qwidget_fn)(int mark, int dimmarea, int reloffset, const void*)
+//{
+//  const char* latins = "abcdefghijklmnopqrstuvwxyz";
+//  const int   latinslen = recycle < 0 || recycle > 26? 26 : recycle;
+//  reservedResult = latins[mark % int(latinslen + latinslen*(float(reloffset)/dimmarea))];
+//}
+
 
 
 
@@ -134,7 +142,7 @@ class DrawBars : public QWidget
 {
   Q_OBJECT
   class DrawBars_impl*  pImpl;
-  class DrawQWidget*    pDraw;
+  DrawQWidget*          pDraw;
 public:
   enum  COLORS {  CP_DEFAULT,       // use default widget palette
                   CP_FROM_DRAWBACK,     // use DrawQWidget colorBack function
@@ -177,6 +185,9 @@ public:
   
   MEWScaleNN*         addScaleTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30);
   MEWScaleNM*         addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30);
+  MEWScaleNM*         addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30);
+  
+  MEWScaleNM*         addScaleWidgetsNM(ATTACHED_TO atto, int flags, int maxperpendiculardimm, int marksNwidgetsCount, QWidget* wdgs[], int pixStep_pixSpacing=30);
   
   MEWScale*           addScaleDrawUniSide(ATTACHED_TO atto, int flags, int pixSpacing, unsigned int step=1);
   MEWScale*           addScaleDrawUniSide(ATTACHED_TO atto, int flags, float LL, float HL, int pixSpacing, int miniPerMaxiLIMIT=9);
@@ -185,11 +196,13 @@ public:
   
   MEWScaleTAP*        addScaleDrawRecorderB(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, const void* param=nullptr, int miniPerMaxiLIMIT=0);
   MEWScaleTAP*        addScaleDrawRecorderNM(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, const void* param=nullptr, int miniPerMaxiLIMIT=0);
+  
+  
 public:
   void                retrieveMElement(MEQWrapper*, bool replaceWithEqSpace);
   void                setVisible(MEQWrapper*, bool);
   void                switchToAnotherSide(MEQWrapper*);
-  void                changeColor(MEQWrapper*, const QColor& clr);
+//  void                changeColor(MEQWrapper*, const QColor& clr);
   void                swapBars(ATTACHED_TO);
   void                removeAllMElements(bool squeeze=false);
 protected:

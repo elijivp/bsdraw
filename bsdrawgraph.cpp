@@ -27,17 +27,25 @@ public:
   virtual int           portionMeshType() const{  return PMT_FORCE1D; }
   virtual unsigned int  shvertex_pendingSize() const { return VshMainGenerator1D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const { return VshMainGenerator1D()(to); }
-  virtual unsigned int  shfragment_pendingSize(unsigned int ovlscount) const { return 4000 + FshMainGenerator::basePendingSize(ovlscount); }
+  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 4100 + FshMainGenerator::basePendingSize(imp, ovlscount); }
   virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, 
-                                         ORIENTATION orient, SPLITPORTIONS splitGraphs, 
+                                         ORIENTATION orient, SPLITPORTIONS splitGraphs, const impulsedata_t& imp,
                                          unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
-    FshMainGenerator fmg(to, allocatedPortions, orient, splitGraphs, ovlscount, ovlsinfo);
+    FshMainGenerator fmg(to, allocatedPortions, splitGraphs, imp, ovlscount, ovlsinfo);
     float opacity = graphopts.opacity > 1.0f? 1.0f : graphopts.opacity < 0.0f? 0.0f : graphopts.opacity;
     fmg.cfloatvar("specopc", 1.0f - opacity);
-    fmg.goto_func_begin(coloropts.backcolor != 0xFFFFFFFF? FshMainGenerator::INIT_BYVALUE:
+    fmg.main_begin(coloropts.backcolor != 0xFFFFFFFF? FshMainGenerator::INIT_BYVALUE:
                                                            FshMainGenerator::INIT_BYPALETTE, 
-                        coloropts.backcolor, fsp);
+                        coloropts.backcolor, orient, fsp);
+    
+    static const char graph_locals[] = 
+                                      "vec2  fbounds_noscaled = vec2(viewdimm_a, viewdimm_b);" SHNL
+                                      "vec2  fbounds = vec2(ibounds);" SHNL
+                                      "vec2  fcoords = (relcoords*(fbounds));" SHNL   /// ! no floor.
+                                      "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled));" SHNL
+                                    ;
+    fmg.push(graph_locals);
     {
       bool isDots = graphopts.graphtype == GT_DOTS;
       bool isHistogram = graphopts.graphtype == GT_HISTOGRAM || graphopts.graphtype == GT_HISTOGRAM_CROSSMAX || graphopts.graphtype == GT_HISTOGRAM_CROSSMIN;
@@ -197,7 +205,7 @@ public:
       {
         fmg.push( 
                     "float MIXWELL = step(distance(fcoords_noscaled, vec2(fcoords_noscaled.x, ffy[1])), 0.0);" SHNL // ??? 0.0?
-                    "ppb_sfp[0] = ppb_sfp[0]*(1.0 - MIXWELL) + MIXWELL;" SHNL
+                    "post_mask[0] = post_mask[0]*(1.0 - MIXWELL) + MIXWELL;" SHNL
                     "float VALCLR = ffy[1];" SHNL
                   );
       }
@@ -294,15 +302,15 @@ public:
       if (isLinterp || isHistogram)
       {
         if (graphopts.postrect == PR_STANDARD)
-          fmg.push("ppb_sfp[0] = ppb_sfp[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL);
+          fmg.push("post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL);
         if (graphopts.postrect == PR_VALUEONLY)
-          fmg.push("ppb_sfp[0] = ppb_sfp[0]*(1.0 - fhit.y)*(1.0 - fhit.x) + fhit.y*fhit.x;" SHNL);
+          fmg.push("post_mask[0] = post_mask[0]*(1.0 - fhit.y)*(1.0 - fhit.x) + fhit.y*fhit.x;" SHNL);
         else if (graphopts.postrect == PR_VALUEAROUND)
-          fmg.push("ppb_sfp[0] = ppb_sfp[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL
-                   "ppb_rect.ga = int(1.0 - fhit.x)*ppb_rect.ga + int(fhit.x)*ivec2(fcoords.y - fhit_rect[0], fhit_rect[1] - fhit_rect[0]);" SHNL);
+          fmg.push("post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL
+                   "imrect.ga = int(1.0 - fhit.x)*imrect.ga + int(fhit.x)*ivec2(fcoords.y - fhit_rect[0], fhit_rect[1] - fhit_rect[0]);" SHNL);
         else if (graphopts.postrect == PR_SUMMARY)
-          fmg.push("ppb_sfp[0] = ppb_sfp[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL
-                   "ppb_rect.ga = int(1.0 - (fhit.x - fhit.y))*ppb_rect.ga + int(fhit.x - fhit.y)*ivec2(fcoords.y - fhit_rect[0], fhit_rect[1] - fhit_rect[0]);" SHNL);
+          fmg.push("post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL
+                   "imrect.ga = int(1.0 - (fhit.x - fhit.y))*imrect.ga + int(fhit.x - fhit.y)*ivec2(fcoords.y - fhit_rect[0], fhit_rect[1] - fhit_rect[0]);" SHNL);
       }
       
       
@@ -392,7 +400,7 @@ public:
                 "}" SHNL // for
             );
     }
-    fmg.goto_func_end(fsp);
+    fmg.main_end(fsp);
     return fmg.written();
   }
 };

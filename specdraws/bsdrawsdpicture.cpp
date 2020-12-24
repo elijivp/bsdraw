@@ -20,15 +20,15 @@ public:
   virtual int           portionMeshType() const { return PMT_PSEUDO2D; }
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
-  virtual unsigned int  shfragment_pendingSize(unsigned int ovlscount) const { return FshMainGenerator::basePendingSize(ovlscount); }
+  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 300 + FshMainGenerator::basePendingSize(imp, ovlscount); }
   virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, 
-                                         ORIENTATION orient, SPLITPORTIONS splitPortions, 
+                                         ORIENTATION orient, SPLITPORTIONS splitPortions, const impulsedata_t& imp,
                                          unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
-    FshMainGenerator fmg(to, allocatedPortions, orient, splitPortions, ovlscount, ovlsinfo);
+    FshMainGenerator fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
     fmg.push( "uniform highp sampler2D texGround;"
               "uniform highp int       countGround;" );
-    fmg.goto_func_begin(FshMainGenerator::INIT_BYVALUE, m_bckclr, fsp);
+    fmg.main_begin(FshMainGenerator::INIT_BYVALUE, m_bckclr, orient, fsp);
     
     fmg.push(   "vec4 pixsdp = texture(texGround, relcoords).rgba;" );
     
@@ -37,7 +37,7 @@ public:
       fmg.push(   "result = mix(result, pixsdp.bgr, pixsdp.a);"
 //                  "float value = texture(texData, vec2(domain, 0.0)).r;"  // domain /float(countGround-1)
 //                  "ovMix = max(ovMix, value);"
-//                  "ppb_sfp[0] = mix(1.0, ppb_sfp[0], step( value , ppb_sfp[1]));"
+//                  "post_mask[0] = mix(1.0, post_mask[0], step( value , post_mask[1]));"
                   );
     }
     else if (m_mode == MODE_MARKER63)
@@ -50,12 +50,12 @@ public:
   //                "result = pixsdp.bgr;"
   //                "mixwell = pixsdp.a;"
                   "ovMix = max(ovMix, value);"
-//                  "ppb_sfp[0] = mix(1.0, ppb_sfp[0], step(value, ppb_sfp[1]));"
+//                  "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));"
                   
   
                   );
     }
-    fmg.goto_func_end(fsp);
+    fmg.main_end(fsp);
     return fmg.written();
   }
 };

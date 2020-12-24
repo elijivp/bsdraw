@@ -34,6 +34,7 @@ unix:{
 #win32: LIBS += "-lgomp"
 
 SOURCES += main.cpp\
+    ../specdraws/bsdrawpolar.cpp \
     mainwindow.cpp \
     ../core/bsoverlay.cpp \
     ../bsdrawgraph.cpp \
@@ -65,6 +66,7 @@ SOURCES += main.cpp\
     ../overlays/special/bsbounded.cpp
 
 HEADERS  += \
+    ../specdraws/bsdrawpolar.h \
     mainwindow.h \
     ../core/bsidrawcore.h \
     ../core/bsdraw.h \

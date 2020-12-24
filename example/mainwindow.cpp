@@ -17,6 +17,7 @@
 #include "bsdrawscales.h"
 #include "specdraws/bsdrawempty.h"
 #include "specdraws/bsdrawsdpicture.h"
+#include "specdraws/bsdrawpolar.h"
 
 #include "overlays/bsinteractive.h"
 #include "overlays/bsgrid.h"
@@ -99,7 +100,7 @@ public:
   ~BSUOD_DPM(){ if (id == 0) delete dpm; }
 };
 
-const IPalette* const ppalettes_std[] = {  &paletteBkWh, &paletteBkGyGyGyWh, &paletteGnYe, &paletteBlWh, &paletteBkRdWh, &paletteBkBlWh, &paletteBkGrWh, &paletteBkBlGrYeWh };
+const IPalette* const ppalettes_loc_std[] = {  &paletteBkWh, &paletteBkGyGyGyWh, &paletteGnYe, &paletteBlWh, &paletteBkRdWh, &paletteBkBlWh, &paletteBkGrWh, &paletteBkBlGrYeWh };
 const IPalette* const ppalettes_rgb[] = {  &paletteRG, &paletteRB, &paletteRGB, &paletteBGR };
 
 MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent), 
@@ -375,6 +376,34 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(1, 2);
     for (unsigned int i=0; i<drawscount; i++)
       draws[i] = new DrawRecorder(SAMPLES, MAXLINES, 2000, PORTIONS);
+  }
+  else if (MW_TEST == DRAW_POLAR) /// polar draw
+  {
+    SAMPLES = 128;
+    MAXLINES = 225;
+//    PORTIONS = 4;
+    PORTIONS = 1;
+    PRECREATE(1, 1);
+    syncscaling = MAXLINES > 30? 0 : (30-MAXLINES)*6;
+    impulsedata_t imp[] = { { impulsedata_t::IR_OFF },
+                            { impulsedata_t::IR_COEFF, 5, 5/2, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+//                            { impulsedata_t::IR_COEFF, 3, 3/2, { 0.25f, 0.5f, 0.25f } },
+                            { impulsedata_t::IR_COEFF_NOSCALED, 5, 5/2, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { impulsedata_t::IR_BORDERS_FIXEDCOUNT, 4, 6, {} },
+                            { impulsedata_t::IR_BORDERS, 2, 12, {} },
+    };
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+//      draws[i] = new DrawPolar(SAMPLES, MAXLINES, PORTIONS, 0x00000000, SL_HORZ2);
+      draws[i] = new DrawPolar(SAMPLES, MAXLINES, PORTIONS, 0x00000000);
+      draws[i]->setImpulse(imp[4]);
+//      draws[i]->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_LINELEFT, 0, 0x00333333, 0.35f));
+//      draws[i]->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_LINELEFTBOTTOM, 0, 0x00333333, 0.2f));
+    }
+//    sigtype = ST_GEN_NORM;
+    sigtype = ST_MOVE;
+//    sigtype = ST_ONE;
+//    sp = SP_ONCE;
   }
   else if (MW_TEST == DRAW_GRAPHS) /// graphs and graphmoves
   {
@@ -742,6 +771,31 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     sigtype = ST_MOVE;
     defaultPalette = ppalettes_adv[12];
   }
+  else if (MW_TEST == IMPULSE)
+  {
+    SAMPLES = 5;
+    MAXLINES = 1;
+    PORTIONS = 1;
+    PRECREATE(5, 1);
+    
+    impulsedata_t imp[] = { { impulsedata_t::IR_OFF },
+                            { impulsedata_t::IR_COEFF, 5, 5/2, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { impulsedata_t::IR_COEFF_NOSCALED, 5, 5/2, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { impulsedata_t::IR_BORDERS_FIXEDCOUNT, 30, 4, {} },
+                            { impulsedata_t::IR_BORDERS, 30, 4, {} },
+    };
+    const char* cpnames[] = { "ORIGINAL", "COEFF", "COEFF_NOSCALED", "BORDERS_FIXED", "BORDERS", "" };
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+      draws[i] = new DrawIntensity(SAMPLES, MAXLINES, 1);
+      draws[i]->setImpulse(imp[i]);
+      draws[i]->setScalingLimitsA(50);
+      draws[i]->setScalingLimitsB(50);
+      draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.05f, 0.05f, 8, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
+    }
+    sigtype = ST_RAMP;
+//    defaultPalette = ppalettes_adv[12];
+  }
   else if (MW_TEST == DRAW_BRIGHT_CLUSTER) /// bright cluster
   {
     SAMPLES = 30;
@@ -970,7 +1024,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //        draws[i]->setScalingLimitsVert(syncscaling);
       }
       
-//      draws[i]->setClearColor(0x00333333);
+//      draws[i]->setClearColor(0x00FFFFFF);
 //      draws[i]->setClearByPalette();
       if (MW_TEST == LET_IT_SNOW)
       {
@@ -1167,7 +1221,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BSAUTO_TEXT_ADD(tr("bspalettes_std.h:"), 0, Qt::AlignLeft);
               QSignalMapper*  palMapper = new QSignalMapper(this);
               const unsigned int btnsinrow = 4;
-              unsigned int palscount = sizeof(ppalettes_std)/sizeof(const IPalette*);
+              unsigned int palscount = sizeof(ppalettes_loc_std)/sizeof(const IPalette*);
               unsigned int rows= palscount / btnsinrow + (palscount % btnsinrow ? 1 : 0);
               unsigned int palctr=0;
               
@@ -1838,7 +1892,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           BS_START_SCROLL_V_HMAX_VMAX
             for (unsigned int i=0; i<drawscount; i++)
             {
-              BSAUTO_TEXT_ADD(QString().sprintf("ppalettes_adv[%d]:\t\t%s", i, ppalettes_names[i]));
+              BSAUTO_TEXT_ADD(QString().sprintf("ppalettes_adv[%d]:\t\t%s", i, ppalettenames_adv[i]));
               BSADD(draws[i]);
             }
           BS_STRETCH
@@ -2272,15 +2326,18 @@ void MainWindow::generateData()
       case ST_MOVE:
       {
         static const float mover[] = { 1.0, 0.9, 0.7, 0.5, 0.3 };
+        static const int mover_size = sizeof(mover)/sizeof(float);
         int base = qRound(fmov01samples*DSAMPLES);
         #pragma omp for
         for (int i = 0; i < DSAMPLES; ++i)
-        {
           testbuf[i] = randbuf[i]*0.3f;
-//          testbuf[i] = 0;
-          unsigned int offs = qAbs(i - base);
-          if (offs < sizeof(mover)/sizeof(float))
-            testbuf[i] = mover[offs];
+        
+        for (int i = 0; i < mover_size; ++i)
+        {
+          int iip = base + i; if (iip >= DSAMPLES) iip = iip - DSAMPLES;
+          int iim = base - i; if (iim < 0) iim = DSAMPLES + iim;
+          testbuf[iip] = mover[i];
+          testbuf[iim] = mover[i];
         }
         break;
       }
@@ -2741,11 +2798,11 @@ void  MainWindow::updateAllDraws()
 
 void  MainWindow::changePaletteSTD(int id)
 {
-  if ((unsigned int)id >= sizeof(ppalettes_std)/sizeof(const IPalette*))
+  if ((unsigned int)id >= sizeof(ppalettes_loc_std)/sizeof(const IPalette*))
     return;
   
   for (unsigned int i=0; i<drawscount; i++)
-    draws[i]->setDataPalette(ppalettes_std[id]);
+    draws[i]->setDataPalette(ppalettes_loc_std[id]);
 }
 
 void  MainWindow::changePaletteADV(int id)

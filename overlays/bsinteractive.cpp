@@ -172,9 +172,9 @@ int   OActiveRandom::fshTrace(int overlay, bool rotated, char* to) const
 //      else                                                          ocg.push("vec2 saved = vec2(0.0, bounds.y*contrast.x + contrast.y);");
 //    }
 //    ocg.push( "for (int i=0; i<countPortions; i++){"
-//                "for (int h=0; h<datadimm_a; h++){"
-//                  "float fpos = float(h)/(datadimm_a-1);"
-//                  "vec2 current = vec2((fpos*(datadimm_a-1) + 0.5)/datadimm_a, getValue1D(i, fpos));" );
+//                "for (int h=0; h<viewdimm_a; h++){"
+//                  "float fpos = float(h)/(viewdimm_a-1);"
+//                  "vec2 current = vec2((fpos*(viewdimm_a-1) + 0.5)/viewdimm_a, getValue1D(i, fpos));" );
 //    {
 //      if (m_pointerType == PT_MAX_H || m_pointerType == PT_MAX_V)   ocg.push("float itis = step(saved[1], current[1]);");
 //      else                                                          ocg.push("float itis = step(current[1], saved[1]);");

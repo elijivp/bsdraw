@@ -175,5 +175,14 @@ signals:
   void  portionSelected(int);
 };
 
+class BSQCellSelector: public QObject, public IProactive
+{
+  Q_OBJECT
+public:
+  virtual bool  overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const void*, bool* doStop);
+signals:
+  void  cellSelected(int cellA, int cellB);
+};
+
 #endif // DRAWQWIDGET_H
 

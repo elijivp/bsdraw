@@ -8,13 +8,14 @@
 */
 
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)1
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)4
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)9
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)2
+#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)8
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)10
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)12
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)13
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)15
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)18
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)20
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)21
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)26
 #ifndef MW_TEST_NOCHOOSE_DEFAULT
 #include <QInputDialog>
@@ -49,6 +50,7 @@ int main(int argc, char *argv[])
 #endif
   MainWindow w(MW_TEST);
   w.move(100, 200);
+//  w.resize(1400, 1000);
   w.show();
   return a.exec();
 }

@@ -52,6 +52,12 @@ inline bool orientationMirroredVert(ORIENTATION ort)
   return mv[ort];
 }
 
+inline bool orientationTransposed(ORIENTATION ort)
+{
+  const bool mv[] = { false, false, false, false, true, true, true, true };
+  return mv[ort];
+}
+
 struct  DPostmask
 {
   enum DPOVER   {  PO_OFF=0, PO_SIGNAL=1, PO_EMPTY=2, PO_ALL=3 };
@@ -260,6 +266,19 @@ inline linestyle_t    linestyle_update(linestyle_t ls, float red, float green, f
 inline linestyle_t    linestyle_update(linestyle_t ls, unsigned int clr){   ls.b = ((clr >> 16) & 0xFF)/255.0f;    ls.g = ((clr >> 8) & 0xFF)/255.0f; ls.r = ((clr) & 0xFF)/255.0f; ls.inversive = 0; return ls; }
 inline linestyle_t    linestyle_update_inverse(linestyle_t ls, int inv){   ls.r = ls.g = ls.b = 0; ls.inversive = inv; return ls; }
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+
+struct impulsedata_t
+{
+  enum { MAXCOEFFS = 31 };
+  enum IMPULSE_TYPE {     IR_OFF, IR_COEFF, IR_COEFF_NOSCALED, IR_BORDERS, IR_BORDERS_FIXEDCOUNT  };
+  int type;
+  int count;      // for IR_COEFF and IR_COEFF_NOSCALED - count of coeffs. For IR_BORDERS+ - minimal scaling for activation
+  int central;    // for IR_COEFF and IR_COEFF_NOSCALED - central coeff. For IR_BORDERS+ - starter count for activation scaling
+  float coeff[MAXCOEFFS];
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -404,8 +423,9 @@ public:
   virtual   const char*   shaderName() const =0;
   virtual   unsigned int  shvertex_pendingSize() const =0;
   virtual   unsigned int  shvertex_store(char* to) const =0;
-  virtual   unsigned int  shfragment_pendingSize(unsigned int ovlscount) const =0;
-  virtual   unsigned int  shfragment_store(unsigned int allocPortions, const DPostmask&, ORIENTATION orient, SPLITPORTIONS splitPortions, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const =0;
+  virtual   unsigned int  shfragment_pendingSize(const impulsedata_t&, unsigned int ovlscount) const =0;
+  virtual   unsigned int  shfragment_store(unsigned int allocPortions, const DPostmask&, ORIENTATION orient, SPLITPORTIONS splitPortions, 
+                                           const impulsedata_t&, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const =0;
   
 public:
   enum      { PMT_PSEUDO2D, PMT_FORCE1D }; /// PORTION_MESH_TYPE

@@ -62,8 +62,8 @@ const PaletteConstBWD<sizeof(colors_rgb_SemaphoreRYGgrad) / sizeof(unsigned int)
 const unsigned int colors_rgb_SemaphoreRYG [] = { 
   0x0000ff00,0x0000ff00,0x0000ff00,0x0000ff00,0x0000ffff,0x0000ffff,0x0000ffff,0x0000ffff,0x000000ff,0x000000ff,0x000000ff,0x000000ff
 };
-const PaletteConstFWD<sizeof(colors_rgb_SemaphoreRYG) / sizeof(unsigned int)>   palette(colors_rgb_SemaphoreRYG);
-const PaletteConstBWD<sizeof(colors_rgb_SemaphoreRYG) / sizeof(unsigned int)>   palette_inv(colors_rgb_SemaphoreRYG);
+const PaletteConstFWD<sizeof(colors_rgb_SemaphoreRYG) / sizeof(unsigned int)>   paletteSemaphoreRYG(colors_rgb_SemaphoreRYG);
+const PaletteConstBWD<sizeof(colors_rgb_SemaphoreRYG) / sizeof(unsigned int)>   paletteSemaphoreRYG_inv(colors_rgb_SemaphoreRYG);
 
 const unsigned int colors_rgb_SemaphoreRG [] = { 
   0x000000ff,0x000000ff,0x000000ff,0x0000ff00,0x0000ff00,0x0000ff00

@@ -16,13 +16,12 @@
 const char*   DrawQWidget::vardesc(SHEIFIELD sf)
 {
   if (sf == SF_DATA)            return "texData";
-//  if (sf == SF_CONTRAST)            return "contrast";
   if (sf == SF_PALETTE)         return "texPalette";
   if (sf == SF_DOMAIN)          return "texGround";
   if (sf == SF_PORTIONSIZE)     return "countGround";
   if (sf == SF_COUNTPORTIONS)   return "countPortions";
-  if (sf == SF_DIMM_A)          return "datadimm_a";
-  if (sf == SF_DIMM_B)          return "datadimm_b";
+  if (sf == SF_DIMM_A)          return "viewdimm_a";
+  if (sf == SF_DIMM_B)          return "viewdimm_b";
   if (sf == SF_CHNL_SCALING_A)  return "scaling_a";
   if (sf == SF_CHNL_SCALING_B)  return "scaling_b";
   if (sf == SF_DATABOUNDS)      return "databounds";
@@ -153,6 +152,7 @@ void DrawQWidget::palettePrepare(const IPalette* ppal, bool discrete, int levels
 #endif
 void DrawQWidget::initCollectAndCompileShader()
 {
+  glClearColor(m_clearcolor[0], m_clearcolor[1], m_clearcolor[2], 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
   
   m_ShaderProgram.removeAllShaders();
@@ -167,7 +167,8 @@ void DrawQWidget::initCollectAndCompileShader()
   
   /// store
   unsigned int vsh_written = m_pcsh->shvertex_store(m_vshmem);
-  Q_UNUSED(vsh_written);
+  Q_ASSERT(vsh_written <= m_vshalloc);
+//  Q_UNUSED(vsh_written);
 //    qDebug()<<m_pcsh->shaderName()<<" vertex size "<<vsh_written<<" (had"<<m_vshalloc<<")";
   
   if (!m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Vertex, m_vshmem))
@@ -179,22 +180,13 @@ void DrawQWidget::initCollectAndCompileShader()
   
   /// 2. Fragment shader
   /// mem alloc
-  if (m_fshalloc == 0 || m_fshalloc < m_pcsh->shfragment_pendingSize(m_overlaysCount + 2))
+  if (m_fshalloc == 0 || m_fshalloc < m_pcsh->shfragment_pendingSize(m_impulsedata, m_overlaysCount))
   {
     if (m_fshalloc != 0)
       delete []m_fshmem;
-    m_fshalloc = m_pcsh->shfragment_pendingSize(m_overlaysCount + 2);
+    m_fshalloc = m_pcsh->shfragment_pendingSize(m_impulsedata, m_overlaysCount);
     m_fshmem = new char[m_fshalloc];
   }
-  
-  
-  //    {
-  //      const char* pfragment_rotate_enumed[] = { 
-  //        fragment_rotateLRBT(), fragment_rotateRLBT(), fragment_rotateLRTB(), fragment_rotateRLTB(),
-  //        fragment_rotateTBLR(), fragment_rotateBTLR(), fragment_rotateTBRL(), fragment_rotateBTRL()
-  //      };
-  //      m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, pfragment_rotate_enumed[m_orient]);
-  //    }
   
   /// store
   {
@@ -206,9 +198,12 @@ void DrawQWidget::initCollectAndCompileShader()
       else
         ovlsinfo[i].link = -1;
     }
-    unsigned int fsh_written = m_pcsh->shfragment_store(m_allocatedPortions, m_postMask, m_orient, m_splitPortions, m_overlaysCount, ovlsinfo, m_fshmem);
-    Q_UNUSED(fsh_written);
-//      qDebug()<<m_pcsh->shaderName()<<" fragment size "<<fsh_written<<" (had"<<m_fshalloc<<")";
+    unsigned int fsh_written = m_pcsh->shfragment_store(m_allocatedPortions, m_postMask, m_orient, m_splitPortions, 
+                                                        m_impulsedata, m_overlaysCount, ovlsinfo, m_fshmem);
+    
+//    qDebug()<<m_pcsh->shaderName()<<" fragment size "<<fsh_written<<" (had"<<m_fshalloc<<")";
+    Q_ASSERT(fsh_written <= m_fshalloc);
+//    Q_UNUSED(fsh_written);
   }
   if (!m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, m_fshmem))
   {
@@ -358,13 +353,25 @@ void DrawQWidget::paintGL()
 //    glDisable(GL_BLEND);
 //    glDisable(GL_ALPHA_TEST);
   }
-  glClearColor(m_clearcolor[0], m_clearcolor[1], m_clearcolor[2], 1.0f);
-//    glClear(GL_COLOR_BUFFER_BIT); // on initCollectAndCompileShader
+  
+//  if (!havePending())
+//  {
+//    static int ctr=0;
+//    qDebug()<<"EMMM"<<ctr++;
+//  }
 //    glEnable(GL_BLEND);
   
   if (havePendOn(PC_INIT))
     initCollectAndCompileShader();
-
+  else
+  {
+    if (m_clearupdated || !havePending())
+    {
+      glClearColor(m_clearcolor[0], m_clearcolor[1], m_clearcolor[2], 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT); // on initCollectAndCompileShader
+      m_clearupdated = false;
+    }
+  }
   
   if (m_ShaderProgram.bind())
   {
@@ -385,6 +392,11 @@ void DrawQWidget::paintGL()
         {
           dataDimmB = 1;
           dataDimmA = m_portionSize;
+        }
+        else if (ddu == DDU_POLAR)
+        {
+          dataDimmB = dataDimmB / 2;
+          dataDimmA = m_portionSize / dataDimmB;
         }
         if (havePendOn(PC_DATA) || ddu == DDU_15D)
         {
@@ -461,13 +473,35 @@ void DrawQWidget::paintGL()
             m_groundData = nullptr;
           break;
         }
-        case GND_SDP:
+        case GND_SDP: 
         {
           glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, m_groundDataWidth, m_groundDataHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_groundData);
           if (m_groundMipMapping) glGenerateMipmap( GL_TEXTURE_2D );
           
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_groundMipMapping? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+          
+          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+          break;
+        }
+        case GND_ASSISTFLOATTABLE:
+        {
+          glTexImage2D(  GL_TEXTURE_2D, 0, 
+ #if QT_VERSION >= 0x050000
+                           GL_R32F, 
+ #elif QT_VERSION >= 0x040000
+                           GL_RED, 
+ #endif
+                         m_groundDataWidth, m_groundDataHeight, 0, GL_RGBA, GL_FLOAT, m_groundData);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
           glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
           glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
@@ -635,12 +669,12 @@ void DrawQWidget::paintGL()
     
     if (!m_rawResizeModeNoScaled)
     {
-      int sizeA = m_matrixDimmA*m_scalingA*(m_spDivider == 0? 1 : m_spDirection == 1? _divider2() : m_spDivider);
-      int sizeB = m_matrixDimmB*m_scalingB*(m_spDivider == 0? 1 : m_spDirection == 1? m_spDivider : _divider2());
+//      int sizeA = m_matrixDimmA*m_scalingA*(m_spDivider == 0? 1 : m_spDirection == 1? _divider2() : m_spDivider);
+//      int sizeB = m_matrixDimmB*m_scalingB*(m_spDivider == 0? 1 : m_spDirection == 1? m_spDivider : _divider2());
       if (m_matrixSwitchAB)
-        glViewport(0 + m_cttrLeft, height() - sizeA - m_cttrTop, sizeB, sizeA);
+        glViewport(0 + m_cttrLeft, height() - sizeA() - m_cttrTop, sizeB(), sizeA());
       else
-        glViewport(0 + m_cttrLeft, height() - sizeB - m_cttrTop, sizeA, sizeB);
+        glViewport(0 + m_cttrLeft, height() - sizeB() - m_cttrTop, sizeA(), sizeB());
     }
     
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -655,16 +689,6 @@ void DrawQWidget::paintGL()
 
 void DrawQWidget::resizeGL(int w, int h)
 {
-  if (m_rawResizeModeNoScaled)
-  {
-    int sizeA = m_matrixDimmA*m_scalingA*(m_spDivider == 0? 1 : m_spDirection == 1? _divider2() : m_spDivider);
-    int sizeB = m_matrixDimmB*m_scalingB*(m_spDivider == 0? 1 : m_spDirection == 1? m_spDivider : _divider2());
-    if (m_matrixSwitchAB)
-      glViewport(0 + m_cttrLeft, height() - sizeA - m_cttrTop, sizeB, sizeA);
-    else
-      glViewport(0 + m_cttrLeft, height() - sizeB - m_cttrTop, sizeA, sizeB);
-  }
-  
   getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
   w -= m_cttrLeft + m_cttrRight;
   h -= m_cttrTop + m_cttrBottom;
@@ -675,6 +699,16 @@ void DrawQWidget::resizeGL(int w, int h)
   else
     adjustSizeAndScale(w, h);
   
+  
+  if (m_rawResizeModeNoScaled)
+  {
+    if (m_matrixSwitchAB)
+      glViewport(0 + m_cttrLeft, height() - sizeA() - m_cttrTop, sizeB(), sizeA());
+    else
+      glViewport(0 + m_cttrLeft, height() - sizeB() - m_cttrTop, sizeA(), sizeB());
+  }
+  
+  m_clearupdated = true;
   pendResize(false);
 }
 
@@ -723,15 +757,15 @@ void DrawQWidget::innerUpdateGeometry()
 
 QSize DrawQWidget::minimumSizeHint() const
 {
-  int sizeA = m_scalingAMin * m_matrixDimmA*(m_spDivider == 0? 1 : m_spDirection == 1? _divider2() : m_spDivider);
-  int sizeB = m_scalingBMin * (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*(m_spDivider == 0? 1 : m_spDirection == 1? m_spDivider : _divider2());
+  int sizeA = m_scalingAMin * m_matrixDimmA * m_splitterA;
+  int sizeB = m_scalingBMin * (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB) * m_splitterB;
   return m_matrixSwitchAB ? QSize( sizeB + m_cttrLeft + m_cttrRight, sizeA + m_cttrTop + m_cttrBottom ) : QSize( sizeA + m_cttrLeft + m_cttrRight, sizeB + m_cttrTop + m_cttrBottom );
 }
 
 QSize DrawQWidget::sizeHint() const
 { 
-  int sizeA = m_scalingA * m_matrixDimmA*(m_spDivider == 0? 1 : m_spDirection == 1? _divider2() : m_spDivider);
-  int sizeB = m_scalingB * (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB)*(m_spDivider == 0? 1 : m_spDirection == 1? m_spDivider : _divider2());
+  int sizeA = m_scalingA * m_matrixDimmA * m_splitterA;
+  int sizeB = m_scalingB * (getDataDimmUsage() == DDU_1D? 1 : m_matrixDimmB) * m_splitterB;
   return m_matrixSwitchAB ? QSize( sizeB + m_cttrLeft + m_cttrRight, sizeA + m_cttrTop + m_cttrBottom ) : QSize( sizeA + m_cttrLeft + m_cttrRight, sizeB + m_cttrTop + m_cttrBottom );
 }
 
@@ -741,10 +775,10 @@ static const bool isPress[] = { true, false, false, true, true, false, true };
 
 void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
 {
-  int singleDimmWidth = sizeScaledHorz();
-  int singleDimmHeight = sizeScaledVert();
-  int totalDimmWidth = singleDimmWidth * (m_spDivider == 0? 1 : m_spDirection == 1? _divider2() : m_spDivider);
-  int totalDimmHeight = singleDimmHeight * (m_spDivider == 0? 1 : m_spDirection == 1? m_spDivider : _divider2());
+  int singleDimmWidth = sizeHorz();
+  int singleDimmHeight = sizeVert();
+  int totalDimmWidth = singleDimmWidth * (m_matrixSwitchAB? m_splitterB : m_splitterA);
+  int totalDimmHeight = singleDimmHeight * (m_matrixSwitchAB? m_splitterA : m_splitterB);
 
   if (isPress[oreact] == false)
   {
@@ -757,7 +791,7 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
 //  float dataptr[] = { float(x - m_cttrLeft) / (dimmWidth-1), 1.0f - float(y - m_cttrTop) / (dimmHeight-1), float(x), float(y) };
   float dataptr[] = { float((x - m_cttrLeft)%singleDimmWidth) / (singleDimmWidth-1), 
                       1.0f - float((y - m_cttrTop)%singleDimmHeight) / (singleDimmHeight-1), 
-                      float(x), float(y)
+                      float(x - m_cttrLeft), float(y - m_cttrTop)
                     };
   float* (*pfns[])(float*) = {  ccode_rotateLRBT, ccode_rotateRLBT, ccode_rotateLRTB, ccode_rotateRLTB,
                                 ccode_rotateTBLR, ccode_rotateBTLR, ccode_rotateTBRL, ccode_rotateBTRL
@@ -1103,7 +1137,9 @@ bool BSQDoubleClicker::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUS
   {
     *doStop = true;
     emit doubleClicked();
-    emit doubleClicked(pwdg->mapToGlobal(QPoint(((const float*)dataptr)[0], ((const float*)dataptr)[1])));
+//    emit doubleClicked(pwdg->mapToGlobal(QPoint(((const float*)dataptr)[0], ((const float*)dataptr)[1])));
+//    emit doubleClicked(pwdg->mapToGlobal(QPoint(((const float*)dataptr)[2], ((const float*)dataptr)[3])));
+    emit doubleClicked(QPoint(((const float*)dataptr)[2], ((const float*)dataptr)[3]));
   }
   return false;
 }
@@ -1113,16 +1149,37 @@ bool BSQProactiveSelector::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_
   if (oreact == ORM_LMDOUBLE)
   {
     *doStop = true;
-    if (pwdg->splitPortionsDivider())
+//    if (pwdg->splitterA() > 1 || pwdg->splitterB() > 1)  ???
     {
-      unsigned int ssA = pwdg->sizeScaledA(), ssB = pwdg->sizeScaledB();
+      unsigned int ssA = pwdg->sizeA()/pwdg->splitterA(), ssB = pwdg->sizeB()/pwdg->splitterB();
       int x = ((const float*)dataptr)[2], y = ((const float*)dataptr)[3];
       int portion = 0;
-      if (pwdg->splitPortionsDirection() == 0)
+      if (pwdg->isSplittedA())
         portion = pwdg->allocatedPortions() - 1 - y / ssB;
-      else if (pwdg->splitPortionsDirection() == 0)
+      else if (pwdg->isSplittedB())
         portion = x / ssA;
       emit portionSelected(portion);
+    }
+  }
+  return false;
+}
+
+bool BSQCellSelector::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)
+{
+  if (oreact == ORM_LMPRESS)
+  {
+    *doStop = true;
+    ORIENTATION orient = pwdg->orientation();
+    {
+      unsigned int ssA = pwdg->sizeA()/pwdg->sizeDataA(), ssB = pwdg->sizeB()/pwdg->sizeDataB();
+      int x = ((const float*)dataptr)[2], y = ((const float*)dataptr)[3];
+      unsigned int cellA = (orientationTransposed(orient)? y : x) / ssA;
+      unsigned int cellB = (orientationTransposed(orient)? x : y) / ssB;
+      if (orientationMirroredHorz(orient))
+        cellA = pwdg->sizeDataA() - 1 - cellA;
+      if (orientationMirroredVert(orient))
+        cellB = pwdg->sizeDataB() - 1 - cellB;
+      emit cellSelected(cellA, cellB);
     }
   }
   return false;

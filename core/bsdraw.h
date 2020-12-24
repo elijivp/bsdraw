@@ -55,13 +55,14 @@ protected:
   
   ORIENTATION           m_orient;
   SPLITPORTIONS         m_splitPortions;
-  int                   m_spDirection, m_spDivider;
-  
+
   float*                m_matrixData;
   float*                m_matrixDataCached;
   unsigned int          m_matrixDimmA;
   unsigned int          m_matrixDimmB;
   bool                  m_matrixSwitchAB;
+  
+  impulsedata_t         m_impulsedata;
   
   bool                  m_dataTextureInterp;
   
@@ -72,13 +73,16 @@ protected:
   unsigned int          m_scalingAMin, m_scalingAMax;
   unsigned int          m_scalingBMin, m_scalingBMax;
   bool                  m_scalingIsSynced;
+  
+  unsigned int          m_splitterA;
+  unsigned int          m_splitterB;
 protected:
   const IPalette*       m_ppal;
   bool                  m_ppaldiscretise;
   float                 m_clearcolor[3];
-  bool                  m_clearbypalette;
+  bool                  m_clearbypalette, m_clearupdated;
 protected:
-  enum  GROUNDTYPE      { GND_NONE, GND_DOMAIN, GND_SDP };
+  enum  GROUNDTYPE      { GND_NONE, GND_DOMAIN, GND_SDP, GND_ASSISTFLOATTABLE };
   GROUNDTYPE            m_groundType;
   void*                 m_groundData;
   unsigned int          m_groundDataWidth, m_groundDataHeight;
@@ -158,15 +162,29 @@ public:
                                                         m_scalingA(1), m_scalingB(1),
                                                         m_scalingAMin(1), m_scalingAMax(0),
                                                         m_scalingBMin(1), m_scalingBMax(0), m_scalingIsSynced(false),
-                                                        m_ppal(nullptr), m_ppaldiscretise(false), m_clearbypalette(true), 
+                                                        m_ppal(nullptr), m_ppaldiscretise(false), m_clearbypalette(true), m_clearupdated(true), 
                                                         m_groundType(GND_NONE), m_groundData(nullptr), m_groundDataFastFree(true),
                                                         m_groundMipMapping(false), m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
                                                         m_postMask(DPostmask::PO_OFF, DPostmask::PM_CONTOUR, 0, 0.0f, 0.0f, 0.0f),
                                                         m_overlaysCount(0), m_proactive(nullptr), m_proactiveOwner(true)
   {
     _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);
-    m_spDirection = (m_splitPortions >> 8)&0xFF;
-    m_spDivider = m_splitPortions&0xFF;
+    
+    m_impulsedata.type = impulsedata_t::IR_OFF;
+    m_impulsedata.count = 0;
+        
+    int spDivider = m_splitPortions&0xFF;
+    int divider2 = spDivider == 0? 1 : m_allocatedPortions / spDivider + (m_allocatedPortions % spDivider? 1 : 0);
+    if (((m_splitPortions >> 8)&0xFF) == 0)
+    {
+      m_splitterA = spDivider == 0? 1 : spDivider;
+      m_splitterB = divider2;
+    }
+    else
+    {
+      m_splitterB = spDivider == 0? 1 : spDivider;
+      m_splitterA = divider2;
+    }
   }
   virtual ~DrawCore()
   {
@@ -188,7 +206,6 @@ protected:
     m_matrixDataCached = new float[total];
   }
   void    deployMemory(unsigned int total) {  m_matrixData = new float[total]; for (unsigned int i=0; i<total; i++) m_matrixData[i] = 0; m_matrixDataCached = new float[total]; }
-  int     _divider2() const {  return m_spDivider == 0? 0 : m_allocatedPortions / m_spDivider + (m_allocatedPortions % m_spDivider? 1 : 0); }
 public:
                     /// Access methods
   unsigned int          allocatedPortions() const { return m_allocatedPortions; }
@@ -212,15 +229,23 @@ public:
   unsigned int          scalingHorz() const { return m_matrixSwitchAB? m_scalingB : m_scalingA; }
   unsigned int          scalingVert() const { return m_matrixSwitchAB? m_scalingA : m_scalingB; }
   
-  unsigned int          sizeDimmA() const { return m_matrixDimmA; }
-  unsigned int          sizeDimmB() const { return m_matrixDimmB; }
-  unsigned int          sizeDimmHorz() const { return m_matrixSwitchAB? m_matrixDimmB : m_matrixDimmA; }
-  unsigned int          sizeDimmVert() const { return m_matrixSwitchAB? m_matrixDimmA : m_matrixDimmB; }
+  unsigned int          sizeDataA() const { return m_matrixDimmA; }
+  unsigned int          sizeDataB() const { return m_matrixDimmB; }
+  unsigned int          sizeDataHorz() const { return m_matrixSwitchAB? m_matrixDimmB : m_matrixDimmA; }
+  unsigned int          sizeDataVert() const { return m_matrixSwitchAB? m_matrixDimmA : m_matrixDimmB; }
   
-  unsigned int          sizeScaledA() const { return m_matrixDimmA*m_scalingA; }
-  unsigned int          sizeScaledB() const { return m_matrixDimmB*m_scalingB; }
-  unsigned int          sizeScaledHorz() const { return m_matrixSwitchAB? m_matrixDimmB*m_scalingB : m_matrixDimmA*m_scalingA; }
-  unsigned int          sizeScaledVert() const { return m_matrixSwitchAB? m_matrixDimmA*m_scalingA : m_matrixDimmB*m_scalingB; }
+  unsigned int          sizeA() const { return m_matrixDimmA*m_scalingA*m_splitterA; }
+  unsigned int          sizeB() const { return m_matrixDimmB*m_scalingB*m_splitterB; }
+  unsigned int          sizeHorz() const { return m_matrixSwitchAB? sizeB() : sizeA(); }
+  unsigned int          sizeVert() const { return m_matrixSwitchAB? sizeA() : sizeB(); }
+  
+  unsigned int          splitterA() const { return m_splitterA; }
+  unsigned int          splitterB() const { return m_splitterB; }
+  unsigned int          splitterHorz() const { return m_matrixSwitchAB? m_splitterA : m_splitterB; }
+  unsigned int          splitterVert() const { return m_matrixSwitchAB? m_splitterB : m_splitterA; }
+  
+  bool                  isSplittedA() const { return ((m_splitPortions >> 8)&0xFF) == 0; }
+  bool                  isSplittedB() const { return ((m_splitPortions >> 8)&0xFF) != 0; }
   
   void                  scalingLimitsA(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingAMin;  if (scmax) *scmax = m_scalingAMax; }
   void                  scalingLimitsB(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingBMin;  if (scmax) *scmax = m_scalingBMax; }
@@ -233,21 +258,11 @@ public:
   void                  setScalingLimitsVert(unsigned int scmin, unsigned int scmax=0){ if (!m_matrixSwitchAB) setScalingLimitsB(scmin, scmax); else setScalingLimitsA(scmin, scmax); }
   void                  setScalingLimitsSynced(unsigned int scmin, unsigned int scmax=0){ m_scalingIsSynced = true; m_scalingAMin = m_scalingBMin = scmin < 1? 1 : scmin; m_scalingAMax = m_scalingBMax = scmax; clampScalingManually(); pendResize(true); }
 public:
-  int                   splitPortionsDivider() const { return m_spDivider; }
-  int                   splitPortionsDirection() const { return m_spDirection; }
-public:
   virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const =0;
   void                  adjustSizeAndScale(int sizeA, int sizeB)
   {
     unsigned int matrixDimmA, matrixDimmB, scalingA, scalingB;
-    if (m_spDivider == 0 || m_countPortions == 0)
-      sizeAndScaleHint(sizeA, sizeB, &matrixDimmA, &matrixDimmB, &scalingA, &scalingB);
-    else
-    {
-      int splitA = m_spDirection == 1? _divider2() : m_spDivider;
-      int splitB = m_spDirection == 1? m_spDivider : _divider2();
-      sizeAndScaleHint(sizeA/splitA, sizeB/splitB, &matrixDimmA, &matrixDimmB, &scalingA, &scalingB);
-    }
+    sizeAndScaleHint(sizeA/m_splitterA, sizeB/m_splitterB, &matrixDimmA, &matrixDimmB, &scalingA, &scalingB);
     m_matrixDimmA = matrixDimmA;
     m_matrixDimmB = matrixDimmB;
     m_scalingA = scalingA;
@@ -267,7 +282,7 @@ protected:
     if (m_scalingIsSynced)
     {
       DATADIMMUSAGE ddu(getDataDimmUsage());
-      if (*scalingB > *scalingA || (ddu != DDU_2D && ddu != DDU_DD)) *scalingB = *scalingA;
+      if (*scalingB > *scalingA || (ddu != DDU_2D && ddu != DDU_DD && ddu != DDU_POLAR)) *scalingB = *scalingA;
       else *scalingA = *scalingB;
     }
   }
@@ -369,10 +384,10 @@ public:
 protected:
   void  vmanUpInit(){ m_bitmaskPendingChanges |= PC_INIT; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();  }
   void  vmanUpData(){ m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();  }
-  enum  DATADIMMUSAGE { DDU_2D, DDU_15D, DDU_1D, DDU_DD };
+  enum  DATADIMMUSAGE { DDU_2D, DDU_15D, DDU_1D, DDU_DD, DDU_POLAR };
   virtual DATADIMMUSAGE   getDataDimmUsage() const =0;
 public:
-  unsigned int directions() const { DATADIMMUSAGE ddu = getDataDimmUsage(); if (ddu == DDU_2D || ddu == DDU_DD) return 2; return 1; }
+  unsigned int directions() const { DATADIMMUSAGE ddu = getDataDimmUsage(); if (ddu == DDU_2D || ddu == DDU_DD || ddu == DDU_POLAR) return 2; return 1; }
 public:
   /// 2. Delegated methods
   void  setPortionsCount(unsigned int portionsLessThanAlocated)
@@ -381,11 +396,48 @@ public:
       portionsLessThanAlocated = m_allocatedPortions;
     m_countPortions = (unsigned int)portionsLessThanAlocated;
     m_bitmaskPendingChanges |= PC_DATA | PC_SIZE | PC_PARAMS;
-    if (m_spDivider != 0)
+//    if (m_spDivider != 0)
+    if (m_splitterA > 1 || m_splitterB > 1)
       innerRescale();
     if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
 public:
+  void  setImpulse(const impulsedata_t& id)
+  {
+    m_impulsedata = id;
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+  }
+  void  setImpulseOff()
+  {
+    if (m_impulsedata.type != impulsedata_t::IR_OFF)
+    {
+      m_impulsedata.type = impulsedata_t::IR_OFF;
+      m_impulsedata.count = m_impulsedata.central = 0;
+      m_bitmaskPendingChanges |= PC_INIT;
+      if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+    }
+  }
+  void  setImpulseCoeff(int count, const float coeffs[], int central, bool noscaled=false)
+  {
+    m_impulsedata.type = noscaled? impulsedata_t::IR_COEFF_NOSCALED : impulsedata_t::IR_COEFF;
+    m_impulsedata.count = count;
+    m_impulsedata.central = central;
+    for (int i=0; i<count; i++)
+      m_impulsedata.coeff[i] = coeffs[i];
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+  }
+  void  setImpulseBorders(int count, int central, bool fixed=true)
+  {
+    m_impulsedata.type = fixed? impulsedata_t::IR_BORDERS_FIXEDCOUNT : impulsedata_t::IR_BORDERS;
+    m_impulsedata.count = count;
+    m_impulsedata.central = central;
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+  }
+  const impulsedata_t& impulse() const { return m_impulsedata; }
+  
   void  setOrientation(ORIENTATION orient)
   { 
     m_orient = orient;
@@ -578,11 +630,13 @@ public:
   {
     m_clearbypalette = false;
     _colorCvt(clearcolor);
+    m_clearupdated = true;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
   void            setClearByPalette()
   {
     m_clearbypalette = true;
+    m_clearupdated = true;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
   bool            isClearedByPalette() const { return m_clearbypalette; }

@@ -19,25 +19,26 @@ public:
   virtual int           portionMeshType() const { return PMT_PSEUDO2D; }
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
-  virtual unsigned int  shfragment_pendingSize(unsigned int ovlscount) const { return FshMainGenerator::basePendingSize(ovlscount); }
-  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, ORIENTATION orient, SPLITPORTIONS splitPortions, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
+  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 500 + FshMainGenerator::basePendingSize(imp, ovlscount); }
+  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, ORIENTATION orient, 
+                                         SPLITPORTIONS splitPortions, const impulsedata_t& imp, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
-    FshMainGenerator fmg(to, allocatedPortions, orient, splitPortions, ovlscount, ovlsinfo);
+    FshMainGenerator fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
 
     if (dsup != DS_NONE)
       fmg.push( "uniform highp sampler2D texGround;"
                 "uniform highp int       countGround;" );
 
-    fmg.goto_func_begin(FshMainGenerator::INITBACK_BYPALETTE, 0, fsp); //FshMainGenerator::INITBACK_BYZERO
+    fmg.main_begin(FshMainGenerator::INITBACK_BYPALETTE, 0, orient, fsp); //FshMainGenerator::INITBACK_BYZERO
     fmg.cintvar("allocatedPortions", (int)allocatedPortions);
     fmg.push( splitPortions == SL_NONE? "for (int i=0; i<countPortions; i++)" : "int i=icell[0];" );
     fmg.push( "{" );
     {
       if (dsup == DS_NONE)
-        fmg.push(
-                  "float value = getValue2D(i, relcoords);"
-                  "ovMix = max(ovMix, value);"
-                 );
+      {
+        fmg.value2D("float value");
+        fmg.push("ovMix = max(ovMix, value);");
+      }
       else if (dsup == DS_DOMSTD)
         fmg.push(
                   "float domain = texture(texGround, relcoords).r;"
@@ -56,11 +57,11 @@ public:
       else
         fmg.push( "result.rgb = mix(texture(texPalette, vec2(value, 0.0)).rgb, result.rgb, step(countPortions, float(icell[0])));" );
       
-      fmg.push( "ppb_sfp[0] = mix(1.0, ppb_sfp[0], step(value, ppb_sfp[1]));" );
+      fmg.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" );
     }
     fmg.push( "}" );
     
-    fmg.goto_func_end(fsp);
+    fmg.main_end(fsp);
     return fmg.written();
   }
 };

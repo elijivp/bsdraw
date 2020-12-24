@@ -165,60 +165,51 @@ unsigned int VshMainGenerator2D::operator()(char *to)
 
 /***********************************************************/
 
-unsigned int FshMainGenerator::basePendingSize(unsigned int ovlscount)
+unsigned int FshMainGenerator::basePendingSize(const impulsedata_t& imp, unsigned int ovlscount)
 {
-  return 1750 + ovlscount*540;
+  unsigned int base = 2000 + ovlscount*540;
+  if (imp.type == impulsedata_t::IR_OFF)
+    ;
+  else if (imp.type == impulsedata_t::IR_COEFF || imp.type == impulsedata_t::IR_COEFF_NOSCALED)
+    base += imp.count*70;
+  else if (imp.type == impulsedata_t::IR_BORDERS || imp.type == impulsedata_t::IR_BORDERS_FIXEDCOUNT)
+    base += 500;
+  else
+    ;
+  return base;
 }
 
-FshMainGenerator::FshMainGenerator(char *deststring, unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]): 
-  m_writebase(deststring), m_to(deststring), m_allocatedPortions(allocatedPortions), m_offset(0), m_orient(orient), m_splitPortions(splitPortions), m_ovlscount(ovlscount), m_ovls(ovlsinfo)
+FshMainGenerator::FshMainGenerator(char *deststring, unsigned int allocatedPortions, SPLITPORTIONS splitPortions, const impulsedata_t& imp, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]): 
+  m_writebase(deststring), m_to(deststring), m_allocatedPortions(allocatedPortions), m_offset(0), m_splitPortions(splitPortions), m_impulsegen(imp), m_ovlscount(ovlscount), m_ovls(ovlsinfo)
 {
 #ifdef BSGLSLVER
-  m_offset += msprintf(&m_to[m_offset],  "#version %d" SHNL, BSGLSLVER);
+  m_offset += msprintf(&m_to[m_offset],   "#version %d" SHNL, BSGLSLVER);
 #endif
-  static const char fsh_base[] =  "uniform highp sampler2D  texData;" SHNL
-                                  "uniform highp int        datadimm_a;" SHNL
-                                  "uniform highp int        datadimm_b;" SHNL
-                                  "uniform highp int        scaling_a;" SHNL
-                                  "uniform highp int        scaling_b;" SHNL
-                                  "uniform highp int        countPortions;" SHNL
-                                  "uniform highp sampler2D  texPalette;" SHNL
-                                  "in highp vec2            coords;" SHNL
-//                                  "varying  vec4            fragColor;" SHNL
-                                  "float getValue1D(in int portion, in float x){  return texture(texData, vec2(x, float(portion)/(float(countPortions)-1.0))).r; }" SHNL
-                                  "float getValue2D(in int portion, in vec2  x){  return texture(texData, vec2(x.x, float(x.y + float(portion))/float(countPortions))).r; }" SHNL
-                                  "vec3  insider(int i, ivec2 ifromvec) { float scaled01 = float(i - ifromvec[0])/float(ifromvec[1] - sign(float(ifromvec[1])));\n\treturn vec3( step(0.0, scaled01)*(1.0-step(1.001, scaled01)), scaled01, sign(ifromvec[1])*ifromvec[1]); }" SHNL;
+  static const char fsh_base[] =          "uniform highp sampler2D  texData;" SHNL
+                                          "uniform highp int        viewdimm_a;" SHNL
+                                          "uniform highp int        viewdimm_b;" SHNL
+                                          "uniform highp int        scaling_a;" SHNL
+                                          "uniform highp int        scaling_b;" SHNL
+                                          "uniform highp int        countPortions;" SHNL
+                                          "uniform highp sampler2D  texPalette;" SHNL
+                                          "in highp vec2            coords;" SHNL
+                                          "float getValue1D(in int portion, in float x){  return texture(texData, vec2(x, float(portion)/(float(countPortions)-1.0))).r; }" SHNL
+                                          "float getValue2D(in int portion, in vec2  x){  return texture(texData, vec2(x.x, float(x.y + float(portion))/float(countPortions))).r; }" SHNL
+                                          "vec3  insider(int i, ivec2 ifromvec) { float scaled01 = float(i - ifromvec[0])/float(ifromvec[1] - sign(float(ifromvec[1])));\n\treturn vec3( step(0.0, scaled01)*(1.0-step(1.001, scaled01)), scaled01, sign(ifromvec[1])*ifromvec[1]); }" SHNL;
 
   memcpy(&m_to[m_offset], fsh_base, sizeof(fsh_base) - 1);  m_offset += sizeof(fsh_base) - 1;
-  
-  const char* rotaters[] = {      "vec2 rotater(vec2 coords){ return coords; }",
-                                  "vec2 rotater(vec2 coords){ coords.x = 1.0-coords.x; return coords; }",
-                                  "vec2 rotater(vec2 coords){ coords.y = 1.0-coords.y; return coords; }",
-                                  "vec2 rotater(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords; }",
-                                  "vec2 rotater(vec2 coords){ coords.y = 1.0-coords.y; return coords.yx; }",
-                                  "vec2 rotater(vec2 coords){ return coords.yx; }",
-                                  "vec2 rotater(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords.yx; }",
-                                  "vec2 rotater(vec2 coords){ coords.x = 1.0-coords.x; return coords.yx; }"
-                                };
-  m_offset += msprintf(&m_to[m_offset], "%s" SHNL, rotaters[orient]);
-
   for (unsigned int i=0; i<m_ovlscount; i++)
   {
-    m_offset += msprintf(&m_to[m_offset],  "uniform highp vec4 ovl_exsettings%D;" SHNL
+    m_offset += msprintf(&m_to[m_offset], "uniform highp vec4 ovl_exsettings%D;" SHNL
                                           "vec4 overlayTrace%d(in ivec2 icell, in vec4 coords, in float thick, in ivec2 mastercoords, out ivec2 shapeself);" SHNL
                                           "vec3 overlayColor%d(in vec4 trace, in vec3 color);" SHNL,
                         i+1, i+1, i+1);
   }
-  
-  
 }
 
-//FshMainGenerator::FshMainGenerator(char* deststring): 
-//  m_writebase(deststring), m_to(deststring), m_offset(0), m_orient(OR_LRTB), m_ovlscount(0), m_ovls(nullptr)
-//{
-//}
 
-void FshMainGenerator::goto_func_begin(int initback, unsigned int backcolor, const DPostmask& fsp)
+
+void FshMainGenerator::_main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const DPostmask& fsp)
 {
   static const char fsh_main[] =  "void main()" SHNL
                                   "{" SHNL
@@ -226,17 +217,27 @@ void FshMainGenerator::goto_func_begin(int initback, unsigned int backcolor, con
                                     "ivec2 loc_i2_pos;" SHNL
                                     "float ovMix = 0.0;" SHNL
                                   
-                                    "ivec2 ibounds_noscaled = ivec2(datadimm_a, datadimm_b);" SHNL
-                                    "vec2  fbounds_noscaled = vec2(datadimm_a, datadimm_b);" SHNL
-                                  
+                                    "ivec2 ibounds_noscaled = ivec2(viewdimm_a, viewdimm_b);" SHNL
                                     "ivec2 iscaling = ivec2(scaling_a, scaling_b);" SHNL
-                                    "ivec2 ibounds = ibounds_noscaled*iscaling;" SHNL
-                                    "vec2  fbounds = vec2(ibounds);" SHNL
-                                  
-                                    "vec2  relcoords = rotater(vec2(coords.xy*0.5 + vec2(0.5,0.5)));" SHNL
-                                  ;
-  
+                                    "ivec2 ibounds = ibounds_noscaled*iscaling;" SHNL;
   memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
+  
+  {
+    const char* rotaters[] = {      "",
+                                    "relcoords.x = 1.0-relcoords.x;",
+                                    "relcoords.y = 1.0-relcoords.y;",
+                                    "relcoords.xy = vec2(1.0,1.0)-relcoords.xy;",
+                                    "relcoords.xy = vec2(1.0-relcoords.y, relcoords.x);",
+                                    "relcoords.xy = relcoords.yx;",
+                                    "relcoords.xy = vec2(1.0,1.0)-relcoords.yx;",
+                                    "relcoords.xy = vec2(relcoords.y, 1.0-relcoords.x);"
+                                  };
+    
+    m_offset += msprintf(&m_to[m_offset], "vec2  relcoords = vec2(coords.xy*0.5 + vec2(0.5,0.5));" SHNL
+                                          "%s"
+                         , rotaters[orient]);
+  }
+  
   {
     int spDirection = (m_splitPortions >> 8)&0xFF;
     int spDivider = m_splitPortions&0xFF;
@@ -250,8 +251,8 @@ void FshMainGenerator::goto_func_begin(int initback, unsigned int backcolor, con
     {
       if (spDivider == 1)
       {
-        m_offset += msprintf(&m_to[m_offset],   "ivec2 icell = ivec2(relcoords.%1/(1.0/%d), %d);" SHNL
-                                                "relcoords.%1 = (relcoords.%1 - (icell[0])*(1.0/icell[1])) / (1.0/icell[1]);" SHNL
+        m_offset += msprintf(&m_to[m_offset],   "ivec2 icell = ivec2(relcoords.%1 * %d, %d);" SHNL
+                                                "relcoords.%1 = (relcoords.%1*icell[1] - icell[0]);" SHNL
                                                 "relcoords = mix(relcoords, vec2(-1.0), step(countPortions, float(icell[0])));" SHNL
                                                 "vec4  ocoords = vec4(coords.xy*0.5 + vec2(0.5,0.5), relcoords);" SHNL,
                              spDirection == 0? "y" : "x",
@@ -266,8 +267,8 @@ void FshMainGenerator::goto_func_begin(int initback, unsigned int backcolor, con
         m_offset += msprintf(&m_to[m_offset],   "vec2  spdvs = vec2(1.0/spDivider, 1.0/int(icell[1]/float(spDivider) + 0.99) );" SHNL
                                                 "ivec2 ispcell = ivec2(relcoords.x/spdvs[%1], relcoords.y/spdvs[%2]);" SHNL
                                                 "icell[0] = ispcell[%1]+ispcell[%2]*spDivider;" SHNL
-                                                "relcoords.x = (relcoords.x - ispcell.x*spdvs[%1]) / spdvs[%1];" SHNL
-                                                "relcoords.y = (relcoords.y - ispcell.y*spdvs[%2]) / spdvs[%2];" SHNL
+                                                "relcoords.x = relcoords.x / spdvs[%1] - ispcell.x;" SHNL
+                                                "relcoords.y = relcoords.y / spdvs[%2] - ispcell.y;" SHNL
                                                 "relcoords = mix(relcoords, vec2(-1.0), step(countPortions, float(icell[0])));" SHNL
                                                 "vec4  ocoords = vec4(coords.xy*0.5 + vec2(0.5,0.5), relcoords);" SHNL,
                              spDirection == 0? "0" : "1", 
@@ -276,25 +277,250 @@ void FshMainGenerator::goto_func_begin(int initback, unsigned int backcolor, con
     }
   }
   
-  static const char fsh_lastlocals[] = 
-                                    "vec2  fcoords = (relcoords*(fbounds));" SHNL   /// ! no floor.
-                                    "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled));" SHNL
-                                    "ivec2 imoded = ivec2( int(mod(fcoords.x, float(iscaling.x))), int(mod(fcoords.y, float(iscaling.y))));" SHNL
-                                  ;
-  memcpy(&m_to[m_offset], fsh_lastlocals, sizeof(fsh_lastlocals) - 1);  m_offset += sizeof(fsh_lastlocals) - 1;
-      
-//  const char* rotates[] = { "vec2 relcoords = vec2(coords.x*0.5 + 0.5, coords.y*0.5 + 0.5);",
-//                            "vec2 relcoords = vec2(1.0 - (coords.x*0.5 + 0.5), coords.y*0.5 + 0.5);",
-//                            "vec2 relcoords = vec2(coords.x*0.5 + 0.5, 1.0 - (coords.y*0.5 + 0.5));",
-//                            "vec2 relcoords = vec2(1.0 - (coords.x*0.5 + 0.5), 1.0 - (coords.y*0.5 + 0.5));",
-//                            "vec2 relcoords = vec2(1.0 - (coords.y*0.5 + 0.5), coords.x*0.5 + 0.5);",
-//                            "vec2 relcoords = vec2(coords.y*0.5 + 0.5, coords.x*0.5 + 0.5);",
-//                            "vec2 relcoords = vec2(1.0 - (coords.y*0.5 + 0.5), 1.0 - (coords.x*0.5 + 0.5));",
-//                            "vec2 relcoords = vec2(coords.y*0.5 + 0.5, 1.0 - (coords.x*0.5 + 0.5));"
-//                          };
-//  m_offset += msprintf(&m_to[m_offset], rotates[m_orient] SHNL);
+  if (initback == INITBACK_BYZERO || initback == INIT_BYZERO)
+    m_offset += msprintf(&m_to[m_offset],   "vec3  backcolor = vec3(0.0, 0.0, 0.0);" SHNL);
+  else if (initback == INITBACK_BYVALUE || initback == INIT_BYVALUE)
+    this->ccolor("backcolor", backcolor);
+  else if (initback == INITBACK_BYPALETTE || initback == INIT_BYPALETTE)
+    m_offset += msprintf(&m_to[m_offset],   "vec3  backcolor = texture(texPalette, vec2(0.0, 0.0)).rgb;" SHNL);
+  
+  if (initback == INIT_BYZERO || initback == INIT_BYVALUE || initback == INIT_BYPALETTE)
+    m_offset += msprintf(&m_to[m_offset],   "vec3  result = backcolor;" SHNL);
+  else
+    m_offset += msprintf(&m_to[m_offset],   "vec3  result = vec3(0.0, 0.0, 0.0);" SHNL);
+    
+  m_offset += msprintf(&m_to[m_offset],     "vec3   post_mask   = vec3(0.0, %F, %F);" SHNL, fsp.threshold, (float)fsp.weight );   /// ppban, ppoutsignal, 
+}
 
-                                  
+void FshMainGenerator::main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const DPostmask& fsp)
+{
+  _main_begin(initback, backcolor, orient, fsp);
+  
+//  m_offset += msprintf(&m_to[m_offset],     "ivec2  imoded = ivec2( int(mod(fcoords.x, float(iscaling.x))), int(mod(fcoords.y, float(iscaling.y))));" SHNL
+//                                            "ivec4  imrect  = ivec4(imoded.x, imoded.y, iscaling.x-1, iscaling.y-1);" SHNL
+//                       );
+  
+  m_offset += msprintf(&m_to[m_offset],     "ivec2  imoded = ivec2( int(mod(relcoords.x*ibounds.x, float(iscaling.x))), int(mod(relcoords.y*ibounds.y, float(iscaling.y))));" SHNL
+                                            "ivec4  imrect  = ivec4(imoded.x, imoded.y, iscaling.x-1, iscaling.y-1);" SHNL
+                       );
+  m_datamapped = DM_OFF;
+}
+
+void FshMainGenerator::main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const DPostmask& fsp, unsigned int dboundsA, unsigned int dboundsB)
+{
+  _main_begin(initback, backcolor, orient, fsp);
+  m_offset += msprintf(&m_to[m_offset],     "ivec2  dbounds_noscaled = ivec2(%d, %d);" SHNL
+                                            "vec2   dbounds = vec2(dbounds_noscaled);" SHNL
+                                            "ivec2  imoded = ivec2(0,0);" SHNL
+                                            "ivec4  imrect = ivec4(0);" SHNL,
+                       dboundsA, dboundsB);
+  m_datamapped = DM_ON;
+}
+
+void FshMainGenerator::main_end(const DPostmask &fsp)
+{  
+  if (fsp.over != DPostmask::PO_OFF)
+  {
+    const char* dpostmasks[] = {  
+                                  "float ppb_in = sign(step(imrect.x, post_mask[2]) + step(imrect.y, post_mask[2])"
+                                          " + step(imrect[2] - imrect.x, post_mask[2]) + step(imrect[3] - imrect.y, post_mask[2]));", // PM_CONTOUR
+                                  "float ppb_in = step(imrect.x, post_mask[2]);", // PM_LINELEFT
+                                  "float ppb_in = step(imrect[2] - imrect.x, post_mask[2]);", // PM_LINERIGHT
+                                  "float ppb_in = step(imrect.y, post_mask[2]);", // PM_LINEBOTTOM
+                                  "float ppb_in = step(imrect[3] - imrect.y, post_mask[2]);", // PM_LINETOP
+                                  "float ppb_in = sign(step(imrect.x, post_mask[2])+step(imrect.y, post_mask[2]));", //  PM_LINELEFTBOTTOM
+                                  "float ppb_in = sign(step(imrect[2] - imrect.x, post_mask[2])+step(imrect.y, post_mask[2]));", //  PM_LINERIGHTBOTTOM
+                                  "float ppb_in = sign(step(imrect.x, post_mask[2])+step(imrect[3] - imrect.y, post_mask[2]));", //  PM_LINELEFTTOP
+                                  "float ppb_in = sign(step(imrect[2] - imrect.x, post_mask[2])+step(imrect[3] - imrect.y, post_mask[2]));", // PM_LINERIGHTTOP 
+                                  "vec2 _ppb_pos = vec2(abs(0.5 - float(imrect.x)/imrect[2]), abs(0.5 - float(imrect.y)/imrect[3]));"
+                                  "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
+//                                                                        "float ppb_in = smoothstep((post_mask[2]*0.1 + 0.2)*(post_mask[2]*0.1 + 0.2), 0.7*0.7, _ppb_d2);"
+                                  "float ppb_in = smoothstep(0.25*0.25, (0.66 - post_mask[2]*0.05)*(0.66 - post_mask[2]*0.05), _ppb_d2);", // PM_PSEUDOCIRCLE
+                                  "float ppb_in = step(abs(imrect.x-imrect[2]/2), post_mask[2])*step(abs(imrect.y-imrect[3]/2), post_mask[2]);", // PM_DOT
+                                  "float ppb_in = step(imrect.x, post_mask[2])*step(imrect.y, post_mask[2]);", // PM_DOTLEFTBOTTOM
+                                  "float ppb_in = sign( "
+                                                        "step(imrect.x, post_mask[2])*step(imrect.y, post_mask[2]) + "
+                                                        "step(imrect[2]-imrect.x, post_mask[2])*step(imrect.y, post_mask[2]) + "
+                                                        "step(imrect.x, post_mask[2])*step(imrect[3]-imrect.y, post_mask[2]) + "
+                                                        "step(imrect[2]-imrect.x, post_mask[2])*step(imrect[3]-imrect.y, post_mask[2]));", // PM_DOTCONTOUR
+                                  "float ppb_in = step(mod(abs(imrect.x - imrect.y), post_mask[2] + sign(post_mask[2])*2.0), 0.0);", // PM_SHTRICHL
+                                  "float ppb_in = step(mod(abs(imrect.x - imrect[3] + imrect.y), post_mask[2] + sign(post_mask[2])*2.0), 0.0);", // PM_SHTRICHR
+                                  "float ppb_in = step(mod(float(imrect.x), 4.0),0.0)*step(mod(float(imrect.y), 4.0), 0.0) + mod(float(imrect.x),2.0)*mod(float(imrect.y),2.0);", // PM_CROSS
+                                  "float ppb_in = step(mod(abs(imrect.x - imrect.y), (post_mask[2] + 1.0)*2.0), 0.0);", // PM_GRID
+                                  "float ppb_in = step(mod(abs(imrect.x - imrect.y), 2.0 + post_mask[2]) + mod(abs(imrect.x - imrect[3] - 1 + imrect.y), 2.0 + post_mask[2]), 0.0);", // PM_FILL
+                                  "float ppb_in = step(mod(abs(imrect.x - imrect.y) + abs(imrect.x - imrect[3] + 1 + imrect.y), 3.0 + post_mask[2]), 0.0);" // PM_SQUARES
+      
+    };
+    
+    if (fsp.postmask < sizeof(dpostmasks) / sizeof(const char*))
+    {
+      m_offset += msprintf(&m_to[m_offset],   "%s" SHNL, dpostmasks[fsp.postmask]);
+      
+      
+      if (fsp.colorManual == -1)
+      {
+        if (fsp.colorPalette == 0.0f)
+          m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = backcolor;" SHNL);
+        else
+          m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = texture(texPalette, vec2(%F, 0.0)).rgb;" SHNL, fsp.colorPalette);
+      }
+      else
+      {
+        float rgb[3];
+        bsintTocolor3f(fsp.colorManual, rgb);
+        m_offset += msprintf(&m_to[m_offset],   "vec3   ppb_color = vec3(%F,%F,%F);" SHNL, rgb[2], rgb[1], rgb[0]);
+      }
+      m_offset += msprintf(&m_to[m_offset],     "result = mix(result, ppb_color, ppb_in * %s );" SHNL,
+                           fsp.over == DPostmask::PO_SIGNAL?  "post_mask[0]" : 
+                           fsp.over == DPostmask::PO_EMPTY?   "(1.0 - post_mask[0])" : 
+                           fsp.over == DPostmask::PO_ALL?     "1.0" : "0.0"
+                                          );
+    }
+  } // if postmask
+  
+  static const char fsh_decltrace[] = "vec4 ovTrace;" SHNL;
+  memcpy(&m_to[m_offset], fsh_decltrace, sizeof(fsh_decltrace) - 1);  m_offset += sizeof(fsh_decltrace) - 1;
+  for (unsigned int i=0; i<m_ovlscount; i++)
+    if (m_ovls[i].link >= 0)
+    {
+      m_offset += msprintf(&m_to[m_offset],   "loc_f4_sets = ovl_exsettings%D;" SHNL
+                                              "loc_i2_pos = ivec2(0,0);" SHNL
+                                              "if (step(1.0, loc_f4_sets[0]) != 1)" SHNL
+                                              "{" SHNL
+                                                "ovTrace = overlayTrace%d(icell, ocoords, loc_f4_sets[1], ovl_position%d, loc_i2_pos);" SHNL
+                                                "if (sign(ovTrace[3]) != 0.0 && step(ovMix, loc_f4_sets[2]) == 1.0)" SHNL
+                                                  "result = mix(result, overlayColor%d(ovTrace, result), 1.0 - loc_f4_sets[0]);" SHNL 
+                                              "}" SHNL
+                                              "ivec2 ovl_position%d = loc_i2_pos;" SHNL,
+                                              i+1, i+1, m_ovls[i].link + 1, i+1, i+1);
+    }
+    else
+    {
+      m_offset += msprintf(&m_to[m_offset],   "loc_f4_sets = ovl_exsettings%D;" SHNL
+                                              "loc_i2_pos = ivec2(0,0);" SHNL
+                                              "if (step(1.0, loc_f4_sets[0]) != 1)" SHNL
+                                              "{" SHNL
+                                                 "ovTrace = overlayTrace%d(icell, ocoords, loc_f4_sets[1], ivec2(0,0), loc_i2_pos);" SHNL
+                                                 "if (sign(ovTrace[3]) != 0.0 && step(ovMix, loc_f4_sets[2]) == 1.0) result = mix(result, overlayColor%d(ovTrace, result), 1.0 - loc_f4_sets[0]);" SHNL
+                                              "}" SHNL
+                                              "ivec2 ovl_position%d = loc_i2_pos;" SHNL,
+                                              i+1, i+1, i+1, i+1);
+    }
+  
+  static const char fsh_end[] =   "gl_FragColor = vec4(result, 0.0);" SHNL "}" SHNL;
+//  static const char fsh_end[] =   "fragColor = vec4(result, 0.0);" SHNL "}" SHNL;
+  memcpy(&m_to[m_offset], fsh_end, sizeof(fsh_end) - 1); m_offset += sizeof(fsh_end) - 1;
+  m_to[m_offset++] = '\0';
+}
+
+void FshMainGenerator::push(const char *text)
+{
+  while (*text != '\0')
+    m_to[m_offset++] = *text++;
+}
+
+void FshMainGenerator::ccolor(const char *name, unsigned int value)
+{
+  float clr[3];
+  for (int i=0; i<3; i++)
+    clr[i] = ((value >> 8*i) & 0xFF) / 256.0;
+  m_offset += msprintf(&m_to[m_offset], "const vec3 %s = vec3(%F, %F, %F);" SHNL, name, clr[0], clr[1], clr[2]);
+}
+
+
+void FshMainGenerator::cfloatvar(const char *name, float value){  m_offset += msprintf(&m_to[m_offset], "const float %s = %f;" SHNL, name, value);  }
+void FshMainGenerator::cfloatvar(const char *name, float value1, float value2){  m_offset += msprintf(&m_to[m_offset], "const vec2 %s = vec2(%f, %f);" SHNL, name, value1, value2);  }
+void FshMainGenerator::cintvar(const char *name, int value){  m_offset += msprintf(&m_to[m_offset], "const int %s = %d;" SHNL, name, value);  }
+void FshMainGenerator::cintvar(const char *name, int value1, int value2){  m_offset += msprintf(&m_to[m_offset], "const ivec2 %s = ivec2(%d, %d);" SHNL, name, value1, value2);  }
+
+//#include <QDebug>
+
+void FshMainGenerator::value2D(const char* varname, const char* coordsname, const char* portionname)
+{
+  if (m_impulsegen.type == impulsedata_t::IR_OFF)
+  {
+    m_offset += msprintf(&m_to[m_offset], "%s = texture(texData, vec2(%s.x, float(%s.y + float(%s))/float(countPortions))).r;" SHNL, 
+                                          varname,                    coordsname, coordsname,   portionname);
+  }
+  else if (m_impulsegen.type == impulsedata_t::IR_COEFF || m_impulsegen.type == impulsedata_t::IR_COEFF_NOSCALED)
+  {
+    const char* scnosc = m_datamapped == DM_OFF ? 
+                           m_impulsegen.type == impulsedata_t::IR_COEFF? "ibounds" : "ibounds_noscaled" :
+                           m_impulsegen.type == impulsedata_t::IR_COEFF? "dbounds" : "dbounds_noscaled";
+    
+//    const char* scnosc = m_impulsegen.type == impulsedata_t::IR_COEFF? "ibounds" : "ibounds_noscaled";
+    
+    m_offset += msprintf(&m_to[m_offset],  "loc_f4_sets = vec4(0, %s.x*%s.x, 1.0/%s.x, float(%s.y + float(%s))/float(countPortions));" SHNL,
+                                                          coordsname,  scnosc,   scnosc,     coordsname,  portionname
+                        );
+    
+    //fmg.push( "vec3 fx = vec3(float(max(relcoords.x*ibounds_noscaled.x, 1) - 1)/ibounds_noscaled.x, "
+    //"relcoords.x, "
+    //"float(min(relcoords.x*ibounds_noscaled.x, ibounds_noscaled.x-1)  + 1)/ibounds_noscaled.x);" SHNL
+    
+    for (int i=0; i<m_impulsegen.central; i++)
+     m_offset += msprintf(&m_to[m_offset], "loc_f4_sets[0] = loc_f4_sets[0] + %f * texture(texData, vec2((loc_f4_sets[1] - %d)*loc_f4_sets[2], loc_f4_sets[3])).r;" SHNL, 
+                                                                              m_impulsegen.coeff[i],                  -(i - m_impulsegen.central));
+    
+    m_offset += msprintf(&m_to[m_offset], "loc_f4_sets[0] = loc_f4_sets[0] + %f * texture(texData, vec2((loc_f4_sets[1] + 0)*loc_f4_sets[2], loc_f4_sets[3])).r;" SHNL, 
+                                                                              m_impulsegen.coeff[m_impulsegen.central]);
+    
+    for (int i=m_impulsegen.central+1; i<m_impulsegen.count; i++)
+     m_offset += msprintf(&m_to[m_offset], "loc_f4_sets[0] = loc_f4_sets[0] + %f * texture(texData, vec2((loc_f4_sets[1] + %d)*loc_f4_sets[2], loc_f4_sets[3])).r;" SHNL, 
+                                                                              m_impulsegen.coeff[i],                  i-m_impulsegen.central);
+    
+    m_offset += msprintf(&m_to[m_offset],  "%s = loc_f4_sets[0];" SHNL, varname);
+  }
+  else if (m_impulsegen.type == impulsedata_t::IR_BORDERS || m_impulsegen.type == impulsedata_t::IR_BORDERS_FIXEDCOUNT)
+  {
+    double halfcent = m_impulsegen.central/2.0;
+    if (m_impulsegen.type == impulsedata_t::IR_BORDERS)
+    {
+      m_offset += msprintf(&m_to[m_offset], "ovMix = (%F+floor((imrect[2] - %F)/1.0));" SHNL,  halfcent, double(m_impulsegen.count));
+      m_offset += msprintf(&m_to[m_offset], "ovMix = step(%F, float(imrect[2]))*(0.5 - 0.25/ovMix)*(-clamp(1.0 - (imrect[0])/ovMix, 0.0, 1.0) + clamp(1.0 - float(imrect[2]-imrect[0])/ovMix, 0.0, 1.0) );" SHNL,//+ 1.0 - 
+                            double(m_impulsegen.count)
+                         );
+    }
+    else
+    {
+      m_offset += msprintf(&m_to[m_offset], "ovMix = step(%F, float(imrect[2]))*(0.5 - 0.25/%F)*(-clamp(1.0 - (imrect[0])/%F, 0.0, 1.0) + clamp(1.0 - float(imrect[2]-imrect[0])/%F, 0.0, 1.0) );" SHNL,
+                            double(m_impulsegen.count), halfcent, halfcent, halfcent
+                         );
+    }
+    
+    if (m_datamapped == DM_OFF)
+      m_offset += msprintf(&m_to[m_offset],  "loc_f4_sets = vec4(0, (%s.x*(ibounds_noscaled.x)), 1.0/(ibounds_noscaled.x), float(%s.y + float(%s))/float(countPortions));" SHNL,
+                                                                     coordsname,                    coordsname,  portionname );
+    else
+      m_offset += msprintf(&m_to[m_offset],  "loc_f4_sets = vec4(0, (%s.x*(dbounds_noscaled.x)), 1.0/(dbounds_noscaled.x), float(%s.y + float(%s))/float(countPortions));" SHNL,
+                                                                     coordsname,                    coordsname,  portionname );
+    
+    
+    m_offset += msprintf(&m_to[m_offset], "loc_f4_sets[0] = texture(texData, vec2(%s.x, loc_f4_sets[3])).r;" SHNL, coordsname);
+    m_offset += msprintf(&m_to[m_offset], "loc_f4_sets[0] = (loc_f4_sets[0]"
+                                                              " - (loc_f4_sets[0] - texture(texData, vec2((loc_f4_sets[1] - 1)*loc_f4_sets[2], loc_f4_sets[3])).r)*clamp(-ovMix, 0.0, 1.0)" SHNL
+                                                              " - (loc_f4_sets[0] - texture(texData, vec2((loc_f4_sets[1] + 1)*loc_f4_sets[2], loc_f4_sets[3])).r)*clamp(ovMix, 0.0, 1.0)" SHNL
+                                                                 ");");
+    m_offset += msprintf(&m_to[m_offset],  "%s = loc_f4_sets[0];" SHNL, varname);
+
+  }
+//  qDebug()<<m_to;
+}
+
+
+//  const char* rotaters[] = {      "vec2 rotater(vec2 coords){ return coords; }",
+//                                  "vec2 rotater(vec2 coords){ coords.x = 1.0-coords.x; return coords; }",
+//                                  "vec2 rotater(vec2 coords){ coords.y = 1.0-coords.y; return coords; }",
+//                                  "vec2 rotater(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords; }",
+//                                  "vec2 rotater(vec2 coords){ coords.y = 1.0-coords.y; return coords.yx; }",
+//                                  "vec2 rotater(vec2 coords){ return coords.yx; }",
+//                                  "vec2 rotater(vec2 coords){ coords.xy = vec2(1.0,1.0)-coords.xy; return coords.yx; }",
+//                                  "vec2 rotater(vec2 coords){ coords.x = 1.0-coords.x; return coords.yx; }"
+//                                };
+//  m_offset += msprintf(&m_to[m_offset], "%s" SHNL, rotaters[orient]);
+/*
+ * //                                    "vec2  relcoords = rotater(vec2(coords.xy*0.5 + vec2(0.5,0.5)));" SHNL
+ * 
 //                                  "vec2  fcoords = floor((coords.xy+vec2(1,1))*fbounds/vec2(2.0,2.0) + vec2(0.49, 0.49));" SHNL
 //                                  "vec2  fcoords_noscaled = floor((coords.xy+vec2(1,1))*fbounds_noscaled/vec2(2.0,2.0) + vec2(0.49, 0.49));" SHNL
 //                                    "vec2  fcoords = floor((coords.xy+vec2(1,1))*fbounds/vec2(2.0,2.0));" SHNL
@@ -315,156 +541,8 @@ void FshMainGenerator::goto_func_begin(int initback, unsigned int backcolor, con
 //                                  "vec2  fcoords = floor(relcoords*fbounds);" SHNL
 //                                  "vec2  fcoords_noscaled = floor(relcoords*fbounds_noscaled);" SHNL
                                   
-                                  
-
-                                    
-                                  
-                                  
 //                                    "ivec2 icoords = ivec2(fcoords);" SHNL
 //                                    "ivec2 icoords_noscaled = ivec2(fcoords_noscaled);" SHNL
-                                  
-                                    
-                                  
-                                    ;
 
-  if (initback == INITBACK_BYZERO || initback == INIT_BYZERO)
-    m_offset += msprintf(&m_to[m_offset], "vec3  backcolor = vec3(0.0, 0.0, 0.0);" SHNL);
-  else if (initback == INITBACK_BYVALUE || initback == INIT_BYVALUE)
-    this->ccolor("backcolor", backcolor);
-  else if (initback == INITBACK_BYPALETTE || initback == INIT_BYPALETTE)
-    m_offset += msprintf(&m_to[m_offset], "vec3  backcolor = texture(texPalette, vec2(0.0, 0.0)).rgb;" SHNL);
-  
-  if (initback == INIT_BYZERO || initback == INIT_BYVALUE || initback == INIT_BYPALETTE)
-    m_offset += msprintf(&m_to[m_offset],   "vec3  result = backcolor;" SHNL);
-  else
-    m_offset += msprintf(&m_to[m_offset],   "vec3  result = vec3(0.0, 0.0, 0.0);" SHNL);
-    
-  m_offset += msprintf(&m_to[m_offset], "vec3   ppb_sfp   = vec3(0.0, %F, %F);" SHNL    /// ppban, ppoutsignal, 
-                                        "ivec4  ppb_rect  = ivec4(imoded.x, imoded.y, iscaling.x-1, iscaling.y-1);" SHNL, 
-                                        fsp.threshold, (float)fsp.weight );
-//                                        fsp.over & 1? 1.0f : 0.0f, fsp.over & 2? 1.0f : 0.0f, (float)fsp.weight );
-}
-
-void FshMainGenerator::goto_func_end(const DPostmask &fsp)
-{  
-  if (fsp.over != DPostmask::PO_OFF)
-  {
-    const char* dpostmasks[] = {  
-                                  "float ppb_in = sign(step(ppb_rect.x, ppb_sfp[2]) + step(ppb_rect.y, ppb_sfp[2])"
-                                          " + step(ppb_rect[2] - ppb_rect.x, ppb_sfp[2]) + step(ppb_rect[3] - ppb_rect.y, ppb_sfp[2]));", // PM_CONTOUR
-                                  "float ppb_in = step(ppb_rect.x, ppb_sfp[2]);", // PM_LINELEFT
-                                  "float ppb_in = step(ppb_rect[2] - ppb_rect.x, ppb_sfp[2]);", // PM_LINERIGHT
-                                  "float ppb_in = step(ppb_rect.y, ppb_sfp[2]);", // PM_LINEBOTTOM
-                                  "float ppb_in = step(ppb_rect[3] - ppb_rect.y, ppb_sfp[2]);", // PM_LINETOP
-                                  "float ppb_in = sign(step(ppb_rect.x, ppb_sfp[2])+step(ppb_rect.y, ppb_sfp[2]));", //  PM_LINELEFTBOTTOM
-                                  "float ppb_in = sign(step(ppb_rect[2] - ppb_rect.x, ppb_sfp[2])+step(ppb_rect.y, ppb_sfp[2]));", //  PM_LINERIGHTBOTTOM
-                                  "float ppb_in = sign(step(ppb_rect.x, ppb_sfp[2])+step(ppb_rect[3] - ppb_rect.y, ppb_sfp[2]));", //  PM_LINELEFTTOP
-                                  "float ppb_in = sign(step(ppb_rect[2] - ppb_rect.x, ppb_sfp[2])+step(ppb_rect[3] - ppb_rect.y, ppb_sfp[2]));", // PM_LINERIGHTTOP 
-                                  "vec2 _ppb_pos = vec2(abs(0.5 - float(ppb_rect.x)/ppb_rect[2]), abs(0.5 - float(ppb_rect.y)/ppb_rect[3]));"
-                                  "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
-//                                                                        "float ppb_in = smoothstep((ppb_sfp[2]*0.1 + 0.2)*(ppb_sfp[2]*0.1 + 0.2), 0.7*0.7, _ppb_d2);"
-                                  "float ppb_in = smoothstep(0.25*0.25, (0.66 - ppb_sfp[2]*0.05)*(0.66 - ppb_sfp[2]*0.05), _ppb_d2);", // PM_PSEUDOCIRCLE
-                                  "float ppb_in = step(abs(ppb_rect.x-ppb_rect[2]/2), ppb_sfp[2])*step(abs(ppb_rect.y-ppb_rect[3]/2), ppb_sfp[2]);", // PM_DOT
-                                  "float ppb_in = step(ppb_rect.x, ppb_sfp[2])*step(ppb_rect.y, ppb_sfp[2]);", // PM_DOTLEFTBOTTOM
-                                  "float ppb_in = sign( "
-                                                        "step(ppb_rect.x, ppb_sfp[2])*step(ppb_rect.y, ppb_sfp[2]) + "
-                                                        "step(ppb_rect[2]-ppb_rect.x, ppb_sfp[2])*step(ppb_rect.y, ppb_sfp[2]) + "
-                                                        "step(ppb_rect.x, ppb_sfp[2])*step(ppb_rect[3]-ppb_rect.y, ppb_sfp[2]) + "
-                                                        "step(ppb_rect[2]-ppb_rect.x, ppb_sfp[2])*step(ppb_rect[3]-ppb_rect.y, ppb_sfp[2]));", // PM_DOTCONTOUR
-                                  "float ppb_in = step(mod(abs(ppb_rect.x - ppb_rect.y), ppb_sfp[2] + sign(ppb_sfp[2])*2.0), 0.0);", // PM_SHTRICHL
-                                  "float ppb_in = step(mod(abs(ppb_rect.x - ppb_rect[3] + ppb_rect.y), ppb_sfp[2] + sign(ppb_sfp[2])*2.0), 0.0);", // PM_SHTRICHR
-                   "float ppb_in = step(mod(float(ppb_rect.x), 4.0),0.0)*step(mod(float(ppb_rect.y), 4.0), 0.0) + mod(float(ppb_rect.x),2.0)*mod(float(ppb_rect.y),2.0);", // PM_CROSS
-                                  "float ppb_in = step(mod(abs(ppb_rect.x - ppb_rect.y), (ppb_sfp[2] + 1.0)*2.0), 0.0);", // PM_GRID
-                                  "float ppb_in = step(mod(abs(ppb_rect.x - ppb_rect.y), 2.0 + ppb_sfp[2]) + mod(abs(ppb_rect.x - ppb_rect[3] - 1 + ppb_rect.y), 2.0 + ppb_sfp[2]), 0.0);", // PM_FILL
-                                  "float ppb_in = step(mod(abs(ppb_rect.x - ppb_rect.y) + abs(ppb_rect.x - ppb_rect[3] + 1 + ppb_rect.y), 3.0 + ppb_sfp[2]), 0.0);" // PM_SQUARES
-      
-    };
-    
-    if (fsp.postmask < sizeof(dpostmasks) / sizeof(const char*))
-    {
-      m_offset += msprintf(&m_to[m_offset],   "%s" SHNL, dpostmasks[fsp.postmask]);
-      
-      
-      if (fsp.colorManual == -1)
-      {
-        if (fsp.colorPalette == 0.0f)
-          m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = backcolor;" SHNL);
-        else
-          m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = texture(texPalette, vec2(%F, 0.0)).rgb;" SHNL, fsp.colorPalette);
-      }
-      else
-      {
-        float rgb[3];
-        bsintTocolor3f(fsp.colorManual, rgb);
-        m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = vec3(%F,%F,%F);" SHNL, rgb[2], rgb[1], rgb[0]);
-      }
-      
-    
-      m_offset += msprintf(&m_to[m_offset], "result = mix(result, ppb_color, ppb_in * %s );" SHNL,
-                           fsp.over == DPostmask::PO_SIGNAL?  "ppb_sfp[0]" : 
-                           fsp.over == DPostmask::PO_EMPTY?   "(1.0 - ppb_sfp[0])" : 
-                           fsp.over == DPostmask::PO_ALL?     "1.0" : "0.0"
-                                          );
-                //  "result = mix(result, ppb_color, ppb_sfp[1]*ppb_sfp[0]*ppb_in + ppb_sfp[2]*(1.0 - ppb_sfp[0])*ppb_in );" SHNL,
-    }
-  }
-  
-  static const char fsh_decltrace[] = "vec4 ovTrace;" SHNL;
-  memcpy(&m_to[m_offset], fsh_decltrace, sizeof(fsh_decltrace) - 1);  m_offset += sizeof(fsh_decltrace) - 1;  
-  for (unsigned int i=0; i<m_ovlscount; i++)
-    if (m_ovls[i].link >= 0)
-    {
-      m_offset += msprintf(&m_to[m_offset],  "loc_f4_sets = ovl_exsettings%D;" SHNL
-                                            "loc_i2_pos = ivec2(0,0);" SHNL
-                                            "if (step(1.0, loc_f4_sets[0]) != 1){" SHNL
-                                              "ovTrace = overlayTrace%d(icell, ocoords, loc_f4_sets[1], ovl_position%d, loc_i2_pos);" SHNL
-                                              "if (sign(ovTrace[3]) != 0.0 && step(ovMix, loc_f4_sets[2]) == 1.0) result = mix(result, overlayColor%d(ovTrace, result), 1.0 - loc_f4_sets[0]);" SHNL 
-                                            "}" SHNL
-                                            "ivec2 ovl_position%d = loc_i2_pos;" SHNL,
-                                        i+1, i+1, m_ovls[i].link + 1, i+1, i+1);
-    }
-    else
-    {
-      m_offset += msprintf(&m_to[m_offset],  "loc_f4_sets = ovl_exsettings%D;" SHNL
-                                            "loc_i2_pos = ivec2(0,0);" SHNL
-                                            "if (step(1.0, loc_f4_sets[0]) != 1){" SHNL
-                                              "ovTrace = overlayTrace%d(icell, ocoords, loc_f4_sets[1], ivec2(0,0), loc_i2_pos);" SHNL
-                                              "if (sign(ovTrace[3]) != 0.0 && step(ovMix, loc_f4_sets[2]) == 1.0) result = mix(result, overlayColor%d(ovTrace, result), 1.0 - loc_f4_sets[0]);" SHNL
-                                            "}" SHNL
-                                            "ivec2 ovl_position%d = loc_i2_pos;" SHNL,
-                                        i+1, i+1, i+1, i+1);
-    }
-  
-  
-  static const char fsh_end[] =   "gl_FragColor = vec4(result, 0.0);" SHNL "}" SHNL;
-//  static const char fsh_end[] =   "fragColor = vec4(result, 0.0);" SHNL "}" SHNL;
-  
-  memcpy(&m_to[m_offset], fsh_end, sizeof(fsh_end) - 1); m_offset += sizeof(fsh_end) - 1;
-  m_to[m_offset++] = '\0';
-}
-
-void FshMainGenerator::push(const char *text)
-{
-  while (*text != '\0')
-    m_to[m_offset++] = *text++;
-}
-
-void FshMainGenerator::cfloatvar(const char *name, float value)
-{
-  m_offset += msprintf(&m_to[m_offset], "const float %s = %f;" SHNL, name, value);
-}
-
-void FshMainGenerator::ccolor(const char *name, unsigned int value)
-{
-  float clr[3];
-  for (int i=0; i<3; i++)
-    clr[i] = ((value >> 8*i) & 0xFF) / 256.0;
-  m_offset += msprintf(&m_to[m_offset], "const vec3 %s = vec3(%F, %F, %F);" SHNL, name, clr[0], clr[1], clr[2]);
-}
-
-void FshMainGenerator::cintvar(const char *name, int value)
-{
-  m_offset += msprintf(&m_to[m_offset], "const int %s = %d;" SHNL, name, value);
-}
-
-
+*/
+//  "result = mix(result, ppb_color, post_mask[1]*post_mask[0]*ppb_in + post_mask[2]*(1.0 - post_mask[0])*ppb_in );" SHNL,

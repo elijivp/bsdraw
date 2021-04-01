@@ -29,7 +29,7 @@ public:
 };
 SheiGeneratorEmpty::~SheiGeneratorEmpty(){}
 
-DrawEmpty::DrawEmpty(unsigned int samplesHorz, unsigned int samplesVert, unsigned int backcolor): DrawQWidget(new SheiGeneratorEmpty(backcolor), 1, OR_LRTB)
+DrawEmpty::DrawEmpty(unsigned int samplesHorz, unsigned int samplesVert, unsigned int backcolor): DrawQWidget(DATEX_2D, new SheiGeneratorEmpty(backcolor), 1, OR_LRTB)
 {
   m_matrixDimmA = samplesHorz;
   m_matrixDimmB = samplesVert;

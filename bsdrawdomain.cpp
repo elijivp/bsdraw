@@ -129,7 +129,7 @@ void DIDomain::excludePixel(int r, int c)
 /////////////////////////////////////////////////////////////////////////
 
 DrawDomain::DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, bool isBckgrndDomain, ORIENTATION orient, bool holdmemorytilltheend): 
-  DrawQWidget(new SheiGeneratorBright(isBckgrndDomain? SheiGeneratorBright::DS_DOMSTD : SheiGeneratorBright::DS_DOMBLACK), portions, orient)
+  DrawQWidget(DATEX_DD, new SheiGeneratorBright(isBckgrndDomain? SheiGeneratorBright::DS_DOMSTD : SheiGeneratorBright::DS_DOMBLACK), portions, orient)
 {
   m_matrixDimmA = samplesHorz;
   m_matrixDimmB = samplesVert;
@@ -146,7 +146,7 @@ DrawDomain::DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsig
 }
 
 DrawDomain::DrawDomain(const DIDomain &cpy, unsigned int portions, ORIENTATION orient, bool holdmemorytilltheend): 
-  DrawQWidget(new SheiGeneratorBright(cpy.isBackgroundDomain()? SheiGeneratorBright::DS_DOMSTD : SheiGeneratorBright::DS_DOMBLACK), portions, orient)
+  DrawQWidget(DATEX_DD, new SheiGeneratorBright(cpy.isBackgroundDomain()? SheiGeneratorBright::DS_DOMSTD : SheiGeneratorBright::DS_DOMBLACK), portions, orient)
 {
   m_matrixDimmA = cpy.m_width;
   m_matrixDimmB = cpy.m_height;

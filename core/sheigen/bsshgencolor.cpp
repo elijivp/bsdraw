@@ -40,7 +40,7 @@ void FshColorGenerator::goto_func_begin(CGV cgv)
                                             "float mixwell = overcolor[3];" SHNL
                         , m_overlay);
   else if (cgv == CGV_TRACED)
-    m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 trace, in vec3 undercolor) {" SHNL
+    m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 trace_on_pix, in vec3 undercolor) {" SHNL
                                             "vec3 result;" SHNL
                                             "float mixwell = 0.0;" SHNL
                         , m_overlay);
@@ -86,11 +86,11 @@ void FshColorGenerator::mixwell_by_traced(const linestyle_t &kls)
 {
   /// 1. Mixwell
   {
-    const char* decl_mixwell[] =          {   "mixwell = step(1.0, float(trace[0]));" SHNL, 
-                                              "mixwell = 1.0 - step(float(trace[0]), 0.0);" SHNL,
-                                              "mixwell = trace[0];" SHNL,
-                                              "mixwell = (1 - trace[0]*trace[0]);" SHNL,
-                                              "mixwell = trace[0];" SHNL,
+    const char* decl_mixwell[] =          {   "mixwell = step(1.0, float(trace_on_pix[0]));" SHNL, 
+                                              "mixwell = 1.0 - step(float(trace_on_pix[0]), 0.0);" SHNL,
+                                              "mixwell = trace_on_pix[0];" SHNL,
+                                              "mixwell = (1 - trace_on_pix[0]*trace_on_pix[0]);" SHNL,
+                                              "mixwell = trace_on_pix[0];" SHNL,
                                                        };
     m_offset += msprintf(&m_to[m_offset], "%s", decl_mixwell[kls.outside]);
   }
@@ -101,8 +101,8 @@ void FshColorGenerator::mixwell_by_traced(const linestyle_t &kls)
     else if (kls.lenstroke == 0)
       m_offset += msprintf(&m_to[m_offset], "const int lenspace = %d;" SHNL
                                             "const int countdot = %d;" SHNL
-                                            "int rounded = int(floor(trace[1] * trace[2] + 0.49));" SHNL
-                                            "int pos = int(mod(float(rounded), float(2*countdot - 1 + lenspace)));" SHNL
+//                                            "int rounded = int(floor(trace_on_pix[1] * trace_on_pix[2] + 0.49));" SHNL
+                                            "int pos = int(mod(trace_on_pix[1], float(2*countdot - 1 + lenspace)));" SHNL
                                             "int mixdot = int((1.0 - step(2.0*countdot, float(pos)))*step(1.0, mod(pos - (2.0*countdot-1.0), 2.0)));" SHNL
                                             "mixwell = mixwell*mixdot;" SHNL,
                           kls.lenspace, kls.countdot);
@@ -110,8 +110,8 @@ void FshColorGenerator::mixwell_by_traced(const linestyle_t &kls)
       m_offset += msprintf(&m_to[m_offset], "const int lenstroke = %d;" SHNL
                                             "const int lenspace = %d;" SHNL
                                             "const int countdot = %d;" SHNL
-                                            "int rounded = int(floor(trace[1] * trace[2]));" SHNL
-                                            "int pos = int(mod(rounded, lenstroke + lenspace + (1 + lenspace) * countdot));" SHNL
+//                                            "int rounded = int(floor(trace_on_pix[1] * trace_on_pix[2]));" SHNL
+                                            "int pos = int(mod(trace_on_pix[1], lenstroke + lenspace + (1 + lenspace) * countdot));" SHNL
                                             "int mixban = int(step(float(lenstroke), float(pos))*step(1.0, mod(pos - lenstroke + 1, lenspace + 1)));" SHNL
                                             "mixwell = mixwell*(1 - mixban);" SHNL, 
                           kls.lenstroke, kls.lenspace, kls.countdot);

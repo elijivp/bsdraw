@@ -129,8 +129,7 @@ int OMarkFigures::fshTrace(int overlay, bool rotated, char *to) const
       ocg.push("if (figtype == 1){");
       {
         ocg.var_static(DT_2I, "ifigdimms = ivec2(fsize*fig[2], fsize*fig[2]);");
-        ocg.trace_rect_cc_begin("");
-        ocg.trace_rect_cc_end("ifigdimms", m_figopc);
+        ocg.trace_rect_cc("ifigdimms", m_figopc);
       }
       ocg.push("} else if (figtype == 2){");
       {
@@ -142,15 +141,9 @@ int OMarkFigures::fshTrace(int overlay, bool rotated, char *to) const
         ocg.trace_lines_x("fsize*fig[2]");
       }
       ocg.push("} else if (figtype == 4){");
-      {
-        ocg.trace_triangle_cc_begin("fsize*fig[2]");
-        ocg.trace_triangle_cc_end("fsize*fig[2]", 0, m_figopc);
-      }
+        ocg.trace_triangle_cc("fsize*fig[2]", 0, m_figopc);
       ocg.push("} else if (figtype == 5){");
-      {
-        ocg.trace_triangle_cc_begin("fsize*fig[2]");
-        ocg.trace_triangle_cc_end("fsize*fig[2]", 1, m_figopc);
-      }
+        ocg.trace_triangle_cc("fsize*fig[2]", 1, m_figopc);
       ocg.push("}");
       
       

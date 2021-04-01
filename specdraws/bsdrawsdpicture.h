@@ -40,8 +40,19 @@ public:
 public:
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
   virtual unsigned int    colorBack() const;
-protected:
-  virtual DATADIMMUSAGE   getDataDimmUsage() const { return DDU_DD; }
+};
+
+class BSQMarkerSelector: public BSQProactiveSelectorBase
+{
+  Q_OBJECT
+  bool  m_emitEmptyMarker;
+public:
+  BSQMarkerSelector(bool emitEmptyMarker, OVL_REACTION_MOUSE action=ORM_LMPRESS, OVL_REACTION_MOUSE drop=ORM_RMPRESS): 
+    BSQProactiveSelectorBase(action, drop), m_emitEmptyMarker(emitEmptyMarker) {}
+  virtual bool  overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const void*, bool* /*doStop*/);
+signals:
+  void  markerClicked(int);
+  void  markerDropped();
 };
 
 #endif // DRAWCORESDP_H

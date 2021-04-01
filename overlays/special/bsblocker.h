@@ -22,5 +22,20 @@ protected:
   virtual bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void*, bool* doStop);
 };
 
+class OBlockerDots: public DrawOverlaySimple, public OVLCoordsOff, public OVLDimmsOff
+{
+  int     m_mod[2];
+  float   m_mixdot, m_mixback;
+  float   m_clrdot[3], m_clrback[3];
+public:
+  OBlockerDots(unsigned int modX, unsigned int modY, unsigned int dotcolor=0x00EEEEEE, float dotmix=0.9f, unsigned int backcolor=0x00000000, float backmix=0.9f);
+  void    setLocked(bool locked);
+  void    setUnlocked(bool unlocked);
+protected:
+  virtual int fshTrace(int overlay, bool rotated, char* to) const;
+  virtual bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void*, bool* doStop);
+};
+
+
 #endif // BSBLOCKER_H
 

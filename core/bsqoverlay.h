@@ -16,6 +16,8 @@ protected:
   DrawOverlay*     m_povl;
   float         c_opacity;    // cached opacity for roll back visible state
   bool          m_owner;
+private:
+  void      _vischecker();
 public:
   MQOverlay(DrawOverlay* ovl, bool owner=false, QObject* parent=nullptr);
   ~MQOverlay();
@@ -25,6 +27,9 @@ public slots:
   void      setThickness(float thickness){  m_povl->setThickness(thickness); }
   void      setSlice(float slice){  m_povl->setSlice(slice); }
   void      setVisible(bool v);
+  
+  void      show();
+  void      hide();
   
   DrawOverlay* replace(DrawOverlay* ovl);
   void      remove();
@@ -45,16 +50,34 @@ public:
 //  void      setLineColor(unsigned int clr);
 };
 
+
+//class MQOverlaySwap: public QObject
+//{
+//  Q_OBJECT
+//protected:  
+//  DrawOverlay*  m_povlPrimary, *m_povlSecondary;
+//  bool          m_owner;
+//public:
+//  MQOverlaySwap(DrawOverlay* ovlPrimary, DrawOverlay* ovlSecondary, bool owner=false, QObject* parent=nullptr);
+//  ~MQOverlaySwap();
+//  DrawOverlay* overlayPrimary() const { return m_povlPrimary; }
+//  DrawOverlay* overlaySecondary() const { return m_povlSecondary; }
+//  DrawOverlay* overlay(bool primary) const { return primary? m_povlPrimary : m_povlSecondary; }
+//public slots:
+//  void show(bool);
+//  void hide(bool);
+//};
+
 /****/
 
-class OQClicker: public QObject, public DrawOverlayProactive
-{
-  Q_OBJECT
-public:
-  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void*, bool* /*doStop*/);
-signals:
-  void  doubleClicked();
-  void  doubleClicked(QPoint);
-};
+//class OQClicker: public QObject, public DrawOverlayProactive
+//{
+//  Q_OBJECT
+//public:
+//  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void*, bool* /*doStop*/);
+//signals:
+//  void  doubleClicked();
+//  void  doubleClicked(QPoint);
+//};
 
 #endif // BSQOVERLAY_H

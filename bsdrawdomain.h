@@ -82,7 +82,6 @@ public:
   const DIDomain*   domain() const;   /// --//--
   unsigned int      domainsCount() const;
 protected:
-  virtual DATADIMMUSAGE   getDataDimmUsage() const { return DDU_DD; }
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
 };
 

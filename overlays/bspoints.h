@@ -81,9 +81,9 @@ class OSelectorReaction: public DrawOverlayTraced, public OVLCoordsDimmsLinked
 protected:
   float     m_alpha;
   int       m_phase;
-  bool      m_move;
+  bool      m_move, m_neg;
   ovlcoords_t m_dxy;
-  OSelectorReaction(const linestyle_t& kls, float alpha, bool moveable);
+  OSelectorReaction(const linestyle_t& kls, float alpha, bool moveable, bool saveneg);
 public:
   void    setMoveMode(bool mvm){  m_move = mvm; }
   bool    moveMode() const { return m_move; }

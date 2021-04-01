@@ -103,6 +103,28 @@ public:
 const IPalette* const ppalettes_loc_std[] = {  &paletteBkWh, &paletteBkGyGyGyWh, &paletteGnYe, &paletteBlWh, &paletteBkRdWh, &paletteBkBlWh, &paletteBkGrWh, &paletteBkBlGrYeWh };
 const IPalette* const ppalettes_rgb[] = {  &paletteRG, &paletteRB, &paletteRGB, &paletteBGR };
 
+QString palette2string(const QString& name, unsigned int pptr[], unsigned int clc)
+{
+  QString nc = QString("colors_rgb_%1").arg(name);
+  QString pc = QString("palette%1").arg(name), pci = QString("palette%1_inv").arg(name);
+  QString result = QString("const unsigned int %1[] = { ").arg(nc) + "\n";
+  QString part="  ";
+  for (int i=0; i<clc; i++)
+  {
+    part += QString().sprintf(i == clc-1? "0x%08x" : "0x%08x,", pptr[i]);
+    if ((i+1) % (clc/4) == 0)
+    {
+      result += part + "\n";
+      part = "  ";
+    }
+  }
+  result += part;
+  result += "};\n";
+  result += QString("const PaletteConstFWD<sizeof(%1) / sizeof(unsigned int)>   %2(%1);").arg(nc).arg(pc) + "\n";
+  result += QString("const PaletteConstBWD<sizeof(%1) / sizeof(unsigned int)>   %2(%1);").arg(nc).arg(pci) + "\n";
+  return result;
+}
+
 MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent), 
   MW_TEST(testnumber), randomer(nullptr), active_ovl(0), ovl_visir(-1), ovl_marks(-1), ovl_figures(-1), ovl_snowflake(-1), ovl_active_mark(9), ovl_is_synced(true), sigtype(ST_PEAK3), sig_k(1), sig_b(0)
 {  
@@ -145,7 +167,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     draws[6]->ovlPushBack(new OTextColored("Recorder", CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, OO_LRBT, 0x00000000, 0x77FFFFFF, 0x00000000));
     
     graphopts_t  gopts[] = { graphopts_t::goDots(), 
-                             graphopts_t::goInterp(0.0f, DE_NONE), 
+                             graphopts_t::goInterp(0.6f, DE_NONE), 
                              graphopts_t::goHistogramCrossMin()
                            };
     const char*  gnames[] = { "Graph (dots)", "Graph (linterp)", "Graph (histogram)" };
@@ -176,7 +198,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 2;
     syncscaling = 4;
     PRECREATE(3, 3);
-    DPostmask dpmcontour(DPostmask::PO_EMPTY, DPostmask::PM_LINELEFTBOTTOM, 0, 0.0f,0.0f,0.0f);
+    DPostmask dpmcontour = DPostmask::postmask(PO_EMPTY, PM_LINELEFTBOTTOM, 0, 0.0f,0.0f,0.0f);
     draws[0] = new DrawIntensity(SAMPLES, MAXLINES, 1);
     draws[0]->setPostMask(dpmcontour);
     draws[3] = new DrawDomain(SAMPLES, MAXLINES, 1, false, OR_LRBT, true);
@@ -196,7 +218,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     draws[6]->setPostMask(dpmcontour);
     
     graphopts_t  gopts[] = { graphopts_t::goDots(), 
-                             graphopts_t::goInterp(0.0f, DE_NONE), 
+                             graphopts_t::goInterp(0.3f, DE_NONE), 
                              graphopts_t::goHistogramCrossMax()
                            };
     
@@ -210,9 +232,9 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
       draws[3*i + 2] = new DrawGraph(SAMPLES, PORTIONS, gopts[i]);
       if (i == 0)
-        draws[3*i + 2]->setPostMask(DPostmask(DPostmask::PO_ALL, DPostmask::PM_PSEUDOCIRCLE, 0, 0.0f,0.1f,0.0f));
+        draws[3*i + 2]->setPostMask(DPostmask::postmask(PO_ALL, PM_PSEUDOCIRCLE, 0, 0.0f,0.1f,0.0f));
       else
-        draws[3*i + 2]->setPostMask(DPostmask(DPostmask::PO_ALL, DPostmask::PM_LINELEFT, 1, 0.0f,0.0f,0.0f));
+        draws[3*i + 2]->setPostMask(DPostmask::postmask(PO_ALL, PM_LINELEFT, 1, 0.0f,0.0f,0.0f));
     }
     
     sigtype = ST_GEN_NORM;
@@ -226,7 +248,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     for (unsigned int i=0; i<dccount; i++)
     {
       draws[i*drcount + 0] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
-      draws[i*drcount + 1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.0f, DE_NONE));
+      draws[i*drcount + 1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.5f, DE_NONE));
       draws[i*drcount + 2] = new DrawRecorder(SAMPLES, MAXLINES, 1000, PORTIONS);
     }
     
@@ -238,7 +260,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     MAXLINES = 100;
     PORTIONS = 3;
     PRECREATE(3, 2);
-    graphopts_t gopts = graphopts_t::goInterp(0.0f, DE_NONE);
+    graphopts_t gopts = graphopts_t::goInterp(0.5f, DE_NONE);
     for (unsigned int i=0; i<dccount; i++)
     {
       draws[i*drcount + 0] = new DrawIntensity(SAMPLES, MAXLINES, i == 1? 1 : PORTIONS);
@@ -261,22 +283,22 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(2, 2);
     unsigned int msc = 5;
     draws[0] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
-    draws[0]->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_LINELEFTBOTTOM, 0, 0.02f));
+    draws[0]->setPostMask(DPostmask::postmask(PO_EMPTY, PM_LINELEFTBOTTOM, 0, 0.02f));
     draws[0]->setScalingLimitsSynced(msc, msc);
     
     draws[1] = new DrawIntensity(SAMPLES/2, 1, PORTIONS);
-    draws[1]->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_LINELEFT, 0, 0.2f));
+    draws[1]->setPostMask(DPostmask::postmask(PO_EMPTY, PM_LINELEFT, 0, 0.2f));
     draws[1]->setScalingLimitsHorz(msc*2);
     draws[1]->setScalingLimitsVert(msc*2, msc*2);
     
     draws[2] = new DrawIntensity(SAMPLES/2, 1, PORTIONS);
     draws[2]->setOrientation(OR_TBLR);
-    draws[2]->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_LINELEFT, 0, 0.2f));
+    draws[2]->setPostMask(DPostmask::postmask(PO_EMPTY, PM_LINELEFT, 0, 0.2f));
     draws[2]->setScalingLimitsHorz(msc*2);
     draws[2]->setScalingLimitsVert(msc*2, msc*2);
     
     draws[3] = new DrawIntensity(1, 1, PORTIONS);
-    draws[3]->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_PSEUDOCIRCLE, 0, 0.2f));
+    draws[3]->setPostMask(DPostmask::postmask(PO_EMPTY, PM_PSEUDOCIRCLE, 0, 0.2f));
     draws[3]->setScalingLimitsSynced(msc*2, msc*2);
     
     lw = LW_1000;    
@@ -386,23 +408,25 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(1, 1);
     syncscaling = MAXLINES > 30? 0 : (30-MAXLINES)*6;
     impulsedata_t imp[] = { { impulsedata_t::IR_OFF },
-                            { impulsedata_t::IR_COEFF, 5, 5/2, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
-//                            { impulsedata_t::IR_COEFF, 3, 3/2, { 0.25f, 0.5f, 0.25f } },
-                            { impulsedata_t::IR_COEFF_NOSCALED, 5, 5/2, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
-                            { impulsedata_t::IR_BORDERS_FIXEDCOUNT, 4, 6, {} },
-                            { impulsedata_t::IR_BORDERS, 2, 12, {} },
+                            { impulsedata_t::IR_A_COEFF, 5, 5/2, 1, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+//                            { impulsedata_t::IR_A_COEFF, 3, 3/2, 0, { 0.25f, 0.5f, 0.25f } },
+                            { impulsedata_t::IR_A_COEFF_NOSCALED, 5, 5/2, 1, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 4, 6, 1, {} },
+                            { impulsedata_t::IR_A_BORDERS, 2, 2, 1, {} },
     };
     for (unsigned int i=0; i<drawscount; i++)
     {
 //      draws[i] = new DrawPolar(SAMPLES, MAXLINES, PORTIONS, 0x00000000, SL_HORZ2);
-      draws[i] = new DrawPolar(SAMPLES, MAXLINES, PORTIONS, 0x00000000);
-      draws[i]->setImpulse(imp[4]);
-//      draws[i]->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_LINELEFT, 0, 0x00333333, 0.35f));
-//      draws[i]->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_LINELEFTBOTTOM, 0, 0x00333333, 0.2f));
+      draws[i] = new DrawPolar(SAMPLES, MAXLINES, PORTIONS, 0, 0.0f, 0x00000000, SL_NONE);
+      draws[i]->setImpulse(imp[1]);
+//      draws[i]->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINELEFT, 0, 0x00333333, 0.35f));
+//      draws[i]->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINELEFTBOTTOM, 0, 0x00333333, 0.2f));
+//      ((DrawPolar*)draws[i])->turn(0f);
     }
 //    sigtype = ST_GEN_NORM;
     sigtype = ST_MOVE;
 //    sigtype = ST_ONE;
+//    sigtype = ST_ZOO;
 //    sp = SP_ONCE;
   }
   else if (MW_TEST == DRAW_GRAPHS) /// graphs and graphmoves
@@ -420,9 +444,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                                     i == 0? c == dccount-1? 0.4f : 0.3f : 0.0f,
                                     i != 2? 0 : 2, 
                                     0.5f,
-                                    i < 2? 0.25f : 0.0f,
+                                    i < 2? 0.4f : 0.2f,
                                     PR_STANDARD
                            };
+//        gopts.smooth = 0.0f;
         coloropts_t copts = {   dclr[c], 1.0f, 0.5f, c == 1? 0xFFFFFFFF : 0x00999999 };
         draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gopts, copts);
       }
@@ -444,7 +469,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                                     i == 0? c == dccount-1? 0.4f : 0.3f : 0.0f,
                                     i != 2? 0 : 2,
                                     0.5f,
-                                    0.0f,
+                                    0.5f,
                                     PR_STANDARD
                               };
         coloropts_t copts = {   dclr[c], 1.0f, 0.5f, c == 1? 0xFFFFFFFF : 0x00999999 };
@@ -461,11 +486,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 3;
     PRECREATE(4, 1);
     syncscaling = 10;
-    graphopts_t gts[] = { graphopts_t::goHistogram(), graphopts_t::goHistogramCrossMin(), graphopts_t::goHistogramCrossMax(), graphopts_t::goInterp(0.0f, DE_NONE) };
-    DPostmask fsp[] = {   DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f), 
-                          DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f), 
-                          DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f), 
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_PSEUDOCIRCLE, 0, 0.1f,0.1f,0.1f)
+    graphopts_t gts[] = { graphopts_t::goHistogram(), graphopts_t::goHistogramCrossMin(), graphopts_t::goHistogramCrossMax(), graphopts_t::goInterp(0.5f, DE_NONE) };
+    DPostmask fsp[] = {   DPostmask::postmask(PO_SIGNAL, PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f), 
+                          DPostmask::postmask(PO_SIGNAL, PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f), 
+                          DPostmask::postmask(PO_SIGNAL, PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f), 
+                          DPostmask::postmask(PO_ALL, PM_PSEUDOCIRCLE, 0, 0.1f,0.1f,0.1f)
                            };
     
     const char* gnames[] = { "Histogram (cross over)", "Histogram (cross min)", "Histogram (cross max)", "Linterp + pseudocircle" };
@@ -492,7 +517,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     MAXLINES = 20;
     PORTIONS = 1;
     PRECREATE(4, 3);
-    graphopts_t gts[] = { graphopts_t::goHistogramCrossMax(), graphopts_t::goHistogramCrossMax(), graphopts_t::goInterp(0.0f, DE_NONE) };
+    graphopts_t gts[] = { graphopts_t::goHistogramCrossMax(), graphopts_t::goHistogramCrossMax(), graphopts_t::goInterp(0.5f, DE_NONE) };
     BSPOSTRECT prs[] = { PR_STANDARD, PR_VALUEONLY, PR_VALUEAROUND, PR_SUMMARY };
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
@@ -502,7 +527,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gts[c] + prs[i] );
         draws[c*drcount + i]->setScalingLimitsHorz(c == 2? 5 : 12);
         draws[c*drcount + i]->setScalingLimitsVert(c == 0 && i == 1? 12 : 5);
-        draws[c*drcount + i]->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_CONTOUR, c == 1? i == 2? 4 : 1 : 0));
+        draws[c*drcount + i]->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_CONTOUR, c == 1? i == 2? 4 : 1 : 0));
       }
     
     sp = SP_SLOWEST;
@@ -519,7 +544,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       draws[i] = new DrawSDPicture(SAMPLES, MAXLINES, img_path_sdp /*"/home/elijah/Projects/schema/schemod.png"*/);
       draws[i]->setRawResizeModeNoScaled(true);
     }
-//    draws[2]->setPostMask(DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOTCONTOUR, 0, 0.0f, 0.0f));
+//    draws[2]->setPostMask(DPostmask::postmask(PO_ALL, PM_DOTCONTOUR, 0, 0.0f, 0.0f));
     sigtype = ST_MANYSIN;
     sp = SP_FAST;
 //    sigtype = ST_ZOO;
@@ -535,7 +560,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 29;
     PRECREATE(5, 1);
     
-    graphopts_t  gopts = { GT_LINTERP, DE_LINTERP, 0.0f, 0, 0.0f, 0.2f, PR_STANDARD };
+    graphopts_t  gopts = { GT_LINTERP, DE_LINTERP, 0.0f, 0, 0.0f, 0.6f, PR_STANDARD };
 //    graphopts_t  gopts = { GT_DOTS, DE_NONE, 0.0f, 0, 0.0f, 0.2f, PR_STANDARD };
     draws[0] = new DrawGraph(SAMPLES, PORTIONS_MIN, gopts, coloropts_t::copts(CP_SINGLE, 0.332f, 1.0f));
     draws[0]->setScalingLimitsVert(1);
@@ -566,7 +591,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     MAXLINES = 200;
     PORTIONS = 3;
     PRECREATE(3, 3);
-    float smoothtest[] = { -0.5f, -0.3f, 0.0f,
+    float smoothtest[] = { -1.0f, -0.3f, 0.0f,
                            0.2f,  0.3f,  0.4f,
                            0.6f,  0.8f,  1.0f
                          };
@@ -584,9 +609,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       }
     
     sigtype = ST_HIPERB;
-//    sigtype = ST_GEN_NORM;
-//    sp = SP_ONCE;
     defaultPalette = (const IPalette*)ppalettes_adv[47];
+    
+//    sigtype = ST_SINXX;
+//    sp = SP_SLOWEST;
+//    setMinimumSize(2400, 1000);
   }
   else if (MW_TEST == FEATURE_ORIENTS)
   {
@@ -599,7 +626,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     const char* ornames[] = { "LRBT",  "TBLR",  "BTRL",  "BTLR",  "TBRL",  "RLTB" };
     for (unsigned int i=0; i<drawscount; i++)
     {
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp2(0.0, DE_NONE), coloropts_t::copts(0x00111111));
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp2(0.5, DE_NONE), coloropts_t::copts(0x00111111));
       draws[i]->setOrientation(orients[i]);
       draws[i]->ovlPushBack(new OTextColored(ornames[i], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f,
                                              12, i == 0 || i == drawscount-1? OO_BTRL : OO_LRBT, 0x00000000, 0x00FFFFFF, 0x00000000));
@@ -615,15 +642,14 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(4, 1);
     
     graphopts_t  gopts[] = { graphopts_t::goDots(0, 0.0f, DE_NONE), 
-                             graphopts_t::goInterp(0.0, DE_LINTERP), 
-                             graphopts_t::goInterp(0.0, DE_SINTERP), 
-                             graphopts_t::goInterp(0.0, DE_QINTERP), 
+                             graphopts_t::goInterp(0.1f, DE_LINTERP), 
+                             graphopts_t::goInterp(0.1f, DE_SINTERP), 
+                             graphopts_t::goInterp(0.1f, DE_QINTERP), 
                            };
     const char*  gnames[] = { "Original Data", "Linear interpolation", "Smooth by 3 points", "Smooth by 4 points" };
     
     for (unsigned int i=0; i<sizeof(gopts)/sizeof(graphopts_t); i++)
     {
-      gopts[i].smooth = 0.5f;
       gopts[i].dotsize = 4;
 //      gopts[i].dotsmooth = 2.0;
       gopts[i].dotsmooth = 0.8f;
@@ -654,37 +680,37 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     DPostmask dpms[] = {  
                           // 1st row
-                          DPostmask(DPostmask::PO_OFF, DPostmask::PM_DOT, 0),
-                          DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_CONTOUR, 3, 0.0f, 0.5f),
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_CONTOUR, 3, 0.0f),
+                          DPostmask::postmask(PO_OFF, PM_DOT, 0),
+                          DPostmask::postmask(PO_EMPTY, PM_CONTOUR, 3, 0.0f, 0.5f),
+                          DPostmask::postmask(PO_ALL, PM_CONTOUR, 3, 0.0f),
       
                           // 2nd row
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_LINELEFTBOTTOM, 0, 0.0f),
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOTLEFTBOTTOM, 2, 1.0f, 0.0f),
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_LINELEFTBOTTOM, 2, 0.0f, 0.4f, 0.9f),
+                          DPostmask::postmask(PO_ALL, PM_LINELEFTBOTTOM, 0, 0.0f),
+                          DPostmask::postmask(PO_ALL, PM_DOTLEFTBOTTOM, 2, 1.0f, 0.0f),
+                          DPostmask::postmask(PO_ALL, PM_LINELEFTBOTTOM, 2, 0.0f, 0.4f, 0.9f),
       
                           // 3rd row
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOTCONTOUR, 0, 0.0f, 0.0f),
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_SQUARES, 0, 0.0f, 0.0f),
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOTCONTOUR, 3, 0.0f, 0.0f),
+                          DPostmask::postmask(PO_ALL, PM_DOTCONTOUR, 0, 0.0f, 0.0f),
+                          DPostmask::postmask(PO_ALL, PM_SQUARES, 0, 0.0f, 0.0f),
+                          DPostmask::postmask(PO_ALL, PM_DOTCONTOUR, 3, 0.0f, 0.0f),
     
                           // 4th row
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_PSEUDOCIRCLE, 0, 0.0f),
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_PSEUDOCIRCLE, 4, 0.0f),
-                          DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_PSEUDOCIRCLE, 0, 0.0f, 0.9f),
+                          DPostmask::postmask(PO_ALL, PM_PSEUDOCIRCLE, 0, 0.0f),
+                          DPostmask::postmask(PO_ALL, PM_PSEUDOCIRCLE, 4, 0.0f),
+                          DPostmask::postmask(PO_SIGNAL, PM_PSEUDOCIRCLE, 0, 0.0f, 0.9f),
       
-                          DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_FILL, 0, 0.0f, 0.8f),
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOT, 1, 0.0f, 0.0f),
-                          DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_SHTRICHL, 1, 0.5f, 0.5f, 0.5f, 0.3f),
+                          DPostmask::postmask(PO_SIGNAL, PM_FILL, 0, 0.0f, 0.8f),
+                          DPostmask::postmask(PO_ALL, PM_DOT, 1, 0.0f, 0.0f),
+                          DPostmask::postmask(PO_EMPTY, PM_SHTRICHL, 1, 0.5f, 0.5f, 0.5f, 0.3f),
                           
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_CONTOUR, 1, 0.0f, 0.0f, 0.0f),
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_CONTOUR, 1, 0.3f, 0.3f, 0.3f),
-                          DPostmask(DPostmask::PO_ALL, DPostmask::PM_CONTOUR, 1, 1.0f, 1.0f, 1.0f),
+                          DPostmask::postmask(PO_ALL, PM_CONTOUR, 1, 0.0f, 0.0f, 0.0f),
+                          DPostmask::postmask(PO_ALL, PM_CONTOUR, 1, 0.3f, 0.3f, 0.3f),
+                          DPostmask::postmask(PO_ALL, PM_CONTOUR, 1, 1.0f, 1.0f, 1.0f),
                           
                        };
     
 //    for (int i=0; i<sizeof(dpms)/sizeof(DPostmask); i++)
-//      dpms[i] = DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_CROSS, 0, 0.5f, 0.5f, 0.5f, i / 18.0f);
+//      dpms[i] = DPostmask::postmask(PO_EMPTY, PM_CROSS, 0, 0.5f, 0.5f, 0.5f, i / 18.0f);
 //    sp = SP_ONCE;
     
     
@@ -706,16 +732,16 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     SAMPLES = 180;
     MAXLINES = 70;
     PORTIONS = 4;
-    PRECREATE(6, 1);
+    PRECREATE(7, 1);
 //    syncscaling = 4;
     
-    BSCOLORPOLICY cps[] = { CP_SINGLE, CP_OWNRANGE, CP_OWNRANGE_GROSS, CP_OWNRANGE_SYMMETRIC, CP_RANGE, CP_SUBPAINTED };
-    const char* cpnames[] = { "CP_SINGLE", "CP_OWNRANGE", "CP_OWNRANGE_GROSS", "CP_OWNRANGE_SYMMETRIC", "CP_RANGE", "CP_SUBPAINTED" };
+    BSCOLORPOLICY cps[] = { CP_SINGLE, CP_OWNRANGE, CP_OWNRANGE_GROSS, CP_OWNRANGE_SYMMETRIC, CP_RANGE, CP_SUBPAINTED, CP_RANGESUBPAINTED };
+    const char* cpnames[] = { "CP_SINGLE", "CP_OWNRANGE", "CP_OWNRANGE_GROSS", "CP_OWNRANGE_SYMMETRIC", "CP_RANGE", "CP_SUBPAINTED", "CP_RANGESUBPAINTED" };
     
     for (unsigned int i=0; i<drawscount; i++)
     {
       draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.5f, DE_QINTERP), coloropts_t::copts(cps[i], 1.0f, 0.3f));
-//      draws[i]->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f));
+//      draws[i]->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f));
       draws[i]->setScalingLimitsHorz(7);
       
       draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.8f, 0.7f, 12, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
@@ -733,9 +759,9 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(4, 1);
     draws[0] = new DrawGraph(SAMPLES/8, PORTIONS, graphopts_t::goHistogram());
     draws[0]->setScalingLimitsB(8,8);
-    draws[0]->setPostMask(DPostmask(DPostmask::PO_SIGNAL, DPostmask::PM_CONTOUR, 0, 0.3f,0.3f,0.3f));
+    draws[0]->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_CONTOUR, 0, 0.3f,0.3f,0.3f));
     
-    draws[1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.0f, DE_NONE));
+    draws[1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.5f, DE_NONE));
     
     draws[2] = new DrawRecorder(SAMPLES, MAXLINES, 1000, PORTIONS);
     
@@ -762,7 +788,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     for (unsigned int i=0; i<drawscount; i++)
     {
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.0f, DE_QINTERP), coloropts_t::copts(CP_SINGLE, 1.0f, 0.3f, i == 2? 0x00AAAAAA : 0xFFFFFFFF));
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.5f, DE_QINTERP), coloropts_t::copts(CP_SINGLE, 1.0f, 0.3f, i == 2? 0x00AAAAAA : 0xFFFFFFFF));
 //      draws[i]->setScalingLimitsHorz(7);
 //      draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.8f, 0.7f, 12, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
     }
@@ -771,7 +797,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     sigtype = ST_MOVE;
     defaultPalette = ppalettes_adv[12];
   }
-  else if (MW_TEST == IMPULSE)
+  else if (MW_TEST == IMPULSE_HORZ)
   {
     SAMPLES = 5;
     MAXLINES = 1;
@@ -779,10 +805,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(5, 1);
     
     impulsedata_t imp[] = { { impulsedata_t::IR_OFF },
-                            { impulsedata_t::IR_COEFF, 5, 5/2, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
-                            { impulsedata_t::IR_COEFF_NOSCALED, 5, 5/2, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
-                            { impulsedata_t::IR_BORDERS_FIXEDCOUNT, 30, 4, {} },
-                            { impulsedata_t::IR_BORDERS, 30, 4, {} },
+                            { impulsedata_t::IR_A_COEFF, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { impulsedata_t::IR_A_COEFF_NOSCALED, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 30, 4, 0, {} },
+                            { impulsedata_t::IR_A_BORDERS, 30, 4, 0, {} },
     };
     const char* cpnames[] = { "ORIGINAL", "COEFF", "COEFF_NOSCALED", "BORDERS_FIXED", "BORDERS", "" };
     for (unsigned int i=0; i<drawscount; i++)
@@ -794,6 +820,31 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.05f, 0.05f, 8, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
     }
     sigtype = ST_RAMP;
+//    defaultPalette = ppalettes_adv[12];
+  }
+  else if (MW_TEST == IMPULSE_VERT)
+  {
+    SAMPLES = 1;
+    MAXLINES = 5;
+    PORTIONS = 1;
+    PRECREATE(1, 5);
+    
+    impulsedata_t imp[] = { { impulsedata_t::IR_OFF },
+                            { impulsedata_t::IR_B_COEFF, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { impulsedata_t::IR_B_COEFF_NOSCALED, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { impulsedata_t::IR_B_BORDERS_FIXEDCOUNT, 30, 4, 0, {} },
+                            { impulsedata_t::IR_B_BORDERS, 30, 4, 0, {} },
+    };
+    const char* cpnames[] = { "ORIGINAL", "COEFF", "COEFF_NOSCALED", "BORDERS_FIXED", "BORDERS", "" };
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+      draws[i] = new DrawIntensity(SAMPLES, MAXLINES, 1);
+      draws[i]->setImpulse(imp[i]);
+      draws[i]->setScalingLimitsA(50);
+      draws[i]->setScalingLimitsB(50);
+      draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.05f, 0.05f, 8, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
+    }
+    sigtype = ST_PEAK;
 //    defaultPalette = ppalettes_adv[12];
   }
   else if (MW_TEST == DRAW_BRIGHT_CLUSTER) /// bright cluster
@@ -850,8 +901,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       draws[i]->setScalingLimitsSynced(2 + i, 2 + i);
       
     }
-//    draws[2]->setPostMask(DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOTCONTOUR, 0, 0.0f, 0.0f));
-    draws[2]->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_LINERIGHTTOP, 0, 0x00333333, 0.2f));
+//    draws[2]->setPostMask(DPostmask::postmask(PO_ALL, PM_DOTCONTOUR, 0, 0.0f, 0.0f));
+    draws[2]->setPostMask(DPostmask::postmask(PO_EMPTY, PM_LINERIGHTTOP, 0, 0x00333333, 0.2f));
 
     sigtype = ST_MOVE;
   }
@@ -866,23 +917,140 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //      draws[i] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
       draws[i] = new DrawEmpty(SAMPLES, MAXLINES, 0x00333333);
     }
-//    draws[2]->setPostMask(DPostmask(DPostmask::PO_ALL, DPostmask::PM_DOTCONTOUR, 0, 0.0f, 0.0f));
+//    draws[2]->setPostMask(DPostmask::postmask(PO_ALL, PM_DOTCONTOUR, 0, 0.0f, 0.0f));
     sigtype = ST_10;
   }
-  else if (MW_TEST == PALETTE_TESTER)
+  else if (MW_TEST == PALETTE2D_TESTER)
   {
-//    SAMPLES = 100;
-//    MAXLINES = 300;
+#if 1
+    static const int clc = 172;
+    static unsigned int colors[2][clc];
+    int dm = clc/2;
+    
+    QColor clr("#EE9999");
+    const char* schemaname[2] = { "LG", "LR" };
+//    int rgb_p1[][2] = { { 0,0xA0 }, {0,0xED}, {0,0xA0} };
+//    int rgb_p2[][2] = { { 0,0xEE }, {0,0x99}, {0,0x99} };
+    
+    int rp1[][2] = { {25, 0x550000}, {59, 0x550000}, {25, 0x550000} };
+    
+    int rgb_p1[][2] = { { 0,0xA0 }, {0,0xED}, {0,0xA0} };
+    int rgb_p2[][2] = { { 0,0xED }, {0,0x99}, {0,0xA0} };
+    
+    for (int c=0; c<2; c++)
+    {
+      int rw[][2] = { { rgb_p1[0][0], rgb_p1[0][1] }, { rgb_p2[0][0], rgb_p2[0][1] }  };
+      int gw[][2] = { { rgb_p1[1][0], rgb_p1[1][1] }, { rgb_p2[1][0], rgb_p2[1][1] }  };
+      int bw[][2] = { { rgb_p1[2][0], rgb_p1[2][1] }, { rgb_p2[2][0], rgb_p2[2][1] }  };
+      for (int h=0; h<2; h++)
+      {
+        int cr=rw[h][0];
+        int cg=gw[h][0];
+        int cb=bw[h][0];
+        for (int i=0; i<dm; i++)
+        {
+          float step = float(i)/(dm-1);
+          cr = rw[h][0] + qRound(step*(rw[h][1] - rw[h][0]));
+          cg = gw[h][0] + qRound(step*(gw[h][1] - gw[h][0]));
+          cb = bw[h][0] + qRound(step*(bw[h][1] - bw[h][0]));
+          colors[c][dm*h + i] = (cb&0xFF) << 16 | (cg&0xFF) << 8 | (cr&0xFF);
+        }
+      }
+    }
+//    int red_way[][2] = { { 0, 0 }, {255,255} };
+//    int green_way[][2] = { { 0, 0 }, {0,255} };
+//    int blue_way[][2] = { { 0, 255}, {0,0} };
+    
+//    for (int c=0; c<2; c++)
+//    {
+//      int rw[][2] = { { red_way[c][0], red_way[c][1] }, { red_way[1-c][0], red_way[1-c][1] }  };
+//      int gw[][2] = { { green_way[c][0], green_way[c][1] }, { green_way[1-c][0], green_way[1-c][1] } };
+//      int bw[][2] = { { blue_way[c][0], blue_way[c][1] }, { blue_way[1-c][0], blue_way[1-c][1] } };
+//      for (int h=0; h<2; h++)
+//      {
+//        int cr=rw[h][0];
+//        int cg=gw[h][0];
+//        int cb=bw[h][0];
+//        for (int i=0; i<dm; i++)
+//        {
+//          float step = float(i)/(dm-1);
+//          cr = rw[h][0] + qRound(step*(rw[h][1] - rw[h][0]));
+//          cg = gw[h][0] + qRound(step*(gw[h][1] - gw[h][0]));
+//          cb = bw[h][0] + qRound(step*(bw[h][1] - bw[h][0]));
+//          colors[c][dm*h + i] = (cb&0xFF) << 16 | (cg&0xFF) << 8 | (cr&0xFF);
+//        }
+//      }
+//    }
+    qDebug()<<palette2string(QString("%1%2").arg(schemaname[0]).arg(schemaname[1]), colors[0], clc).toStdString().c_str();
+    qDebug()<<palette2string(QString("%1%2").arg(schemaname[1]).arg(schemaname[0]), colors[1], clc).toStdString().c_str();
+    
+    static PalettePArray palettes[2] = { PalettePArray(colors[0], clc, false), PalettePArray(colors[1], clc, false) };
+    const IPalette* pptr[2] = { &palettes[0], &palettes[1] };
+#else
+    const IPalette* pptr[2] = { &paletteGB, &paletteBG };
+#endif
+    
+    
+    SAMPLES = 100;
+    MAXLINES = 100;
+    PORTIONS = 2;
+    PRECREATE(1, 2);
+    for (int i=0; i < drawscount; i++)
+    {
+      draws[i] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
+//      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(0.0f, DE_NONE), coloropts_t::copts(CP_SUBPAINTED, 1.0f, 1.0f, 0x00000000));
+      draws[i]->setScalingLimitsSynced(6);
+      draws[i]->setClearByPalette();
+      draws[i]->setDataPalette(pptr[i]);
+      draws[i]->setDataPaletteDiscretion(true);
+    }
+//    sigtype = ST_ONE;
+    sp = SP_ONCE;
+    
+//    static PaletteBORDS<100> pptr(0x000000ff, 0.15f, 0x0000ff00, 0.85f, 0x000000ff);
+//    defaultPalette = &pptr;
+    
+//    SAMPLES = 3;
+//    MAXLINES = 100;
 //    PORTIONS = 1;
 //    PRECREATE(1, 1);
-////    draws[0] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
-//    draws[0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram());
-//    draws[0]->setScalingLimitsHorz(5);
+//    for (int i=0; i < 1; i++)
+//    {
+//      draws[i] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
+//      draws[i]->setDataPaletteDiscretion(true);
+//    }
 //    sigtype = ST_RAMP;
 //    sp = SP_ONCE;
     
-//    draws[0]->setDataPaletteDiscretion(true);
+//    static PaletteBORDS<100> pptr(0x000000ff, 0.3333f, 0x0000ff00, 0.6666f, 0x000000ff);
+//    defaultPalette = &pptr;
+  }
+  else if (MW_TEST == ADV_SIZE) 
+  {
+    SAMPLES = 23;
+    MAXLINES = 51;
+    PORTIONS = 1;
     
+    PRECREATE(4, 2);
+    OActiveCursor* oac = new OActiveCursor(CR_RELATIVE, -1,-1);
+    
+    
+    for (unsigned int i=0; i<drcount; i++)
+      for (unsigned int j=0; j<dccount; j++)
+      {
+        draws[i*dccount + j] = new DrawIntensity(SAMPLES, MAXLINES, 1, ORIENTATION(i*dccount + j));
+        draws[i*dccount + j]->setScalingLimitsA(1,1);
+        draws[i*dccount + j]->setScalingLimitsB(1,1);
+        
+        int id = draws[i*dccount + j]->ovlPushBack(oac);
+        OFLine* oaf = new OFLine(OFLine::LT_CROSS, CR_RELATIVE, 0.0f, 0.0f, CR_RELATIVE, 0.0f, -1, linestyle_white(1,0,0));
+        draws[i*dccount + j]->ovlPushBack(oaf, id);
+      }
+    sigtype = ST_ZERO;
+  }
+  
+//  else if (MW_TEST == PALETTE2D_TESTERX)
+//  {
 //#if false
 //    static const int clc = 33;
 //    static unsigned int colors[clc];
@@ -906,73 +1074,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //      colors[dm*3 + i] = 0xFF << 8;
 //    }
 //#else
-//    static const int clc = 96;
-//    static unsigned int colors[clc];
-//    int dm = clc/4;
-//    for (int i=0; i<dm; i++)
-//    {
-//      unsigned int up = (unsigned int)(((i)/float(dm-1))*255);
-//      unsigned int gnd = up << 16 | up << 8 | up;
-//      colors[dm*0 + i] = gnd;
-//      colors[dm*1 + i] = 0xFF << 0 | gnd;
-//      colors[dm*2 + i] = 0xFF << 8 | 0xFF << 0 | gnd;
-//      colors[dm*3 + i] = 0xFF << 8 | gnd;
-//    }
-//#endif
-//    static PalettePArray pptr(colors, clc, false);
-    
-//    qDebug()<<"const unsigned int colorsSemaphore [] = { ";
-//    QString result="  ";
-//    for (int i=0; i<clc; i++)
-//    {
-//      result += QString().sprintf(i == clc-1? "0x%08x" : "0x%08x,", pptr[i]);
-//      if ((i+1) % 10 == 0)
-//      {
-//        qDebug()<<result.toStdString().c_str();
-//        result = "  ";
-//      }
-//    }
-//    qDebug()<<result.toStdString().c_str();
-//    qDebug()<<"};";
-//    qDebug()<<"const PaletteConstFWD<sizeof(colorsSemaphore) / sizeof(unsigned int)>   paletteSemaphore(colorsSemaphore);";
-//    qDebug()<<"const PaletteConstBWD<sizeof(colorsSemaphore) / sizeof(unsigned int)>   paletteSemaphore_inv(colorsSemaphore);";
-    
-//    defaultPalette = &pptr;
-    
-    SAMPLES = 1000;
-    MAXLINES = 200;
-    PORTIONS = 1;
-    PRECREATE(1, 1);
-    BSCOLORPOLICY cps[] = { /*CP_SINGLE, CP_OWNRANGE, CP_OWNRANGE_GROSS, 
-                                     CP_OWNRANGE_SYMMETRIC, */CP_RANGE, CP_SUBPAINTED };
-    for (int i=0; i < 1; i++)
-    {
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(0.0f, DE_NONE), coloropts_t::copts(cps[i], 1.0f, 0.0f, 0x00000000));
-//      draws[i]->setScalingLimitsHorz(5);
-      draws[i]->setDataPaletteDiscretion(true);
-    }
-    sigtype = ST_RAMP;
-    sp = SP_ONCE;
-    
-    static PaletteBORDS<100> pptr(0x000000ff, 0.15f, 0x0000ff00, 0.85f, 0x000000ff);
-    defaultPalette = &pptr;
-    
-//    SAMPLES = 3;
-//    MAXLINES = 100;
-//    PORTIONS = 1;
-//    PRECREATE(1, 1);
-//    for (int i=0; i < 1; i++)
-//    {
-//      draws[i] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
-//      draws[i]->setDataPaletteDiscretion(true);
-//    }
-//    sigtype = ST_RAMP;
-//    sp = SP_ONCE;
-    
-//    static PaletteBORDS<100> pptr(0x000000ff, 0.3333f, 0x0000ff00, 0.6666f, 0x000000ff);
-//    defaultPalette = &pptr;
-  }
-  
+//  }
 //  else if (MW_TEST == PROGRESS_BAR)   /// progress
 //  {
 //    sigtype = ST_10;
@@ -988,11 +1090,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //        draws[i]->setScalingLimitsVert(10,10);
 //        draws[i]->setScalingLimitsHorz(10,10);
 //        if (i == 1)
-//          draws[i]->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_CONTOUR, 0, 0.3f,0.3f,0.3f));
+//          draws[i]->setPostMask(DPostmask::postmask(PO_EMPTY, PM_CONTOUR, 0, 0.3f,0.3f,0.3f));
 //        else if (i == 2)
-//          draws[i]->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_LINELEFT, 0, 0.7f,0.7f,0.7f));
+//          draws[i]->setPostMask(DPostmask::postmask(PO_EMPTY, PM_LINELEFT, 0, 0.7f,0.7f,0.7f));
 //        else if (i == 3)
-//          draws[i]->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_PSEUDOCIRCLE, 0, 0.0f,0.0f,0.0f));
+//          draws[i]->setPostMask(DPostmask::postmask(PO_EMPTY, PM_PSEUDOCIRCLE, 0, 0.0f,0.0f,0.0f));
 //      }
 //      else
 //        draws[i] = new DrawGraph(SAMPLES, 1, graphopts_t(GT_DOTS));
@@ -1014,7 +1116,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
 //      draws[i]->setRawResizeModeNoScaled(true);
       
-      if (MW_TEST != FEATURE_PORTIONS && MW_TEST != ADV_PALETTES)
+      if (MW_TEST != FEATURE_PORTIONS && MW_TEST != ADV_PALETTES && MW_TEST != PALETTE2D_TESTER)
         draws[i]->setDataPalette(defaultPalette);
       
       if (syncscaling > 0)
@@ -1103,7 +1205,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           tabshow = ptb->addTab(tr("Data"));
           BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
             BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-              int bfsmask = BFS_CHECKABLE | (MW_TEST == DRAW_BRIGHT_CLUSTER? BFS_DISABLED : 0);
+              int bfsmask = BFS_CHECKABLE | (MW_TEST == DRAW_BRIGHT_CLUSTER || MW_TEST == PALETTE2D_TESTER? BFS_DISABLED : 0);
               BSFieldSetup sigs[] = { 
                 BSFieldSetup(tr("Random"),  &fntSTD, ST_RAND, bfsmask,     btnMinWidth, btnMaxWidth),
                 BSFieldSetup(tr("Normal"), &fntSTD, ST_GEN_NORM, bfsmask,   btnMinWidth, btnMaxWidth),
@@ -1633,7 +1735,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           ptb->addTab(tr("Addit."));
           BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
             BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
-              DPostmask* dpm = new DPostmask(DPostmask::PO_OFF, DPostmask::PM_CONTOUR, 0, 0x00000000);
+              DPostmask* dpm = new DPostmask(DPostmask::empty());
               BSAUTO_TEXT_ADD(tr("Postmask: "), Qt::AlignLeft);
               BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
                 BSAUTO_TEXT_ADD(QString::fromUtf8("Over: "))
@@ -1997,7 +2099,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               else
                 pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED_POW2 | DBF_ONLY2NOTES | DBF_NOTESINSIDE, 0.0, 1.0, SAMPLES, 10);
               
-//              pDB->getDraw()->setPostMask(DPostmask(DPostmask::PO_EMPTY, DPostmask::PM_LINERIGHT, 0, 0.3f, 0.3f, 0.3f));
+//              pDB->getDraw()->setPostMask(DPostmask::postmask(PO_EMPTY, PM_LINERIGHT, 0, 0.3f, 0.3f, 0.3f));
 //              MEPointer mpH = pDB->addPointerFixed(AT_BOTTOM, 0, 180);
               MEWPointer* mpH = pDB->addPointerDrawUniSide(AT_BOTTOM, DBF_NOTESINSIDE);
 //              MEPointer mpV = pDB->addPointerDrawUniSide(AT_RIGHT);
@@ -2272,6 +2374,31 @@ void MainWindow::generateData()
     for (unsigned int i=0; i<drawscount; i++)
     {
       ((DrawIntensePoints*)draws[i])->setData( countByPortions, Xs, Ys, values);
+    }
+  }
+  else if (MW_TEST == PALETTE2D_TESTER)
+  {
+//    for (int p=0; p<PORTIONS; p++)
+//      for (int j=0; j<MAXLINES; j++)
+//        for (int i=0; i<DSAMPLES; i++)
+//        {
+//          testbuf2D[p*DSAMPLES*MAXLINES + j*DSAMPLES + i] = i/float(DSAMPLES-1) + j/float(MAXLINES-1);
+//        }
+    
+    for (int j=0; j<MAXLINES; j++)
+      for (int i=0; i<DSAMPLES; i++)
+      {
+        testbuf2D[0*DSAMPLES*MAXLINES + j*DSAMPLES + i] = i/float(DSAMPLES-1);
+      }
+    for (int j=0; j<MAXLINES; j++)
+      for (int i=0; i<DSAMPLES; i++)
+      {
+        testbuf2D[1*DSAMPLES*MAXLINES + j*DSAMPLES + i] = j/float(MAXLINES-1);
+      }
+    
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+      draws[i]->setData(testbuf2D);
     }
   }
   else
@@ -2954,9 +3081,9 @@ void MainWindow::changePostmask(int sigid)
 {
   BSUOD_DPM* dpm = (BSUOD_DPM*)sender()->userData(1);
   if (dpm->id == 0)
-    dpm->dpm->postmask = (DPostmask::DPMASK)sigid;
+    dpm->dpm->mask = (BSPOSTMASKTYPE)sigid;
   else if (dpm->id == 1)
-    dpm->dpm->over = (DPostmask::DPOVER)sigid;
+    dpm->dpm->over = (BSPOSTMASKOVER)sigid;
   else if (dpm->id == 2)
     dpm->dpm->weight = sigid;
   else if (dpm->id == 3)
@@ -3073,7 +3200,7 @@ void MainWindow::createOverlaySTD(int id)
     {
       draws[i]->ovlPushBack(new OFLine(OFLine::LT_CROSS, CR_RELATIVE, 0.5, 0.5, CR_ABSOLUTE, 0, 10, linestyle_grey(1,0,0)));
       draws[i]->ovlPushBack(new OGridCircular(CR_RELATIVE, 0.5, 0.5, CR_RELATIVE, 0.1, linestyle_grey(1,0,0)));
-      draws[i]->ovlPushBack(new OToons(CR_RELATIVE, 0.95, 1, linestyle_greydark(1,0,0)));
+//      draws[i]->ovlPushBack(new OToons(CR_RELATIVE, 0.95, 1, linestyle_greydark(1,0,0)));
       break;
     }
     case COS_DROPLINES:
@@ -3221,7 +3348,7 @@ void MainWindow::createOverlayADD()
   {
     float opacity = 0.2f;
     float centerX = rand() / float(RAND_MAX), centerY = rand()/float(RAND_MAX);
-    float abssize = 10;
+    float abssize = 20;
     linestyle_t kls = linestyle_green(1,0,0);
     
     DrawOverlay* ovl = nullptr;

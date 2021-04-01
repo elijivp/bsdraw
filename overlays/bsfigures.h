@@ -23,9 +23,10 @@ class OFCircle: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDim
 {
 protected:
   float  m_fillcoeff;
+  float  m_border;
 public:
-  OFCircle(float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float radius, const linestyle_t& kls=linestyle_solid(1,1,1));
-  OFCircle(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float radius, const linestyle_t& kls=linestyle_solid(1,1,1));
+  OFCircle(float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float radius, const linestyle_t& kls=linestyle_solid(1,1,1), float border=1.0f);
+  OFCircle(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float radius, const linestyle_t& kls=linestyle_solid(1,1,1), float border=1.0f);
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
@@ -84,6 +85,23 @@ public:
 public:
   OFLine(COORDINATION cn, float start_x, float start_y, float end_x, float end_y, const linestyle_t& linestyle=linestyle_solid(1,1,1));
   OFLine(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float end_x, float end_y, const linestyle_t& linestyle=linestyle_solid(1,1,1));
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+};
+
+class OFRay: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimmsOff
+{
+public:
+protected:
+  COORDINATION  m_featcn;
+  float         m_start_x, m_start_y;
+  COORDINATION  m_additcn;
+  float         m_length;
+public:
+  OFRay(COORDINATION cn, float start_x, float start_y, const linestyle_t& linestyle=linestyle_solid(1,1,1));
+  OFRay(COORDINATION cn, float start_x, float start_y, COORDINATION additcn, float length, const linestyle_t& linestyle=linestyle_solid(1,1,1));
+  OFRay(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float start_x, float start_y, const linestyle_t& linestyle=linestyle_solid(1,1,1));
+  OFRay(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float start_x, float start_y, COORDINATION additcn, float length, const linestyle_t& linestyle=linestyle_solid(1,1,1));
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };

@@ -61,8 +61,8 @@ int ODropPoints::fshTrace(int overlay, bool rotated, char *to) const
     {
       ocg.goto_normed("point.xy", ptpixing);
       ocg.push("_fvar = (1.0+thick - clamp(distance(vec2(inormed), vec2(0.0,0.0)), 0.0, 1.0+thick))/(1.0+thick);");
-      ocg.push("_mvar = vec3(_fvar, sign(_fvar), sign(_fvar)) * vec3(1, float(i)/float(rarr_len), rarr_len);");
-      ocg.push("result = mix(result, _mvar, 1 - step(abs(_mvar[0]) - abs(result[0]), 0.0) );");
+      ocg.push("_mvar = vec2(_fvar, float(i));");
+      ocg.push("result = mix(result, vec3(_mvar*_traceban, 0.0), 1 - step(abs(_mvar[0]) - abs(result[0]), 0.0) );");
     }
     ocg.param_for_end();
   }
@@ -222,9 +222,9 @@ bool OBrush::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-OSelectorReaction::OSelectorReaction(const linestyle_t &kls, float alpha, bool moveable): 
+OSelectorReaction::OSelectorReaction(const linestyle_t &kls, float alpha, bool moveable, bool saveneg): 
   DrawOverlayTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f),
-  m_alpha(alpha), m_phase(-1), m_move(moveable)
+  m_alpha(alpha), m_phase(-1), m_move(moveable), m_neg(saveneg)
 {
   if (alpha > 0.0f)
     m_linestyle.outside = OLS_OPACITY_LINEAR;
@@ -263,6 +263,7 @@ bool OSelectorReaction::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const vo
     {
       m_phase = oreact == ORM_LMPRESS? 1 : 0;
       m_xy = ovlcoords_t((const float*)dataptr);
+      m_dxy = m_xy;
       m_wh = ovldimms2_t(0.0f, 0.0f);
       m_dimmsready = false;
       result = true;
@@ -272,8 +273,8 @@ bool OSelectorReaction::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const vo
       if (m_phase == 1)
       {
         ovlcoords_t pdt((const float*)dataptr);
-        m_wh.w = pdt.x - m_xy.x;  //if (m_wh[0] < 0) m_wh[0] = -m_wh[0];
-        m_wh.h = pdt.y - m_xy.y;  //if (m_wh[1] < 0) m_wh[1] = -m_wh[1];
+        m_wh.w = pdt.x - m_dxy.x;  if (m_wh.w < 0 && !m_neg){  m_wh.w = -m_wh.w; m_xy.x = pdt.x; }  //if (m_wh[0] < 0) m_wh[0] = -m_wh[0];
+        m_wh.h = pdt.y - m_dxy.y;  if (m_wh.h < 0 && !m_neg){  m_wh.h = -m_wh.h; m_xy.y = pdt.y; } //if (m_wh[1] < 0) m_wh[1] = -m_wh[1];
         result = true;
       }
       if (oreact == ORM_LMRELEASE)
@@ -293,7 +294,7 @@ bool OSelectorReaction::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const vo
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-OSelector::OSelector(const linestyle_t& kls, float alpha, bool moveable): OSelectorReaction(kls, alpha, moveable)
+OSelector::OSelector(const linestyle_t& kls, float alpha, bool moveable): OSelectorReaction(kls, alpha, moveable, false)
 {
 }
 
@@ -304,15 +305,14 @@ int OSelector::fshTrace(int overlay, bool rotated, char *to) const
   {
     {
       ocg.goto_normed();      
-      ocg.trace_rect_xywh_begin(nullptr);
-      ocg.trace_rect_xywh_end("idimms2", m_alpha);
+      ocg.trace_rect_xywh("idimms2", m_alpha);
     }
   }
   ocg.goto_func_end(true);
   return ocg.written();
 }
 
-OSelectorCirc::OSelectorCirc(const linestyle_t& kls, float alpha, bool moveable): OSelectorReaction(kls, alpha, moveable)
+OSelectorCirc::OSelectorCirc(const linestyle_t& kls, float alpha, bool moveable): OSelectorReaction(kls, alpha, moveable, true)
 {
 }
 

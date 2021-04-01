@@ -157,10 +157,7 @@ int OTextTraced::fshTrace(int overlay, bool rotated, char *to) const
                 "result += vec3(inside*textpixel, 0.0, 1.0);"
                 );
       if (m_rectangled)
-      {
-        ocg.trace_rect_xywh_begin("rect_size");
-        ocg.trace_rect_xywh_end("rect_size");
-      }
+        ocg.trace_rect_xywh("rect_size");
     }
     ocg.inside_end();
   }
@@ -337,8 +334,7 @@ int OTextPaletted::fshTrace(int overlay, bool rotated, char* to) const
                 );
       if (m_rectangled)
       {
-        ocg.trace_rect_xywh_begin("rect_size");
-        ocg.trace_rect_xywh_end("rect_size");
+        ocg.trace_rect_xywh("rect_size");
         ocg.push("mixwell = result[0] + textmixwell;");
       }
       else

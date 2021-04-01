@@ -301,17 +301,24 @@ static void rectAlign(const QRect& area, Qt::Alignment alignment, QPoint* result
 
 enum  RELATED_FLAG { 
   RF_NONE=0,
-  RF_SETBOUNDS=1, RF_SETENUMERATE=2,
-  RF_SETTAPS=3,
-  RF_SETTAPWDG=4
+  RF_SETBOUNDS=1,
+  RF_SETBOUNDSMOD=2,
+  RF_SETENUMERATE=3,
+  RF_SETTAPS=4,
+  RF_SETTAPWDG=5
 };
 
 union relatedopts_t
 {
-  struct tt_t
+  struct
   {
     float         LL, HL;
   }               rel_fixed;
+  struct
+  {
+    float         LL, HL;
+    float         MOD;
+  }               rel_fixed_mod;
   struct
   {
     mtap_qstring_fn  tapfn;
@@ -331,14 +338,15 @@ union relatedopts_t
     int       recycle;
     int       enfrom;
   }               rel_enumerate;
-  struct
-  {
-    int       step;
-    int       recycle;
-  }               rel_symbolate;
+//  struct
+//  {
+//    int       step;
+//    int       recycle;
+//  }               rel_symbolate;
   
   relatedopts_t(){}
   relatedopts_t(const bounds_t bnd){  rel_fixed.LL = bnd.LL; rel_fixed.HL = bnd.HL; }
+  relatedopts_t(const bounds_t bnd, float mod){  rel_fixed_mod.LL = bnd.LL; rel_fixed_mod.HL = bnd.HL;  rel_fixed_mod.MOD = mod; }
   relatedopts_t(mtap_qstring_fn tapfn, const void* param, int maxlen){  rel_tap_qstring.tapfn = tapfn; rel_tap_qstring.param = param; rel_tap_qstring.slen = maxlen; /*rel_tap_qstring.sstr.reserve(maxlen); */ }
 //  relatedopts_t(mtap_qwidget_fn tapfn, const void* param, int maxperpendiculardimm){  rel_tap_qwidget.tapfn = tapfn; rel_tap_qwidget.param = param; rel_tap_qwidget.maxperpdimm = maxperpendiculardimm; }
   relatedopts_t(int numcount, int enfrom, int recycle){  rel_enumerate.numcount = numcount;  rel_enumerate.enfrom = enfrom;  rel_enumerate.recycle = recycle; }
@@ -348,36 +356,126 @@ union relatedopts_t
 
 class MarginBoundDepended
 {
+  int                     c_rtexttype;
+  relatedopts_t           c_rdata;
+  float                   c_reloffset;
 protected:
-  int                     rtexttype;
-  int                     lmoffset, lmardimm;
-  relatedopts_t           rdata;
-  float                   reloffset;
+  
+  char*                   prefix, *postfix;  
+  char                    prefix_array[12], postfix_array[12];
+  
+  struct  tapcontent_t
+  {
+    int   lmoffset, lmardimm;
+  }                       tapctt;
 public:
   virtual ~MarginBoundDepended(){}
-  virtual void relatedTextup()=0;
+  bool bdContentUpdate(bool forcedupdate=true)
+  {
+    return bdContentUpdate(c_rtexttype, c_rdata, forcedupdate);
+  }
+  bool bdContentUpdate(int rtexttype, const relatedopts_t& rdata, bool forcedupdate=false)
+  {
+    bool docall = (rtexttype != c_rtexttype) | forcedupdate;
+    c_rtexttype = rtexttype;
+    if (rtexttype == RF_SETBOUNDS)
+    {
+      docall |= (rdata.rel_fixed.LL != c_rdata.rel_fixed.LL) || (rdata.rel_fixed.HL != c_rdata.rel_fixed.HL);
+      if (docall)
+      {
+        c_rdata = rdata;
+        float ll = rdata.rel_fixed.LL + (rdata.rel_fixed.HL - rdata.rel_fixed.LL)*c_reloffset;
+        float hl = rdata.rel_fixed.HL + (rdata.rel_fixed.HL - rdata.rel_fixed.LL)*c_reloffset;
+        bdContentUpdateBounds(ll, hl);
+      }
+    }
+    if (rtexttype == RF_SETBOUNDSMOD)
+    {
+      docall |= (rdata.rel_fixed_mod.LL != c_rdata.rel_fixed_mod.LL) || (rdata.rel_fixed_mod.HL != c_rdata.rel_fixed_mod.HL);
+      if (docall)
+      {
+        c_rdata = rdata;
+        float ll = rdata.rel_fixed_mod.LL + (rdata.rel_fixed_mod.HL - rdata.rel_fixed_mod.LL)*c_reloffset;
+        float hl = rdata.rel_fixed_mod.HL + (rdata.rel_fixed_mod.HL - rdata.rel_fixed_mod.LL)*c_reloffset;
+        bdContentUpdateBoundsMod(ll, hl, rdata.rel_fixed_mod.MOD);
+      }
+    }
+    else if (rtexttype == RF_SETTAPS)
+    {
+      docall = true;
+      c_rdata = rdata;
+      QString sstr(rdata.rel_tap_qstring.slen, Qt::Uninitialized);
+      bdContentUpdateTaps(sstr, rdata.rel_tap_qstring.tapfn, rdata.rel_tap_qstring.param, c_reloffset, tapctt);
+    }
+    else if (rtexttype == RF_SETENUMERATE)
+    {
+      docall |= (rdata.rel_enumerate.enfrom != c_rdata.rel_enumerate.enfrom) || (rdata.rel_enumerate.numcount != c_rdata.rel_enumerate.numcount);
+      if (docall)
+      {
+        c_rdata = rdata;
+        bdContentUpdateEnumerate(rdata.rel_enumerate.enfrom, rdata.rel_enumerate.numcount, rdata.rel_enumerate.recycle, c_reloffset);
+      }
+    }
+    return docall;
+  }
+protected:
+  virtual void  bdContentUpdateBounds(float LL, float HL)=0;
+  virtual void  bdContentUpdateBoundsMod(float LL, float HL, float MOD)=0;
+  virtual void  bdContentUpdateTaps(QString& base, mtap_qstring_fn, const void* param, float relatedoffset, const tapcontent_t&)=0;
+  virtual void  bdContentUpdateEnumerate(int from, int count, int recycle, float relatedoffset)=0;
 public:
-  MarginBoundDepended(): rtexttype(RF_NONE), lmoffset(0), lmardimm(1), reloffset(0){}
-  void    setRelatedOpts(int texttype, const relatedopts_t& reldata, bool autocalltextup=true)
+  MarginBoundDepended(): c_reloffset(0), prefix(nullptr), postfix(nullptr)
   {
-    rtexttype = texttype;
-    rdata = reldata;
-    if (autocalltextup)
-      relatedTextup();
+    c_rtexttype = RF_NONE;
+    c_rdata.rel_fixed.LL = c_rdata.rel_fixed.HL = 0;
+    c_rdata.rel_enumerate.enfrom = c_rdata.rel_enumerate.numcount = -1;
+    tapctt.lmoffset = 0;
+    tapctt.lmardimm = 1;
   }
-  void    setRelatedOffset(int offset, bool autocalltextup=true)
+  
+  void    setRelatedOffset(int offset, bool autocallupdates=true)
   {
-    lmoffset = offset;
-    reloffset = lmoffset / lmardimm;
-    if (autocalltextup)
-      relatedTextup();
+    tapctt.lmoffset = offset;
+    if (tapctt.lmardimm != 0)     // ntf??
+    {
+      float reloffset = tapctt.lmoffset / tapctt.lmardimm;
+      if (c_reloffset != reloffset)
+      {
+        c_reloffset = reloffset;
+        if (autocallupdates)
+          bdContentUpdate(c_rtexttype, c_rdata, autocallupdates);
+      }
+    }
   }
-  void    storeDimm(int dimm, bool autocalltextup=false)
+  void    storeDimm(int dimm, bool autocallupdates=false)
   {
-    lmardimm = dimm;
-    reloffset = lmoffset / lmardimm;
-    if (autocalltextup)
-      relatedTextup();
+    if (dimm != 0)    // ntf??
+    {
+      tapctt.lmardimm = dimm;
+      c_reloffset = tapctt.lmoffset / tapctt.lmardimm;
+      if (autocallupdates)
+        bdContentUpdate(c_rtexttype, c_rdata, autocallupdates);
+    }
+  }
+  
+  int rmaxlen() const {  return c_rtexttype == RF_SETBOUNDS || c_rtexttype == RF_SETBOUNDSMOD ? 7 : c_rtexttype == RF_SETENUMERATE? c_rdata.rel_enumerate.numcount :
+                                c_rtexttype == RF_SETTAPS? c_rdata.rel_tap_qstring.slen : 0; }
+public:
+  void    setPrefix(const char* str){   if (str == nullptr) prefix = nullptr; else{ prefix = prefix_array; strcpy(prefix, str); } }
+  void    setPostfix(const char* str){  if (str == nullptr) postfix = nullptr; else { postfix = postfix_array; strcpy(postfix, str); } }
+protected:
+  QString&  redact(QString& sstr) const
+  {
+    if (prefix)   sstr = prefix + sstr;
+    if (postfix)  sstr = sstr + postfix;
+    return sstr;
+  }
+  QString   redact(const QString& sstr) const
+  {
+    QString result(sstr);
+    if (prefix)   result = prefix + result;
+    if (postfix)  result = result + postfix;
+    return result;
   }
 };
 
@@ -403,6 +501,7 @@ public:
   }
 protected:
   virtual bool  updateArea(const uarea_t&, int){ return true; }
+//  virtual bool  needredraw() const {  return false; }
   virtual void  draw(QPainter&){}
   virtual void  sizeHint(ATTACHED_TO, int* atto_size, int* mindly, int* mindly1, int* mindly2) const
   {
@@ -412,16 +511,50 @@ protected:
   virtual void  changeColor(const QColor&){}
 };
 
+//class MarginStretch: public MarginElement
+//{
+//  int space;
+//  int stepSelf, stepDraw;
+//  int c_space;
+//public:
+//  MarginStretch(int _space, int _stepself, int _stepdraw): space(_space), stepSelf(_stepself), stepDraw(_stepdraw),
+//    c_space(0)
+//  {
+//  }
+//  void  setSpace(int newspace)
+//  {
+//    space = newspace;
+//    c_space = 0;
+//  }
+////  void  resize(int drawsize)
+//  int   spaceCurrent() const  {   return space + c_space; }
+//protected:
+//  virtual bool  updateArea(const uarea_t&, int){ return true; }
+////  virtual bool  needredraw() const {  return false; }
+//  virtual void  draw(QPainter&){}
+//  virtual void  sizeHint(ATTACHED_TO, int* atto_size, int* mindly, int* mindly1, int* mindly2) const
+//  {
+//    *atto_size = space + c_space;
+//    *mindly = *mindly1 = *mindly2 = 0;
+//  }
+//  virtual void  changeColor(const QColor&){}
+//};
+
 class MarginElementCached: public MarginElement
 {
   uarea_t       c_area;
   bool          c_haveArea;
+  
+//  unsigned int  upmask;
 protected:
+//  virtual bool  needredraw() const {  return upmask != 0; }
+  virtual void  draw(QPainter&){ /*upmask = 0;*/ }
   virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
   {
     bool inited = c_haveArea;
     bool equal = area == c_area;
     c_area = area;
+//    upmask = equal? 1 : 0;
     if (UPDATEFOR == UF_RESIZE)
     {
 //      qDebug()<<"UpAr: resize, inited = "<<inited<<equal;
@@ -437,13 +570,12 @@ protected:
   }
   
   const uarea_t&  cached_area() const { return c_area; }
-//  bool            cached_haveArea() const { return c_haveArea; }
 protected:
   QColor        c_color;
   bool          c_color_redefined;
   virtual void  changeColor(const QColor& clr){  c_color = clr; c_color_redefined = true; }
 public:
-  MarginElementCached(): c_haveArea(false), c_color_redefined(false)
+  MarginElementCached(): c_haveArea(false), c_color_redefined(false)//, upmask(1)
   {
   }
   ~MarginElementCached();
@@ -504,6 +636,7 @@ protected:
   }
   virtual void  draw(QPainter& painter)
   { 
+//    MarginElementCached::draw(painter);
     if (c_color_redefined)
       for (int i=0; i<count; i++)
         painter.fillRect(dtrt[i], c_color);
@@ -609,6 +742,7 @@ protected:
   }
   virtual void  draw(QPainter& painter)
   {
+//    MarginElementCached::draw(painter);
     if (label.visible)
     {
       painter.save();
@@ -814,43 +948,55 @@ protected:
 
 class MarginPointer: public MarginElementCached, public MarginBoundDepended
 {
+//  bool            needRedrawByPosition;
+  ORIENTATION     orient;
   texts_t         pointer;
   Qt::Alignment   alignment;
   float           position;
+  float           c_value;
 //  Qt::Orientation orientation;
 //  QSize           orient_size;
 //  QTransform      ttransform;
 //  QPoint          ttranspoint;
   QFont           font;
   bool            fontReplaced;
-  
   bool            textInnerPlaced;
   
   DSNumFormatter  numfmt;
-  float           LL, HL;
+  float           LL, HL, MOD;
 public:
-  MarginPointer(Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/, bool innerTextPlacement=true): 
-    alignment(align), position(-1.0f), /*orientation(orient), */fontReplaced(false), 
-    textInnerPlaced(innerTextPlacement), LL(0.0f), HL(1.0f)
+  MarginPointer(ORIENTATION _orient, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/):
+    /*needRedrawByPosition(false), */orient(_orient), alignment(align), position(-1.0f), c_value(-1.0f),/*orientation(orient), */
+    fontReplaced(false), textInnerPlaced(true), LL(0.0f), HL(1.0f), MOD(0.0f)
   {
-//    assignText(&pointer, "000.00");
   }
-  MarginPointer(const QFont& fnt, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/, bool innerTextPlacement=true): 
-    alignment(align), position(-1.0f), /*orientation(orient), */
-    font(fnt), fontReplaced(true), textInnerPlaced(innerTextPlacement), LL(0.0f), HL(1.0f)
+  MarginPointer(ORIENTATION _orient, const QFont& fnt, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/): 
+    orient(_orient),alignment(align), position(-1.0f), c_value(-1.0f),
+    font(fnt), fontReplaced(true), textInnerPlaced(true), LL(0.0f), HL(1.0f), MOD(0.0f)
   {
-//    assignText(&pointer, "000.00", fnt);
   }
+  float _update_value(float p){    c_value = LL + p*(HL-LL);  if (MOD > 0.0f) c_value -= int(c_value/MOD)*MOD;  return c_value; }
   void  setPosition(float pos01)
   {
     position = pos01;
-    assignText(&pointer, numfmt(LL + position*(HL-LL)));
+    assignText(&pointer, redact(numfmt(_update_value(position))));
     update_position(cached_area());
     pointer.visible = position >= 0.0f? 1 : 0;
   }
-  void  setPosition(float pos01_x, float pos01_y)
+  void  setPositionBifunc(float pos01, float posBi)
   {
-    setPosition(BAR_VERT[cached_area().atto]? pos01_y : pos01_x);
+    position = pos01;
+    assignText(&pointer, redact(numfmt(_update_value(posBi))));
+    update_position(cached_area());
+    pointer.visible = position >= 0.0f? 1 : 0;
+  }
+  void  setPosition(float pos01_A, float pos01_B)
+  {
+//    setPosition(BAR_VERT[cached_area().atto]? pos01_y : pos01_x);
+    bool v = BAR_VERT[cached_area().atto]? orientationMirroredVert(orient) : orientationMirroredHorz(orient);
+    bool m = orientationTransposed(orient) ^ BAR_VERT[cached_area().atto];
+    float pos01 = m? pos01_B : pos01_A;
+    setPositionBifunc( v ? 1.0f - pos01 : pos01, pos01);
   }
   void  setVisible(bool visible)
   {
@@ -861,6 +1007,7 @@ public:
     }
     else
       pointer.visible = 0;
+//    needRedrawByPosition = true;
   }
   bool  isVisible() const
   {
@@ -870,7 +1017,7 @@ public:
   {
     font = fnt;
     fontReplaced = true;
-    assignText(&pointer, numfmt(LL + position*(HL-LL)), fnt);
+    assignText(&pointer, redact(numfmt(c_value)), fnt);
   }
 protected:
   void update_position(const uarea_t& area)
@@ -887,14 +1034,15 @@ protected:
                         area.atto == AT_TOP?    QPoint(dd + d*position, a1):
                                                 QPoint(dd + d*position, a2);
     pointer.uarea_pos -= BAR_VERT[area.atto]? QPoint(0, pointer.uin_locsize.height()/2) : QPoint(pointer.uin_locsize.width()/2, 0);
-    if (textInnerPlaced)
-    {
+//    if (textInnerPlaced)
+//    {
 //      void  (*luptp)(texts_t*, int) = area.mirrored? UPTP_DOWN[area.atto] : UPTP_UP[area.atto];
 //      void  (*luptp)(texts_t*, int) = area.mirrored? UPTP_UP[area.atto] : UPTP_DOWN[area.atto];
 //      void  (*luptp)(texts_t*, int) = UPTP_MID[area.atto];
 //      luptp(&pointer, 0);
-    }
+//    }
     storeDimm(d);
+//    needRedrawByPosition = true;
   }
   virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
   {
@@ -915,8 +1063,10 @@ protected:
 //    pointer.visible = 1;
     return true;
   }
+//  virtual bool  needredraw() const {  return MarginElementCached::needredraw() | needRedrawByPosition; }
   virtual void  draw(QPainter& painter)
   {
+//    MarginElementCached::draw(painter);
     if (pointer.visible)
     {
       if (fontReplaced)
@@ -938,6 +1088,7 @@ protected:
 //      painter.drawStaticText(pointer.uarea_pos, pointer.uin_text);
 //      painter.restore();
     }
+//    needRedrawByPosition = false;
   }
   virtual void sizeHint(ATTACHED_TO atto, int* atto_size, int* mindly, int* mindly1, int* mindly2) const
   {
@@ -950,31 +1101,37 @@ protected:
     *mindly2 = d_half_dly;
   }
   
-  
-  virtual void  relatedTextup()
+protected:
+  virtual void  bdContentUpdateBounds(float ll, float hl)
   {
-    if (rtexttype == RF_SETBOUNDS)
-    {
-      LL = rdata.rel_fixed.LL + (rdata.rel_fixed.HL - rdata.rel_fixed.LL)*reloffset;
-      HL = rdata.rel_fixed.HL + (rdata.rel_fixed.HL - rdata.rel_fixed.LL)*reloffset;
-      numfmt.autoFormat(LL, HL);
-      assignText(&pointer, numfmt(LL + position*(HL-LL)));
-    }
-    else if (rtexttype == RF_SETTAPS)
-    {
-      QString sstr(rdata.rel_tap_qstring.slen, Qt::Uninitialized);
-      float LLof = LL + (HL-LL)*reloffset;
-      float HLof = HL + (HL-LL)*reloffset;
-      rdata.rel_tap_qstring.tapfn(LLof + position*(HLof-LLof), lmardimm, lmoffset, rdata.rel_tap_qstring.param, sstr);
-      assignText(&pointer, sstr);
-    }
-    else if (rtexttype == RF_SETENUMERATE)
-    {
-      LL = rdata.rel_enumerate.enfrom;
-      HL = rdata.rel_enumerate.enfrom + rdata.rel_enumerate.numcount;
-      numfmt.integerFormat(false);
-      assignText(&pointer, numfmt(LL + position*(HL-LL)));  // ntf: reloffset
-    }
+    LL = ll;    HL = hl;    MOD = 0.0f;
+    numfmt.autoFormat(LL, HL);
+    assignText(&pointer, redact(numfmt(_update_value(position))));
+//    needRedrawByPosition = true;
+  }
+  virtual void  bdContentUpdateBoundsMod(float ll, float hl, float mod)
+  {
+    LL = ll;    HL = hl;    MOD = mod;
+    numfmt.autoFormat(LL, HL);
+    assignText(&pointer, redact(numfmt(_update_value(position))));
+//    needRedrawByPosition = true;
+  }
+  virtual void  bdContentUpdateTaps(QString& base, mtap_qstring_fn tapfn, const void* param, float relatedoffset, const tapcontent_t& tctt)
+  {
+    float LLof = LL + (HL-LL)*relatedoffset;
+    float HLof = HL + (HL-LL)*relatedoffset;
+    tapfn(LLof + position*(HLof-LLof), tctt.lmardimm, tctt.lmoffset, param, base);
+    assignText(&pointer, redact(base));
+//    needRedrawByPosition = true;
+  }
+  virtual void  bdContentUpdateEnumerate(int from, int count, int recycle, float relatedoffset)
+  {
+    LL = from;
+    HL = from + count;
+    MOD = 0.0f;
+    numfmt.integerFormat(false);
+    assignText(&pointer, redact(numfmt(_update_value(position))));  // ntf: reloffset
+//    needRedrawByPosition = true;
   }
 }; 
 
@@ -983,7 +1140,7 @@ protected:
 
 class MarginMarks: public MarginElementCached
 {
-public:
+//  bool          needRedrawByMark;
 protected:
   int           algoType;
   struct        mark_t
@@ -995,16 +1152,17 @@ protected:
   int           countMaxiNoted, countMaxiHided, countMini;
   int           pixStep_pixSpace;
   int           miniPerMaxi;
-//  bool          miniPerMaxiFixed;
+  int           round; // 0 - default rounding, 1 - no round, 2 - no round and +1 for all except first and last
 protected:
   int           mlenmaxi, mlenmini, mwid;
 protected:
   int           c_dimm_main;
 public:
-  MarginMarks():
+  MarginMarks(): //needRedrawByMark(false),
     algoType(DBMODE_STRETCHED_POW2),
     ua_marks(nullptr), ua_marklinks2(nullptr), countMaxiNoted(0), countMaxiHided(0), countMini(0), pixStep_pixSpace(0), 
-    miniPerMaxi(0), mlenmaxi(4), mlenmini(2), mwid(1), c_dimm_main(0)
+    miniPerMaxi(0), round(0),
+    mlenmaxi(4), mlenmini(2), mwid(1), c_dimm_main(0)
   {
   }
   ~MarginMarks()
@@ -1016,11 +1174,12 @@ public:
     }
   }
   
-  void  init(int algotype, int marksCount, int pixStep_pixSpacing, int miniPerMaxiLIMIT) /// marksCount = 0 for init later
+  void  init(int algotype, int marksCount, int pixStep_pixSpacing, int roundsteps, int miniPerMaxiLIMIT) /// marksCount = 0 for init later
   {
     algoType = algotype == DBMODE_DEFAULT? DBMODE_STRETCHED_POW2 : algotype;
     pixStep_pixSpace = pixStep_pixSpacing;
     miniPerMaxi = miniPerMaxiLIMIT;
+    round = roundsteps;
     setMarksCount(marksCount);
   }
   
@@ -1032,7 +1191,7 @@ public:
       if (ua_marks) delete []ua_marks;
       if (ua_marklinks2)  delete []ua_marklinks2;
       
-      if (algoType == DBMODE_STRETCHED_POW2)
+      if (algoType == DBMODE_STRETCHED_POW2 && marksCount > 2)
       {
         int mc = 2;
         while (2*mc + 1 <= marksCount)
@@ -1050,11 +1209,11 @@ public:
     }
     return marksCount;
   }
-  void    setMarkLength(int length){ mlenmaxi = length; }
-  void    setMarkMiniLength(int length){ mlenmini = length; }
-  void    setMarkWidth(int width){ mwid = width; }
+  void    setMarkLength(int length){ mlenmaxi = length; /*needRedrawByMark = true;*/ }
+  void    setMarkMiniLength(int length){ mlenmini = length; /*needRedrawByMark = true;*/ }
+  void    setMarkWidth(int width){ mwid = width; /*needRedrawByMark = true;*/ }
   void    setMarkSize(int length, int width, int lengthmini=4)
-  { mlenmaxi = length; mlenmini = lengthmini; mwid = width; }
+  { mlenmaxi = length; mlenmini = lengthmini; mwid = width; /*needRedrawByMark = true;*/ }
   
 protected:
   
@@ -1110,16 +1269,21 @@ protected:
     return result;
   }
 protected:
+//  virtual bool  needredraw() const {  return MarginElementCached::needredraw() | needRedrawByMark; }
   virtual void  draw(QPainter& painter)
   {
-//    for (int i=0; i<countMaxiNoted + (miniPerMaxi > 0? countMini : 0); i++)
-//      painter.fillRect(ua_marks[i].rect, c_color_redefined? c_color : foregroundColor);
-    if (c_color_redefined)
-      for (int i=0; i<countMaxiNoted + (miniPerMaxi > 0? countMini : 0); i++)
-        painter.fillRect(ua_marks[i].rect, c_color);
-    else
-      for (int i=0; i<countMaxiNoted + (miniPerMaxi > 0? countMini : 0); i++)
-        painter.fillRect(ua_marks[i].rect, painter.brush());
+//    MarginElementCached::draw(painter);
+    {
+  //    for (int i=0; i<countMaxiNoted + (miniPerMaxi > 0? countMini : 0); i++)
+  //      painter.fillRect(ua_marks[i].rect, c_color_redefined? c_color : foregroundColor);
+      if (c_color_redefined)
+        for (int i=0; i<countMaxiNoted + (miniPerMaxi > 0? countMini : 0); i++)
+          painter.fillRect(ua_marks[i].rect, c_color);
+      else
+        for (int i=0; i<countMaxiNoted + (miniPerMaxi > 0? countMini : 0); i++)
+          painter.fillRect(ua_marks[i].rect, painter.brush());
+    }
+//    needRedrawByMark = false;
   }
   
   virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
@@ -1131,6 +1295,7 @@ protected:
     
 //    const int dimm_main = area.dlytotal - area.dly1 - area.dly2 - area.dly3 - 1 - 1;
     const int dimm_main = area.dlytotal - area.dly1 - area.dly2 - area.dly3 - 1;
+//    const int dimm_main = area.dlytotal - area.dly1 - area.dly2 - area.dly3;
     if (c_dimm_main == dimm_main && BAR_NEEDMOVE[area.atto] && UPDATEFOR <= UF_LVL1)
       return false;
     c_dimm_main = dimm_main;
@@ -1213,6 +1378,8 @@ protected:
     
     for (int o=0; o<2; o++)
     {
+      if (over_count[o] == 0)
+        continue;
       if (BAR_VERT[area.atto])
       {
         int d2 = area.mirrored? area.dly1 : area.dlytotal - 1 - area.dly2 - area.dly3;
@@ -1223,7 +1390,7 @@ protected:
         {
           if (o == 1 && i % minimod == 0)  continue;
           if (o == 0) ua_marklinks2[i] = m;
-          int offs = d2 - qRound(i*d3);
+          int offs = d2 - (round == 0 || i == 0 || i == over_count[0]-1? qRound(i*d3) : round == 1? int(i*d3) : int(i*d3) + 1);
           ua_marks[m].anchor = QPoint(l1, offs);
           if (area.atto == AT_LEFT)
             ua_marks[m].rect.setCoords(l2, offs, l1, offs);
@@ -1243,7 +1410,7 @@ protected:
         {
           if (o == 1 && i % minimod == 0)  continue;
           if (o == 0) ua_marklinks2[i] = m;
-          int offs = d2 + qRound(i*d3);
+          int offs = d2 + (round == 0 || i == 0 || i == over_count[0]-1? qRound(i*d3) : round == 1? int(i*d3) : int(i*d3) + 1);
           ua_marks[m].anchor = QPoint(offs, l1);
           if (area.atto == AT_TOP)
             ua_marks[m].rect.setCoords(offs, l2, offs, l1);
@@ -1272,17 +1439,20 @@ protected:
 class MarginMarksTexted: public MarginMarks, public MarginBoundDepended
 {
 protected:
+//  bool                    needRedrawByText;
   texts_t*                texts;
   QFont                   font;
   DSNumFormatter          numfmt;
   bool                    fontReplaced;
 public:
-  MarginMarksTexted(): texts(nullptr), fontReplaced(false){}
+  MarginMarksTexted(): /*needRedrawByText(false), */texts(nullptr), fontReplaced(false){}
   virtual ~MarginMarksTexted(){  if (texts)  delete []texts; }
-  
-  
-  int rmaxlen() const {  return rtexttype == RF_SETBOUNDS? 7 : rtexttype == RF_SETENUMERATE? rdata.rel_enumerate.numcount :
-                                rtexttype == RF_SETTAPS? rdata.rel_tap_qstring.slen : 0; }
+//  virtual bool  needredraw() const {  return MarginMarks::needredraw() | needRedrawByText; }
+  virtual void  draw(QPainter& painter)
+  {
+    MarginMarks::draw(painter);
+//    needRedrawByText = false;
+  }
   
   void  setFont(const QFont& fnt)
   {
@@ -1290,16 +1460,17 @@ public:
       font = fnt;
     fontReplaced = true;
 //    c_re_updateArea(UF_LVL2);
+//    needRedrawByText = true;
   }
 public:
 };
 
 class Margin1Mark1Text: public MarginMarksTexted
 {
-  bool  textInnerPlaced;
+  bool                    textInnerPlaced;
 public:
   ~Margin1Mark1Text();
-  Margin1Mark1Text(bool innerTextPlacement): textInnerPlaced(innerTextPlacement){}
+  Margin1Mark1Text(bool innerTextPlacement): textInnerPlaced(innerTextPlacement) {}
   virtual int setMarksCount(int marksCount)
   {
     marksCount = MarginMarks::setMarksCount(marksCount);
@@ -1307,14 +1478,17 @@ public:
     return marksCount;
   }
 protected:
+//  virtual bool  needredraw() const {  return MarginMarksTexted::needredraw(); }
   virtual void  draw(QPainter& painter)
   {
-    MarginMarks::draw(painter);
-    if (fontReplaced)
-      painter.setFont(font);
-    for (int i=0; i<countMaxiNoted + countMaxiHided; i++)
-      if (texts[i].visible)
-        painter.drawStaticText(texts[i].uarea_pos, texts[i].uin_text);
+    MarginMarksTexted::draw(painter);
+    {
+      if (fontReplaced)
+        painter.setFont(font);
+      for (int i=0; i<countMaxiNoted + countMaxiHided; i++)
+        if (texts[i].visible)
+          painter.drawStaticText(texts[i].uarea_pos, texts[i].uin_text);
+    }
   }
   virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
   {
@@ -1362,43 +1536,52 @@ protected:
     *mindly1 = d_half_dly;
     *mindly2 = d_half_dly;
   }
-public:
-  virtual void  relatedTextup()
+protected:
+  virtual void  bdContentUpdateBounds(float LL, float HL)
   {
-    if (rtexttype == RF_SETBOUNDS)
+    float bndstep = qAbs(HL - LL)/(countMaxiNoted + countMaxiHided - 1);
+    numfmt.autoFormat(LL, HL);
+    for (int i=0; i<countMaxiNoted + countMaxiHided; i++)
+      assignText(&texts[i], redact(numfmt(LL + i*bndstep)), fontReplaced, font);
+//    needRedrawByText = true;
+  }
+  virtual void  bdContentUpdateBoundsMod(float LL, float HL, float mod)
+  {
+    float bndstep = qAbs(HL - LL)/(countMaxiNoted + countMaxiHided - 1);
+    numfmt.autoFormat(LL, HL);
+    for (int i=0; i<countMaxiNoted + countMaxiHided; i++)
     {
-      float LL = rdata.rel_fixed.LL + (rdata.rel_fixed.HL - rdata.rel_fixed.LL)*reloffset;
-      float HL = rdata.rel_fixed.HL + (rdata.rel_fixed.HL - rdata.rel_fixed.LL)*reloffset;
-      float bndstep = qAbs(HL - LL)/(countMaxiNoted + countMaxiHided - 1);
-      numfmt.autoFormat(LL, HL);
-      for (int i=0; i<countMaxiNoted + countMaxiHided; i++)
-        assignText(&texts[i], numfmt(LL + i*bndstep), fontReplaced, font);
+      float v = LL + i*bndstep;
+      v -= int(v/mod)*mod;
+      assignText(&texts[i], redact(numfmt(v)), fontReplaced, font);
     }
-    else if (rtexttype == RF_SETTAPS)
+//    needRedrawByText = true;
+  }
+  virtual void  bdContentUpdateTaps(QString& base, mtap_qstring_fn tapfn, const void* param, float relatedoffset, const tapcontent_t& tctt)
+  {
+    for (int i=0; i<countMaxiNoted + countMaxiHided; i++)
     {
-      QString sstr(rdata.rel_tap_qstring.slen, Qt::Uninitialized);
-      for (int i=0; i<countMaxiNoted + countMaxiHided; i++)
-      {
-        rdata.rel_tap_qstring.tapfn(i, lmardimm, lmoffset, rdata.rel_tap_qstring.param, sstr);
-        assignText(&texts[i], sstr, fontReplaced, font);
-      }
+      tapfn(i, tctt.lmardimm, tctt.lmoffset, param, base);
+      assignText(&texts[i], redact(base), fontReplaced, font);
     }
-    else if (rtexttype == RF_SETENUMERATE)
+//    needRedrawByText = true;
+  }
+  virtual void  bdContentUpdateEnumerate(int from, int count, int recycle, float relatedoffset)
+  {
+    for (int i=0; i<countMaxiNoted + countMaxiHided; i++)
     {
+      int num = from + i + int((countMaxiNoted + countMaxiHided)*relatedoffset);
 //      if (recycle != -1)  num = num % recycle;
-      for (int i=0; i<countMaxiNoted + countMaxiHided; i++)
-      {
-        int num = rdata.rel_enumerate.enfrom + i + int((countMaxiNoted + countMaxiHided)*reloffset);
-        assignText(&texts[i], QString::number(num), fontReplaced, font);
-      }
+      assignText(&texts[i], redact(QString::number(num)), fontReplaced, font);
     }
+//    needRedrawByText = true;
   }
 };
 Margin1Mark1Text::~Margin1Mark1Text(){}
 
 class MarginMinTexts: public MarginMarksTexted
 {
-  bool  textInnerPlaced;
+  bool                    textInnerPlaced;
 public:
   ~MarginMinTexts();
   MarginMinTexts(bool innerTextPlacement): textInnerPlaced(innerTextPlacement){}
@@ -1462,31 +1645,37 @@ protected:
     *mindly1 = d_half_dly;
     *mindly2 = d_half_dly;
   }
-public:
-  virtual void  relatedTextup()
+protected:
+  virtual void  bdContentUpdateBounds(float LL, float HL)
   {
-    if (rtexttype == RF_SETBOUNDS)
+    numfmt.autoFormat(LL, HL);
+    for (int i=0; i<2; i++)
+      assignText(&texts[i], redact(numfmt(i == 0? LL : HL)), fontReplaced, font);
+//    needRedrawByText = true;
+  }
+  virtual void  bdContentUpdateBoundsMod(float LL, float HL, float mod)
+  {
+    numfmt.autoFormat(LL, HL);
+    LL -= int(LL/mod)*mod;
+    HL -= int(HL/mod)*mod;
+    for (int i=0; i<2; i++)
+      assignText(&texts[i], redact(numfmt(i == 0? LL : HL)), fontReplaced, font);
+//    needRedrawByText = true;
+  }
+  virtual void  bdContentUpdateTaps(QString& base, mtap_qstring_fn tapfn, const void* param, float relatedoffset, const tapcontent_t& tctt)
+  {
+    for (int i=0; i<2; i++)
     {
-      float LL = rdata.rel_fixed.LL + (rdata.rel_fixed.HL - rdata.rel_fixed.LL)*reloffset;
-      float HL = rdata.rel_fixed.HL + (rdata.rel_fixed.HL - rdata.rel_fixed.LL)*reloffset;
-      numfmt.autoFormat(LL, HL);
-      assignText(&texts[0], numfmt(LL), fontReplaced, font);
-      assignText(&texts[1], numfmt(HL), fontReplaced, font);
+      tapfn(i, tctt.lmardimm, tctt.lmoffset, param, base);
+      assignText(&texts[i], redact(base), fontReplaced, font);
     }
-    else if (rtexttype == RF_SETTAPS)
-    {
-      QString sstr(rdata.rel_tap_qstring.slen, Qt::Uninitialized);
-      rdata.rel_tap_qstring.tapfn(0, lmardimm, lmoffset, rdata.rel_tap_qstring.param, sstr);
-      assignText(&texts[0], sstr, fontReplaced, font);
-      rdata.rel_tap_qstring.tapfn(1, lmardimm, lmoffset, rdata.rel_tap_qstring.param, sstr);
-      assignText(&texts[1], sstr, fontReplaced, font);
-    }
-    else if (rtexttype == RF_SETENUMERATE)
-    {
-      int num = rdata.rel_enumerate.enfrom;
-      assignText(&texts[0], QString::number(num), fontReplaced, font);
-      assignText(&texts[1], QString::number(num+1), fontReplaced, font);
-    }
+//    needRedrawByText = true;
+  }
+  virtual void  bdContentUpdateEnumerate(int from, int count, int recycle, float relatedoffset)
+  {
+    for (int i=0; i<2; i++)
+      assignText(&texts[i], redact(QString::number(from + i)), fontReplaced, font);
+//    needRedrawByText = true;
   }
 };
 MarginMinTexts::~MarginMinTexts(){}
@@ -1498,15 +1687,17 @@ MarginMinTexts::~MarginMinTexts(){}
 class MarginMarksTextBetween: public MarginMarksTexted
 {
 protected:
-  bool      showLastEnumer;
-  unsigned int submod;
+  int           docking;
+  bool          showLastEnumer;
+  unsigned int  submod;
 public:
   ~MarginMarksTextBetween();
-  MarginMarksTextBetween(): showLastEnumer(false), submod(1) {}
+  MarginMarksTextBetween(): docking(1), showLastEnumer(false), submod(1) {}
 
-  void  init_wide(int algotype, int marksCount, int pixStep_pixSpacing, unsigned int step, bool alwaysShowLast)
+  void  init_wide(int algotype, int marksCount, int pixStep_pixSpacing, unsigned int step, int roundsteps, bool alwaysShowLast, int dockto)
   {
-    MarginMarks::init(algotype, marksCount, pixStep_pixSpacing, 0);
+    MarginMarks::init(algotype, marksCount, pixStep_pixSpacing, roundsteps, 0);
+    docking = dockto;
     showLastEnumer = alwaysShowLast;
     submod = step;
   }
@@ -1538,6 +1729,41 @@ protected:
     const int decayH = 2, decayV = 2, total = countMaxiNoted + countMaxiHided - 1;
 
     int last=0, subctr = 0;
+//    for (int i=0; i<total; )
+//    {
+//      if (ua_marklinks2[i] != -1)
+//      {
+//        int j=i+1;
+//        for (; j<total+1; j++)
+//        {
+//          if (ua_marklinks2[j] != -1)
+//            break;
+//          else
+//            texts[j].visible = 0;
+//        }
+
+//        if (algoType == DBMODE_STATIC && j > total)
+//          texts[i].visible = 0;
+//        else
+//        {
+//          texts[last = i].visible = subctr++ % int(submod) == 0? 1 : 0;
+//          QPoint& mcur = ua_marks[ua_marklinks2[i]].anchor, &mnext = j == total+1? ua_marks[ua_marklinks2[i]].anchor : ua_marks[ua_marklinks2[j]].anchor;
+////          qDebug()<<i<<ua_marklinks2[i]<<j<<ua_marklinks2[j]<<total+1<<-(mnext - mcur).y()/2;
+//          if (area.atto == AT_LEFT)
+//            texts[i].uarea_pos = mcur - QPoint(decayH + texts[i].uin_locsize.width(), -(mnext - mcur).y()/2 + texts[i].uin_locsize.height()/2);
+//          else if (area.atto == AT_RIGHT)
+//            texts[i].uarea_pos = mcur - QPoint(-decayH, -(mnext - mcur).y()/2 + texts[i].uin_locsize.height()/2);
+//          else if (area.atto == AT_TOP)
+//            texts[i].uarea_pos = mcur - QPoint(-(mnext - mcur).x()/2 + texts[i].uin_locsize.width()/2, decayV + texts[i].uin_locsize.height());
+//          else if (area.atto == AT_BOTTOM)
+//            texts[i].uarea_pos = mcur - QPoint(-(mnext - mcur).x()/2 + texts[i].uin_locsize.width()/2, -decayV);
+//          texts[i].uarea_atto = area.atto;
+//        }
+//        i = j;
+//      }
+//      else
+//        texts[i++].visible = 0;
+//    }
     for (int i=0; i<total; )
     {
       if (ua_marklinks2[i] != -1)
@@ -1551,6 +1777,9 @@ protected:
             texts[j].visible = 0;
         }
 
+//        if (area.atto == AT_LEFT /*&& countMaxiNoted + countMaxiHided - 1 == 64*/)
+//            qDebug()<<total<<texts[i].uin_text.text()<<texts[i].uin_locsize.width()<<pixStep_pixSpace<<countMaxiNoted + countMaxiHided - 1;
+        
         if (algoType == DBMODE_STATIC && j > total)
           texts[i].visible = 0;
         else
@@ -1559,13 +1788,25 @@ protected:
           QPoint& mcur = ua_marks[ua_marklinks2[i]].anchor, &mnext = j == total+1? ua_marks[ua_marklinks2[i]].anchor : ua_marks[ua_marklinks2[j]].anchor;
 //          qDebug()<<i<<ua_marklinks2[i]<<j<<ua_marklinks2[j]<<total+1<<-(mnext - mcur).y()/2;
           if (area.atto == AT_LEFT)
-            texts[i].uarea_pos = mcur - QPoint(decayH + texts[i].uin_locsize.width(), -(mnext - mcur).y()/2 + texts[i].uin_locsize.height()/2);
+            texts[i].uarea_pos = mcur - QPoint(decayH + texts[i].uin_locsize.width(), docking == 0? texts[i].uin_locsize.height() + 0 :
+                                                                                      docking == 1? (mcur.y() - mnext.y())/2 + texts[i].uin_locsize.height()/2 :
+                                                                                      mcur.y() - mnext.y()
+              );
           else if (area.atto == AT_RIGHT)
-            texts[i].uarea_pos = mcur - QPoint(-decayH, -(mnext - mcur).y()/2 + texts[i].uin_locsize.height()/2);
+            texts[i].uarea_pos = mcur - QPoint(-decayH,                               docking == 0? texts[i].uin_locsize.height() + 0 :
+                                                                                      docking == 1? (mcur.y() - mnext.y())/2 + texts[i].uin_locsize.height()/2 :
+                                                                                      mcur.y() - mnext.y()
+              );
           else if (area.atto == AT_TOP)
-            texts[i].uarea_pos = mcur - QPoint(-(mnext - mcur).x()/2 + texts[i].uin_locsize.width()/2, decayV + texts[i].uin_locsize.height());
+            texts[i].uarea_pos = mcur - QPoint( docking == 0? 0 :
+                                                docking == 1? (mcur.x() - mnext.x())/2 + texts[i].uin_locsize.width()/2 :
+                                                mcur.x() - mnext.x() + texts[i].uin_locsize.width(),
+              decayV + texts[i].uin_locsize.height());
           else if (area.atto == AT_BOTTOM)
-            texts[i].uarea_pos = mcur - QPoint(-(mnext - mcur).x()/2 + texts[i].uin_locsize.width()/2, -decayV);
+            texts[i].uarea_pos = mcur - QPoint( docking == 0? 0 :
+                                                docking == 1? (mcur.x() - mnext.x())/2 + texts[i].uin_locsize.width()/2 :
+                                                mcur.x() - mnext.x() + texts[i].uin_locsize.width(),
+              -decayV);
           texts[i].uarea_atto = area.atto;
         }
         i = j;
@@ -1573,6 +1814,62 @@ protected:
       else
         texts[i++].visible = 0;
     }
+    
+//    for (int i=0; i<total; )
+//    {
+//      if (ua_marklinks2[i] != -1)
+//      {
+//        int j=i+1;
+//        for (; j<total+1; j++)
+//        {
+//          if (ua_marklinks2[j] != -1)
+//            break;
+//          else
+//            texts[j].visible = 0;
+//        }
+
+//        if (algoType == DBMODE_STATIC && j > total)
+//          texts[i].visible = 0;
+//        else
+//        {
+//          texts[last = i].visible = subctr++ % int(submod) == 0? 1 : 0;
+//          texts[i].uarea_pos = ua_marks[ua_marklinks2[i]].anchor;
+//        }
+//        i = j;
+//      }
+//      else
+//        texts[i++].visible = 0;
+//    }
+     
+//    if (area.atto == AT_LEFT)
+//    {
+//      QPoint  posprev;
+//      int j=-1;
+//      for (int i=0; i<last; i++)
+//      {
+//        if (texts[i].visible && j == -1)
+//        {
+//          j = i;
+//          posprev = texts[i].uarea_pos;
+//          continue;
+//        }
+        
+//        QPoint& mcur = ua_marks[ua_marklinks2[i]].anchor, &mnext = j == total+1? ua_marks[ua_marklinks2[i]].anchor : ua_marks[ua_marklinks2[j]].anchor;
+        
+//        posprev = texts[i].uarea_pos;
+//      }
+//    }
+    
+//              QPoint& mcur = ua_marks[ua_marklinks2[i]].anchor, &mnext = j == total+1? ua_marks[ua_marklinks2[i]].anchor : ua_marks[ua_marklinks2[j]].anchor;
+//    //          qDebug()<<i<<ua_marklinks2[i]<<j<<ua_marklinks2[j]<<total+1<<-(mnext - mcur).y()/2;
+//                texts[i].uarea_pos = mcur - QPoint(decayH + texts[i].uin_locsize.width(), -(mnext - mcur).y()/2 + texts[i].uin_locsize.height()/2);
+//              else if (area.atto == AT_RIGHT)
+//                texts[i].uarea_pos = mcur - QPoint(-decayH, -(mnext - mcur).y()/2 + texts[i].uin_locsize.height()/2);
+//              else if (area.atto == AT_TOP)
+//                texts[i].uarea_pos = mcur - QPoint(-(mnext - mcur).x()/2 + texts[i].uin_locsize.width()/2, decayV + texts[i].uin_locsize.height());
+//              else if (area.atto == AT_BOTTOM)
+//                texts[i].uarea_pos = mcur - QPoint(-(mnext - mcur).x()/2 + texts[i].uin_locsize.width()/2, -decayV);
+//              texts[i].uarea_atto = area.atto;
     
     if (showLastEnumer)
     {
@@ -1602,36 +1899,45 @@ protected:
     *mindly1 += d_half_dly;
     *mindly2 += d_half_dly;
   }
-public: 
-  virtual void  relatedTextup()
+protected:
+  virtual void  bdContentUpdateBounds(float LL, float HL)
   {
-    if (rtexttype == RF_SETBOUNDS)
+    float bndstep = qAbs(HL - LL)/(countMaxiNoted + countMaxiHided - 1);
+    numfmt.autoFormat(LL, HL);
+    for (int i=0; i<countMaxiNoted + countMaxiHided - 1; i++)
+      assignText(&texts[i], redact(numfmt(LL + i*bndstep)), fontReplaced, font);
+//    needRedrawByText = true;
+  }
+  virtual void  bdContentUpdateBoundsMod(float LL, float HL, float mod)
+  {
+    float bndstep = qAbs(HL - LL)/(countMaxiNoted + countMaxiHided - 1);
+    numfmt.autoFormat(LL, HL);
+    for (int i=0; i<countMaxiNoted + countMaxiHided - 1; i++)
     {
-      float LL = rdata.rel_fixed.LL + (rdata.rel_fixed.HL - rdata.rel_fixed.LL)*reloffset;
-      float HL = rdata.rel_fixed.HL + (rdata.rel_fixed.HL - rdata.rel_fixed.LL)*reloffset;
-      float bndstep = qAbs(HL - LL)/(countMaxiNoted + countMaxiHided - 1);
-      numfmt.autoFormat(LL, HL);
-      for (int i=0; i<countMaxiNoted + countMaxiHided - 1; i++)
-        assignText(&texts[i], numfmt(LL + i*bndstep), fontReplaced, font);
+      float v = LL + i*bndstep;
+      v -= int(v/mod)*mod;
+      assignText(&texts[i], redact(numfmt(v)), fontReplaced, font);
     }
-    else if (rtexttype == RF_SETTAPS)
+//    needRedrawByText = true;
+  }
+  virtual void  bdContentUpdateTaps(QString& base, mtap_qstring_fn tapfn, const void* param, float relatedoffset, const tapcontent_t& tctt)
+  {
+    for (int i=0; i<countMaxiNoted + countMaxiHided - 1; i++)
     {
-      QString sstr(rdata.rel_tap_qstring.slen, Qt::Uninitialized);
-      for (int i=0; i<countMaxiNoted + countMaxiHided - 1; i++)
-      {
-        rdata.rel_tap_qstring.tapfn(i, lmardimm, lmoffset, rdata.rel_tap_qstring.param, sstr);
-        assignText(&texts[i], sstr, fontReplaced, font);
-      }
+      tapfn(i, tctt.lmardimm, tctt.lmoffset, param, base);
+      assignText(&texts[i], redact(base), fontReplaced, font);
     }
-    else if (rtexttype == RF_SETENUMERATE)
+//    needRedrawByText = true;
+  }
+  virtual void  bdContentUpdateEnumerate(int from, int count, int recycle, float relatedoffset)
+  {
+    for (int i=0; i<countMaxiNoted + countMaxiHided - 1; i++)
     {
-//      if (recycle != -1)  num = num % recycle;
-      for (int i=0; i<countMaxiNoted + countMaxiHided - 1; i++)
-      {
-        int num = rdata.rel_enumerate.enfrom + i;
-        assignText(&texts[i], QString::number(num), fontReplaced, font);
-      }
+      int num = from + i;
+//      qDebug()<<num;
+      assignText(&texts[i], redact(QString::number(num)), fontReplaced, font);
     }
+//    needRedrawByText = true;
   }
 };
 MarginMarksTextBetween::~MarginMarksTextBetween(){}
@@ -1676,9 +1982,9 @@ public:
   MarginMarksWidgetBetween(): showLastEnumer(false), submod(1), maxperpendiculardimm(0), wftype(WF_OFF)
   {}
 
-  void  init_wide(int algotype, int marksCount, int pixStep_pixSpacing, unsigned int step, bool alwaysShowLast, unsigned int maxperpdimm, mtap_qwidget_fn ftor, void* fpm, QWidget* prnt)
+  void  init_wide(int algotype, int marksCount, int pixStep_pixSpacing, unsigned int step, int roundsteps, bool alwaysShowLast, unsigned int maxperpdimm, mtap_qwidget_fn ftor, void* fpm, QWidget* prnt)
   {
-    MarginMarks::init(algotype, marksCount, pixStep_pixSpacing, 0);
+    MarginMarks::init(algotype, marksCount, pixStep_pixSpacing, roundsteps, 0);
     showLastEnumer = alwaysShowLast;
     submod = step;
     maxperpendiculardimm = maxperpdimm;
@@ -1690,9 +1996,9 @@ public:
     }
     parent = prnt;
   }
-  void  init_wide(int algotype, int marksNwidgetsCount, int pixStep_pixSpacing, unsigned int step, bool alwaysShowLast, unsigned int maxperpdimm, QWidget* wdgs[], QWidget* prnt)
+  void  init_wide(int algotype, int marksNwidgetsCount, int pixStep_pixSpacing, unsigned int step, int roundsteps, bool alwaysShowLast, unsigned int maxperpdimm, QWidget* wdgs[], QWidget* prnt)
   {
-    MarginMarks::init(algotype, marksNwidgetsCount, pixStep_pixSpacing, 0);
+    MarginMarks::init(algotype, marksNwidgetsCount, pixStep_pixSpacing, roundsteps, 0);
     showLastEnumer = alwaysShowLast;
     submod = step;
     maxperpendiculardimm = maxperpdimm;
@@ -1845,7 +2151,7 @@ class DrawBars_impl
 public:
   DrawBars_impl():
     c_mirroredHorz(false), c_mirroredVert(false),
-    drawCoreInited(false){}
+    drawCoreInited(false), main_opacity(1.0f){}
   
   int           c_hint_draw_width, c_hint_draw_height;
   bool          c_mirroredHorz, c_mirroredVert;
@@ -1853,6 +2159,7 @@ public:
   int           c_width, c_height, c_overheadRight, c_overheadBottom;
   QMargins      c_margins;
   int           c_width_margins, c_height_margins;
+  QSize         c_dsize;
   
   bool          expandNeighborBarsIfNeed;
 #ifdef RAKOFLAG
@@ -1860,8 +2167,11 @@ public:
 #endif
   
   int           clr_policy;
+  bool          c_back_fill;
   QBrush        c_back_brush, c_front_brush;
   QPen          c_front_pen;
+  
+  float         main_opacity;
   
   struct        
   {
@@ -1916,6 +2226,7 @@ public:
   {
 //    qDebug()<<"before, after:"<<c_width<<width<<overheadRight;//<<"____"<<c_height<<height;
     c_width = width; c_height = height; c_overheadRight = overheadRight; c_overheadBottom = overheadBottom;
+//    qDebug()<<width<<height<<overheadRight<<overheadBottom;
     reupdateBars(UPDATEFOR);
   }
   
@@ -2047,25 +2358,29 @@ public:
     pal.setColor(QPalette::WindowText, clr_front);
     wdg->setPalette(pal);
     
+    c_back_fill = true;
     c_back_brush = clr_back;
     c_front_brush = clr_front;
     c_front_pen = clr_front;
   }
   
-  void  updatePalette(QWidget* wdg, const QColor& clr_front)
+  void  updatePalette(QWidget* wdg, const QColor& clr_front, bool getback=false)
   {
     QPalette pal(wdg->palette());
     pal.setColor(QPalette::WindowText, clr_front);
     wdg->setPalette(pal);
     
-    c_back_brush = pal.color(QPalette::Window);
+    c_back_fill = getback;
+    if (c_back_fill)
+      c_back_brush = pal.color(QPalette::Window);
     c_front_brush = clr_front;
     c_front_pen = clr_front;
   }
   
   void  upbackPalette(QWidget* wdg)
   {
-    c_back_brush = wdg->palette().color(QPalette::Window);
+    c_back_fill = false;
+//    c_back_brush = wdg->palette().color(QPalette::Window);
     QColor clr_front = wdg->palette().color(QPalette::WindowText);
     c_front_brush = clr_front;
     c_front_pen = clr_front;
@@ -2104,6 +2419,11 @@ DrawBars::DrawBars(DrawQWidget* pdraw, COLORS colorsPolicy, QWidget *parent) : Q
   
   pImpl->c_width_margins = 0;
   pImpl->c_height_margins = 0;
+  
+#ifdef RAKOFLAG
+  pImpl->rakoflag = true;
+#endif
+  
   
 //  setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
 }
@@ -2151,6 +2471,11 @@ void DrawBars::setColors(unsigned int backgroundColor, unsigned int foregroundCo
 {
   pImpl->clr_policy = -1;
   pImpl->updatePalette(this, QColor(COLOR3(backgroundColor)), QColor(COLOR3(foregroundColor)));
+}
+
+void DrawBars::setOpacity(float opacity)
+{
+  pImpl->main_opacity = opacity;
 }
 
 //void DrawBars::slot_setBackgroundColor(const QColor& color)
@@ -2247,42 +2572,61 @@ MEWSpace* DrawBars::addSpace(ATTACHED_TO atto, int space)
   return (MEWSpace*)addMarginElement(atto, pme, new MEWSpace, false, false);
 }
 
+//MEWSpace*DrawBars::addStretch(ATTACHED_TO atto, int space, int stepSelf, int stepDraw)
+//{
+  
+//}
+
 MEWSpace* DrawBars::addContour(ATTACHED_TO atto, int space, bool maxzone)
 {
   MarginElement*  pme = new MarginContour(space, maxzone);
   return (MEWSpace*)addMarginElement(atto, pme, new MEWSpace, false, false);
 }
 
-MEWPointer* DrawBars::addPointerFixed(ATTACHED_TO atto, int flags, float LL, float HL)
+MEWPointer* DrawBars::addPointerFixed(ATTACHED_TO atto, int flags, float LL, float HL, const char* postfix)
 {
-  MarginPointer*  pme = new MarginPointer(Qt::AlignCenter, false/*flags & DBF_NOTESINSIDE*/);
-  pme->setRelatedOpts(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL)));
+  MarginPointer*  pme = new MarginPointer(pDraw->orientation(), Qt::AlignCenter);
+  flags & DBF_POSTFIX_TO_PREFIX? pme->setPrefix(postfix) : pme->setPostfix(postfix);
+  pme->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL)));
   return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
-MEWPointer* DrawBars::addPointerDrawUniSide(ATTACHED_TO atto, int flags)
+MEWPointer* DrawBars::addPointerFixedMod(ATTACHED_TO atto, int flags, float LL, float HL, float MOD, const char* postfix)
 {
-  MarginPointer*  pme = new MarginPointer(Qt::AlignCenter, false/*flags & DBF_NOTESINSIDE*/);
+  MarginPointer*  pme = new MarginPointer(pDraw->orientation(), Qt::AlignCenter);
+  flags & DBF_POSTFIX_TO_PREFIX? pme->setPrefix(postfix) : pme->setPostfix(postfix);
+  pme->bdContentUpdate(RF_SETBOUNDSMOD, relatedopts_t(bounds_t(LL, HL), MOD));
+  return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+}
+
+MEWPointer* DrawBars::addPointerDrawUniSide(ATTACHED_TO atto, int flags, const char* postfix)
+{
+  MarginPointer*  pme = new MarginPointer(pDraw->orientation(), Qt::AlignCenter);
+  flags & DBF_POSTFIX_TO_PREFIX? pme->setPrefix(postfix) : pme->setPostfix(postfix);
   int sizeDimm = BAR_VERT[atto]? int(pDraw->sizeDataVert() + 1) : int(pDraw->sizeDataHorz() + 1);
-  pme->setRelatedOpts(RF_SETENUMERATE, relatedopts_t(sizeDimm-1, 0/*flags & DBF_ENUMERATE_FROMZERO? 0 : 1*/, -1));
+  pme->bdContentUpdate(RF_SETENUMERATE, relatedopts_t(sizeDimm-1, 0/*flags & DBF_ENUMERATE_FROMZERO? 0 : 1*/, -1));
   return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
-MEWPointer* DrawBars::addPointerDrawGraphB(ATTACHED_TO atto, int flags)
+MEWPointer* DrawBars::addPointerDrawGraphB(ATTACHED_TO atto, int flags, const char* postfix)
 {
-  MarginPointer*  pme = new MarginPointer(Qt::AlignCenter, false/*flags & DBF_NOTESINSIDE*/);
-  pme->setRelatedOpts(RF_SETBOUNDS, relatedopts_t(pDraw->bounds()));
+  MarginPointer*  pme = new MarginPointer(pDraw->orientation(), Qt::AlignCenter);
+  flags & DBF_POSTFIX_TO_PREFIX? pme->setPrefix(postfix) : pme->setPostfix(postfix);
+  pme->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(pDraw->bounds()));
   pImpl->elemsBoundDepended.push_back(pme);
   return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
 
-#define DB_EXTRACT_MODE(flags, DEFAULTMODE)  (((flags)&0x3) == 0? DEFAULTMODE : (flags)&0x3)
+//#define DB_HIDDEN_MODE(flags, DEFAULTMODE)  (((flags)&0x3) == 0? DEFAULTMODE : (flags)&0x3)
+
+#define DB_HIDDEN_MODE(flags, DEFAULTMODE)  (((flags)&0x3) == 0? (DEFAULTMODE) : (flags)&0x3)
+#define DB_ROUNDING(flags)  (flags & DBF_MARKS_DONTROUND? 1 : flags & DBF_MARKS_DONTROUND1? 2 : 0)
 
 MEWScale* DrawBars::addScaleEmpty(ATTACHED_TO atto, int flags, int fixedCount, int pixStep_pixSpacing, int miniPerMaxiLIMIT)
 {
   MarginMarks*  pme = new MarginMarks();
-  pme->init(DB_EXTRACT_MODE(flags, DBMODE_STRETCHED_POW2), fixedCount, pixStep_pixSpacing, miniPerMaxiLIMIT);
+  pme->init(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED_POW2), fixedCount, pixStep_pixSpacing, DB_ROUNDING(flags), miniPerMaxiLIMIT);
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = fixedCount*pixStep_pixSpacing;
@@ -2292,7 +2636,7 @@ MEWScale* DrawBars::addScaleEmpty(ATTACHED_TO atto, int flags, int fixedCount, i
   return (MEWScale*)addMarginElement(atto, pme, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
-MEWScaleNN* DrawBars::addScaleFixed(ATTACHED_TO atto, int flags, float LL, float HL, int fixedCount, int pixStep_pixSpacing, int miniPerMaxiLIMIT)
+MEWScaleNN* DrawBars::addScaleFixed(ATTACHED_TO atto, int flags, float LL, float HL, int fixedCount, int pixStep_pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
 {
   MarginMarksTexted* mmt;
   if (flags & DBF_ONLY2NOTES)
@@ -2300,9 +2644,31 @@ MEWScaleNN* DrawBars::addScaleFixed(ATTACHED_TO atto, int flags, float LL, float
   else
     mmt = new Margin1Mark1Text(flags & DBF_NOTESINSIDE);
 
-  mmt->init(DB_EXTRACT_MODE(flags, DBMODE_STRETCHED_POW2), fixedCount, pixStep_pixSpacing, miniPerMaxiLIMIT);
+  mmt->init(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED_POW2), fixedCount, pixStep_pixSpacing, DB_ROUNDING(flags), miniPerMaxiLIMIT);
+  flags & DBF_POSTFIX_TO_PREFIX? mmt->setPrefix(postfix) : mmt->setPostfix(postfix);
   mmt->setFont(this->font());
-  mmt->setRelatedOpts(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL)));
+  mmt->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL)));
+  if (flags & DBF_MINSIZE_BY_PIXSTEP)
+  {
+    if (BAR_VERT[atto])     pImpl->c_hint_draw_height = fixedCount*pixStep_pixSpacing;
+    else                    pImpl->c_hint_draw_width = fixedCount*pixStep_pixSpacing;
+//    updateGeometry();
+  }
+  return (MEWScaleNN*)addMarginElement(atto, mmt, new MEWScaleNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+}
+
+MEWScaleNN* DrawBars::addScaleFixedMod(ATTACHED_TO atto, int flags, float LL, float HL, float MOD, int fixedCount, int pixStep_pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
+{
+  MarginMarksTexted* mmt;
+  if (flags & DBF_ONLY2NOTES)
+    mmt = new MarginMinTexts(flags & DBF_NOTESINSIDE);
+  else
+    mmt = new Margin1Mark1Text(flags & DBF_NOTESINSIDE);
+
+  mmt->init(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED_POW2), fixedCount, pixStep_pixSpacing, DB_ROUNDING(flags), miniPerMaxiLIMIT);
+  flags & DBF_POSTFIX_TO_PREFIX? mmt->setPrefix(postfix) : mmt->setPostfix(postfix);
+  mmt->setFont(this->font());
+  mmt->bdContentUpdate(RF_SETBOUNDSMOD, relatedopts_t(bounds_t(LL, HL), MOD));
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = fixedCount*pixStep_pixSpacing;
@@ -2323,12 +2689,13 @@ inline int countMaxNumbers(int marksCount)
   return n;
 }
 
-MEWScaleNM* DrawBars::addScaleEnumerator(ATTACHED_TO atto, int flags, int marksCount, int pixStep_pixSpacing, unsigned int step, bool alwaysShowLast)
+MEWScaleNM* DrawBars::addScaleEnumerator(ATTACHED_TO atto, int flags, int marksCount, int pixStep_pixSpacing, unsigned int step, bool alwaysShowLast, const char* postfix)
 {
   MarginMarksTextBetween* mmt = new MarginMarksTextBetween();
-  mmt->init_wide(DB_EXTRACT_MODE(flags, DBMODE_STRETCHED_POW2), marksCount, pixStep_pixSpacing, step, alwaysShowLast);
+  mmt->init_wide(DB_HIDDEN_MODE(flags, /*DBMODE_STRETCHED_POW2*/DBMODE_STRETCHED), marksCount, pixStep_pixSpacing, step, DB_ROUNDING(flags), alwaysShowLast, flags & DBF_DOCKTO_PREVMARK? 0 : flags & DBF_DOCKTO_NEXTMARK? 2 : 1);
+  flags & DBF_POSTFIX_TO_PREFIX? mmt->setPrefix(postfix) : mmt->setPostfix(postfix);
   mmt->setFont(this->font());
-  mmt->setRelatedOpts(RF_SETENUMERATE, relatedopts_t(countMaxNumbers(marksCount-1), flags & DBF_ENUMERATE_FROMZERO? 0 : 1, -1));
+  mmt->bdContentUpdate(RF_SETENUMERATE, relatedopts_t(countMaxNumbers(marksCount-1), flags & DBF_ENUMERATE_FROMZERO? 0 : 1, -1));
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = (marksCount-1)*pixStep_pixSpacing;
@@ -2338,53 +2705,55 @@ MEWScaleNM* DrawBars::addScaleEnumerator(ATTACHED_TO atto, int flags, int marksC
   return (MEWScaleNM*)addMarginElement(atto, mmt, new MEWScaleNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
-MEWScaleNN* DrawBars::addScaleTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksCount, int pixStep_pixSpacing)
+MEWScaleTAPNN* DrawBars::addScaleTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksCount, int pixStep_pixSpacing, const char* postfix)
 {
   MarginMarksTexted* mmt = new Margin1Mark1Text(flags & DBF_NOTESINSIDE);
-  mmt->init(DB_EXTRACT_MODE(flags, DBMODE_STRETCHED_POW2), marksCount, pixStep_pixSpacing, 0);
+  mmt->init(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED_POW2), marksCount, pixStep_pixSpacing, DB_ROUNDING(flags), 0);
+  flags & DBF_POSTFIX_TO_PREFIX? mmt->setPrefix(postfix) : mmt->setPostfix(postfix);
   mmt->setFont(this->font());
-  mmt->setRelatedOpts(RF_SETTAPS, relatedopts_t(fn, param, maxtextlen));
+  mmt->bdContentUpdate(RF_SETTAPS, relatedopts_t(fn, param, maxtextlen));
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = marksCount*(pixStep_pixSpacing);
     else                    pImpl->c_hint_draw_width = marksCount*(pixStep_pixSpacing);
 //    updateGeometry();
   }
-  return (MEWScaleNN*)addMarginElement(atto, mmt, new MEWScaleNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScaleTAPNN*)addMarginElement(atto, mmt, new MEWScaleTAPNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
-MEWScaleNM* DrawBars::addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksCount, int pixStep_pixSpacing)
+MEWScaleTAPNM* DrawBars::addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksCount, int pixStep_pixSpacing, const char* postfix)
 {
   MarginMarksTextBetween* mmt = new MarginMarksTextBetween();
-  mmt->init_wide(DB_EXTRACT_MODE(flags, DBMODE_STRETCHED_POW2), marksCount, pixStep_pixSpacing, 1, true);
+  mmt->init_wide(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED_POW2), marksCount, pixStep_pixSpacing, 1, DB_ROUNDING(flags), true, flags & DBF_DOCKTO_PREVMARK? 0 : flags & DBF_DOCKTO_NEXTMARK? 2 : 1);
+  flags & DBF_POSTFIX_TO_PREFIX? mmt->setPrefix(postfix) : mmt->setPostfix(postfix);
   mmt->setFont(this->font());
-  mmt->setRelatedOpts(RF_SETTAPS, relatedopts_t(fn, param, maxtextlen));
+  mmt->bdContentUpdate(RF_SETTAPS, relatedopts_t(fn, param, maxtextlen));
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = (marksCount-1)*pixStep_pixSpacing;
     else                    pImpl->c_hint_draw_width = (marksCount-1)*pixStep_pixSpacing;
 //    updateGeometry();
   }
-  return (MEWScaleNM*)addMarginElement(atto, mmt, new MEWScaleNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScaleTAPNM*)addMarginElement(atto, mmt, new MEWScaleTAPNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
-MEWScaleNM* DrawBars::addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param, int marksCount, int pixStep_pixSpacing)
+MEWScaleTAPNM* DrawBars::addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param, int marksCount, int pixStep_pixSpacing)
 {
   MarginMarksWidgetBetween* mmt = new MarginMarksWidgetBetween();
-  mmt->init_wide(DB_EXTRACT_MODE(flags, DBMODE_STRETCHED_POW2), marksCount, pixStep_pixSpacing, 1, true, maxperpendiculardimm, fn, param, this);
+  mmt->init_wide(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED_POW2), marksCount, pixStep_pixSpacing, 1, DB_ROUNDING(flags), true, maxperpendiculardimm, fn, param, this);
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = (marksCount-1)*pixStep_pixSpacing;
     else                    pImpl->c_hint_draw_width = (marksCount-1)*pixStep_pixSpacing;
 //    updateGeometry();
   }
-  return (MEWScaleNM*)addMarginElement(atto, mmt, new MEWScaleNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScaleTAPNM*)addMarginElement(atto, mmt, new MEWScaleTAPNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
 MEWScaleNM* DrawBars::addScaleWidgetsNM(ATTACHED_TO atto, int flags, int maxperpendiculardimm, int marksNwidgetsCount, QWidget* wdgs[], int pixStep_pixSpacing)
 {
   MarginMarksWidgetBetween* mmt = new MarginMarksWidgetBetween();
-  mmt->init_wide(DB_EXTRACT_MODE(flags, DBMODE_STRETCHED), marksNwidgetsCount, pixStep_pixSpacing, 1, true, maxperpendiculardimm, wdgs, this);
+  mmt->init_wide(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED), marksNwidgetsCount, pixStep_pixSpacing, 1, DB_ROUNDING(flags), true, maxperpendiculardimm, wdgs, this);
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = (marksNwidgetsCount-1)*pixStep_pixSpacing;
@@ -2394,12 +2763,13 @@ MEWScaleNM* DrawBars::addScaleWidgetsNM(ATTACHED_TO atto, int flags, int maxperp
   return (MEWScaleNM*)addMarginElement(atto, mmt, new MEWScaleNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
-MEWScale* DrawBars::addScaleDrawUniSide(ATTACHED_TO atto, int flags, int pixSpacing, unsigned int step)
+MEWScale* DrawBars::addScaleDrawUniSide(ATTACHED_TO atto, int flags, int pixSpacing, unsigned int step, const char* postfix)
 {
   MarginMarksTextBetween* mmt = new MarginMarksTextBetween();
   int sizeDimm = BAR_VERT[atto]? int(pDraw->sizeDataVert() + 1) : int(pDraw->sizeDataHorz() + 1);
-  mmt->init_wide(DB_EXTRACT_MODE(flags, DBMODE_STRETCHED), sizeDimm, pixSpacing, step, flags & DBF_ENUMERATE_SHOWLAST);
-  mmt->setRelatedOpts(RF_SETENUMERATE, relatedopts_t(countMaxNumbers(sizeDimm-1), flags & DBF_ENUMERATE_FROMZERO? 0 : 1, -1));
+  flags & DBF_POSTFIX_TO_PREFIX? mmt->setPrefix(postfix) : mmt->setPostfix(postfix);
+  mmt->init_wide(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED), sizeDimm, pixSpacing, step, DB_ROUNDING(flags), flags & DBF_ENUMERATE_SHOWLAST, flags & DBF_DOCKTO_PREVMARK? 0 : flags & DBF_DOCKTO_NEXTMARK? 2 : 1);
+  mmt->bdContentUpdate(RF_SETENUMERATE, relatedopts_t(countMaxNumbers(sizeDimm-1), flags & DBF_ENUMERATE_FROMZERO? 0 : 1, -1));
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = (sizeDimm-1)*(pixSpacing);
@@ -2409,14 +2779,14 @@ MEWScale* DrawBars::addScaleDrawUniSide(ATTACHED_TO atto, int flags, int pixSpac
   return (MEWScale*)addMarginElement(atto, mmt, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
-MEWScale* DrawBars::addScaleDrawUniSide(ATTACHED_TO atto, int flags, float LL, float HL, int pixSpacing, int miniPerMaxiLIMIT)
+MEWScale* DrawBars::addScaleDrawUniSide(ATTACHED_TO atto, int flags, float LL, float HL, int pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
 {
 //  Margin1Mark1Text* mmt = new Margin1Mark1Text(flags & DBF_NOTESINSIDE);
   MarginMarksTexted* mmt = flags & DBF_ONLY2NOTES? (MarginMarksTexted*)new MarginMinTexts(flags & DBF_NOTESINSIDE) : 
                                                   (MarginMarksTexted*)new Margin1Mark1Text(flags & DBF_NOTESINSIDE);
   int sizeDimm = BAR_VERT[atto]? int(pDraw->sizeDataVert() + 1) : int(pDraw->sizeDataHorz() + 1);
-  mmt->init(DB_EXTRACT_MODE(flags, DBMODE_STRETCHED), sizeDimm, pixSpacing, miniPerMaxiLIMIT);
-  mmt->setRelatedOpts(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL)));
+  mmt->init(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED), sizeDimm, pixSpacing, DB_ROUNDING(flags), miniPerMaxiLIMIT);
+  mmt->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL)));
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = sizeDimm*(pixSpacing);
@@ -2426,12 +2796,12 @@ MEWScale* DrawBars::addScaleDrawUniSide(ATTACHED_TO atto, int flags, float LL, f
   return (MEWScale*)addMarginElement(atto, mmt, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
-MEWScale* DrawBars::addScaleDrawGraphB(ATTACHED_TO atto, int flags, int marksCount, int pixSpacing, int miniPerMaxiLIMIT)
+MEWScale* DrawBars::addScaleDrawGraphB(ATTACHED_TO atto, int flags, int marksCount, int pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
 {
   MarginMarksTexted* mmt = flags & DBF_ONLY2NOTES? (MarginMarksTexted*)new MarginMinTexts(flags & DBF_NOTESINSIDE) : 
                                                   (MarginMarksTexted*)new Margin1Mark1Text(flags & DBF_NOTESINSIDE);
-  mmt->init(DB_EXTRACT_MODE(flags, DBMODE_STRETCHED_POW2), marksCount, pixSpacing, miniPerMaxiLIMIT);
-  mmt->setRelatedOpts(RF_SETBOUNDS, relatedopts_t(pDraw->bounds()));
+  mmt->init(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED_POW2), marksCount, pixSpacing, DB_ROUNDING(flags), miniPerMaxiLIMIT);
+  mmt->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(pDraw->bounds()));
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = marksCount*(pixSpacing);
@@ -2442,12 +2812,12 @@ MEWScale* DrawBars::addScaleDrawGraphB(ATTACHED_TO atto, int flags, int marksCou
   return (MEWScale*)addMarginElement(atto, mmt, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
-MEWScale* DrawBars::addScaleDrawGraphB(ATTACHED_TO atto, int flags, float LL, float HL, int marksCount, int pixSpacing, int miniPerMaxiLIMIT)
+MEWScale* DrawBars::addScaleDrawGraphB(ATTACHED_TO atto, int flags, float LL, float HL, int marksCount, int pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
 {
   MarginMarksTexted* mmt = flags & DBF_ONLY2NOTES? (MarginMarksTexted*)new MarginMinTexts(flags & DBF_NOTESINSIDE) : 
                                                   (MarginMarksTexted*)new Margin1Mark1Text(flags & DBF_NOTESINSIDE);
-  mmt->init(DB_EXTRACT_MODE(flags, DBMODE_STRETCHED_POW2), marksCount, pixSpacing, miniPerMaxiLIMIT);
-  mmt->setRelatedOpts(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL)));
+  mmt->init(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED_POW2), marksCount, pixSpacing, DB_ROUNDING(flags), miniPerMaxiLIMIT);
+  mmt->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL)));
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = marksCount*(pixSpacing);
@@ -2462,8 +2832,8 @@ MEWScaleTAP*          DrawBars::addScaleDrawRecorderB(ATTACHED_TO atto, int flag
 {
   MarginMarksTexted* mmt = flags & DBF_ONLY2NOTES? (MarginMarksTexted*)new MarginMinTexts(flags & DBF_NOTESINSIDE) : 
                                                   (MarginMarksTexted*)new Margin1Mark1Text(flags & DBF_NOTESINSIDE);
-  mmt->init(DB_EXTRACT_MODE(flags, DBMODE_STATIC), marksCount, pixStep, miniPerMaxiLIMIT);
-  mmt->setRelatedOpts(RF_SETTAPS, relatedopts_t(mtfn, param, maxtextlen));
+  mmt->init(DB_HIDDEN_MODE(flags, DBMODE_STATIC), marksCount, pixStep, DB_ROUNDING(flags), miniPerMaxiLIMIT);
+  mmt->bdContentUpdate(RF_SETTAPS, relatedopts_t(mtfn, param, maxtextlen));
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = marksCount*(pixStep);
@@ -2477,8 +2847,8 @@ MEWScaleTAP*          DrawBars::addScaleDrawRecorderB(ATTACHED_TO atto, int flag
 MEWScaleTAP* DrawBars::addScaleDrawRecorderNM(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, const void* param, int miniPerMaxiLIMIT)
 {
   MarginMarksTexted* mmt = new MarginMarksTextBetween();
-  mmt->init(DB_EXTRACT_MODE(flags, DBMODE_STATIC), marksCount, pixStep, miniPerMaxiLIMIT);
-  mmt->setRelatedOpts(RF_SETTAPS, relatedopts_t(mtfn, param, maxtextlen));
+  mmt->init(DB_HIDDEN_MODE(flags, DBMODE_STATIC), marksCount, pixStep, DB_ROUNDING(flags), miniPerMaxiLIMIT);
+  mmt->bdContentUpdate(RF_SETTAPS, relatedopts_t(mtfn, param, maxtextlen));
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = (marksCount-1)*(pixStep);
@@ -2643,9 +3013,9 @@ void DrawBars::resizeEvent(QResizeEvent* event)
     PDRAWMOVE;
     updateGeometry();
   }
-  QSize dsize = event->size() - QSize(pImpl->ttr[AT_LEFT].c_size + pImpl->ttr[AT_RIGHT].c_size,
+  const QSize dsize = event->size() - QSize(pImpl->ttr[AT_LEFT].c_size + pImpl->ttr[AT_RIGHT].c_size,
                                       pImpl->ttr[AT_TOP].c_size + pImpl->ttr[AT_BOTTOM].c_size)
-                - QSize(pImpl->c_width_margins, pImpl->c_height_margins);
+                      - QSize(pImpl->c_width_margins, pImpl->c_height_margins);
   
   int dwidth, dheight;
   
@@ -2655,6 +3025,7 @@ void DrawBars::resizeEvent(QResizeEvent* event)
 #else
   bool resizeDrawWillAfterBars = !pDraw->isVisible();
 #endif
+  
   if (resizeDrawWillAfterBars)
     pDraw->fitSize(dsize.width(), dsize.height(), &dwidth, &dheight);
   else
@@ -2663,16 +3034,25 @@ void DrawBars::resizeEvent(QResizeEvent* event)
     dwidth = (int)pDraw->sizeHorz();
     dheight = (int)pDraw->sizeVert();
   }
+//  if (this->accessibleName() == "Allo")
+//  {
+//    qDebug()<<"Allo  "<<resizeDrawWillAfterBars<<event->size()<<dsize<<QSize(dwidth, dheight);
+//  }
+  
   if (/*isVisible() && */height() > 5 && width() > 5)
   {
+    int dw = dsize.width() - dwidth;    if (dw < 0) dw = 0;
+    int dh = dsize.height() - dheight;  if (dh < 0) dh = 0;
     pImpl->resizeBars(MarginElement::UF_RESIZE, width() - pImpl->c_width_margins, height() - pImpl->c_height_margins, 
-                       pDraw->rawResizeModeNoScaled()? 0 : dsize.width() - dwidth,
-                       pDraw->rawResizeModeNoScaled()? 0 : dsize.height() - dheight
+                       pDraw->rawResizeModeNoScaled()? 0 : dw,
+                       pDraw->rawResizeModeNoScaled()? 0 : dh
                                                        );
 //    qDebug()<<event->size()<<width()<<height();
   }
   if (resizeDrawWillAfterBars)
     pDraw->resize(dsize);
+  
+  pImpl->c_dsize = dsize;
 }
 
 void DrawBars::paintEvent(QPaintEvent* event)
@@ -2682,7 +3062,8 @@ void DrawBars::paintEvent(QPaintEvent* event)
   painter.begin(this);
 //  painter.setRenderHint(QPainter::NonCosmeticDefaultPen);
   
-  painter.fillRect(rect(), pImpl->c_back_brush);
+  if (pImpl->c_back_fill)
+    painter.fillRect(rect(), pImpl->c_back_brush);
   
   painter.setRenderHint(QPainter::Antialiasing, false);
 //  painter.setRenderHint(QPainter::Antialiasing, false);
@@ -2705,6 +3086,8 @@ void DrawBars::paintEvent(QPaintEvent* event)
   
   painter.setPen(pImpl->c_front_pen);
   painter.setBrush(pImpl->c_front_brush);
+  if (pImpl->main_opacity < 1.0f)
+    painter.setOpacity(pImpl->main_opacity);
   painter.translate(QPoint(pImpl->c_margins.left(), pImpl->c_margins.top()));
   for (int d=0; d<4; d++)
     for (int i=0; i<pImpl->elems[d].count(); i++)
@@ -2728,6 +3111,14 @@ bool DrawBars::event(QEvent* ev)
     else if (pImpl->clr_policy == CP_DEFAULT) /// not-strict movement! for not to lose -1 (manual) color_policy
       pImpl->upbackPalette(this);
   }
+  else if (ev->type() == QEvent::LayoutRequest)
+  {
+  }
+//  else
+//  {
+//    if (this->objectName() == "VAU")
+//      qDebug()<<ev->type();
+//  }
   return QWidget::event(ev);
 }
 
@@ -2737,6 +3128,8 @@ void DrawBars::connectScrollBar(QScrollBar* qsb, bool staticView, bool setOrient
   QObject::connect(qsb, SIGNAL(valueChanged(int)), this, SLOT(scrollDataTo(int)));
 }
 
+void DrawBars::slot_setScalingA(int sh){  pDraw->slot_setScalingA(sh);  }
+void DrawBars::slot_setScalingB(int sv){  pDraw->slot_setScalingB(sv);  }
 void DrawBars::slot_setScalingH(int sh){  pDraw->slot_setScalingH(sh);  }
 void DrawBars::slot_setScalingV(int sv){  pDraw->slot_setScalingV(sv);  }
 
@@ -2786,11 +3179,20 @@ void DrawBars::slot_updatedBounds()
   int cnt = pImpl->elemsBoundDepended.count();
   if (cnt)
   {
+    bool doupdate = false;
     for (int i=0; i<cnt; i++)
+      doupdate |= pImpl->elemsBoundDepended[i]->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bnd), false);
+    if (doupdate)
     {
-      pImpl->elemsBoundDepended[i]->setRelatedOpts(RF_SETBOUNDS, relatedopts_t(bnd));
+      update();
+//      static int up1;
+//      qDebug()<<"updated"<<up1++;
     }
-    update();
+    else
+    {
+//      static int up2;
+//      qDebug()<<"banned"<<up2++;
+    }
   }
 }
 
@@ -2894,13 +3296,17 @@ static void rectAlign(const QRect& area, Qt::Alignment alignment, QPoint* result
 
 void MEQWrapper::remoteUpdate()
 {
-  m_premote->update();
+//  static int ctr;
+//  if (checkneedredraw == false || m_pme->needredraw())
+    m_premote->update();
+//  else
+//    qDebug()<<"Update banned by remote "<<ctr++;
 }
 
 void MEQWrapper::remoteRebound()
 {
   m_premote->elemSizeHintChanged(m_pme);
-  m_premote->update();
+  remoteUpdate();
 }
 
 MEQWrapper::MEQWrapper(): m_pme(nullptr), m_premote(nullptr)
@@ -2972,8 +3378,8 @@ void MEWSpace::setSpace(int space)
   public:
     MEPointerOProactive(MarginPointer* ptr, DrawBars* premote): m_ptr(ptr), m_premote(premote)
     {   if (m_premote) m_premote->update(); }
-    MEPointerOProactive(MarginPointer* ptr, DrawBars* premote, float f0x, float f0y): m_ptr(ptr), m_premote(premote)
-    {   m_ptr->setPosition(f0x, f0y); if (m_premote) m_premote->update(); }
+    MEPointerOProactive(MarginPointer* ptr, DrawBars* premote, float x01, float y01): m_ptr(ptr), m_premote(premote)
+    {   m_ptr->setPosition(x01, y01); if (m_premote) m_premote->update(); }
     virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void *dataptr, bool*)
     {
       if (oreact == ORM_LMPRESS || oreact == ORM_LMMOVE)
@@ -3000,14 +3406,69 @@ DrawOverlayProactive* MEWPointer::createProactive(float start_x, float start_y)
   return new MEPointerOProactive((MarginPointer*)m_pme, m_premote, start_x, start_y);
 }
 
+  class MEPointerOProactivePFN: public DrawOverlayProactive
+  {
+    MarginPointer*  m_ptr;
+    DrawBars*       m_premote;
+    MEWPointer::proconvert_fn       m_pfn;
+    MEWPointer::proconvert_bi_fn    m_pfnbi;
+  public:
+    MEPointerOProactivePFN(MarginPointer* ptr, DrawBars* premote, MEWPointer::proconvert_fn pfn): 
+      m_ptr(ptr), m_premote(premote), m_pfn(pfn), m_pfnbi(nullptr)
+    {   if (m_premote) m_premote->update(); }
+    MEPointerOProactivePFN(MarginPointer* ptr, DrawBars* premote, MEWPointer::proconvert_bi_fn pfn): 
+      m_ptr(ptr), m_premote(premote), m_pfn(nullptr), m_pfnbi(pfn)
+    {   if (m_premote) m_premote->update(); }
+//    MEPointerOProactivePFN(MarginPointer* ptr, DrawBars* premote, float x01, float y01): m_ptr(ptr), m_premote(premote)
+//    {   m_ptr->setPosition(x01, y01); if (m_premote) m_premote->update(); }
+    virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void *dataptr, bool*)
+    {
+      if (oreact == ORM_LMPRESS || oreact == ORM_LMMOVE)
+      {
+        if (m_pfn)
+          m_ptr->setPosition(m_pfn(((const float*)dataptr)[0], ((const float*)dataptr)[1]));
+        else if (m_pfnbi)
+        {
+          float ff;
+          float pos01 = m_pfnbi(((const float*)dataptr)[0], ((const float*)dataptr)[1], &ff);
+          m_ptr->setPositionBifunc(pos01, ff);
+        }
+        if (m_premote)  m_premote->update();
+      }
+      else if (oreact == ORM_RMPRESS)
+      {
+        m_ptr->setVisible(false);
+        if (m_premote)  m_premote->update();
+      }
+      return true;
+    }
+  };
+
+DrawOverlayProactive* MEWPointer::createProactive(MEWPointer::proconvert_fn pfn)
+{
+  return new MEPointerOProactivePFN((MarginPointer*)m_pme, m_premote, pfn);
+}
+
+DrawOverlayProactive* MEWPointer::createProactive(MEWPointer::proconvert_bi_fn pfn)
+{
+  return new MEPointerOProactivePFN((MarginPointer*)m_pme, m_premote, pfn);
+}
+
+//void MEWPointer::setPrefix(const char* str){ ((MarginPointer*)m_pme)->setPrefix(str);  }
+//void MEWPointer::setPostfix(const char* str){ ((MarginPointer*)m_pme)->setPostfix(str);  }
+
 void MEWPointer::setPosition(float pos01)
 {
   ((MarginPointer*)m_pme)->setPosition(pos01);
-//  remoteRebound();
   remoteUpdate();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
+
+
+//void MEWScale::setPrefix(const char* str){ ((MarginMarksTexted*)m_pme)->setPrefix(str); remoteUpdate(); }
+//void MEWScale::setPostfix(const char* str){ ((MarginMarksTexted*)m_pme)->setPostfix(str); remoteUpdate(); }
+
 
 void MEWScale::setFont(const QFont& font)
 {
@@ -3036,12 +3497,24 @@ void MEWScale::setMarkMiniLen(int mlen)
 
 void MEWScaleNN::setBounds(float LL, float HL)
 {
-  ((MarginMarksTexted*)m_pme)->setRelatedOpts(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL)));
-  remoteUpdate();
+  if ( ((MarginMarksTexted*)m_pme)->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL))) )
+    remoteUpdate();
 }
 
 void MEWScaleTAP::tap()
 {
-  ((MarginMarksTexted*)m_pme)->relatedTextup();
-  remoteUpdate();
+  if ( ((MarginMarksTexted*)m_pme)->bdContentUpdate() )
+    remoteUpdate();
+}
+
+void MEWScaleTAPNN::tap()
+{
+  if ( ((MarginMarksTexted*)m_pme)->bdContentUpdate() )
+    remoteUpdate();
+}
+
+void MEWScaleTAPNM::tap()
+{
+  if ( ((MarginMarksTexted*)m_pme)->bdContentUpdate() )
+    remoteUpdate();
 }

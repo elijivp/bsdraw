@@ -63,7 +63,8 @@ SOURCES += main.cpp\
     ../overlays/special/bssnowflake.cpp \
     ../specdraws/bsdrawsdpicture.cpp \
     ../core/bsqoverlay.cpp \
-    ../overlays/special/bsbounded.cpp
+    ../overlays/special/bsbounded.cpp \
+    ../palettes/QPaletteExtractor.cpp
 
 HEADERS  += \
     ../specdraws/bsdrawpolar.h \
@@ -212,7 +213,9 @@ HEADERS  += \
     ../palettes/advanced/idl_rainbowWh.h \
     ../palettes/advanced/gnu_hotsteel.h \
     ../palettes/advanced/mat_copper.h \
-    ../palettes/advanced/idl_nature.h
+    ../palettes/advanced/idl_nature.h \
+    ../palettes/QPaletteExtractor.h \
+    ../palettes/bspalettes_spec.h
 
 RESOURCES += \
     ../palettes/QPaletteBox.qrc

@@ -31,6 +31,9 @@ enum  ORIENTATION       { OR_LRBT=0,  OR_RLBT,  OR_LRTB,  OR_RLTB,    // order f
                           OR_TBLR,    OR_BTLR,  OR_TBRL,  OR_BTRL 
                         };
 
+enum  DRAWVIEWALIGN     { DVA_LEFT=0,  DVA_CENTER,  DVA_RIGHT
+                        };
+
 enum  SPLITPORTIONS     { SL_NONE=0,
                           SL_VERT =0x0001,  SL_HORZ =0x0101,  SL_VERT2=0x0002,  SL_HORZ2=0x0102,
                           SL_VERT3=0x0003,  SL_HORZ3=0x0103,  SL_VERT4=0x0004,  SL_HORZ4=0x0104,
@@ -58,26 +61,34 @@ inline bool orientationTransposed(ORIENTATION ort)
   return mv[ort];
 }
 
+
+
+enum BSPOSTMASKOVER {  PO_OFF=0, PO_SIGNAL=1, PO_EMPTY=2, PO_ALL=3 };
+enum BSPOSTMASKTYPE {  
+                  PM_CONTOUR, PM_LINELEFT, PM_LINERIGHT, PM_LINEBOTTOM, PM_LINETOP,
+                  PM_LINELEFTBOTTOM, PM_LINERIGHTBOTTOM, PM_LINELEFTTOP, PM_LINERIGHTTOP,
+                  PM_PSEUDOCIRCLE, PM_DOT, 
+                  PM_DOTLEFTBOTTOM, PM_DOTCONTOUR,
+                  PM_SHTRICHL, PM_SHTRICHR, PM_CROSS, PM_GRID, PM_FILL, PM_SQUARES  
+};
+
 struct  DPostmask
 {
-  enum DPOVER   {  PO_OFF=0, PO_SIGNAL=1, PO_EMPTY=2, PO_ALL=3 };
-  DPOVER        over;
-  enum DPMASK   {  PM_CONTOUR, PM_LINELEFT, PM_LINERIGHT, PM_LINEBOTTOM, PM_LINETOP,
-                   PM_LINELEFTBOTTOM, PM_LINERIGHTBOTTOM, PM_LINELEFTTOP, PM_LINERIGHTTOP,
-                   PM_PSEUDOCIRCLE, PM_DOT, 
-                   PM_DOTLEFTBOTTOM, PM_DOTCONTOUR,
-                   PM_SHTRICHL, PM_SHTRICHR, PM_CROSS, PM_GRID, PM_FILL, PM_SQUARES  };
-  DPMASK        postmask;
-  int           weight;
-  int           colorManual;
-  float         colorPalette; /// activates if colorManual == -1
-  float         threshold;    /// for 2D draws
-  DPostmask(DPOVER over_, DPMASK mask, int weight_, float r_, float g_, float b_, float emptyThreshold=0.0f):
-  over(over_), postmask(mask), weight(weight_), threshold(emptyThreshold) { colorManual = bscolor3fToint(r_, g_, b_); }
-  DPostmask(DPOVER over_, DPMASK mask, int weight_, int colorhex, float emptyThreshold=0.0f):
-  over(over_), postmask(mask), weight(weight_), colorManual(colorhex), threshold(emptyThreshold){}
-  DPostmask(DPOVER over_, DPMASK mask, int weight_, float colorByPalette=0.0f, float emptyThreshold=0.0f):
-  over(over_), postmask(mask), weight(weight_), colorManual(-1), colorPalette(colorByPalette), threshold(emptyThreshold){}
+  BSPOSTMASKOVER    over;
+  BSPOSTMASKTYPE    mask;
+  int               weight;
+  int               colorManual;
+  float             colorPalette; /// activates if colorManual == -1
+  float             threshold;    /// for 2D draws
+  static DPostmask  postmask(BSPOSTMASKOVER over, BSPOSTMASKTYPE mask, int weight, float r, float g, float b, float emptyThreshold=0.0f)
+  { int clr = bscolor3fToint(r, g, b);  DPostmask result = { over, mask, weight, clr, 0.0f, emptyThreshold }; return result;  }
+  static DPostmask  postmask(BSPOSTMASKOVER over, BSPOSTMASKTYPE mask, int weight, int colorhex, float emptyThreshold=0.0f)
+  { DPostmask result = { over, mask, weight, colorhex, 0.0f, emptyThreshold };      return result;  }
+  static DPostmask  postmask(BSPOSTMASKOVER over, BSPOSTMASKTYPE mask, int weight, float colorByPalette=0.0f, float emptyThreshold=0.0f)
+  { DPostmask result = { over, mask, weight, -1, colorByPalette, emptyThreshold };  return result;  }
+  
+  static DPostmask  empty()
+  { DPostmask result = { PO_OFF, PM_CONTOUR, 0, 0, 0.0f, 0.0f };  return result;  }
 };
 
 enum  DTYPE       /// Trace/simple shader datatypes
@@ -273,10 +284,13 @@ inline linestyle_t    linestyle_update_inverse(linestyle_t ls, int inv){   ls.r 
 struct impulsedata_t
 {
   enum { MAXCOEFFS = 31 };
-  enum IMPULSE_TYPE {     IR_OFF, IR_COEFF, IR_COEFF_NOSCALED, IR_BORDERS, IR_BORDERS_FIXEDCOUNT  };
+  enum IMPULSE_TYPE {     IR_OFF, IR_A_COEFF, IR_A_COEFF_NOSCALED, IR_A_BORDERS, IR_A_BORDERS_FIXEDCOUNT,
+                                  IR_B_COEFF, IR_B_COEFF_NOSCALED, IR_B_BORDERS, IR_B_BORDERS_FIXEDCOUNT
+                    };
   int type;
-  int count;      // for IR_COEFF and IR_COEFF_NOSCALED - count of coeffs. For IR_BORDERS+ - minimal scaling for activation
-  int central;    // for IR_COEFF and IR_COEFF_NOSCALED - central coeff. For IR_BORDERS+ - starter count for activation scaling
+  int count;      // for IR_X_COEFF and IR_X_COEFF_NOSCALED - count of coeffs. For IR_X_BORDERS+ - minimal scaling for activation
+  int central;    // for IR_X_COEFF and IR_X_COEFF_NOSCALED - central coeff. For IR_X_BORDERS+ - starter count for activation scaling
+  int cycled;
   float coeff[MAXCOEFFS];
 };
 

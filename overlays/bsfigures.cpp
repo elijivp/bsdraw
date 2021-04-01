@@ -36,13 +36,13 @@ int   OFPoint::fshTrace(int overlay, bool rotated, char* to) const
 ////////////////////////
 /// 
 
-OFCircle::OFCircle(float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float radius, const linestyle_t &kls): DrawOverlayTraced(kls), 
-  OVLCoordsDynamic(cn, center_x, center_y), OVLDimms1Static(featcn == CR_SAME? cn : featcn, radius), m_fillcoeff(fillopacity)
+OFCircle::OFCircle(float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float radius, const linestyle_t &kls, float border): DrawOverlayTraced(kls), 
+  OVLCoordsDynamic(cn, center_x, center_y), OVLDimms1Static(featcn == CR_SAME? cn : featcn, radius), m_fillcoeff(fillopacity), m_border(border)
 {
 }
 
-OFCircle::OFCircle(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float radius, const linestyle_t &kls): DrawOverlayTraced(kls), 
-  OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimms1Static(featcn == CR_SAME? pcoords->getCoordination(): featcn, radius), m_fillcoeff(fillopacity)
+OFCircle::OFCircle(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float radius, const linestyle_t &kls, float border): DrawOverlayTraced(kls), 
+  OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimms1Static(featcn == CR_SAME? pcoords->getCoordination(): featcn, radius), m_fillcoeff(fillopacity), m_border(border)
 {
 }
 
@@ -52,7 +52,8 @@ int   OFCircle::fshTrace(int overlay, bool rotated, char* to) const
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
-    ocg.var_const_static(DT_1F, "b = 1.0");
+    ocg.var_fixed("b", m_border);
+//    ocg.var_const_static(DT_1F, "b = 1.0");
     ocg.trace_circle_cc_begin("idimms1", "b");
     ocg.trace_circle_cc_end(m_fillcoeff);
   }  
@@ -173,8 +174,7 @@ int OFTriangle::fshTrace(int overlay, bool rotated, char *to) const
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
-    ocg.trace_triangle_cc_begin("idimms1");
-    ocg.trace_triangle_cc_end("idimms1", m_orientation == ORIENT_UP? 0: m_orientation == ORIENT_DOWN? 1 : 0, m_fillcoeff);
+    ocg.trace_triangle_cc("idimms1", m_orientation == ORIENT_UP? 0: m_orientation == ORIENT_DOWN? 1 : 0, m_fillcoeff);
   }  
   ocg.goto_func_end(true);
   return ocg.written();
@@ -269,6 +269,68 @@ int   OFLine::fshTrace(int overlay, bool rotated, char* to) const
   return ocg.written();
 }
 
+
+/////////////////////////////////////////////
+//////////////////////////
+/// 
+
+OFRay::OFRay(COORDINATION cn, float start_x, float start_y, const linestyle_t& linestyle): DrawOverlayTraced(linestyle), 
+  OVLCoordsDynamic(cn, 0.0f, 0.0f),
+  OVLDimmsOff(),
+  m_start_x(start_x), m_start_y(start_y), m_additcn(CR_SAME), m_length(0)
+{
+}
+
+OFRay::OFRay(COORDINATION cn, float start_x, float start_y, COORDINATION additcn, float length, const linestyle_t& linestyle): DrawOverlayTraced(linestyle), 
+  OVLCoordsDynamic(cn, 0.0f, 0.0f),
+  OVLDimmsOff(),
+  m_start_x(start_x), m_start_y(start_y), m_additcn(additcn), m_length(length)
+{
+  
+}
+
+OFRay::OFRay(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float start_x, float start_y, const linestyle_t& linestyle): DrawOverlayTraced(linestyle), 
+  OVLCoordsDynamic(pcoords, offset_x, offset_y),
+  OVLDimmsOff(),
+  m_start_x(start_x), m_start_y(start_y), m_additcn(CR_SAME), m_length(0)
+{
+}
+
+OFRay::OFRay(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float start_x, float start_y, COORDINATION additcn, float length, const linestyle_t& linestyle)
+  : DrawOverlayTraced(linestyle), 
+    OVLCoordsDynamic(pcoords, offset_x, offset_y),
+    OVLDimmsOff(),
+    m_start_x(start_x), m_start_y(start_y), m_additcn(additcn), m_length(length)
+{
+  
+}
+
+int   OFRay::fshTrace(int overlay, bool rotated, char* to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
+  {
+//    ocg.goto_normed();
+//    ocg.var_fixed("endpoint", m_start_x, m_start_y);
+//    ocg.movecs_pix("endpoint", 0);
+//    ocg.push("endpoint = endpoint - ioffset;");
+//    ocg.trace_ray_trough_normed_from("endpoint");
+    ocg.var_fixed("center", m_start_x, m_start_y);
+    ocg.goto_normed("center", 0);
+    
+    const char* limit = nullptr;
+    if (m_length != 0.0f)
+    {
+      int relcn = ocg.add_movecs_pixing(m_additcn == CR_SAME? this->getCoordination() : m_additcn);
+      ocg.var_fixed("limit", m_length);
+      ocg.movecs_pix_x("limit", relcn);
+      limit = "limit";
+    }
+    ocg.trace_ray_trough("icoords - ioffset - inormed;", limit);
+  }
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
 /////////////////////////////////////////////////////////
 //////////////////////////////////////
 ///
@@ -389,8 +451,7 @@ int   OFFactor::fshTrace(int overlay, bool rotated, char* to) const
     ocg.var_static(DT_2F, "cs_sizegapped = idimms2 - gap");
     ocg.trace_2linehorz_c("cs_sizegapped.x", "gap.x");
     ocg.trace_2linevert_c("cs_sizegapped.y", "gap.y");
-    ocg.trace_rect_cc_begin("idimms2");
-    ocg.trace_rect_cc_end("idimms2", 0.0f);
+    ocg.trace_rect_cc("idimms2", 0.0f);
   }  
   ocg.goto_func_end(true);
   return ocg.written();

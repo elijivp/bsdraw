@@ -47,6 +47,8 @@ public:
 class DrawCore: public IDrawOverlayFriendly
 {
 protected:
+  enum  DATAASTEXTURE  {  DATEX_2D, DATEX_15D, DATEX_1D, DATEX_DD, DATEX_POLAR };
+  DATAASTEXTURE         m_datex;
   bounds_t              m_bounds;
   float                 m_loc_k, m_loc_b;
   unsigned int          m_portionSize;        /// inner sizeof data
@@ -63,7 +65,7 @@ protected:
   bool                  m_matrixSwitchAB;
   
   impulsedata_t         m_impulsedata;
-  
+  DRAWVIEWALIGN         m_viewAlign;
   bool                  m_dataTextureInterp;
   
   bool                  m_rawResizeModeNoScaled;
@@ -80,7 +82,10 @@ protected:
   const IPalette*       m_ppal;
   bool                  m_ppaldiscretise;
   float                 m_clearcolor[3];
-  bool                  m_clearbypalette, m_clearupdated;
+  
+  enum  CLEARSOURCE     { CS_WIDGET, CS_PALETTE, CS_MANUAL };
+  bool                  m_doclearbackground;
+  CLEARSOURCE           m_clearsource;
 protected:
   enum  GROUNDTYPE      { GND_NONE, GND_DOMAIN, GND_SDP, GND_ASSISTFLOATTABLE };
   GROUNDTYPE            m_groundType;
@@ -103,6 +108,8 @@ protected:
   enum                  PCBM  { PC_INIT=1, PC_SIZE=2, PC_GROUND=4, PC_DATA=8, PC_PALETTE=16, PC_PARAMS=64, PC_PARAMSOVL=128  };
   bool                  havePendOn(PCBM bit) const {  return (m_bitmaskPendingChanges & bit) != 0; }
   bool                  havePending() const {  return m_bitmaskPendingChanges != 0; } 
+  bool                  havePendOn(PCBM bit, int someBPCcopy) const {  return (someBPCcopy & bit) != 0; }
+  bool                  havePending(int someBPCcopy) const {  return someBPCcopy != 0; } 
   void                  unpend(PCBM bit) {  m_bitmaskPendingChanges &= ~bit; }
   void                  unpendAll() {  m_bitmaskPendingChanges = 0; }
   
@@ -154,18 +161,19 @@ protected:
   };
   OverlayEmpty          m_overlaySingleEmpty;
 public:
-  DrawCore(unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions):  m_portionSize(0), m_allocatedPortions(portions), 
+  DrawCore(DATAASTEXTURE datex, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): m_datex(datex), 
+                                                        m_portionSize(0), m_allocatedPortions(portions), 
                                                         m_countPortions(portions), m_orient(orient), m_splitPortions(splitPortions),
                                                         m_matrixData(nullptr), m_matrixDataCached(nullptr),
                                                         m_matrixSwitchAB(orient > OR_RLTB),
-                                                        m_dataTextureInterp(false), m_rawResizeModeNoScaled(false),
+                                                        m_viewAlign(DVA_LEFT), m_dataTextureInterp(false), m_rawResizeModeNoScaled(false),
                                                         m_scalingA(1), m_scalingB(1),
                                                         m_scalingAMin(1), m_scalingAMax(0),
                                                         m_scalingBMin(1), m_scalingBMax(0), m_scalingIsSynced(false),
-                                                        m_ppal(nullptr), m_ppaldiscretise(false), m_clearbypalette(true), m_clearupdated(true), 
+                                                        m_ppal(nullptr), m_ppaldiscretise(false), m_doclearbackground(true), m_clearsource(CS_WIDGET), 
                                                         m_groundType(GND_NONE), m_groundData(nullptr), m_groundDataFastFree(true),
                                                         m_groundMipMapping(false), m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
-                                                        m_postMask(DPostmask::PO_OFF, DPostmask::PM_CONTOUR, 0, 0.0f, 0.0f, 0.0f),
+                                                        m_postMask(DPostmask::empty()),
                                                         m_overlaysCount(0), m_proactive(nullptr), m_proactiveOwner(true)
   {
     _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);
@@ -207,6 +215,8 @@ protected:
   }
   void    deployMemory(unsigned int total) {  m_matrixData = new float[total]; for (unsigned int i=0; i<total; i++) m_matrixData[i] = 0; m_matrixDataCached = new float[total]; }
 public:
+  unsigned int directions() const { if (m_datex == DATEX_2D || m_datex == DATEX_DD || m_datex == DATEX_POLAR) return 2; return 1; }
+public:
                     /// Access methods
   unsigned int          allocatedPortions() const { return m_allocatedPortions; }
   unsigned int          countPortions() const { return m_countPortions; }
@@ -241,8 +251,8 @@ public:
   
   unsigned int          splitterA() const { return m_splitterA; }
   unsigned int          splitterB() const { return m_splitterB; }
-  unsigned int          splitterHorz() const { return m_matrixSwitchAB? m_splitterA : m_splitterB; }
-  unsigned int          splitterVert() const { return m_matrixSwitchAB? m_splitterB : m_splitterA; }
+  unsigned int          splitterHorz() const { return m_matrixSwitchAB? m_splitterB : m_splitterA; }
+  unsigned int          splitterVert() const { return m_matrixSwitchAB? m_splitterA : m_splitterB; }
   
   bool                  isSplittedA() const { return ((m_splitPortions >> 8)&0xFF) == 0; }
   bool                  isSplittedB() const { return ((m_splitPortions >> 8)&0xFF) != 0; }
@@ -263,14 +273,16 @@ public:
   {
     unsigned int matrixDimmA, matrixDimmB, scalingA, scalingB;
     sizeAndScaleHint(sizeA/m_splitterA, sizeB/m_splitterB, &matrixDimmA, &matrixDimmB, &scalingA, &scalingB);
+    bool  changedDimmA = m_matrixDimmA != matrixDimmA || m_scalingA != scalingA;
     m_matrixDimmA = matrixDimmA;
-    m_matrixDimmB = matrixDimmB;
     m_scalingA = scalingA;
+    bool  changedDimmB = m_matrixDimmB != matrixDimmB || m_scalingB != scalingB;
+    m_matrixDimmB = matrixDimmB;
     m_scalingB = scalingB;
-    sizeAndScaleChanged();
+    m_bitmaskPendingChanges |= sizeAndScaleChanged(changedDimmA, changedDimmB);
   }
 protected:
-  virtual void          sizeAndScaleChanged() { }
+  virtual int           sizeAndScaleChanged(bool changedDimmA, bool changedDimmB) { return 0; }
 protected:
   void  clampScaling(unsigned int* scalingA, unsigned int* scalingB) const
   {
@@ -281,8 +293,7 @@ protected:
     
     if (m_scalingIsSynced)
     {
-      DATADIMMUSAGE ddu(getDataDimmUsage());
-      if (*scalingB > *scalingA || (ddu != DDU_2D && ddu != DDU_DD && ddu != DDU_POLAR)) *scalingB = *scalingA;
+      if (*scalingB > *scalingA || (m_datex != DATEX_2D && m_datex != DATEX_DD && m_datex != DATEX_POLAR)) *scalingB = *scalingA;
       else *scalingA = *scalingB;
     }
   }
@@ -291,7 +302,7 @@ private:
   {
     unsigned int old_scaling = m_scalingB;
     clampScaling(&m_scalingA, &m_scalingB);
-    if (m_scalingB != old_scaling  && (getDataDimmUsage() == DDU_1D))
+    if (m_scalingB != old_scaling  && m_datex == DATEX_1D)
     {
       float coeff = float(old_scaling) / m_scalingB;
       m_matrixDimmB = (unsigned int)(m_matrixDimmB*coeff + 0.5f);
@@ -329,6 +340,13 @@ public:
   void  setDataPaletteDiscretion(bool d)
   {
     m_ppaldiscretise = d;
+    m_bitmaskPendingChanges |= PC_PALETTE;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+  }
+  void  setDataPalette(const IPalette* ppal, bool discrete)
+  {
+    m_ppal = ppal;
+    m_ppaldiscretise = discrete;
     m_bitmaskPendingChanges |= PC_PALETTE;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
@@ -384,10 +402,6 @@ public:
 protected:
   void  vmanUpInit(){ m_bitmaskPendingChanges |= PC_INIT; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();  }
   void  vmanUpData(){ m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();  }
-  enum  DATADIMMUSAGE { DDU_2D, DDU_15D, DDU_1D, DDU_DD, DDU_POLAR };
-  virtual DATADIMMUSAGE   getDataDimmUsage() const =0;
-public:
-  unsigned int directions() const { DATADIMMUSAGE ddu = getDataDimmUsage(); if (ddu == DDU_2D || ddu == DDU_DD || ddu == DDU_POLAR) return 2; return 1; }
 public:
   /// 2. Delegated methods
   void  setPortionsCount(unsigned int portionsLessThanAlocated)
@@ -418,25 +432,35 @@ public:
       if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
     }
   }
-  void  setImpulseCoeff(int count, const float coeffs[], int central, bool noscaled=false)
+  void  setImpulseCoeffA(int count, const float coeffs[], int central, bool noscaled=false, bool rotated=false)
   {
-    m_impulsedata.type = noscaled? impulsedata_t::IR_COEFF_NOSCALED : impulsedata_t::IR_COEFF;
-    m_impulsedata.count = count;
-    m_impulsedata.central = central;
+    impulsedata_t idt = { noscaled? impulsedata_t::IR_A_COEFF_NOSCALED : impulsedata_t::IR_A_COEFF, count, central, rotated? 1 : 0 };
     for (int i=0; i<count; i++)
       m_impulsedata.coeff[i] = coeffs[i];
-    m_bitmaskPendingChanges |= PC_INIT;
-    if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+    setImpulse(idt);
   }
-  void  setImpulseBorders(int count, int central, bool fixed=true)
+  void  setImpulseCoeffB(int count, const float coeffs[], int central, bool noscaled=false, bool rotated=false)
   {
-    m_impulsedata.type = fixed? impulsedata_t::IR_BORDERS_FIXEDCOUNT : impulsedata_t::IR_BORDERS;
-    m_impulsedata.count = count;
-    m_impulsedata.central = central;
-    m_bitmaskPendingChanges |= PC_INIT;
-    if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+    impulsedata_t idt = { noscaled? impulsedata_t::IR_B_COEFF_NOSCALED : impulsedata_t::IR_B_COEFF, count, central, rotated? 1 : 0 };
+    for (int i=0; i<count; i++)
+      m_impulsedata.coeff[i] = coeffs[i];
+    setImpulse(idt);
+  }
+  void  setImpulseBordersA(int minscaling, int bordersize, bool fixed=true)
+  {
+    impulsedata_t idt = { fixed? impulsedata_t::IR_A_BORDERS_FIXEDCOUNT : impulsedata_t::IR_A_BORDERS, minscaling, bordersize, 0 };
+    setImpulse(idt);
+  }
+  void  setImpulseBordersB(int minscaling, int bordersize, bool fixed=true)
+  {
+    impulsedata_t idt = { fixed? impulsedata_t::IR_B_BORDERS_FIXEDCOUNT : impulsedata_t::IR_B_BORDERS, minscaling, bordersize, 0 };
+    setImpulse(idt);
   }
   const impulsedata_t& impulse() const { return m_impulsedata; }
+  
+  void  setViewAlign(DRAWVIEWALIGN dva){  m_viewAlign = dva; callWidgetUpdate(); }
+  DRAWVIEWALIGN  viewAlign() const {  return m_viewAlign; }
+public:
   
   void  setOrientation(ORIENTATION orient)
   { 
@@ -628,18 +652,18 @@ protected:
 public:
   void            setClearColor(unsigned int clearcolor)
   {
-    m_clearbypalette = false;
+    m_clearsource = CS_MANUAL;
     _colorCvt(clearcolor);
-    m_clearupdated = true;
+    m_doclearbackground = true;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
   void            setClearByPalette()
   {
-    m_clearbypalette = true;
-    m_clearupdated = true;
+    m_clearsource = CS_PALETTE;
+    m_doclearbackground = true;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
-  bool            isClearedByPalette() const { return m_clearbypalette; }
+  bool            isClearedByPalette() const { return m_clearsource == CS_PALETTE; }
   unsigned int    clearColor() const {  return (unsigned int)
         (int(m_clearcolor[0]*255.0f) + (int(m_clearcolor[1]*255.0f)<<8) + (int(m_clearcolor[2]*255.0f)<<16));
                                      }

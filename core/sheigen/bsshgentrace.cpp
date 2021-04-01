@@ -48,7 +48,7 @@ FshTraceGenerator::FshTraceGenerator(const AbstractDrawOverlay::uniforms_t &ufms
 
 void FshTraceGenerator::_gtb(OVL_ORIENTATION orient)
 { 
-  m_offset += msprintf(&m_to[m_offset], "vec4 overlayTrace%d(in ivec2 icell, in vec4 coords, in float thick, in ivec2 mastercoords, out ivec2 selfposition){" SHNL, 
+  m_offset += msprintf(&m_to[m_offset], "vec4 overlayTrace%d(in ivec2 icell, in vec4 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition){" SHNL, 
                        m_overlay);
   
   bool rtn = orient == OO_LRBT || orient == OO_RLBT || orient == OO_LRTB || orient == OO_RLTB;
@@ -70,17 +70,20 @@ void FshTraceGenerator::_gtb(OVL_ORIENTATION orient)
     //  OO_TBLR, OO_BTLR, OO_TBRL, OO_BTRL,
         "vec2(1.0 - coords.t, coords.s)", "coords.ts", "vec2(1.0 - coords.t, 1.0 - coords.s)", "vec2(coords.t, 1.0 - coords.s)",
     // OO_IHBT, OO_IHTB, OO_LRIH, OO_RLIH
-        "coords.pt", "vec2(coords.p, 1.0 - coords.t)", "coords.sq", "vec2(1.0 - coords.s, coords.q)"
+        "coords.pt", "vec2(coords.p, 1.0 - coords.t)", "coords.sq", "vec2(1.0 - coords.s, coords.q)",
+    // OO_INVERSED
+        "coords.qp"
     };
     m_offset += msprintf(&m_to[m_offset], //"ivec2 icoords = ivec2(floor(coords.pq*ibounds + vec2(0.49,0.49)));" SHNL /// ??1
-                                          "ivec2 icoords = ivec2(floor(%s*ibounds));" SHNL
+//                                          "ivec2 icoords = ivec2(floor(%s*(ibounds - ivec2(1,1)) + vec2(0.49, 0.49)));" SHNL
+                         "ivec2 icoords = ivec2(%s*(ibounds));" SHNL
                                           , coords_orient[int(orient)]);
   }
 
-  static const char _vars[] =             "vec3 result=vec3(0.0,0.0,0.0);" SHNL
+  static const char _vars[] =             "vec3 result = vec3(0.0);" SHNL
                                           "float mixwell = 0.0;" SHNL
-                                          "vec3 _mvar;  float _fvar;" SHNL
-                                          "vec3 _insban = vec3(1.0,1.0,1.0);" SHNL;
+                                          "vec2 _mvar;  float _fvar;" SHNL
+                                          "vec2 _tracepass = vec2(1.0,1.0);" SHNL;
   memcpy(&m_to[m_offset], _vars, sizeof(_vars)-1); m_offset += sizeof(_vars) - 1;
 }
 
@@ -89,18 +92,19 @@ void FshTraceGenerator::_gtb_coords(const _bs_unzip_t &bsu)
   if (bsu.type)
   {
     int coordspixing = add_movecs_pixing(bsu.cr);
-    m_offset += msprintf(&m_to[m_offset], "ivec2 ioffset = ivec2(floor((");
+    m_offset += msprintf(&m_to[m_offset], "ivec2 ioffset = ivec2(");
     if (bsu.type == 1)
       m_offset += msprintf(&m_to[m_offset], "vec2(%f, %f)", bsu.ffs[0], bsu.ffs[1]);
     else if (bsu.type >= 2)
       m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr++);
 //    m_offset += msprintf(&m_to[m_offset],  " * movecs_pixing%d) + vec2(0.49,0.49)));" SHNL, coordspixing);    /// ??2
-    m_offset += msprintf(&m_to[m_offset],  " * movecs_pixing%d)));" SHNL, coordspixing);
-    m_offset += msprintf(&m_to[m_offset],  "ioffset = ioffset + mastercoords;" SHNL);
+    m_offset += msprintf(&m_to[m_offset],  " * movecs_pixing%d + vec2(0.49));" SHNL, coordspixing);
+//    m_offset += msprintf(&m_to[m_offset],  " * movecs_pixing%d);" SHNL, coordspixing);
   }
   else
     m_offset += msprintf(&m_to[m_offset],  "ivec2 ioffset = ivec2(0,0);\n");
   
+  m_offset += msprintf(&m_to[m_offset],  "ioffset = ioffset + mastercoords;" SHNL);
 }
 
 void FshTraceGenerator::_gtb_dimms(const _bs_unzip_t &bsu)
@@ -414,66 +418,59 @@ void FshTraceGenerator::push(const char* text, unsigned int len)
   }
 }
 
-void FshTraceGenerator::inside_begin1(const char *limrad1){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(-%s,float(inormed.x))*step(-%s,float(inormed.y))*(1-step(%s + 1.0, float(inormed.x)))*(1-step(%s + 1.0, float(inormed.y))));   if (inside != 0){" SHNL,
+//void FshTraceGenerator::inside_begin1(const char *limrad1){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(-%s,float(inormed.x))*step(-%s,float(inormed.y))*(1-step(%s + 1.0, float(inormed.x)))*(1-step(%s + 1.0, float(inormed.y))));   if (inside != 0){" SHNL,
+//                                                                              limrad1, limrad1, limrad1, limrad1); }
+
+//void FshTraceGenerator::inside_begin2(const char *limits2){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1-step(%s[0], float(inormed.x)))*(1-step(%s[1], float(inormed.y))));   if (inside != 0){" SHNL, limits2, limits2); }
+
+//void FshTraceGenerator::inside_begin4(const char *limits4){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(%s[0],float(inormed.x))*step(%s[2],float(inormed.y))*(1-step(%s[1] + 1.0, float(inormed.x)))*(1-step(%s[3] + 1.0, float(inormed.y))));   if (inside != 0){" SHNL, 
+//                                                                              limits4, limits4, limits4, limits4); }
+
+void FshTraceGenerator::inside_begin1(const char *limrad1){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(-%s,float(inormed.x))*step(-%s,float(inormed.y))*step(float(inormed.x), %s + 1.0)*step(float(inormed.y), %s + 1.0));   if (inside != 0){" SHNL,
                                                                               limrad1, limrad1, limrad1, limrad1); }
 
-void FshTraceGenerator::inside_begin2(const char *limits2){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1-step(%s[0], float(inormed.x)))*(1-step(%s[1], float(inormed.y))));   if (inside != 0){" SHNL, limits2, limits2); }
+void FshTraceGenerator::inside_begin2(const char *limits2){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*step(float(inormed.x), %s[0])*step(float(inormed.y), %s[1]));   if (inside != 0){" SHNL, limits2, limits2); }
 
-void FshTraceGenerator::inside_begin4(const char *limits4){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(%s[0],float(inormed.x))*step(%s[2],float(inormed.y))*(1-step(%s[1] + 1.0, float(inormed.x)))*(1-step(%s[3] + 1.0, float(inormed.y))));   if (inside != 0){" SHNL, 
-                                                                              limits4, limits4, limits4, limits4); }
+//void FshTraceGenerator::inside_begin4(const char *limits4){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(%s[0],float(inormed.x))*step(%s[2],float(inormed.y))*(1-step(%s[1] + 1.0, float(inormed.x)))*(1-step(%s[3] + 1.0, float(inormed.y))));   if (inside != 0){" SHNL, 
+//                                                                              limits4, limits4, limits4, limits4); }
 
 void FshTraceGenerator::inside_end(){ m_offset += msprintf(&m_to[m_offset], "}"); }
 
 void FshTraceGenerator::ban_trace(bool ban)
 {
   if (ban)
-    m_offset += msprintf(&m_to[m_offset], "_insban = vec3(1.0, 0.0, 1.0);");
+    m_offset += msprintf(&m_to[m_offset], "_tracepass = vec2(1.0, 0.0);");
   else
-    m_offset += msprintf(&m_to[m_offset], "_insban = vec3(1.0, 1.0, 1.0);");
+    m_offset += msprintf(&m_to[m_offset], "_tracepass = vec2(1.0, 1.0);");
 }
 
-//void FshTraceGenerator::place_rect_lb(const char *rdimms, const char *inside_name)
-//{
-//  m_offset += msprintf(&m_to[m_offset], "int %s = step(0.0,inormed.x)*step(0.0,inormed.y)*(1-step(%s[0], inormed.x))*(1-step(%s[1], inormed.y));" SHNL, inside_name, rdimms, rdimms);
-//}
-
-//void FshTraceGenerator::place_rect_cc(const char *r2dimms, const char *inside_name)
-//{
-//  m_offset += msprintf(&m_to[m_offset], "int %s = step(-%s[0] + 1,inormed.x)*step(-%s[1] + 1,inormed.y)*(1-step(%s[0] , inormed.x))*(1-step(%s[1] , inormed.y));" SHNL, inside_name, r2dimms, r2dimms, r2dimms, r2dimms);
-//}
-
-//void FshTraceGenerator::place_line(const char *ABC, const char *border, const char *inside_name)
-//{
-//  m_offset += msprintf(&m_to[m_offset], "int %s = 1.0 - step(%s, abs(%s.x*inormed.x + %s.y*inormed.y + %s.z));" SHNL, inside_name, border, ABC, ABC, ABC);
-//}
 
 
-#define TRACE_MIX_MVAR_WITH_RESULT "result = mix(result, _mvar, 1.0 - step(abs(_mvar[0]) - abs(result[0]), 0.0) );" SHNL
 
-void FshTraceGenerator::trace_triangle_cc_begin(const char *) {}
 
-void FshTraceGenerator::trace_triangle_cc_end(const char *side, int direction, float fillcoeff)
+#define TRACE_MIX_MVAR_WITH_RESULT "result = mix(result, vec3(_mvar*_tracepass, 0.0), 1.0 - step(abs(_mvar[0]) - abs(result[0]), 0.0) );" SHNL
+
+void FshTraceGenerator::trace_triangle_cc(const char *side, int direction, float fillcoeff)
 {
   char rd[32];    msprintf(rd, "(%s)", side);
   char rd_plus[32];     msprintf(rd_plus, "(0.707*%s)", side);
   char rd_minus[32];    msprintf(rd_minus, "(-0.707*%s)", side);
   
-  m_offset += msprintf(&m_to[m_offset],  "_mvar[0] = float(inormed.y) + %s + 0.49 - 1.0;" SHNL
-                                        "_mvar[1] = %s;" SHNL, 
+  m_offset += msprintf(&m_to[m_offset],   "vec3 _tri = vec3(float(inormed.y) + %s + 0.49 - 1.0, 0.0, 0.0);" SHNL
+                                          "_tri[1] = %s;" SHNL, 
                       direction == 0 || direction == 2? rd_plus :
                       direction == 1 || direction == 3? rd_minus : "",
-                      direction == 0 || direction == 2? "1.0 - step(_mvar[0], 0.0)" :
-                      direction == 1 || direction == 3? "1.0 - step(0.0, _mvar[0])" :
+                      direction == 0 || direction == 2? "1.0 - step(_tri[0], 0.0)" :
+                      direction == 1 || direction == 3? "1.0 - step(0.0, _tri[0])" :
                                       "0.0"
                                       );
-  
   m_offset += msprintf(&m_to[m_offset],
-                          "_mvar[0] = 1.0 - (abs(_mvar[0]))/(%s*0.866*2.0);"
-                          "_mvar[2] = _mvar[1]*_mvar[0]*%s - 0.49;" SHNL    /// otrezok
-                          "_fvar = (1.0+thick - clamp(float(abs(inormed.x) - int(_mvar[2])), 0.0, 1.0+thick))/(1.0+thick) * (1.0-step(_mvar[2], 0.1));" SHNL
-                          "_mvar[2] = step(float(abs(inormed.x)), _mvar[2]-1.0);"
-                          "_fvar = mix(_fvar, %F, _mvar[2]);" SHNL
-                          "_mvar = vec3(_mvar[1]*_fvar, _mvar[0]*(1-_mvar[2]), %s*2.31);" SHNL /// 2.31 - trace coeff
+                          "_tri[0] = 1.0 - (abs(_tri[0]))/(%s*0.866*2.0);"
+                          "_tri[2] = _tri[1]*_tri[0]*%s - 0.49;" SHNL    /// otrezok
+                          "_mvar[0] = (1.0+thick - clamp(float(abs(inormed.x) - int(_tri[2])), 0.0, 1.0+thick))/(1.0+thick) * (1.0-step(_tri[2], 0.1));" SHNL
+                          "_tri[2] = step(float(abs(inormed.x)), _tri[2]-1.0);"
+                          "_mvar[0] = mix(_mvar[0], %F, _tri[2]);" SHNL
+                          "_mvar = vec2(_tri[1]*_mvar[0], _tri[0]*(1-_tri[2])*%s*2.31);" SHNL
                           TRACE_MIX_MVAR_WITH_RESULT
                       ,
                       side, side, fillcoeff, side
@@ -484,51 +481,47 @@ void FshTraceGenerator::trace_triangle_cc_end(const char *side, int direction, f
 }
 
 
-void FshTraceGenerator::trace_rect_xywh_begin(const char *) {}
-
-void FshTraceGenerator::trace_rect_xywh_end(const char *wh, float fillcoeff, const char *crosslimit)
+void FshTraceGenerator::trace_rect_xywh(const char *wh, float fillcoeff, const char *crosslimit)
 {
-  char r0[32], r1[32], r01[64], r11[64]; msprintf(r0, "%s[0]", wh); msprintf(r1, "%s[1]", wh); msprintf(r01, "%s[0]-sign(%s[0])", wh,wh); msprintf(r11, "%s[1]-sign(%s[1])", wh,wh); 
+//  char r0[32], r1[32], r01[64], r11[64]; msprintf(r0, "%s[0]", wh); msprintf(r1, "%s[1]", wh); msprintf(r01, "%s[0]-sign(%s[0])", wh,wh); msprintf(r11, "%s[1]-sign(%s[1])", wh,wh); 
+  char r0[32], r1[32], r01[64], r11[64]; msprintf(r0, "%s[0]", wh); msprintf(r1, "%s[1]", wh); msprintf(r01, "(%s[0])", wh); msprintf(r11, "(%s[1])", wh); 
   trace_linehorz_l(r0, nullptr, nullptr, crosslimit); trace_linehorz_l(r0, nullptr, r11, crosslimit);
   trace_linevert_b(r1, nullptr, nullptr, crosslimit); trace_linevert_b(r1, nullptr, r01, crosslimit);
   if (fillcoeff > 0.0f)
   {
     m_offset += msprintf(&m_to[m_offset],
-//                        "_mvar = vec3(step(0.0, inormed[0])*step(inormed[0], %s)*step(0.0, inormed[1])*step(inormed[1], %s), 0.0, 1.0)*_insban;" SHNL
-                        "_mvar = vec3( "
-                        "step(float(abs(inormed[0])), float(abs(%s)))*(1.0-step(float(sign(inormed[0])*sign(%s)),0.0))*"
-                        "step(float(abs(inormed[1])), float(abs(%s)))*(1.0-step(float(sign(inormed[1])*sign(%s)),0.0)),"
-                        "0.0, 1.0)*_insban;" SHNL
-                        "result = mix(result, vec3(_mvar.r * %F, _mvar.gb), _mvar[0] * (1.0-step(1.0, result[0])) );" SHNL,
+                        "_mvar[0] = step(float(abs(inormed[0])), float(abs(%s)))*(1.0-step(float(sign(inormed[0])*sign(%s)),0.0))*"
+                        "step(float(abs(inormed[1])), float(abs(%s)))*(1.0-step(float(sign(inormed[1])*sign(%s)),0.0));" SHNL
+                        "result = mix(result, vec3(_mvar[0]*%F*_tracepass[0], 0, 0), _mvar[0] * (1.0-step(1.0, result[0])) );" SHNL
+                        ,
                         r01, r01, r11, r11,
 //                         r01, r11, 
                          fillcoeff);
   }
 }
 
-void FshTraceGenerator::trace_rect_cc_begin(const char *) {}
-
-void FshTraceGenerator::trace_rect_cc_end(const char *rdimms, float fillcoeff, const char *crosslimit)
+void FshTraceGenerator::trace_rect_cc(const char *rdimms, float fillcoeff, const char *crosslimit)
 {   
-  char r0[32], r1[32], r01[64], r11[64]; msprintf(r0, "%s[0]", rdimms); msprintf(r1, "%s[1]", rdimms); msprintf(r01, " (%s[0]-sign(%s[0]))", rdimms,rdimms); msprintf(r11, " (%s[1]-sign(%s[1]))", rdimms,rdimms); 
+//  char r0[32], r1[32], r01[64], r11[64]; msprintf(r0, "%s[0]", rdimms); msprintf(r1, "%s[1]", rdimms); msprintf(r01, " (%s[0]-sign(%s[0]))", rdimms,rdimms); msprintf(r11, " (%s[1]-sign(%s[1]))", rdimms,rdimms); 
+  char r0[32], r1[32], r01[64], r11[64]; msprintf(r0, "%s[0]", rdimms); msprintf(r1, " %s[1]", rdimms); msprintf(r01, " (%s[0])", rdimms); msprintf(r11, " (%s[1])", rdimms); 
   trace_2linehorz_c(r0, nullptr, &r11[1], crosslimit); r11[0] = '-'; trace_2linehorz_c(r0, nullptr, r11, crosslimit);
   trace_2linevert_c(r1, nullptr, &r01[1], crosslimit); r01[0] = '-'; trace_2linevert_c(r1, nullptr, r01, crosslimit);
   if (fillcoeff > 0.0f)
   {
     m_offset += msprintf(&m_to[m_offset],
-                        "_mvar = vec3(step(float(abs(inormed[0])), abs(%s)) * step(float(abs(inormed[1])), float(abs(%s))), 0.0, 1.0)*_insban;" SHNL
-                        "result = mix(result, vec3(_mvar.r * %F, _mvar.gb), _mvar[0] * (1.0 - step(1.0, result[0])) );" SHNL,
+                        "_mvar = vec2(step(float(abs(inormed[0])), abs(%s)) * step(float(abs(inormed[1])), float(abs(%s))), 0.0);" SHNL
+                        "result = mix(result, vec3(_mvar[0] * %F * _tracepass[0], 0,0), _mvar[0] * (1.0 - step(1.0, result[0])) );" SHNL,
                         r11, r01, fillcoeff);
   }
 }
 
-void FshTraceGenerator::trace_square_lb_begin(const char *aside) {  m_offset += msprintf(&m_to[m_offset], "vec2 _sqdimms = vec2(%s, %s);", aside, aside);  trace_rect_xywh_begin("_sqdimms"); }
+void FshTraceGenerator::trace_square_lb_begin(const char *aside) {  m_offset += msprintf(&m_to[m_offset], "vec2 _sqdimms = vec2(%s, %s);", aside, aside);  trace_rect_xywh("_sqdimms"); }
 
-void FshTraceGenerator::trace_square_lb_end(float fillcoeff) {  trace_rect_xywh_end("_sqdimms", fillcoeff); }
+void FshTraceGenerator::trace_square_lb_end(float fillcoeff) {  trace_rect_xywh("_sqdimms", fillcoeff); }
 
-void FshTraceGenerator::trace_square_cc_begin(const char *halfside) {  m_offset += msprintf(&m_to[m_offset], "vec2 _sq2dimms = vec2(%s, %s);", halfside, halfside);  trace_rect_cc_begin("_sq2dimms"); }
+void FshTraceGenerator::trace_square_cc_begin(const char *halfside) {  m_offset += msprintf(&m_to[m_offset], "vec2 _sq2dimms = vec2(%s, %s);", halfside, halfside);  trace_rect_cc("_sq2dimms"); }
 
-void FshTraceGenerator::trace_square_cc_end(float fillcoeff) {  trace_rect_cc_end("_sq2dimms", fillcoeff); }
+void FshTraceGenerator::trace_square_cc_end(float fillcoeff) {  trace_rect_cc("_sq2dimms", fillcoeff); }
 
 void FshTraceGenerator::trace_circle_cc_begin(const char *radius, const char *border) { m_offset += msprintf(&m_to[m_offset], "vec4 _cd = vec4(%s-1, %s + thick, inormed.x*inormed.x + inormed.y*inormed.y, %s);", radius, border, border); }
 
@@ -541,8 +534,9 @@ void FshTraceGenerator::trace_circle_cc_end(float fillcoeff/*, bool notraceinsid
                                           "float mixwell_fill = 1-step(r2[1], _cd[2]);" SHNL
                                           "float mixwell_before = smoothstep(r2[0], r2[1], _cd[2])*mixwell_fill;" SHNL
                                           "float mixwell_aftere = (1 - smoothstep(r2[1], r2[2], _cd[2]))*(step(r2[1], _cd[2]));" SHNL
-//                                          "_mvar = vec3(mix(mixwell_before + mixwell_aftere, %F, mixwell_fill*(1 - step(1.0, mixwell_before + mixwell_aftere))), atan(float(inormed.x), float(inormed.y))/(2*PI), 2*PI*_cd[0])*_insban;" SHNL
-                         "_mvar = vec3(mix(mixwell_before + mixwell_aftere, %F, mixwell_fill*(1 - step(1.0, mixwell_before + mixwell_aftere))), atan(float(inormed.x), float(inormed.y))/(2*PI)*step(mixwell_fill, 0.0), 2*PI*_cd[0])*_insban;" SHNL
+//                                          "_mvar = vec3(mix(mixwell_before + mixwell_aftere, %F, mixwell_fill*(1 - step(1.0, mixwell_before + mixwell_aftere))), atan(float(inormed.x), float(inormed.y))/(2*PI), 2*PI*_cd[0]);" SHNL
+//                         "_mvar = vec3(mix(mixwell_before + mixwell_aftere, %F, mixwell_fill*(1 - step(1.0, mixwell_before + mixwell_aftere))), atan(float(inormed.x), float(inormed.y))/(2*PI)*step(mixwell_fill, 0.0), 2*PI*_cd[0]);" SHNL
+                         "_mvar = vec2(mix(mixwell_before + mixwell_aftere, %F, mixwell_fill*(1 - step(1.0, mixwell_before + mixwell_aftere))), atan(float(inormed.x), float(inormed.y))*_cd[0]*step(mixwell_fill, 0.0));" SHNL
                                           TRACE_MIX_MVAR_WITH_RESULT
                         , fillcoeff
                         );    
@@ -552,131 +546,148 @@ void FshTraceGenerator::trace_circle_cc_end(float fillcoeff/*, bool notraceinsid
                                           "float mixwell_onborder = (1 - step(r3[2], _cd[2])) * (step(r3[0], _cd[2])) * abs(sign(thick));" SHNL
                                           "float mixwell_before = smoothstep(r2[0], r2[1], _cd[2])*(1 - step(r2[1], _cd[2]));" SHNL
                                           "float mixwell_aftere = (1 - smoothstep(r2[1], r2[2], _cd[2]))*(step(r2[1], _cd[2]));" SHNL
-                                          "_mvar = vec3(clamp(mixwell_onborder + mixwell_before + mixwell_aftere, 0.0,1.0), atan(float(inormed.x), float(inormed.y))/(2*PI), 2*PI*_cd[0])*_insban;" SHNL
+//                                          "_mvar = vec3(clamp(mixwell_onborder + mixwell_before + mixwell_aftere, 0.0,1.0), atan(float(inormed.x), float(inormed.y))/(2*PI), 2*PI*_cd[0]);" SHNL
+                         "_mvar = vec2(clamp(mixwell_onborder + mixwell_before + mixwell_aftere, 0.0,1.0), atan(float(inormed.x), float(inormed.y))*_cd[0]);" SHNL
                                           TRACE_MIX_MVAR_WITH_RESULT
                         );
 }
 
 //                                              crosslimit                                           offset                                                 
-#define _TRACE_MAIN_CONDITION(idx)  "_fvar = %s * (1.0+thick - clamp(abs(inormed["#idx"] - floor(%s + 0.49)), 0.0, 1.0+thick))/(1.0+thick);"
-//#define _TRACE_MAIN_CONDITION(idx)  "_fvar = %s * (1.0 - clamp((inormed["#idx"]-floor(%s+0.49))/(1.0 + thick), 0.0, 1.0));"
+#define TRACE_MAIN_CONDITION(idx)  "_mvar[0] = %s * (1.0+thick - clamp(abs(inormed["#idx"] - floor(%s + 0.49)), 0.0, 1.0+thick))/(1.0+thick);"
+
+#define TRACE_MVAR_INSIDER(a)        isize == nullptr? "_mvar[1] = "#a" - %s;" SHNL \
+                                                        "_mvar[0] = _mvar[0] * step(0.0, _mvar[1]);" SHNL \
+                                          : \
+                                                       "_mvar[1] = "#a" - %s;" SHNL \
+                                                       "_mvar[0] = _mvar[0] * step(0.0, _mvar[1]) * step(_mvar[1], %s);" SHNL
 
 
 void FshTraceGenerator::trace_2linehorz_c(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
 {
-  m_offset += msprintf(&m_to[m_offset], _TRACE_MAIN_CONDITION(1) "_mvar = vec3(_fvar, sign(_fvar), sign(_fvar)) * insider(abs(inormed[0]), ivec2(%s, %s))*_insban;" TRACE_MIX_MVAR_WITH_RESULT,                        
-                      icrosslimit == nullptr? "1.0" : icrosslimit,
-                      ioffset == nullptr? "0.0" : ioffset,
-                      igap == nullptr? "0" : igap,
-                      isize == nullptr? "5000" : isize);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MAIN_CONDITION(1), icrosslimit == nullptr? "1.0" : icrosslimit, ioffset == nullptr? "0.0" : ioffset);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MVAR_INSIDER(abs(inormed[0])), igap == nullptr? "0" : igap, isize);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
+                      
 }
 
 void FshTraceGenerator::trace_2linevert_c(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
 {
-  m_offset += msprintf(&m_to[m_offset], _TRACE_MAIN_CONDITION(0) "_mvar = vec3(_fvar, sign(_fvar), sign(_fvar)) * insider(abs(inormed[1]), ivec2(%s, %s))*_insban;" TRACE_MIX_MVAR_WITH_RESULT,
-                      icrosslimit == nullptr? "1.0" : icrosslimit,
-                      ioffset == nullptr? "0.0" : ioffset,
-                      igap == nullptr? "0" : igap,
-                      isize == nullptr? "5000" : isize);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MAIN_CONDITION(0), icrosslimit == nullptr? "1.0" : icrosslimit, ioffset == nullptr? "0.0" : ioffset);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MVAR_INSIDER(abs(inormed[1])), igap == nullptr? "0" : igap, isize);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
 void FshTraceGenerator::trace_linehorz_l(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
 { 
-  m_offset += msprintf(&m_to[m_offset], _TRACE_MAIN_CONDITION(1) "_mvar = vec3(_fvar, sign(_fvar), sign(_fvar)) * insider(inormed[0], ivec2(%s, %s))*_insban;" TRACE_MIX_MVAR_WITH_RESULT,
-                      icrosslimit == nullptr? "1.0" : icrosslimit,
-                      ioffset == nullptr? "0.0" : ioffset,
-                      igap == nullptr? "0" : igap,
-                      isize == nullptr? "5000" : isize);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MAIN_CONDITION(1), icrosslimit == nullptr? "1.0" : icrosslimit, ioffset == nullptr? "0.0" : ioffset);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MVAR_INSIDER(inormed[0]), igap == nullptr? "0" : igap, isize);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
 void FshTraceGenerator::trace_linehorz_r(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
 { 
-  m_offset += msprintf(&m_to[m_offset], _TRACE_MAIN_CONDITION(1) "_mvar = vec3(_fvar, sign(_fvar), sign(_fvar)) * insider(-inormed[0], ivec2(%s, %s))*_insban;" TRACE_MIX_MVAR_WITH_RESULT,
-                      icrosslimit == nullptr? "1.0" : icrosslimit,
-                      ioffset == nullptr? "0.0" : ioffset,
-                      igap == nullptr? "0" : igap,
-                      isize == nullptr? "5000" : isize);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MAIN_CONDITION(1), icrosslimit == nullptr? "1.0" : icrosslimit, ioffset == nullptr? "0.0" : ioffset);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MVAR_INSIDER(-inormed[0]), igap == nullptr? "0" : igap, isize);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
 void FshTraceGenerator::trace_linevert_t(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
 { 
-  m_offset += msprintf(&m_to[m_offset], _TRACE_MAIN_CONDITION(0) "_mvar = vec3(_fvar, sign(_fvar), sign(_fvar)) * insider(-inormed[1], ivec2(%s, %s))*_insban;" TRACE_MIX_MVAR_WITH_RESULT,
-                      icrosslimit == nullptr? "1.0" : icrosslimit,
-                      ioffset == nullptr? "0.0" : ioffset,
-                      igap == nullptr? "0" : igap,
-                      isize == nullptr? "5000" : isize);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MAIN_CONDITION(0), icrosslimit == nullptr? "1.0" : icrosslimit, ioffset == nullptr? "0.0" : ioffset);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MVAR_INSIDER(-inormed[1]), igap == nullptr? "0" : igap, isize);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
 void FshTraceGenerator::trace_linevert_b(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
 { 
-  m_offset += msprintf(&m_to[m_offset], _TRACE_MAIN_CONDITION(0) "_mvar = vec3(_fvar, sign(_fvar), sign(_fvar)) * insider(inormed[1], ivec2(%s, %s))*_insban;" TRACE_MIX_MVAR_WITH_RESULT,
-                      icrosslimit == nullptr? "1.0" : icrosslimit,
-                      ioffset == nullptr? "0.0" : ioffset,
-                      igap == nullptr? "0" : igap,
-                      isize == nullptr? "5000" : isize);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MAIN_CONDITION(0), icrosslimit == nullptr? "1.0" : icrosslimit, ioffset == nullptr? "0.0" : ioffset);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MVAR_INSIDER(inormed[1]), igap == nullptr? "0" : igap, isize);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
 void FshTraceGenerator::trace_lines_x(const char *isize, const char *igap, const char *icrosslimit)
 {
-  m_offset += msprintf(&m_to[m_offset], 
-                      "_mvar[0] = atan(float(abs(inormed.x)), float(abs(inormed.y)));" SHNL
-                      "_mvar[1] = length(vec2(inormed))*cos(0.785398 - _mvar[0]);" SHNL
-                      "_mvar[2] = _mvar[1]*0.707;" SHNL
-                      "_mvar.xy = vec2(_mvar[2], _mvar[2]);" SHNL
-                      "_fvar = %s * mix((1.0+thick - clamp(distance(abs(inormed), _mvar.xy), 0.0, 1.0+thick))/(1.0+thick), 1.0, step(length(vec2(inormed)), 0.0));" SHNL
-                      "_mvar = vec3(_fvar, sign(_fvar), sign(_fvar)) * insider(int(_mvar[2]), ivec2(int(%s), int(%s)))*_insban;" SHNL
-                      TRACE_MIX_MVAR_WITH_RESULT
-                      ,
-                      icrosslimit == nullptr? "1.0" : icrosslimit,
-                      igap == nullptr? "0" : igap,
-                      isize == nullptr? "5000" : isize);
+//  m_offset += msprintf(&m_to[m_offset],
+//                      "_mvar[0] = atan(float(abs(inormed.x)), float(abs(inormed.y)));" SHNL
+//                      "_mvar[1] = length(vec2(inormed))*cos(0.785398 - _mvar[0]);" SHNL
+//                      "_mvar[2] = _mvar[1]*0.707;" SHNL
+//                      "_mvar.xy = vec2(_mvar[2], _mvar[2]);" SHNL
+//                      "_fvar = %s * mix((1.0+thick - clamp(distance(abs(inormed), _mvar.xy), 0.0, 1.0+thick))/(1.0+thick), 1.0, step(length(vec2(inormed)), 0.0));" SHNL
+//                      "_mvar = vec3(_fvar, sign(_fvar), sign(_fvar)) * insider(int(_mvar[2]), ivec2(int(%s), int(%s)));" SHNL
+//                      TRACE_MIX_MVAR_WITH_RESULT
+//                      ,
+//                      icrosslimit == nullptr? "1.0" : icrosslimit,
+//                      igap == nullptr? "0" : igap,
+//                      isize == nullptr? "5000" : isize);
+  m_offset += msprintf(&m_to[m_offset],
+                      "_fvar = atan(float(abs(inormed.x)), float(abs(inormed.y)));" SHNL
+                      "_fvar = 0.7071*length(vec2(inormed))*cos(0.785398 - _fvar);" SHNL
+                      "_mvar[0] = %s*mix((1.0+thick - clamp(distance(abs(inormed), vec2(_fvar, _fvar)), 0.0, 1.0+thick))/(1.0+thick), 1.0, step(length(vec2(inormed)), 0.0));" SHNL,
+                      icrosslimit == nullptr? "1.0" : icrosslimit
+                       );
+  m_offset += msprintf(&m_to[m_offset], TRACE_MVAR_INSIDER(_fvar), igap == nullptr? "0" : igap, isize);
+  m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
 void FshTraceGenerator::trace_line_from_normed_to(const char *inormedendpoint)
 { 
-  m_offset += msprintf(&m_to[m_offset], "_mvar.xy = %s;" SHNL, inormedendpoint);
-#if true
+  m_offset += msprintf(&m_to[m_offset], "vec2 _pt = %s;" SHNL, inormedendpoint);
   m_offset += msprintf(&m_to[m_offset], 
-                        "vec2 bz = vec2(step(_mvar.x, 0.0)*step(0.0, _mvar.x), step(_mvar.y, 0.0)*step(0.0, _mvar.y));"
-                        "_mvar.z = _mvar.x/mix(_mvar.y, 1.0, bz[1]);"
-                        "_fvar = (1-bz[0])*(1-bz[1])*(_mvar.z*inormed.y - float(inormed.x))/sqrt(1.0 + _mvar.z*_mvar.z) + float(inormed.x)*bz[0] + float(inormed.y)*bz[1];" SHNL
-                      );
-#else
-  m_offset += msprintf(&m_to[m_offset],
-                        "if (_mvar.x == 0.0)    _fvar = float(inormed.x);" SHNL
-                        "else if (_mvar.y == 0.0)    _fvar = float(inormed.y);" SHNL
-                        "else{  _mvar.z = _mvar.x/_mvar.y;  _fvar = (_mvar.z*inormed.y - float(inormed.x))/sqrt(1.0 + _mvar.z*_mvar.z); }" SHNL
-                      );
-#endif
-//  m_offset += msprintf(&m_to[m_offset], 
-//                        "_mvar.z = step(0.0, sign(dot(_mvar.xy, inormed)));" SHNL    /// quarter
-////                       "_mvar = vec3(step(_fvar, 0.49 + thick)*step(-0.49 - thick, _fvar)*step(_mvar.y*_mvar.y - _fvar*_fvar, _mvar.x*_mvar.x) * _mvar.z, 0,1)*_insban;" SHNL
-////                        "_mvar.xy = vec2(length(_mvar.xy) + 1+thick-_fvar, length(vec2(inormed)));" SHNL
-                       
-////                        "_fvar = max(min(abs(_fvar), 1.0+thick), min(length(_mvar.xy + vec2(inormed)), 1.0+thick) );" SHNL
-                       
-//                        "_mvar.xy = vec2(length(_mvar.xy), length(vec2(inormed)));" SHNL
-////                        "_fvar = min(abs(_fvar), 1.0+thick)*(_mvar.x + 1.0 + thick)/(_mvar.x);" SHNL
-////                        "_fvar = min(abs(_fvar), 1.0+thick)*max(1.0, (_mvar.y)/(_mvar.x + 1.0+thick));" SHNL
-//                        "_fvar = min(abs(_fvar), 1.0+thick);" SHNL
-////                        "_mvar.x = _mvar.x + 1.0 + thick;"
-////                        "_mvar = vec3( (1.0 - _fvar/(1.0+thick))*step(_mvar.y*_mvar.y - _fvar*_fvar, (_mvar.x+1.0+thick)*(_mvar.x+1.0+thick)) * _mvar.z *clamp((_mvar.y - _mvar.x)/(1.0 + thick), 0.0, 1.0) , 0,1)*_insban;" SHNL
-//                       "_mvar = vec3( (1.0 - _fvar/(1.0+thick))*step(_mvar.y*_mvar.y - _fvar*_fvar, (_mvar.x)*(_mvar.x)) * _mvar.z, 0,1)*_insban;" SHNL
-//                       TRACE_MIX_MVAR_WITH_RESULT
-                       
-////                       "result = mix(result, _mvar, 1.0 - step(abs(_mvar[0]) - abs(result[0]), 0.0) );" SHNL
-////                       "result = mix(result, _mvar, 1.0 - step(_mvar[0], 0.0) );" SHNL
-////                        "result = mix(result, _mvar, 1.0 - step(_mvar[0], 0.0) );" SHNL
-//                       );
-  
-  m_offset += msprintf(&m_to[m_offset], 
-                        "_mvar.z = step(0.0, sign(dot(_mvar.xy, inormed)));" SHNL    /// quarter
-                        "vec3 _lens = vec3(length(_mvar.xy), length(vec2(inormed)), length(_mvar.xy) + 1.0 + thick);" SHNL
+                        "vec2 bz = vec2(step(_pt.x, 0.0)*step(0.0, _pt.x), step(_pt.y, 0.0)*step(0.0, _pt.y));"
+                        "_fvar = _pt.x/mix(_pt.y, 1.0, bz[1]);"
+                        "_fvar = (1-bz[0])*(1-bz[1])*(_fvar*inormed.y - float(inormed.x))/sqrt(1.0 + _fvar*_fvar) + float(inormed.x)*bz[0] + float(inormed.y)*bz[1];" SHNL
                         "_fvar = min(abs(_fvar), 1.0+thick);" SHNL
-                        "_fvar = mix( _fvar, min(length(_mvar.xy - vec2(inormed)), 1.0+thick), step(_lens[0], _lens[1]));" SHNL
-                        "_mvar = vec3( (1.0 - _fvar/(1.0+thick))*step(_lens.y*_lens.y - _fvar*_fvar, (_lens.z)*(_lens.z)) * _mvar.z, 0,1)*_insban;" SHNL
+                      );
+  m_offset += msprintf(&m_to[m_offset], 
+                        "vec3 _lens = vec3(length(_pt), length(vec2(inormed)), length(_pt) + 1.0 + thick);" SHNL
+                        "_fvar = mix( _fvar, min(length(_pt.xy - vec2(inormed)), 1.0+thick), step(_lens[0], _lens[1]));" SHNL
+                        "_mvar = vec2( (1.0 - _fvar/(1.0+thick))*step(_lens.y*_lens.y - _fvar*_fvar, (_lens.z)*(_lens.z)) * step(0.0, sign(dot(_pt.xy, inormed))), 0 );" SHNL // _lens[1]
                         TRACE_MIX_MVAR_WITH_RESULT
                        );
+}
+
+//void FshTraceGenerator::trace_ray_trough_normed_from(const char* inormedstartpoint)
+//{
+//  m_offset += msprintf(&m_to[m_offset], "_mvar.xy = %s;" SHNL, inormedstartpoint);
+//  m_offset += msprintf(&m_to[m_offset], 
+//                        "vec2 bz = vec2(step(_mvar.x, 0.0)*step(0.0, _mvar.x), step(_mvar.y, 0.0)*step(0.0, _mvar.y));"
+//                        "_mvar.z = _mvar.x/mix(_mvar.y, 1.0, bz[1]);"
+//                        "_fvar = (1-bz[0])*(1-bz[1])*(_mvar.z*inormed.y - float(inormed.x))/sqrt(1.0 + _mvar.z*_mvar.z) + float(inormed.x)*bz[0] + float(inormed.y)*bz[1];" SHNL
+//                      );
+//  m_offset += msprintf(&m_to[m_offset], 
+//                        "vec2 _lens = vec2(length(_mvar.xy), length(vec2(inormed)));" SHNL
+//                        "_fvar = min(abs(_fvar), 1.0+thick);" SHNL
+////                        "_fvar = mix( _fvar, 1.0+thick, step(_lens[0], _lens[1]));" SHNL
+////                        "_fvar = mix( _fvar, 1.0+thick, step(0.0, _lens[1] - _lens[0]));" SHNL
+////                        "_fvar = mix( 1.0+thick, _fvar, 1.0 - step(_lens[0], _lens[1]));" SHNL
+////                        "_fvar = mix( _fvar, 1.0+thick, step(0.0, dot(_mvar.xy, vec2(inormed))) );" SHNL
+                       
+//                        "_fvar = mix( _fvar, 1.0+thick, (step(0.0, dot(_mvar.xy, vec2(inormed)))) * step(length(_mvar.xy), length(vec2(inormed))) );" SHNL
+                       
+//                        "_mvar = vec3( (1.0 - _fvar/(1.0+thick)), 0,1);" SHNL
+//                        TRACE_MIX_MVAR_WITH_RESULT
+//                       );
+//}
+
+void FshTraceGenerator::trace_ray_trough(const char* somepoint, const char* size)
+{
+  m_offset += msprintf(&m_to[m_offset], "vec2 _pt = %s;" SHNL, somepoint);
+  m_offset += msprintf(&m_to[m_offset], 
+                        "vec2 bz = vec2(step(_pt.x, 0.0)*step(0.0, _pt.x), step(_pt.y, 0.0)*step(0.0, _pt.y));"
+                        "_fvar = _pt.x/mix(_pt.y, 1.0, bz[1]);"
+                        "_fvar = (1-bz[0])*(1-bz[1])*(_fvar*inormed.y - float(inormed.x))/sqrt(1.0 + _fvar*_fvar) + float(inormed.x)*bz[0] + float(inormed.y)*bz[1];" SHNL
+                        "_fvar = min(abs(_fvar), 1.0+thick);" SHNL
+                      );
+  
+  
+  m_offset += msprintf(&m_to[m_offset], 
+                        "_fvar = mix( _fvar, 1.0+thick, step(0.0, dot(_pt.xy, vec2(inormed))));" SHNL
+                        "_mvar = vec2(1.0 - _fvar/(1.0+thick), length(vec2(inormed)));" SHNL
+                       );
+  if (size != nullptr)
+    m_offset += msprintf(&m_to[m_offset], "_mvar[0] = _mvar[0] * step(_mvar[1], %s);", size);  
+    
+  m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
 void FshTraceGenerator::tex_pickcolor(int palette_param_idx, const char *pickvalue, const char *result){  m_offset += msprintf(&m_to[m_offset], "%s = texture(opm%D_%D, vec2(%s, 1)).rgb;" SHNL, result, m_overlay, palette_param_idx, pickvalue); }
@@ -692,7 +703,8 @@ void FshTraceGenerator::goto_func_end(bool traced)
     static const char _overtraced[] = "mixwell = result[0];" SHNL;
     memcpy(&m_to[m_offset], _overtraced, sizeof(_overtraced)-1); m_offset += sizeof(_overtraced) - 1;
   }
-  m_offset += msprintf(&m_to[m_offset], "selfposition = ioffset; return vec4(result, clamp(mixwell, 0.0, 1.0)); }" SHNL);
+//  m_offset += msprintf(&m_to[m_offset], "selfposition = ioffset; return vec4(result.x, result.y, 0.0, clamp(mixwell, 0.0, 1.0)); }" SHNL);
+  m_offset += msprintf(&m_to[m_offset], "selfposition = ioffset; return vec4(result, mixwell); }" SHNL);
 }
 
 

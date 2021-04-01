@@ -48,16 +48,24 @@ int OBorder::fshTrace(int overlay, bool rotated, char *to) const
 }
 
 
-OBorderSelected::OBorderSelected(unsigned int widthpixels, int default_selection, const linestyle_t &kls): DrawOverlayTraced(kls), OVLDimmsOff(),
+
+/*******************************************************************************************************************************************************/
+
+_OSelected::_OSelected(unsigned int widthpixels, int default_selection, const linestyle_t& kls): DrawOverlayTraced(kls), OVLDimmsOff(),
   m_selected(default_selection), m_width(widthpixels)
 {
   appendUniform(DT_1I, &m_selected);
 }
 
-void OBorderSelected::setSelection(int select)
+void _OSelected::setSelection(int select)
 {
   m_selected = select;
   overlayUpdateParameter();
+}
+
+
+OBorderSelected::OBorderSelected(unsigned int widthpixels, int default_selection, const linestyle_t &kls): _OSelected(widthpixels, default_selection, kls)
+{
 }
 
 int OBorderSelected::fshTrace(int overlay, bool rotated, char *to) const
@@ -78,6 +86,85 @@ int OBorderSelected::fshTrace(int overlay, bool rotated, char *to) const
   ocg.goto_func_end(true);
   return ocg.written();
 }
+
+
+ORowSelected::ORowSelected(unsigned int widthpixels, int default_selection, const linestyle_t& kls): _OSelected(widthpixels, default_selection, kls)
+{
+}
+
+int ORowSelected::fshTrace(int overlay, bool rotated, char* to) const
+{
+  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.goto_normed_empty();
+    ocg.param_alias("selected");
+    ocg.var_fixed("border", (int)m_width);
+    ocg.push("border = int(border/2.0 + 0.5);");
+    ocg.push( 
+                "result.xy += vec2(step(iscaling.x*selected-border-1, icoords.x)*step(icoords.x, iscaling.x*selected-1), icoords.y);"
+                "result.xy += vec2(step(iscaling.x*selected + iscaling.x + 1, icoords.x)*step(icoords.x, iscaling.x*selected + iscaling.x + border + 1), icoords.y);"
+          );
+  }  
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
+
+
+OColumnSelected::OColumnSelected(unsigned int widthpixels, int default_selection, const linestyle_t& kls): _OSelected(widthpixels, default_selection, kls)
+{
+}
+
+int OColumnSelected::fshTrace(int overlay, bool rotated, char* to) const
+{
+  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.goto_normed_empty();
+    ocg.param_alias("selected");
+    ocg.var_fixed("border", (int)m_width);
+    ocg.push("border = int(border/2.0 + 0.5);");
+    ocg.push( 
+                "result.xy += vec2(step(iscaling.y*selected-border-1, icoords.y)*step(icoords.y, iscaling.y*selected-1), icoords.x);"
+                "result.xy += vec2(step(iscaling.y*selected + iscaling.y + 1, icoords.y)*step(icoords.y, iscaling.y*selected + iscaling.y + border + 1), icoords.x);"
+          );
+  }  
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
+
+OColumnsSelected::OColumnsSelected(unsigned int widthpixels, int default_selection, int addLeft, int addRight, bool _cyclic, const linestyle_t& kls): 
+  _OSelected(widthpixels, default_selection, kls), al(addLeft), ar(addRight), cyclic(_cyclic)
+{
+}
+
+int OColumnsSelected::fshTrace(int overlay, bool rotated, char* to) const
+{
+  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.goto_normed_empty();
+    ocg.param_alias("selected");
+    ocg.var_fixed("border", (int)m_width);
+    ocg.var_const_fixed("ad", al, ar);
+    ocg.push( "border = int(border/2.0 + 0.5);");
+    ocg.push( "int pos_l = (selected - ad[0]);"
+              "int pos_r = (selected + 1 + ad[1]);"
+              );
+    if (cyclic)
+    {
+      ocg.push("pos_l = pos_l + int(1.0 - step(0.0, float(pos_l)))*viewdimm_b;");
+      ocg.push("pos_r = int(-1.0*step(float(viewdimm_b), float(pos_r)))*viewdimm_b + pos_r;");
+    }
+    ocg.push( 
+              "result.xy += vec2(step(iscaling.y*pos_l-border-1, icoords.y)*step(icoords.y, iscaling.y*pos_l-1), icoords.x);"
+              "result.xy += vec2(step(iscaling.y*pos_r + 1, icoords.y)*step(icoords.y, iscaling.y*pos_r + border + 1), icoords.x);"
+            );
+  }  
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
+
 
 
 /*******************************************************************************************************************************************************/
@@ -125,3 +212,5 @@ bool OToons::overlayReactionMouse(OVL_REACTION_MOUSE, const void*, bool*)
 //  }
   return m_banclicks;
 }
+
+

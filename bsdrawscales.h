@@ -53,6 +53,7 @@ protected:
     }
   };
   virtual bool  updateArea(const uarea_t& uarea, int UPDATEFOR)=0;
+//  virtual bool  needredraw() const {  return true; }
   virtual void  draw(QPainter&)=0;
   virtual void  sizeHint(ATTACHED_TO atto, int* atto_size, int* mindly, int* mindly1, int* mindly2) const =0;
   virtual void  relatedInit(const DrawQWidget*) {  }
@@ -111,30 +112,37 @@ class MEWSpace;
 class MEWPointer;
 class MEWScaleNN;      // NN - 1 note per 1 mark
 class MEWScaleNM;      // NM notes between marks
-class MEWScaleTAP;
+class MEWScaleTAP;  class MEWScaleTAPNN;  class MEWScaleTAPNM;
 class MEWScale;
 
 enum   // DrawBarsFlags
 {
   /// 1. marks mode
-  DBMODE_DEFAULT=0,   // one of following 3
+  DBMODE_DEFAULT=0,         // one of following 3
   DBMODE_STRETCHED_POW2=1,
   DBMODE_STRETCHED=2,
   DBMODE_STATIC=3,
   
   /// 2. flags
-  DBF_SHARED=4,
-  DBF_INTERVENTBANNED=8,
+  DBF_SHARED=0x4,
+  DBF_INTERVENTBANNED=0x8,
   
-  DBF_ONLY2NOTES=16,
-  DBF_NOTESINSIDE=32,
+  DBF_ONLY2NOTES=0x10,
+  DBF_NOTESINSIDE=0x20,
   
-  DBF_LABELAREA_FULLBAR=64,
+  DBF_LABELAREA_FULLBAR=0x40,
   
-  DBF_ENUMERATE_FROMZERO=128,
-  DBF_ENUMERATE_SHOWLAST=256,
+  DBF_ENUMERATE_FROMZERO=0x80,
+  DBF_ENUMERATE_SHOWLAST=0x100,
   
-  DBF_MINSIZE_BY_PIXSTEP=512
+  DBF_MINSIZE_BY_PIXSTEP=0x200,
+  
+  DBF_MARKS_DONTROUND=0x400,
+  DBF_MARKS_DONTROUND1=0x800,
+  
+  DBF_POSTFIX_TO_PREFIX=0x1000,
+  DBF_DOCKTO_PREVMARK=0x2000,   // for NM
+  DBF_DOCKTO_NEXTMARK=0x4000,   // for NM
 };
 
 
@@ -158,6 +166,8 @@ public:
   void                setColorPolicy(COLORS cp);
   void                setColors(const QColor& backgroundColor, const QColor& foregroundColor);
   void                setColors(unsigned int backgroundColor, unsigned int foregroundColor);
+  
+  void                setOpacity(float opacity);    // 0 - invisible, 1 - noopacity
 public:
   DrawQWidget*        getDraw();
   const DrawQWidget*  getDraw() const;
@@ -173,26 +183,29 @@ public:
 public:
   MEWLabel*           addLabel(ATTACHED_TO atto, int flags, QString text, Qt::Alignment  align=Qt::AlignCenter, Qt::Orientation orient=Qt::Horizontal/*, float orientAngleGrad=0.0f*/);
   MEWSpace*           addSpace(ATTACHED_TO atto, int space);
+//  MEWSpace*           addStretch(ATTACHED_TO atto, int space, int stepSelf=1, int stepDraw=10);
   MEWSpace*           addContour(ATTACHED_TO atto, int space=0, bool maxzone=false);
   
-  MEWPointer*         addPointerFixed(ATTACHED_TO atto, int flags, float LL, float HL);
-  MEWPointer*         addPointerDrawUniSide(ATTACHED_TO atto, int flags);
-  MEWPointer*         addPointerDrawGraphB(ATTACHED_TO atto, int flags);
+  MEWPointer*         addPointerFixed(ATTACHED_TO atto, int flags, float LL, float HL, const char* postfix=nullptr);
+  MEWPointer*         addPointerFixedMod(ATTACHED_TO atto, int flags, float LL, float HL, float MOD, const char* postfix=nullptr);
+  MEWPointer*         addPointerDrawUniSide(ATTACHED_TO atto, int flags, const char* postfix=nullptr);
+  MEWPointer*         addPointerDrawGraphB(ATTACHED_TO atto, int flags, const char* postfix=nullptr);
   
   MEWScale*           addScaleEmpty(ATTACHED_TO atto, int flags, int fixedCount=11, int pixStep_pixSpacing=30, int miniPerMaxiLIMIT=9);
-  MEWScaleNN*         addScaleFixed(ATTACHED_TO atto, int flags, float LL, float HL, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9);
-  MEWScaleNM*         addScaleEnumerator(ATTACHED_TO atto, int flags, int marksCount, int pixStep_pixSpacing, unsigned int step=1, bool alwaysShowLast=false);
+  MEWScaleNN*         addScaleFixed(ATTACHED_TO atto, int flags, float LL, float HL, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
+  MEWScaleNN*         addScaleFixedMod(ATTACHED_TO atto, int flags, float LL, float HL, float MOD, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
+  MEWScaleNM*         addScaleEnumerator(ATTACHED_TO atto, int flags, int marksCount, int pixStep_pixSpacing, unsigned int step=1, bool alwaysShowLast=false, const char* postfix=nullptr);
   
-  MEWScaleNN*         addScaleTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30);
-  MEWScaleNM*         addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30);
-  MEWScaleNM*         addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30);
+  MEWScaleTAPNN*      addScaleTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30, const char* postfix=nullptr);
+  MEWScaleTAPNM*      addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30, const char* postfix=nullptr);
+  MEWScaleTAPNM*      addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30);
   
   MEWScaleNM*         addScaleWidgetsNM(ATTACHED_TO atto, int flags, int maxperpendiculardimm, int marksNwidgetsCount, QWidget* wdgs[], int pixStep_pixSpacing=30);
   
-  MEWScale*           addScaleDrawUniSide(ATTACHED_TO atto, int flags, int pixSpacing, unsigned int step=1);
-  MEWScale*           addScaleDrawUniSide(ATTACHED_TO atto, int flags, float LL, float HL, int pixSpacing, int miniPerMaxiLIMIT=9);
-  MEWScale*           addScaleDrawGraphB(ATTACHED_TO atto, int flags, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9);
-  MEWScale*           addScaleDrawGraphB(ATTACHED_TO atto, int flags, float LL, float HL, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9);
+  MEWScale*           addScaleDrawUniSide(ATTACHED_TO atto, int flags, int pixSpacing, unsigned int step=1, const char* postfix=nullptr);
+  MEWScale*           addScaleDrawUniSide(ATTACHED_TO atto, int flags, float LL, float HL, int pixSpacing, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
+  MEWScale*           addScaleDrawGraphB(ATTACHED_TO atto, int flags, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
+  MEWScale*           addScaleDrawGraphB(ATTACHED_TO atto, int flags, float LL, float HL, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
   
   MEWScaleTAP*        addScaleDrawRecorderB(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, const void* param=nullptr, int miniPerMaxiLIMIT=0);
   MEWScaleTAP*        addScaleDrawRecorderNM(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, const void* param=nullptr, int miniPerMaxiLIMIT=0);
@@ -219,6 +232,8 @@ public:
 signals:
   void    sig_allo();
 public slots:
+  void    slot_setScalingA(int);
+  void    slot_setScalingB(int);
   void    slot_setScalingH(int);
   void    slot_setScalingV(int);
   void    slot_setBounds(float low, float high);
@@ -293,8 +308,16 @@ class MEWPointer: public MEQWrapper
   Q_OBJECT
   friend class DrawBars;
 public:
+  typedef float (*proconvert_fn)(float x, float y);
+  typedef float (*proconvert_bi_fn)(float x, float y, float* ptrbi01);
+public:
   DrawOverlayProactive*    createProactive();
   DrawOverlayProactive*    createProactive(float start_x, float start_y);
+  DrawOverlayProactive*    createProactive(proconvert_fn);
+  DrawOverlayProactive*    createProactive(proconvert_bi_fn);
+  
+//  void  setPrefix(const char* str);
+//  void  setPostfix(const char* str);
 public slots:
   void  setPosition(float pos01);
 };
@@ -303,6 +326,9 @@ class MEWScale: public MEQWrapper
 {
   Q_OBJECT
   friend class DrawBars;
+public:
+//  void  setPrefix(const char* str);
+//  void  setPostfix(const char* str);
 public slots:
   void  setFont(const QFont& font);
   void  setMarkLen(int mlen);
@@ -327,6 +353,22 @@ class MEWScaleNM: public MEWScale
 };
 
 class MEWScaleTAP: public MEWScale
+{
+  Q_OBJECT
+  friend class DrawBars;
+public slots:
+  void  tap();
+};
+
+class MEWScaleTAPNN: public MEWScaleNN
+{
+  Q_OBJECT
+  friend class DrawBars;
+public slots:
+  void  tap();
+};
+
+class MEWScaleTAPNM: public MEWScaleNM
 {
   Q_OBJECT
   friend class DrawBars;

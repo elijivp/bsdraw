@@ -142,7 +142,6 @@ public:
 public:
   void  inside_begin1(const char* limrad1);
   void  inside_begin2(const char* limits2);
-  void  inside_begin4(const char* limits4);
   void  inside_end();
 
 public:           /// PLACES  from inormed
@@ -153,15 +152,11 @@ public:           /// PLACES  from inormed
 public:
   void  ban_trace(bool);
 public:           /// TRACES  from inormed
-  void  trace_triangle_cc_begin(const char*);
-  void  trace_triangle_cc_end(const char *side, int direction, float fillcoeff=0.0f);   /// 0 - UP, 1 - DOWN
+  void  trace_triangle_cc(const char *side, int direction, float fillcoeff=0.0f);   /// 0 - UP, 1 - DOWN
   
   
-  void  trace_rect_xywh_begin(const char*);
-  void  trace_rect_xywh_end(const char* wh, float fillcoeff=0.0f, const char* crosslimit=nullptr);
-  
-  void  trace_rect_cc_begin(const char*);
-  void  trace_rect_cc_end(const char* rdimms, float fillcoeff=0.0f, const char* crosslimit=nullptr);
+  void  trace_rect_xywh(const char* wh, float fillcoeff=0.0f, const char* crosslimit=nullptr);
+  void  trace_rect_cc(const char* rdimms, float fillcoeff=0.0f, const char* crosslimit=nullptr);
   
   void  trace_square_lb_begin(const char* aside);
   void  trace_square_lb_end(float fillcoeff=0.0f);
@@ -182,6 +177,8 @@ public:           /// TRACES  from inormed
   void  trace_lines_x(const char* size = nullptr, const char* igap = nullptr, const char* icrosslimit=nullptr);
 public:
   void  trace_line_from_normed_to(const char* inormedendpoint);
+//  void  trace_ray_trough_normed_from(const char* inormedstartpoint);
+  void  trace_ray_trough(const char* somepoint, const char* size);
 public:
   void  tex_pickcolor(int palette_param_idx, const char* pickvalue, const char* result="result");
   void  tex_addcolor(int palette_param_idx, const char* pickvalue, const char* weight, const char* result="result");

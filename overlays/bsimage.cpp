@@ -128,8 +128,9 @@ int OImageOriginal::fshTrace(int overlay, bool rotated, char *to) const
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
-    ocg.push("_fvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1.0 - step(float(idimms2.x), float(inormed.x)))*(1.0 - step(float(idimms2.y), float(inormed.y)));");
-    ocg.push( m_autorotated? "vec2  tcoords = inormed/vec2(idimms2.x-1, idimms2.y-1);" : "vec2  tcoords = inormed/vec2(idimms2.x-1, idimms2.y-1);");
+//    ocg.push("_fvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1.0 - step(float(idimms2.x), float(inormed.x)))*(1.0 - step(float(idimms2.y), float(inormed.y)));");
+    ocg.push("_fvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*step(float(inormed.x), float(idimms2.x))*step(float(inormed.y), float(idimms2.y));");
+    ocg.push( m_autorotated? "vec2  tcoords = inormed/vec2(idimms2.x, idimms2.y);" : "vec2  tcoords = inormed/vec2(idimms2.x, idimms2.y);");
     ocg.push( "vec4 pixel = texture(");  ocg.param_get(); ocg.push(", vec2(tcoords.x, 1.0 - tcoords.y));");
     m_dmti.type == dmtype_image_t::RGB? ocg.push("result = pixel.rgb;") : ocg.push("result = pixel.bgr;");
     ocg.push(m_banalpha? "mixwell = _fvar;" : "mixwell = _fvar*pixel.a;");

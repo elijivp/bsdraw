@@ -22,10 +22,8 @@ class DrawIntensity: public DrawQWidget
 public:
   DrawIntensity(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions=1, ORIENTATION orient=OR_LRBT, SPLITPORTIONS splitPortions=SL_NONE);
 protected:
-  virtual DATADIMMUSAGE   getDataDimmUsage() const { return DDU_2D; }
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
 };
-
 
 class DrawIntensePoints: public DrawIntensity
 {

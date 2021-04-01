@@ -78,7 +78,7 @@ void DrawSDPicture::reConstructor(unsigned int samplesHorz, unsigned int samples
 }
 
 DrawSDPicture::DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert, QImage* img, unsigned int backgroundColor):
-  DrawQWidget(new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER63, backgroundColor), 1, OR_LRTB)
+  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER63, backgroundColor), 1, OR_LRTB)
 {
   m_pImage = new QImage(img->convertToFormat(QImage::Format_ARGB32));
   m_pImage->detach();
@@ -87,7 +87,7 @@ DrawSDPicture::DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert,
 
 
 DrawSDPicture::DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert, const char* imagepath, unsigned int backgroundColor):
-  DrawQWidget(new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER63, backgroundColor), 1, OR_LRTB)
+  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER63, backgroundColor), 1, OR_LRTB)
 {
   QImage orig(imagepath);
   m_pImage = new QImage(orig.convertToFormat(QImage::Format_ARGB32));
@@ -97,7 +97,7 @@ DrawSDPicture::DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert,
 }
 
 DrawSDPicture::DrawSDPicture(QImage* img, float sizeMultiplier, unsigned int backgroundColor):
-  DrawQWidget(new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER63, backgroundColor), 1, OR_LRTB)
+  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER63, backgroundColor), 1, OR_LRTB)
 {
   m_pImage = new QImage(img->convertToFormat(QImage::Format_ARGB32));
   m_pImage->detach();
@@ -105,7 +105,7 @@ DrawSDPicture::DrawSDPicture(QImage* img, float sizeMultiplier, unsigned int bac
 }
 
 DrawSDPicture::DrawSDPicture(const char* imagepath, float sizeMultiplier, unsigned int backgroundColor):
-  DrawQWidget(new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER63, backgroundColor), 1, OR_LRTB)
+  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER63, backgroundColor), 1, OR_LRTB)
 {
   QImage orig(imagepath);
   m_pImage = new QImage(orig.convertToFormat(QImage::Format_ARGB32));
@@ -134,4 +134,22 @@ unsigned int DrawSDPicture::colorBack() const
   if (bc == 0xFFFFFFFF)
     return DrawQWidget::colorBack();
   return bc;
+}
+
+
+
+
+bool BSQMarkerSelector::overlayReactionMouse(DrawQWidget* qwdg, OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)
+{
+  if (oreact == m_action)
+  {
+    *doStop = true;
+    int x = ((const float*)dataptr)[2], y = ((const float*)dataptr)[3];
+    const int* dst = (const int*)((DrawSDPicture*)qwdg)->getImage()->scanLine(y);
+    int marker = ((dst[x]>>16 & 0x3) << 4) | ((dst[x]>>8 & 0x3) << 2) | ((dst[x]& 0x3 << 0));
+    if (m_emitEmptyMarker || (marker > 0 && marker <= SDPSIZE_MARKER))
+      emit markerClicked(marker);
+  }
+  else if (oreact == m_drop)  emit markerDropped();
+  return false;
 }

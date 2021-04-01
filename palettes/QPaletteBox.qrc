@@ -106,5 +106,8 @@
         <file>advanced/tfm_seismic.png</file>
         <file>advanced/tfm_space.png</file>
         <file>advanced/tfm_supernova.png</file>
+        <file>special/spec_BlGnYe.png</file>
+        <file>special/spec_GnYe.png</file>
+        <file>special/spec_BlYeRd.png</file>
     </qresource>
 </RCC>

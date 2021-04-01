@@ -11,14 +11,30 @@ enum  EXTENDED_REGULAR { EGO_REGULAR_H, EGO_REGULAR_V, EGO_RISK_H, EGO_RISK_V };
 OGridRegular::OGridRegular(REGULAR go, COORDINATION cn, float startchannel, float stepsize, const linestyle_t& linestyle, int maxsteps, bool showGridAtZero): DrawOverlayTraced(linestyle), 
   OVLCoordsDynamic(cn, go == REGULAR_HORZ? 0.0f : startchannel, go == REGULAR_HORZ? startchannel : 0.0f),
   OVLDimmsOff(),
-  m_gridtype((int)go), m_stepsize(stepsize), m_maxsteps(maxsteps), m_zeroreg(showGridAtZero)
+  m_gridtype((int)go), m_stepsize(stepsize), m_maxsteps(maxsteps), m_zeroreg(showGridAtZero), m_additcn(CR_SAME)
 {
+}
+
+OGridRegular::OGridRegular(OGridRegular::REGULAR go, COORDINATION cn, float startchannel, COORDINATION cnstep, float stepsize, const linestyle_t& linestyle, int maxsteps, bool showGridAtZero): DrawOverlayTraced(linestyle), 
+  OVLCoordsDynamic(cn, go == REGULAR_HORZ? 0.0f : startchannel, go == REGULAR_HORZ? startchannel : 0.0f),
+  OVLDimmsOff(),
+  m_gridtype((int)go), m_stepsize(stepsize), m_maxsteps(maxsteps), m_zeroreg(showGridAtZero), m_additcn(cnstep)
+{
+  
 }
 
 OGridRegular::OGridRegular(RISK gr, COORDINATION cn, float startchannel, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps): DrawOverlayTraced(linestyle),
   OVLCoordsDynamic(cn, gr == RISK_HORZ? mark_centeroffset : startchannel, gr == RISK_HORZ? startchannel : mark_centeroffset),
   OVLDimmsOff(),
-  m_gridtype((int)gr + EGO_RISK_H), m_stepsize(stepsize), m_specheight(risk_height), m_babsheight(absolute_height), m_maxsteps(maxsteps)
+  m_gridtype((int)gr + EGO_RISK_H), m_stepsize(stepsize), m_specheight(risk_height), m_babsheight(absolute_height), m_maxsteps(maxsteps), m_additcn(CR_SAME)
+{
+}
+
+OGridRegular::OGridRegular(OGridRegular::RISK gr, COORDINATION cn, float startchannel, COORDINATION cnstep, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps)
+  : DrawOverlayTraced(linestyle),
+    OVLCoordsDynamic(cn, gr == RISK_HORZ? mark_centeroffset : startchannel, gr == RISK_HORZ? startchannel : mark_centeroffset),
+    OVLDimmsOff(),
+    m_gridtype((int)gr + EGO_RISK_H), m_stepsize(stepsize), m_specheight(risk_height), m_babsheight(absolute_height), m_maxsteps(maxsteps), m_additcn(cnstep)
 {
 }
 
@@ -38,10 +54,13 @@ int OGridRegular::fshTrace(int overlay, bool rotated, char *to) const
     {
       ocg.var_fixed("grid_step", m_stepsize);
       
+      int relstep = ocg.add_movecs_rel(m_additcn == CR_SAME? coords_type_t::getCoordination() : m_additcn);
+      
       if (m_gridtype == EGO_REGULAR_H || m_gridtype == EGO_REGULAR_V)
       {
         ocg.var_fixed("grid_limit", m_maxsteps == -1? 65536:m_maxsteps);
-        int relstep = ocg.add_movecs_rel(coords_type_t::getCoordination());
+//        int relstep = ocg.add_movecs_rel(coords_type_t::getCoordination());
+//        if ()
         if (m_gridtype == EGO_REGULAR_H)
         {
           ocg.push_cs_rel_y("grid_step", relstep);
@@ -86,18 +105,18 @@ int OGridRegular::fshTrace(int overlay, bool rotated, char *to) const
         }
         ocg.var_fixed("grid_limit", m_maxsteps == -1? 65536:m_maxsteps);
         
-        int relstep = ocg.add_movecs_rel(coords_type_t::getCoordination());
+//        int relstep = ocg.add_movecs_rel(coords_type_t::getCoordination());
         if (m_gridtype == EGO_RISK_H)
         {
           ocg.push_cs_rel_y("grid_step", relstep); 
           ocg.movecs_pix_x("grid_height", pixing_height);
-          ocg.var_static(DT_1F, "crossed = inormed.y/float(ibounds.y-1)"); 
+          ocg.var_static(DT_1F, "crossed = inormed.y/float(ibounds.y)"); 
         }
         else
         {
           ocg.push_cs_rel_x("grid_step", relstep);
           ocg.movecs_pix_y("grid_height", pixing_height);
-          ocg.var_static(DT_1F, "crossed = inormed.x/float(ibounds.x-1)");
+          ocg.var_static(DT_1F, "crossed = inormed.x/float(ibounds.x)");
         }
         
         ocg.push( "int optiid = int(crossed/grid_step + sign(crossed)*0.49);"
@@ -122,10 +141,10 @@ int OGridRegular::fshTrace(int overlay, bool rotated, char *to) const
 
 /********************************************/
 
-OGridCircular::OGridCircular(COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float stepsize, const linestyle_t& linestyle, int maxsteps): DrawOverlayTraced(linestyle), 
+OGridCircular::OGridCircular(COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float stepsize, const linestyle_t& linestyle, int maxsteps, float border): DrawOverlayTraced(linestyle), 
   OVLCoordsDynamic(cn, center_x, center_y),
   OVLDimmsOff(),
-  m_featcn(featcn), m_stepsize(stepsize), m_maxsteps(maxsteps)
+  m_featcn(featcn), m_stepsize(stepsize), m_maxsteps(maxsteps), m_border(border)
 {
 }
 
@@ -149,7 +168,8 @@ int OGridCircular::fshTrace(int overlay, bool rotated, char *to) const
         fc = ocg.add_movecs_pixing(m_featcn);
       ocg.movecs_pix_x("grid_step", fc);
       
-      ocg.var_const_static(DT_1F, "border = 1.5");
+//      ocg.var_const_static(DT_1F, "border = 1.5");
+      ocg.var_fixed("border", m_border);
       ocg.math_pi();
       ocg.push( "float  d2 = inormed.x*inormed.x + inormed.y*inormed.y;"
                 "int    optiid = int(floor(sqrt(d2)/grid_step + 0.49));"
@@ -158,7 +178,9 @@ int OGridCircular::fshTrace(int overlay, bool rotated, char *to) const
                 "float mixwell_before = (d2 - r2[0])/(r2[1]-r2[0])*(1 - step(r2[1], d2));"
                 "float mixwell_aftere = (1 - (d2 - r2[1])/(r2[2]-r2[1]))*(step(r2[1], d2));"
                 "float affirmative = step(1.0, float(optistep)) * clamp(mixwell_before + mixwell_aftere, 0.0,1.0);"
-                "result += vec3((1 - step(float(grid_limit+1), float(optiid)))*affirmative, atan(float(inormed.x), float(inormed.y))/(2*PI), 2*PI*optistep);");
+//                "affirmative = affirmative*step(1.0, post_in[1]);"
+                "result.xy = result.xy + vec2((1 - step(float(grid_limit+1), float(optiid)))*affirmative, atan(float(inormed.x), float(inormed.y))*optistep);"
+                );
     }
   }
   ocg.goto_func_end(true);

@@ -7,23 +7,46 @@
   rabota.doRun(&les);
 */
 
+#define MW_PALETTE_EXTRACT
+#ifdef MW_PALETTE_EXTRACT
+#include "palettes/QPaletteExtractor.h"
+#include <QDebug>
+#endif
+
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)1
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)2
-#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)8
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)10
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)8
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)9
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)12
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)13
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)15
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)18
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)16
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)17
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)19
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)21
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)23
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)26
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)29
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)30
+
 #ifndef MW_TEST_NOCHOOSE_DEFAULT
 #include <QInputDialog>
 #endif
 
 int main(int argc, char *argv[])
-{  
+{
   QApplication a(argc, argv);
+  
+#ifdef MW_PALETTE_EXTRACT
+  pexresult_t pr = paletteExtractFromImage(
+//                     "/home/elijah/Projects/bsdraw/palettes/special/spec_GnYe.png", 
+//                     "/home/elijah/Projects/bsdraw/palettes/special/spec_BlGnYe.png", 
+                     "/home/elijah/Projects/bsdraw/palettes/special/spec_BlYeRd.png", 
+                     PEF_REMOVEFIRSTCOLOR | PEF_REMOVELASTCOLOR | PEF_CUTTER_GROUP);
+  qDebug().noquote()<<pr.success<<pr.paletteHeaderText<<pr.countColors;
+  savePaletteExtract(pr);
+  return 0;
+#endif
 
   tests_t   MW_TEST;
 #ifdef MW_TEST_NOCHOOSE_DEFAULT

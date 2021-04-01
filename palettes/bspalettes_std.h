@@ -54,13 +54,13 @@ const PaletteConstFWD<sizeof(colors_std_RGBMIX) / sizeof(unsigned int)>   palett
 const PaletteConstBWD<sizeof(colors_std_RGBMIX) / sizeof(unsigned int)>   paletteRGBMIX_inv(colors_std_RGBMIX);
 
 const IPalette* const ppalettes_std[] = { &paletteGnYe, &paletteBkWh, &paletteBlWh, &paletteRdWh, &paletteGrGn, 
-                                          &paletteBkRdWh, &paletteBkGrWh, &paletteBkGrYeWh, &paletteBkBlGrYeWh, 
+                                          &paletteBkRdWh, &paletteBkBlWh, &paletteBkGrWh, &paletteBkGrYeWh, &paletteBkBlGrYeWh, 
                                           &paletteBkGyGyGyWh, &paletteBkBlBlBlWh, &paletteBkRdGnBu, &paletteRGBMIX };
 const IPalette* const ppalettes_std_inv[] = { &paletteGnYe_inv, &paletteBkWh_inv, &paletteBlWh_inv, &paletteRdWh_inv, &paletteGrGn_inv, 
-                                              &paletteBkRdWh_inv, &paletteBkGrWh_inv, &paletteBkGrYeWh_inv, &paletteBkBlGrYeWh_inv, 
+                                              &paletteBkRdWh_inv, &paletteBkBlWh_inv, &paletteBkGrWh_inv, &paletteBkGrYeWh_inv, &paletteBkBlGrYeWh_inv, 
                                               &paletteBkGyGyGyWh_inv, &paletteBkBlBlBlWh_inv, &paletteBkRdGnBu_inv, &paletteRGBMIX_inv };
 const char*     const ppalettenames_std[] = { "std_GnYe", "std_BkWh", "std_BlWh", "std_RdWh", "std_GrGn", 
-                                              "std_BkRdWh", "std_BkGrWh", "std_BkGrYeWh", "std_BkBlGrYeWh", 
+                                              "std_BkRdWh", "std_BkBlWh", "std_BkGrWh", "std_BkGrYeWh", "std_BkBlGrYeWh", 
                                               "std_BkGyGyGyWh", "std_BkBlBlBlWh", "std_BkRdGnBu", "std_RGBMIX"
                                             };
 

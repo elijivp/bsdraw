@@ -18,17 +18,51 @@ protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
-class OBorderSelected: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff
+class _OSelected: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff
 {
+protected:
   int  m_selected;
   unsigned int  m_width;
 public:
-  OBorderSelected(unsigned int widthpixels, int default_selection=0, const linestyle_t& kls=linestyle_solid(1,1,1));
+  _OSelected(unsigned int widthpixels, int default_selection=0, const linestyle_t& kls=linestyle_solid(1,1,1));
   void  setSelection(int select);
-  int selection() const { return m_selected; }
+  int selection() const { return m_selected; }  
+};
+
+class OBorderSelected: public _OSelected
+{
+public:
+  OBorderSelected(unsigned int widthpixels, int default_selection=0, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
+
+class ORowSelected: public _OSelected
+{
+public:
+  ORowSelected(unsigned int widthpixels, int default_selection=0, const linestyle_t& kls=linestyle_solid(1,1,1));
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+};
+
+class OColumnSelected: public _OSelected
+{
+public:
+  OColumnSelected(unsigned int widthpixels, int default_selection=0, const linestyle_t& kls=linestyle_solid(1,1,1));
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+};
+
+class OColumnsSelected: public _OSelected
+{
+  int   al,ar;
+  bool  cyclic;
+public:
+  OColumnsSelected(unsigned int widthpixels, int default_selection=0, int addLeft=0, int addRight=0, bool cyclic=false, const linestyle_t& kls=linestyle_solid(1,1,1));
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+};
+
 
 class OToons: public DrawOverlayTraced, public OVLCoordsStatic, public OVLDimms1Static
 {

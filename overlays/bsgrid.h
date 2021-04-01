@@ -15,8 +15,10 @@ class OGridRegular: public DrawOverlayTraced, public OVLCoordsDynamic, public OV
 public:
   enum REGULAR  {  REGULAR_HORZ, REGULAR_VERT };
   OGridRegular(REGULAR  go, COORDINATION cn, float startchannel, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, bool showGridAtZero=false);
+  OGridRegular(REGULAR  go, COORDINATION cn, float startchannel, COORDINATION cnstep, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, bool showGridAtZero=false);
   enum RISK     {  RISK_HORZ, RISK_VERT };
   OGridRegular(RISK     gr, COORDINATION cn, float startchannel, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps=-1);  
+  OGridRegular(RISK     gr, COORDINATION cn, float startchannel, COORDINATION cnstep, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps=-1);  
 protected:
   int           m_gridtype;
   float         m_stepsize;
@@ -24,6 +26,7 @@ protected:
   bool          m_babsheight;
   int           m_maxsteps;
   bool          m_zeroreg;
+  COORDINATION  m_additcn;
 protected:
   int fshTrace(int overlay, bool rotated, char *to) const;
 };
@@ -32,11 +35,12 @@ protected:
 class OGridCircular: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
-  OGridCircular(COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float stepsize, const linestyle_t& linestyle, int maxsteps=-1);
+  OGridCircular(COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, float border=1.5f);
 protected:
   COORDINATION  m_featcn;
   float         m_stepsize;
   int           m_maxsteps;
+  float         m_border;
 protected:
   int fshTrace(int overlay, bool rotated, char *to) const;
 };

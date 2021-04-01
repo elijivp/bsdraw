@@ -36,13 +36,13 @@ struct  graphopts_t
   BSDESCALING     descaling;
   float           opacity;
   int             dotsize;                  /// >0 : abs size; <0 : scaling + size
-  float           dotsmooth;                /// 0..2 optimal, smooth quality
-  float           smooth;
+  float           dotsmooth;                /// 0..2. 0.5 optimal, smooth quality
+  float           smooth;                   /// -0.4 .. 2.0. 0.5 optimal; <=-1.0 for special 8bit nosmooth
   BSPOSTRECT      postrect;
 
   // 1. typical linterp graph
   static graphopts_t goInterp(BSDESCALING ds, int dsize=0, float dsmooth=0.0f)
-  { graphopts_t result = { GT_LINTERP, ds, 0.0f, dsize, dsmooth, 0.0f, PR_STANDARD }; return result;  }
+  { graphopts_t result = { GT_LINTERP, ds, 0.0f, dsize, dsmooth, 0.5f, PR_STANDARD }; return result;  }
   static graphopts_t goInterp(float smoothcoef, BSDESCALING ds=DE_NONE, int dsize=0, float dsmooth=0.0f)
   { graphopts_t result = { GT_LINTERP, ds, 0.0f, dsize, dsmooth, smoothcoef, PR_STANDARD}; return result; }
   
@@ -92,7 +92,8 @@ enum BSCOLORPOLICY          // IPalette split onto graphs
   CP_OWNRANGE_SYMMETRIC,  // color, gradiented in palette, according with portions, centre symmetrion
   CP_RANGE,               // color, gradiented in palette, ignoring portions
 //    CP_RANGE_GROSS,         // color, gradiented in palette, ignoring portions, nonlinear gradient
-  CP_SUBPAINTED           // portions ignored. value point direct onto palette
+  CP_SUBPAINTED,           // portions ignored. value point direct onto palette
+  CP_RANGESUBPAINTED       // portions ignored. value point direct onto palette + cstart
 };
 
 struct  coloropts_t

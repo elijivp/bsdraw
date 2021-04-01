@@ -68,12 +68,7 @@ int OContour::fshTrace(int overlay, bool rotated, char *to) const
             
           ocg.push( "_fvar = getValue2D(p, fcoords2);"
                     "_mvar[1] = step(bnd.x, _fvar)*step(_fvar, bnd.y);"
-    //                  "_fvar = (inoscaled.x + 0.49)*abs(cell[i].y)/ibounds_noscaled.x + (inoscaled.y + 0.49)*abs(cell[i].x)/ibounds_noscaled.y;"
-    //                  "_mvar[2] = mix(_fvar, 0.0, abs(cell[i].x)*abs(cell[i].y));"
-    //                  "_fvar = mix(float(iscaling.x*abs(cell[i].y) + iscaling.y*abs(cell[i].x)), 1.0, abs(cell[i].x)*abs(cell[i].y));"
-    //                "result = mix(result, vec3(1, _mvar[0], _fvar), _mvar[1]*_mvar[2] );"
-                    
-                    "result = mix(result, vec3(_mvar[0]*_mvar[1], 0, 1), step(result[0], _mvar[0]*_mvar[1]) );"    /// trace not finished
+                    "result = mix(result, vec3(_mvar[0]*_mvar[1], 0, 1), step(result[0], _mvar[0]*_mvar[1]) );"    /// trace_on_pix not finished
                   "}");
         }
       }
@@ -117,8 +112,8 @@ int OContourPal::fshTrace(int overlay, bool rotated, char *to) const
           
         ocg.push( "_fvar = getValue2D(0, fcoords2);"
                   "_mvar[1] = (_fvar - bnd.x) / (bnd.y - bnd.x);"
-                  "_mvar[2] = step(bnd.x, _fvar)*step(_fvar, bnd.y);"
-                  "mixwell = mix(mixwell, _mvar[1], _mvar[0]*_mvar[2]*step(sign(mixwell - _mvar[1]), 0.0) );"
+                  "_fvar = step(bnd.x, _fvar)*step(_fvar, bnd.y);"
+                  "mixwell = mix(mixwell, _mvar[1], _mvar[0]*_fvar*step(sign(mixwell - _mvar[1]), 0.0) );"
                 "}");
       }
     }
@@ -144,23 +139,25 @@ int OCover::fshTrace(int overlay, bool rotated, char *to) const
   {
     ocg.var_const_fixed("bnd", m_from, m_to);
     ocg.var_const_fixed("cover", m_cover_r, m_cover_g, m_cover_b);
-    ocg.push( "result = cover;" );
+    ocg.push( "result = cover;"
+              "vec3 maxes = vec3(0);"
+              );
     ocg.push( "for (int p=0; p<countPortions; p++){"
                 "_fvar = getValue2D(p, coords.pq);"
-                "_mvar[0] = max(_mvar[0], step(bnd.x, _fvar)*step(_fvar, bnd.y));"
-                "_mvar[1] = max(_mvar[1], 1.0 - step(bnd.x, _fvar));"
-                "_mvar[2] = max(_mvar[2], 1.0 - step(_fvar, bnd.y));"
+                "maxes[0] = max(maxes[0], step(bnd.x, _fvar)*step(_fvar, bnd.y));"
+                "maxes[1] = max(maxes[1], 1.0 - step(bnd.x, _fvar));"
+                "maxes[2] = max(maxes[2], 1.0 - step(_fvar, bnd.y));"
               "}"
               );
     
     if (m_cop == COP_COVER)
-      ocg.push("mixwell = _mvar[0];");
+      ocg.push("mixwell = maxes[0];");
     else if (m_cop == COP_SAVEALL)
-      ocg.push("mixwell = _mvar[0]*(1.0 - _mvar[1])*(1.0 - _mvar[2]);");
+      ocg.push("mixwell = maxes[0]*(1.0 - maxes[1])*(1.0 - maxes[2]);");
     else if (m_cop == COP_SAVELOWER)
-      ocg.push("mixwell = _mvar[0]*(1.0 - _mvar[1]);");
+      ocg.push("mixwell = maxes[0]*(1.0 - maxes[1]);");
     else if (m_cop == COP_SAVEUPPER)
-      ocg.push("mixwell = _mvar[0]*(1.0 - _mvar[2]);");
+      ocg.push("mixwell = maxes[0]*(1.0 - maxes[2]);");
     
   }
   ocg.goto_func_end(false);

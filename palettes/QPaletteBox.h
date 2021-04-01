@@ -18,6 +18,12 @@
 
 #include <QComboBox>
 
+enum PALETTE_SET
+{
+  PS_ADVANCED,
+  PS_SPECIAL
+};
+
 class QPaletteBoxPrivate;
 
 class IPalette;
@@ -26,10 +32,11 @@ class QPaletteBox : public QComboBox
 {
   Q_OBJECT
 public:
-  explicit QPaletteBox(QWidget *parent = 0);
+  explicit QPaletteBox(PALETTE_SET ps=PS_ADVANCED, QWidget *parent = 0);
   ~QPaletteBox();
   bool  isInverted() const;
   const IPalette* currentPalette() const;
+//  QSize sizeHint() const override;
 public slots:
   void  setInverted(bool inverted);
 protected:
@@ -38,12 +45,11 @@ protected:
   Q_DECLARE_PRIVATE(QPaletteBox)
 };
 
-
 class QPaletteBoxSg: public QPaletteBox
 {
   Q_OBJECT
 public:
-  explicit QPaletteBoxSg(QWidget *parent = 0);
+  explicit QPaletteBoxSg(PALETTE_SET ps=PS_ADVANCED, QWidget *parent = 0);
 private slots:
   void  _redirChanged(int);
 signals:

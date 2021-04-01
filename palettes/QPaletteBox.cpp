@@ -6,12 +6,14 @@
 //#define DRAWSTATICTEXTCRUSH
 
 #include <QAbstractItemDelegate>
+#include <QAbstractItemView>
 #include <QImage>
 #include <QPainter>
 #ifdef DRAWSTATICTEXTCRUSH
 #include <QStaticText>
 #endif
 #include "bspalettes_adv.h"
+#include "bspalettes_spec.h"
 
 
 #ifdef DRAWSTATICTEXTCRUSH
@@ -21,53 +23,117 @@ typedef QString       palboxname_t;
 #endif
 
 
-class QPaletteBoxPrivate
+static const int TEXT_AREA_WIDTH = 32;
+static const QSize  PREDEFINED_SIZE = QSize(256, 16);
+
+class PaletteItem: public QAbstractItemDelegate
 {
+  QSize         imageDimms;
+  QImage*       palImages;
+  palboxname_t* palNames;
 public:
-  enum {  MAX_PP = sizeof(ppalettes_adv)/sizeof(const IPalette*),
-          TEXT_AREA_WIDTH = 32 };
-protected:
-  class PaletteItem: public QAbstractItemDelegate
+  PaletteItem(QSize imageDimmsSize, QImage* pImages, palboxname_t* pNames): 
+    imageDimms(imageDimmsSize), palImages(pImages), palNames(pNames)
   {
-    QSize         imageDimms;
-    QImage*       palImages;
-    palboxname_t* palNames;
-  public:
-    PaletteItem(QSize imageDimmsSize, QImage* pImages, palboxname_t* pNames): 
-      imageDimms(imageDimmsSize), palImages(pImages), palNames(pNames)
-    {
-    }
-    ~PaletteItem();
-    
-    virtual void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
-    {
-      int r = index.row();
-      int y = option.rect.y();
+  }
+  ~PaletteItem();
+  
+  virtual void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+  {
+    int r = index.row();
+    int y = option.rect.y();
 #ifdef DRAWSTATICTEXTCRUSH
-      painter->drawStaticText(QPoint(0 + TEXT_AREA_WIDTH - 4 - palNames[r].size().toSize().width(), y), palNames[r]);
+    painter->drawStaticText(QPoint(0 + TEXT_AREA_WIDTH - 4 - palNames[r].size().toSize().width(), y), palNames[r]);
 #else
 //      painter->drawText(QPoint(0, y), palNames[r]);
-      painter->drawText(QRect(2, y, TEXT_AREA_WIDTH-2, imageDimms.height()), 0, palNames[r]);
+    painter->drawText(QRect(2, y, TEXT_AREA_WIDTH-2, imageDimms.height()), 0, palNames[r]);
 #endif
+    
+    painter->drawImage(QPoint(TEXT_AREA_WIDTH, y), palImages[r]);
+  }
+  virtual QSize sizeHint(const QStyleOptionViewItem&,const QModelIndex&) const {  return imageDimms;  }
+};
+
+PaletteItem::~PaletteItem(){}
+
+
+//template <const char* const PNAMES[], const IPalette* const PPALS[], const IPalette* const PPALS_INV[]>
+//struct PaletteSet
+//{
+//  enum { MAX_PP = sizeof(PNAMES) / sizeof(const char*) };
+//  QSize     imageDimms;
+//  QImage    palImages[MAX_PP];
+//  QImage    palImagesInverted[MAX_PP];
+//  palboxname_t  palNames[MAX_PP];
+//  bool inited;
+//public:
+//  PaletteSet(): imageDimms(0,0), inited(false) {}
+//  bool isInited() { return inited; }
+//  unsigned int width() { /*return TEXT_AREA_WIDTH;*/ return imageDimms.width(); }
+//  unsigned int count() { return MAX_PP; }
+//  void init(const QString& basePath)
+//  {
+//    for (unsigned int i=0; i<MAX_PP; i++)
+//    {
+//      palImages[i].load(basePath + PNAMES[i]);
+////      if (palImages[i].size() > PREDEFINED_SIZE)
+////      {
+////        palImages[i].resize(PREDEFINED_SIZE);
+////      }
+//      palImagesInverted[i] = palImages[i].mirrored(true);
       
-      painter->drawImage(QPoint(TEXT_AREA_WIDTH, y), palImages[r]);
-    }
-    virtual QSize sizeHint(const QStyleOptionViewItem&,const QModelIndex&) const {  return imageDimms;  }
-  };
+//#ifdef DRAWSTATICTEXTCRUSH
+//      palNames[i].setText( QString::number(i) );
+//      palNames[i].prepare();
+//#else
+//      palNames[i] = QString::number(i);
+//#endif
+//    }
+//    imageDimms = palImages[0].size();
+//    imageDimms += QSize(0,1) + QSize(TEXT_AREA_WIDTH, 0);
+//    inited = true;
+//  }
+//  PaletteItem* createPaletteItem(bool inverted)
+//  {
+//    return new PaletteItem(imageDimms, inverted? palImagesInverted : palImages, palNames);
+//  }
+//  const IPalette*   getPalette(int idx, bool inverted) const { return inverted? PPALS_INV[idx] : PPALS[idx]; }
+//};
+
+//static PaletteSet<ppalettenames_adv, ppalettes_adv, ppalettes_adv_inv>   pset_adv;
+//static PaletteSet<ppalettenames_spec, ppalettes_spec, ppalettes_spec_inv>   pset_spec;
+
+
+template <int MAX_PP>
+struct PaletteSet
+{
+  const char*   RESOURCE;
+  const char**  PNAMES;
+  const IPalette** PPALS;
+  const IPalette** PPALS_INV;
   
-  static QSize     imageDimms;
-  static QImage    palImages[MAX_PP];
-  static QImage    palImagesInverted[MAX_PP];
-  static palboxname_t  palNames[MAX_PP];
-  static bool inited;
+//  enum { MAX_PP = sizeof(PNAMES) / sizeof(const char*) };
+  QSize     imageDimms;
+  QImage    palImages[MAX_PP];
+  QImage    palImagesInverted[MAX_PP];
+  palboxname_t  palNames[MAX_PP];
+  bool inited;
 public:
-  static bool isInited() { return inited; }
-  static unsigned int width() { /*return TEXT_AREA_WIDTH;*/ return imageDimms.width(); }
-  static void init(const QString& basePath)
+  PaletteSet(const char* rscpath, const char** pnames, const IPalette** ppals, const IPalette** ppals_inv): 
+    RESOURCE(rscpath), PNAMES(pnames), PPALS(ppals), PPALS_INV(ppals_inv),
+    imageDimms(0,0), inited(false) {}
+  bool isInited() { return inited; }
+  unsigned int width() { /*return TEXT_AREA_WIDTH;*/ return imageDimms.width(); }
+  unsigned int count() { return MAX_PP; }
+  void init()
   {
     for (unsigned int i=0; i<MAX_PP; i++)
     {
-      palImages[i].load(basePath + ppalettenames_adv[i]);
+      palImages[i].load(QString(RESOURCE) + PNAMES[i]);
+      if (palImages[i].size() != PREDEFINED_SIZE)
+      {
+        palImages[i] = palImages[i].scaled(PREDEFINED_SIZE);
+      }
       palImagesInverted[i] = palImages[i].mirrored(true);
       
 #ifdef DRAWSTATICTEXTCRUSH
@@ -81,37 +147,77 @@ public:
     imageDimms += QSize(0,1) + QSize(TEXT_AREA_WIDTH, 0);
     inited = true;
   }
-  static PaletteItem* createPaletteItem(bool inverted)
+  PaletteItem* createPaletteItem(bool inverted)
   {
     return new PaletteItem(imageDimms, inverted? palImagesInverted : palImages, palNames);
   }
+  const IPalette*   getPalette(int idx, bool inverted) const { return inverted? PPALS_INV[idx] : PPALS[idx]; }
+};
+
+static PaletteSet<sizeof(ppalettenames_adv)/sizeof(const char*)>   pset_adv( ":/advanced/",
+    (const char**)ppalettenames_adv, (const IPalette**)ppalettes_adv, (const IPalette**)ppalettes_adv_inv);
+
+static PaletteSet<sizeof(ppalettenames_spec)/sizeof(const char*)>  pset_spec( ":/special/",
+    (const char**)ppalettenames_spec, (const IPalette**)ppalettes_spec, (const IPalette**)ppalettes_spec_inv);
+
+
+class QPaletteBoxPrivate
+{
+public:
+  virtual bool isInited() const=0;
+  virtual unsigned int width() const=0;
+  virtual unsigned int count() const=0;
+  virtual void init()=0;
+  virtual PaletteItem* createPaletteItem(bool inverted)=0;
+  virtual const IPalette* getPalette(int idx, bool inverted) const=0;
 public:
   bool  bInverted;
 };
 
-QPaletteBoxPrivate::PaletteItem::~PaletteItem(){}
-
-
-
-bool  QPaletteBoxPrivate::inited = false;
-QSize QPaletteBoxPrivate::imageDimms = QSize(0,0);
-QImage QPaletteBoxPrivate::palImages[QPaletteBoxPrivate::MAX_PP];
-QImage QPaletteBoxPrivate::palImagesInverted[QPaletteBoxPrivate::MAX_PP];
-palboxname_t  QPaletteBoxPrivate::palNames[QPaletteBoxPrivate::MAX_PP];
-
-QPaletteBox::QPaletteBox(QWidget *parent): QComboBox(parent), d_ptr(new QPaletteBoxPrivate)
+template <class T>
+class QPaletteBoxPrivateDetailed: public QPaletteBoxPrivate
 {
-  if (!QPaletteBoxPrivate::isInited())
-  {
-    QPaletteBoxPrivate::init(":/advanced/");
-  }
+  T& pset;
+public:
+  QPaletteBoxPrivateDetailed(T& pset_impl): pset(pset_impl) {}
+  bool isInited() const { return pset.inited; }
+  unsigned int width() const { /*return TEXT_AREA_WIDTH;*/ return pset.width(); }
+  unsigned int count() const { return pset.count(); }
+  void init(){ return pset.init(); }
+  PaletteItem* createPaletteItem(bool inverted){ return pset.createPaletteItem(inverted); }
+  virtual const IPalette* getPalette(int idx, bool inverted) const { return pset.getPalette(idx, inverted); }
+};
+
+
+QPaletteBox::QPaletteBox(PALETTE_SET ps, QWidget *parent): QComboBox(parent), d_ptr(
+  ps == PS_ADVANCED? (QPaletteBoxPrivate*)new QPaletteBoxPrivateDetailed<PaletteSet<sizeof(ppalettenames_adv)/sizeof(const char*)>>(pset_adv) :
+  ps == PS_SPECIAL? (QPaletteBoxPrivate*)new QPaletteBoxPrivateDetailed<PaletteSet<sizeof(ppalettenames_spec)/sizeof(const char*)>>(pset_spec) : 
+  nullptr
+  )
+{
   Q_D(QPaletteBox);
+  if (!d->isInited())
+  {
+    d->init();
+  }
   d->bInverted = false;
-  this->setItemDelegate(QPaletteBoxPrivate::createPaletteItem(d->bInverted));
-  for (unsigned int p=0; p<QPaletteBoxPrivate::MAX_PP; p++)
+  this->setItemDelegate(d->createPaletteItem(d->bInverted));
+  for (unsigned int p=0; p<d->count(); p++)
     this->addItem(QString::number(p));
-  this->setMinimumWidth(QPaletteBoxPrivate::width());
-  this->setMaximumWidth(QPaletteBoxPrivate::width());
+  
+//  this->setMinimumWidth(QPaletteBoxPrivate::width());
+//  this->setMaximumWidth(QPaletteBoxPrivate::width());
+  
+  this->view()->setMinimumWidth(d->width());
+  this->setFixedWidth(88);
+  
+//  if (inversewdg)
+//  {
+//    d->qcbInverse = new QCheckBox("Инверт", this);
+//    d->qcbInverse->move(QPaletteBoxPrivate::SELF_COMBO_WIDTH + 2, 0);
+//  }
+//  else
+//    d->qcbInverse = nullptr;
 }
 
 QPaletteBox::~QPaletteBox()
@@ -130,15 +236,21 @@ bool QPaletteBox::isInverted() const
 const IPalette* QPaletteBox::currentPalette() const
 {
   const Q_D(QPaletteBox);
-  return d->bInverted? ppalettes_adv_inv[currentIndex()] : ppalettes_adv[currentIndex()];
+  return d->getPalette(currentIndex(), d->bInverted);
 }
+  
+//QSize QPaletteBox::sizeHint() const
+//{
+//  const Q_D(QPaletteBox);
+//  return QComboBox::sizeHint() + QSize(2,0) + d->qcbInverse->sizeHint();
+//}
 
 void QPaletteBox::setInverted(bool inverted)
 {
   Q_D(QPaletteBox);
   if (d->bInverted != inverted)
   {
-    this->setItemDelegate(QPaletteBoxPrivate::createPaletteItem(inverted));
+    this->setItemDelegate(d->createPaletteItem(inverted));
     d->bInverted = inverted;
     emit  currentIndexChanged(currentIndex());
   }
@@ -146,7 +258,7 @@ void QPaletteBox::setInverted(bool inverted)
 
 //////////////////////////////////////////////////////////////////////
 
-QPaletteBoxSg::QPaletteBoxSg(QWidget* parent): QPaletteBox (parent)
+QPaletteBoxSg::QPaletteBoxSg(PALETTE_SET ps, QWidget* parent): QPaletteBox(ps, parent)
 {
   QObject::connect(this, SIGNAL(currentIndexChanged(int)), this, SLOT(_redirChanged(int)));
 }
@@ -154,5 +266,5 @@ QPaletteBoxSg::QPaletteBoxSg(QWidget* parent): QPaletteBox (parent)
 void QPaletteBoxSg::_redirChanged(int idx)
 {
   Q_D(QPaletteBox);
-  emit currentChanged(d->bInverted? ppalettes_adv_inv[idx] : ppalettes_adv[idx]);
+  emit currentChanged(d->getPalette(idx, d->bInverted));
 }

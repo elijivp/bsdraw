@@ -3,7 +3,7 @@
 #include "core/sheigen/bsshei2d.h"
 
 DrawIntensity::DrawIntensity(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): 
-  DrawQWidget(new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient, splitPortions)
+  DrawQWidget(DATEX_2D, new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient, splitPortions)
 {
   m_matrixDimmA = samplesHorz;
   m_matrixDimmB = samplesVert;

@@ -42,7 +42,7 @@ int   OActiveCursor::fshTrace(int overlay, bool rotated, char* to) const
               "ioffset = clamp(ioffset, ivec2(0,0), ibounds-ivec2(1,1));"     /// autoclamp
               "ioffset = ivec2(ioffset/iscaling)*iscaling + iscaling/2;"
              );
-  ocg.goto_normed();
+//  ocg.goto_normed();
   ocg.goto_func_end(false);
   return ocg.written();
 }
@@ -52,6 +52,11 @@ bool OActiveCursor::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* 
   if (oreact == ORM_LMPRESS || oreact == ORM_LMMOVE)
   {
     setCoordinates(((const float*)dataptr)[0], ((const float*)dataptr)[1]);
+    return true;
+  }
+  else if (oreact == ORM_RMPRESS)
+  {
+    setCoordinates(-1, -1);
     return true;
   }
   return false;
@@ -115,7 +120,6 @@ bool OActiveCursorCarrier2::overlayReactionMouse(OVL_REACTION_MOUSE oreact, cons
   }
   return false;
 }
-
 
 /********************************************************************************************************************************************/
 /********************************************************************************************************************************************/

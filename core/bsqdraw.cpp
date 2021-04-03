@@ -1320,7 +1320,7 @@ bool BSQProactiveSelector::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_
         portion = pwdg->allocatedPortions() - 1 - y / ssB;
       else if (pwdg->isSplittedB())
         portion = x / ssA;
-      emit selectionChanged(portion);
+      emit selectionChanged(portion + m_startswith);
     }
   }
   else if (oreact == m_drop)  emit selectionDropped();
@@ -1342,7 +1342,7 @@ bool BSQCellSelector::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE
         cellA = pwdg->sizeDataA() - 1 - cellA;
       if (orientationMirroredVert(orient))
         cellB = pwdg->sizeDataB() - 1 - cellB;
-      emit selectionChanged(cellA, cellB);
+      emit selectionChanged(cellA + m_startswith, cellB + m_startswith);
     }
   }
   else if (oreact == m_drop)  emit selectionDropped();
@@ -1362,7 +1362,7 @@ bool BSQSelectorA::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE or
       unsigned int cellA = (orientationTransposed(orient)? y : x) / ssA;
       if (orientationMirroredHorz(orient))
         cellA = pwdg->sizeDataA() - 1 - cellA;
-      emit selectionChanged(cellA);
+      emit selectionChanged(cellA + m_startswith);
     }
   }
   else if (oreact == m_drop)  emit selectionDropped();
@@ -1381,7 +1381,7 @@ bool BSQSelectorB::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE or
       unsigned int cellB = (orientationTransposed(orient)? x : y) / ssB;
       if (orientationMirroredVert(orient))
         cellB = pwdg->sizeDataB() - 1 - cellB;
-      emit selectionChanged(cellB);
+      emit selectionChanged(cellB + m_startswith);
     }
   }
   else if (oreact == m_drop)  emit selectionDropped();

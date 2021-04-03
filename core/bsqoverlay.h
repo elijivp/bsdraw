@@ -21,7 +21,10 @@ private:
 public:
   MQOverlay(DrawOverlay* ovl, bool owner=false, QObject* parent=nullptr);
   ~MQOverlay();
-  DrawOverlay* overlay() const { return m_povl; }
+  DrawOverlay* overlay() { return m_povl; }
+  const DrawOverlay* overlay() const { return m_povl; }
+  DrawOverlay* operator*() { return m_povl; }
+  const DrawOverlay* operator*() const { return m_povl; }
 public slots:
   void      setOpacity(float opacity){ m_povl->setOpacity(c_opacity = opacity); } /// 0 for invisible
   void      setThickness(float thickness){  m_povl->setThickness(thickness); }

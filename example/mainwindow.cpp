@@ -857,6 +857,16 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     for (unsigned int i=0; i<drawscount; i++)
       draws[i] = new DrawIntensePoints(SAMPLES, MAXLINES, PORTIONS);
   }
+  else if (MW_TEST == SCALES_2)
+  {
+    SAMPLES = 180;
+    MAXLINES = 50;
+    PORTIONS = 1;
+    PRECREATE(1, 1);
+    draws[0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.2f, DE_QINTERP), coloropts_t::copts(CP_SINGLE, 1.0f, 1.0f, 0x777777));
+//    sigtype = ST_MOVE;
+//    defaultPalette = ppalettes_adv[11];
+  }
   else if (MW_TEST == ADV_PALETTES)    /// advanced palettes show
   {
     SAMPLES = 400;
@@ -874,7 +884,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     }
     sigtype = ST_RAMP;
   }
-  else if (MW_TEST == LOAD1)
+  else if (MW_TEST == DEBUG_LOADING)
   {
     SAMPLES = 400;
     MAXLINES = 160;
@@ -889,7 +899,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     sigtype = ST_10;
   }
-  else if (MW_TEST == TABS)
+  else if (MW_TEST == DEBUG_TABS)
   {
     SAMPLES = 80;
     MAXLINES = 120;
@@ -906,7 +916,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 
     sigtype = ST_MOVE;
   }
-  else if (MW_TEST == VOCAB)
+  else if (MW_TEST == DEBUG_VOCAB)
   {
     SAMPLES = 300;
     MAXLINES = 450;
@@ -920,7 +930,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //    draws[2]->setPostMask(DPostmask::postmask(PO_ALL, PM_DOTCONTOUR, 0, 0.0f, 0.0f));
     sigtype = ST_10;
   }
-  else if (MW_TEST == PALETTE2D_TESTER)
+  else if (MW_TEST == DEBUG_PALETTE2D)
   {
 #if 1
     static const int clc = 172;
@@ -1025,7 +1035,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //    static PaletteBORDS<100> pptr(0x000000ff, 0.3333f, 0x0000ff00, 0.6666f, 0x000000ff);
 //    defaultPalette = &pptr;
   }
-  else if (MW_TEST == ADV_SIZE) 
+  else if (MW_TEST == DEBUG_ROTATIONSOVLS) 
   {
     SAMPLES = 23;
     MAXLINES = 51;
@@ -1049,7 +1059,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     sigtype = ST_ZERO;
   }
   
-//  else if (MW_TEST == PALETTE2D_TESTERX)
+//  else if (MW_TEST == DEBUG_PALETTE2DX)
 //  {
 //#if false
 //    static const int clc = 33;
@@ -1116,7 +1126,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
 //      draws[i]->setRawResizeModeNoScaled(true);
       
-      if (MW_TEST != FEATURE_PORTIONS && MW_TEST != ADV_PALETTES && MW_TEST != PALETTE2D_TESTER)
+      if (MW_TEST != FEATURE_PORTIONS && MW_TEST != ADV_PALETTES && MW_TEST != DEBUG_PALETTE2D)
         draws[i]->setDataPalette(defaultPalette);
       
       if (syncscaling > 0)
@@ -1144,7 +1154,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         oimg->setOpacity(0.15);
         draws[i]->ovlPushBack(oimg);
       }
-      else if (MW_TEST == VOCAB)
+      else if (MW_TEST == DEBUG_VOCAB)
       {
         DrawOverlay* oimg = new OImageStretched(new QImage(img_path_normal), OVLQImage::IC_ASIS, false);
         oimg->setSlice(0.35);
@@ -1205,7 +1215,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           tabshow = ptb->addTab(tr("Data"));
           BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
             BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-              int bfsmask = BFS_CHECKABLE | (MW_TEST == DRAW_BRIGHT_CLUSTER || MW_TEST == PALETTE2D_TESTER? BFS_DISABLED : 0);
+              int bfsmask = BFS_CHECKABLE | (MW_TEST == DRAW_BRIGHT_CLUSTER || MW_TEST == DEBUG_PALETTE2D? BFS_DISABLED : 0);
               BSFieldSetup sigs[] = { 
                 BSFieldSetup(tr("Random"),  &fntSTD, ST_RAND, bfsmask,     btnMinWidth, btnMaxWidth),
                 BSFieldSetup(tr("Normal"), &fntSTD, ST_GEN_NORM, bfsmask,   btnMinWidth, btnMaxWidth),
@@ -2137,7 +2147,54 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //            BSAUTO_TEXT_ADD("\tResize Me");
 //          BS_STOP
         }
-        else if (MW_TEST == TABS)
+        else if (MW_TEST == SCALES_2)
+        {
+          for (unsigned int i=0; i<drawscount; i++)
+          {
+            DrawBars* pDB = new DrawBars(draws[i]);
+            pDB->addContour(AT_TOP, 0);
+            pDB->addContour(AT_BOTTOM, 0);
+            pDB->addContour(AT_RIGHT, 0);
+            
+            for (int j=0; j<4; j++)
+            {
+              ATTACHED_TO at = ATTACHED_TO(j);
+              pDB->addContour(at, 0);
+              pDB->addScaleEnumerator(at, DBMODE_STRETCHED, 64, 30);
+              pDB->addContour(at, 0);
+              pDB->addScaleFixed(at, DBMODE_STRETCHED, 0.0f, 1.0f, SAMPLES);
+              pDB->addContour(at, 0);
+              
+              if (j == AT_LEFT)
+                pDB->addScaleDrawGraphB(AT_LEFT, 0, 3, 32);
+            }
+            
+//            if (i == 0)
+//              pDB->addScaleDrawUniSide(AT_TOP, DBF_ENUMERATE_FROMZERO | DBF_ENUMERATE_SHOWLAST, 20);
+//            else if (i == 1)
+//              pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED, 0.0, SAMPLES-1, SAMPLES);
+//            else if (i == 2)
+//              pDB->addScaleTapNM(AT_TOP, DBMODE_STATIC, standard_tap_symbolate<-1>, 4, nullptr, SAMPLES, 20);
+//            else
+//              pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED_POW2 | DBF_ONLY2NOTES | DBF_NOTESINSIDE, 0.0, 1.0, SAMPLES, 10);
+            
+//            MEWPointer* mpH = pDB->addPointerDrawUniSide(AT_BOTTOM, DBF_NOTESINSIDE);
+//            MEWPointer* mpV = pDB->addPointerDrawGraphB(AT_RIGHT, DBF_NOTESINSIDE);
+//            int oapH = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpH->createProactive()));
+//            pDB->getDraw()->ovlPushBack(new OFLine(OFLine::LT_VERT_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_stroks(1.0f,0.0f,0.0f)), oapH);
+//            int oapV = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpV->createProactive()));
+//            pDB->getDraw()->ovlPushBack(new OFLine(OFLine::LT_HORZ_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_stroks(1.0f,0.0f,0.0f)), oapV);
+//            {
+//              pDB->addLabel(AT_LEFT, 0 | DBF_LABELAREA_FULLBAR, labels_clr[i][0], Qt::AlignCenter, Qt::Vertical);
+//              pDB->addLabel(AT_TOP, 0, labels_clr[i][1], Qt::AlignCenter, Qt::Horizontal);
+//            }
+            
+//            draws[i]->setMinimumHeight(800);
+            
+            BSADD(pDB)
+          }
+        }
+        else if (MW_TEST == DEBUG_TABS)
         {
           BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
             QBoxLayout* stackedLayoutIsFullOfShit;
@@ -2376,7 +2433,7 @@ void MainWindow::generateData()
       ((DrawIntensePoints*)draws[i])->setData( countByPortions, Xs, Ys, values);
     }
   }
-  else if (MW_TEST == PALETTE2D_TESTER)
+  else if (MW_TEST == DEBUG_PALETTE2D)
   {
 //    for (int p=0; p<PORTIONS; p++)
 //      for (int j=0; j<MAXLINES; j++)

@@ -206,10 +206,12 @@ class BSQProactiveSelectorBase: public QObject, public IProactive
 protected:
   OVL_REACTION_MOUSE    m_action;
   OVL_REACTION_MOUSE    m_drop;
+  int                   m_startswith;
 public:
-  BSQProactiveSelectorBase(OVL_REACTION_MOUSE action, OVL_REACTION_MOUSE drop): m_action(action), m_drop(drop){}
+  BSQProactiveSelectorBase(OVL_REACTION_MOUSE action, OVL_REACTION_MOUSE drop): m_action(action), m_drop(drop), m_startswith(0){}
   ~BSQProactiveSelectorBase();
 public:
+  void  setStarts(int v){ m_startswith = v; }
   OVL_REACTION_MOUSE  action() const { return m_action; }
   void  setAction(OVL_REACTION_MOUSE action){ m_action = action; }
 };

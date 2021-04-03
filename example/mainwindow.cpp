@@ -1859,6 +1859,9 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
               BSAUTO_BTN_ADDMAPPED(BSFieldSetup(tr("Remove last graph"), &fntSTD, BTF_DESTROYGRAPH, 0, btnMinWidth), featsMapper, 0, Qt::AlignCenter);
             BS_STOP
+            BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
+              BSAUTO_BTN_ADDMAPPED(BSFieldSetup(tr("Special Debug Button"), &fntSTD, BTF_DEBUG, 0, btnMinWidth), featsMapper, 0, Qt::AlignCenter);
+            BS_STOP
                 
 //              BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
 //                BSAUTO_TEXT_ADD(tr("Overlay' images:"), 0, Qt::AlignLeft);
@@ -2152,18 +2155,29 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           for (unsigned int i=0; i<drawscount; i++)
           {
             DrawBars* pDB = new DrawBars(draws[i]);
-            pDB->addContour(AT_TOP, 0);
-            pDB->addContour(AT_BOTTOM, 0);
-            pDB->addContour(AT_RIGHT, 0);
             
+            pDB->setContentsMargins(100,100,100,100);
+            
+            bool contourMaxZone = false;
+            
+            int dbmode = DBMODE_STRETCHED;
+//            int dbmode = DBMODE_STATIC;
+            
+            int otherFlags = /*DBF_ENUMERATE_FROMZERO | */DBF_ENUMERATE_SHOWLAST;
+//            int otherFlags = DBF_ONLY2NOTES;
+//            int otherFlags = DBF_NOTESINSIDE;
+            
+            int dockerFlags = DBF_DOCKTO_PREVMARK; 
             for (int j=0; j<4; j++)
             {
               ATTACHED_TO at = ATTACHED_TO(j);
-              pDB->addContour(at, 0);
-              pDB->addScaleEnumerator(at, DBMODE_STRETCHED, 64, 30);
-              pDB->addContour(at, 0);
-              pDB->addScaleFixed(at, DBMODE_STRETCHED, 0.0f, 1.0f, SAMPLES);
-              pDB->addContour(at, 0);
+              pDB->addContour(at, 0, contourMaxZone);
+              pDB->addScaleEnumerator(at, dbmode | otherFlags | dockerFlags, 64 + 1, 30);
+              pDB->addContour(at, 0, contourMaxZone);
+              pDB->addScaleFixed(at, dbmode | otherFlags | dockerFlags, 0.0f, 1.0f, SAMPLES);
+              pDB->addContour(at, 0, contourMaxZone);
+              
+//              pDB->addScaleDrawUniSide(at, dbmode | otherFlags | dockerFlags, 30);
               
               if (j == AT_LEFT)
                 pDB->addScaleDrawGraphB(AT_LEFT, 0, 3, 32);
@@ -3125,6 +3139,13 @@ void  MainWindow::changeFeatures(int id)
           DrawOverlay* povl = draws[i]->ovlGet(j + 1);
           if (povl) povl->setOpacity(1.0f);
         }
+    }
+    else if (id == BTF_DEBUG)
+    {
+      if (MW_TEST == SCALES_2)
+      {
+        draws[i]->setMinimumWidth(800);
+      }
     }
   }
   if (id == BTF_DESTROYGRAPH)

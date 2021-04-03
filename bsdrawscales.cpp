@@ -1684,6 +1684,8 @@ MarginMinTexts::~MarginMinTexts(){}
 /******************************************************************************************************************/
 /******************************************************************************************************************/
 
+enum  { DOCK_PREV, DOCK_BETWEEN, DOCK_NEXT };
+  
 class MarginMarksTextBetween: public MarginMarksTexted
 {
 protected:
@@ -1692,7 +1694,7 @@ protected:
   unsigned int  submod;
 public:
   ~MarginMarksTextBetween();
-  MarginMarksTextBetween(): docking(1), showLastEnumer(false), submod(1) {}
+  MarginMarksTextBetween(): docking(DOCK_BETWEEN), showLastEnumer(false), submod(1) {}
 
   void  init_wide(int algotype, int marksCount, int pixStep_pixSpacing, unsigned int step, int roundsteps, bool alwaysShowLast, int dockto)
   {
@@ -1725,45 +1727,9 @@ protected:
       return false;
     
     storeDimm(c_dimm_main);
-    
-    const int decayH = 2, decayV = 2, total = countMaxiNoted + countMaxiHided - 1;
-
+    const int total = countMaxiNoted + countMaxiHided - 1;
     int last=0, subctr = 0;
-//    for (int i=0; i<total; )
-//    {
-//      if (ua_marklinks2[i] != -1)
-//      {
-//        int j=i+1;
-//        for (; j<total+1; j++)
-//        {
-//          if (ua_marklinks2[j] != -1)
-//            break;
-//          else
-//            texts[j].visible = 0;
-//        }
-
-//        if (algoType == DBMODE_STATIC && j > total)
-//          texts[i].visible = 0;
-//        else
-//        {
-//          texts[last = i].visible = subctr++ % int(submod) == 0? 1 : 0;
-//          QPoint& mcur = ua_marks[ua_marklinks2[i]].anchor, &mnext = j == total+1? ua_marks[ua_marklinks2[i]].anchor : ua_marks[ua_marklinks2[j]].anchor;
-////          qDebug()<<i<<ua_marklinks2[i]<<j<<ua_marklinks2[j]<<total+1<<-(mnext - mcur).y()/2;
-//          if (area.atto == AT_LEFT)
-//            texts[i].uarea_pos = mcur - QPoint(decayH + texts[i].uin_locsize.width(), -(mnext - mcur).y()/2 + texts[i].uin_locsize.height()/2);
-//          else if (area.atto == AT_RIGHT)
-//            texts[i].uarea_pos = mcur - QPoint(-decayH, -(mnext - mcur).y()/2 + texts[i].uin_locsize.height()/2);
-//          else if (area.atto == AT_TOP)
-//            texts[i].uarea_pos = mcur - QPoint(-(mnext - mcur).x()/2 + texts[i].uin_locsize.width()/2, decayV + texts[i].uin_locsize.height());
-//          else if (area.atto == AT_BOTTOM)
-//            texts[i].uarea_pos = mcur - QPoint(-(mnext - mcur).x()/2 + texts[i].uin_locsize.width()/2, -decayV);
-//          texts[i].uarea_atto = area.atto;
-//        }
-//        i = j;
-//      }
-//      else
-//        texts[i++].visible = 0;
-//    }
+    
     for (int i=0; i<total; )
     {
       if (ua_marklinks2[i] != -1)
@@ -1776,100 +1742,20 @@ protected:
           else
             texts[j].visible = 0;
         }
-
-//        if (area.atto == AT_LEFT /*&& countMaxiNoted + countMaxiHided - 1 == 64*/)
-//            qDebug()<<total<<texts[i].uin_text.text()<<texts[i].uin_locsize.width()<<pixStep_pixSpace<<countMaxiNoted + countMaxiHided - 1;
-        
         if (algoType == DBMODE_STATIC && j > total)
           texts[i].visible = 0;
         else
         {
-          texts[last = i].visible = subctr++ % int(submod) == 0? 1 : 0;
+          texts[last = i].visible = (subctr++ % int(submod) == 0)? 1 : 0;
           QPoint& mcur = ua_marks[ua_marklinks2[i]].anchor, &mnext = j == total+1? ua_marks[ua_marklinks2[i]].anchor : ua_marks[ua_marklinks2[j]].anchor;
-//          qDebug()<<i<<ua_marklinks2[i]<<j<<ua_marklinks2[j]<<total+1<<-(mnext - mcur).y()/2;
-          if (area.atto == AT_LEFT)
-            texts[i].uarea_pos = mcur - QPoint(decayH + texts[i].uin_locsize.width(), docking == 0? texts[i].uin_locsize.height() + 0 :
-                                                                                      docking == 1? (mcur.y() - mnext.y())/2 + texts[i].uin_locsize.height()/2 :
-                                                                                      mcur.y() - mnext.y()
-              );
-          else if (area.atto == AT_RIGHT)
-            texts[i].uarea_pos = mcur - QPoint(-decayH,                               docking == 0? texts[i].uin_locsize.height() + 0 :
-                                                                                      docking == 1? (mcur.y() - mnext.y())/2 + texts[i].uin_locsize.height()/2 :
-                                                                                      mcur.y() - mnext.y()
-              );
-          else if (area.atto == AT_TOP)
-            texts[i].uarea_pos = mcur - QPoint( docking == 0? 0 :
-                                                docking == 1? (mcur.x() - mnext.x())/2 + texts[i].uin_locsize.width()/2 :
-                                                mcur.x() - mnext.x() + texts[i].uin_locsize.width(),
-              decayV + texts[i].uin_locsize.height());
-          else if (area.atto == AT_BOTTOM)
-            texts[i].uarea_pos = mcur - QPoint( docking == 0? 0 :
-                                                docking == 1? (mcur.x() - mnext.x())/2 + texts[i].uin_locsize.width()/2 :
-                                                mcur.x() - mnext.x() + texts[i].uin_locsize.width(),
-              -decayV);
-          texts[i].uarea_atto = area.atto;
+////          qDebug()<<i<<ua_marklinks2[i]<<j<<ua_marklinks2[j]<<total+1<<-(mnext - mcur).y()/2;
+          _recalcPos(i, area.atto, mcur, mnext, docking);
         }
         i = j;
       }
       else
         texts[i++].visible = 0;
     }
-    
-//    for (int i=0; i<total; )
-//    {
-//      if (ua_marklinks2[i] != -1)
-//      {
-//        int j=i+1;
-//        for (; j<total+1; j++)
-//        {
-//          if (ua_marklinks2[j] != -1)
-//            break;
-//          else
-//            texts[j].visible = 0;
-//        }
-
-//        if (algoType == DBMODE_STATIC && j > total)
-//          texts[i].visible = 0;
-//        else
-//        {
-//          texts[last = i].visible = subctr++ % int(submod) == 0? 1 : 0;
-//          texts[i].uarea_pos = ua_marks[ua_marklinks2[i]].anchor;
-//        }
-//        i = j;
-//      }
-//      else
-//        texts[i++].visible = 0;
-//    }
-     
-//    if (area.atto == AT_LEFT)
-//    {
-//      QPoint  posprev;
-//      int j=-1;
-//      for (int i=0; i<last; i++)
-//      {
-//        if (texts[i].visible && j == -1)
-//        {
-//          j = i;
-//          posprev = texts[i].uarea_pos;
-//          continue;
-//        }
-        
-//        QPoint& mcur = ua_marks[ua_marklinks2[i]].anchor, &mnext = j == total+1? ua_marks[ua_marklinks2[i]].anchor : ua_marks[ua_marklinks2[j]].anchor;
-        
-//        posprev = texts[i].uarea_pos;
-//      }
-//    }
-    
-//              QPoint& mcur = ua_marks[ua_marklinks2[i]].anchor, &mnext = j == total+1? ua_marks[ua_marklinks2[i]].anchor : ua_marks[ua_marklinks2[j]].anchor;
-//    //          qDebug()<<i<<ua_marklinks2[i]<<j<<ua_marklinks2[j]<<total+1<<-(mnext - mcur).y()/2;
-//                texts[i].uarea_pos = mcur - QPoint(decayH + texts[i].uin_locsize.width(), -(mnext - mcur).y()/2 + texts[i].uin_locsize.height()/2);
-//              else if (area.atto == AT_RIGHT)
-//                texts[i].uarea_pos = mcur - QPoint(-decayH, -(mnext - mcur).y()/2 + texts[i].uin_locsize.height()/2);
-//              else if (area.atto == AT_TOP)
-//                texts[i].uarea_pos = mcur - QPoint(-(mnext - mcur).x()/2 + texts[i].uin_locsize.width()/2, decayV + texts[i].uin_locsize.height());
-//              else if (area.atto == AT_BOTTOM)
-//                texts[i].uarea_pos = mcur - QPoint(-(mnext - mcur).x()/2 + texts[i].uin_locsize.width()/2, -decayV);
-//              texts[i].uarea_atto = area.atto;
     
     if (showLastEnumer)
     {
@@ -1879,7 +1765,12 @@ protected:
         if (last != total-1)
         {
           texts[last].visible = 0;
+#if 1
+//          _recalcPos(total-1, area.atto, ua_marks[ua_marklinks2[last]].anchor, ua_marks[ua_marklinks2[total]].anchor, docking == DOCK_PREV? DOCK_NEXT : docking == DOCK_NEXT? DOCK_PREV : DOCK_BETWEEN);
+          _recalcPos(total-1, area.atto, ua_marks[ua_marklinks2[last]].anchor, ua_marks[ua_marklinks2[total]].anchor, DOCK_NEXT);
+#else
           texts[total - 1].uarea_pos = texts[last].uarea_pos;
+#endif
         }
       }
     }
@@ -1887,6 +1778,32 @@ protected:
 
     return true;
   }
+  void  _recalcPos(int i, ATTACHED_TO atto, QPoint& mcur, QPoint mnext, int locdock)
+  {
+    const int decayH = 2, decayV = 2;
+    if (atto == AT_LEFT)
+      texts[i].uarea_pos = mcur - QPoint(decayH + texts[i].uin_locsize.width(), locdock == 0? texts[i].uin_locsize.height() + 0 :
+                                                                                locdock == 1? (mcur.y() - mnext.y())/2 + texts[i].uin_locsize.height()/2 :
+                                                                                mcur.y() - mnext.y()
+        );
+    else if (atto == AT_RIGHT)
+      texts[i].uarea_pos = mcur - QPoint(-decayH,                               locdock == 0? texts[i].uin_locsize.height() + 0 :
+                                                                                locdock == 1? (mcur.y() - mnext.y())/2 + texts[i].uin_locsize.height()/2 :
+                                                                                mcur.y() - mnext.y()
+        );
+    else if (atto == AT_TOP)
+      texts[i].uarea_pos = mcur - QPoint( locdock == 0? 0 :
+                                          locdock == 1? (mcur.x() - mnext.x())/2 + texts[i].uin_locsize.width()/2 :
+                                          mcur.x() - mnext.x() + texts[i].uin_locsize.width(),
+        decayV + texts[i].uin_locsize.height());
+    else if (atto == AT_BOTTOM)
+      texts[i].uarea_pos = mcur - QPoint( locdock == 0? 0 :
+                                          locdock == 1? (mcur.x() - mnext.x())/2 + texts[i].uin_locsize.width()/2 :
+                                          mcur.x() - mnext.x() + texts[i].uin_locsize.width(),
+        -decayV);
+    texts[i].uarea_atto = atto;
+  }
+        
   virtual void sizeHint(ATTACHED_TO atto, int* atto_size, int* mindly, int* mindly1, int* mindly2) const
   {
     MarginMarks::sizeHint(atto, atto_size, mindly, mindly1, mindly2);
@@ -2689,10 +2606,11 @@ inline int countMaxNumbers(int marksCount)
   return n;
 }
 
-MEWScaleNM* DrawBars::addScaleEnumerator(ATTACHED_TO atto, int flags, int marksCount, int pixStep_pixSpacing, unsigned int step, bool alwaysShowLast, const char* postfix)
+MEWScaleNM* DrawBars::addScaleEnumerator(ATTACHED_TO atto, int flags, int marksCount, int pixStep_pixSpacing, unsigned int step, const char* postfix)
 {
   MarginMarksTextBetween* mmt = new MarginMarksTextBetween();
-  mmt->init_wide(DB_HIDDEN_MODE(flags, /*DBMODE_STRETCHED_POW2*/DBMODE_STRETCHED), marksCount, pixStep_pixSpacing, step, DB_ROUNDING(flags), alwaysShowLast, flags & DBF_DOCKTO_PREVMARK? 0 : flags & DBF_DOCKTO_NEXTMARK? 2 : 1);
+  mmt->init_wide(DB_HIDDEN_MODE(flags, /*DBMODE_STRETCHED_POW2*/DBMODE_STRETCHED), marksCount, pixStep_pixSpacing, step, DB_ROUNDING(flags), 
+                 flags & DBF_ENUMERATE_SHOWLAST, flags & DBF_DOCKTO_PREVMARK? 0 : flags & DBF_DOCKTO_NEXTMARK? 2 : 1);
   flags & DBF_POSTFIX_TO_PREFIX? mmt->setPrefix(postfix) : mmt->setPostfix(postfix);
   mmt->setFont(this->font());
   mmt->bdContentUpdate(RF_SETENUMERATE, relatedopts_t(countMaxNumbers(marksCount-1), flags & DBF_ENUMERATE_FROMZERO? 0 : 1, -1));
@@ -2724,7 +2642,7 @@ MEWScaleTAPNN* DrawBars::addScaleTapNN(ATTACHED_TO atto, int flags, mtap_qstring
 MEWScaleTAPNM* DrawBars::addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksCount, int pixStep_pixSpacing, const char* postfix)
 {
   MarginMarksTextBetween* mmt = new MarginMarksTextBetween();
-  mmt->init_wide(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED_POW2), marksCount, pixStep_pixSpacing, 1, DB_ROUNDING(flags), true, flags & DBF_DOCKTO_PREVMARK? 0 : flags & DBF_DOCKTO_NEXTMARK? 2 : 1);
+  mmt->init_wide(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED_POW2), marksCount, pixStep_pixSpacing, 1, DB_ROUNDING(flags), true, flags & DBF_DOCKTO_PREVMARK? DOCK_PREV : flags & DBF_DOCKTO_NEXTMARK? DOCK_NEXT : DOCK_BETWEEN);
   flags & DBF_POSTFIX_TO_PREFIX? mmt->setPrefix(postfix) : mmt->setPostfix(postfix);
   mmt->setFont(this->font());
   mmt->bdContentUpdate(RF_SETTAPS, relatedopts_t(fn, param, maxtextlen));
@@ -2768,7 +2686,7 @@ MEWScale* DrawBars::addScaleDrawUniSide(ATTACHED_TO atto, int flags, int pixSpac
   MarginMarksTextBetween* mmt = new MarginMarksTextBetween();
   int sizeDimm = BAR_VERT[atto]? int(pDraw->sizeDataVert() + 1) : int(pDraw->sizeDataHorz() + 1);
   flags & DBF_POSTFIX_TO_PREFIX? mmt->setPrefix(postfix) : mmt->setPostfix(postfix);
-  mmt->init_wide(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED), sizeDimm, pixSpacing, step, DB_ROUNDING(flags), flags & DBF_ENUMERATE_SHOWLAST, flags & DBF_DOCKTO_PREVMARK? 0 : flags & DBF_DOCKTO_NEXTMARK? 2 : 1);
+  mmt->init_wide(DB_HIDDEN_MODE(flags, DBMODE_STRETCHED), sizeDimm, pixSpacing, step, DB_ROUNDING(flags), flags & DBF_ENUMERATE_SHOWLAST, flags & DBF_DOCKTO_PREVMARK? DOCK_PREV : flags & DBF_DOCKTO_NEXTMARK? DOCK_NEXT : DOCK_BETWEEN);
   mmt->bdContentUpdate(RF_SETENUMERATE, relatedopts_t(countMaxNumbers(sizeDimm-1), flags & DBF_ENUMERATE_FROMZERO? 0 : 1, -1));
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
@@ -2989,8 +2907,14 @@ QSize DrawBars::minimumSizeHint() const
 {
 //  qDebug()<<pImpl->c_hint_draw_height<<pImpl->c_height_margins<<pImpl->ttr[AT_BOTTOM].c_size;
 //  qDebug()<<pImpl->ottrLeft<<pImpl->ottrTop<<pImpl->ottrRight<<pImpl->ottrBottom;
-  return QSize(pImpl->c_width_margins + pImpl->ttr[AT_LEFT].c_size + pImpl->c_hint_draw_width + pImpl->ttr[AT_RIGHT].c_size, 
-               pImpl->c_height_margins + pImpl->ttr[AT_TOP].c_size + pImpl->c_hint_draw_height + pImpl->ttr[AT_BOTTOM].c_size);
+  
+//  return QSize(pImpl->c_width_margins + pImpl->ttr[AT_LEFT].c_size + pImpl->c_hint_draw_width + pImpl->ttr[AT_RIGHT].c_size, 
+//               pImpl->c_height_margins + pImpl->ttr[AT_TOP].c_size + pImpl->c_hint_draw_height + pImpl->ttr[AT_BOTTOM].c_size);
+  
+  int dw = qMax(pImpl->c_hint_draw_width, pDraw->minimumWidth());
+  int dh = qMax(pImpl->c_hint_draw_height, pDraw->minimumHeight());
+  return QSize(pImpl->c_width_margins + pImpl->ttr[AT_LEFT].c_size + dw + pImpl->ttr[AT_RIGHT].c_size, 
+               pImpl->c_height_margins + pImpl->ttr[AT_TOP].c_size + dh + pImpl->ttr[AT_BOTTOM].c_size);
 }
 
 //QSize DrawBars::sizeHint() const
@@ -3001,6 +2925,7 @@ QSize DrawBars::minimumSizeHint() const
 void DrawBars::resizeEvent(QResizeEvent* event)
 {
   QWidget::resizeEvent(event);
+  QSize esize = event->size();
   
   pImpl->c_margins = contentsMargins();
   int margin_width = pImpl->c_margins.left() + pImpl->c_margins.right();
@@ -3013,10 +2938,9 @@ void DrawBars::resizeEvent(QResizeEvent* event)
     PDRAWMOVE;
     updateGeometry();
   }
-  const QSize dsize = event->size() - QSize(pImpl->ttr[AT_LEFT].c_size + pImpl->ttr[AT_RIGHT].c_size,
+  const QSize dsize = esize - QSize(pImpl->ttr[AT_LEFT].c_size + pImpl->ttr[AT_RIGHT].c_size,
                                       pImpl->ttr[AT_TOP].c_size + pImpl->ttr[AT_BOTTOM].c_size)
                       - QSize(pImpl->c_width_margins, pImpl->c_height_margins);
-  
   int dwidth, dheight;
   
 #ifdef RAKOFLAG
@@ -3034,6 +2958,7 @@ void DrawBars::resizeEvent(QResizeEvent* event)
     dwidth = (int)pDraw->sizeHorz();
     dheight = (int)pDraw->sizeVert();
   }
+//  qDebug()<<pDraw->height()<<pDraw->sizeVert()<<pDraw->minimumHeight()<<dheight<<esize.height();
 //  if (this->accessibleName() == "Allo")
 //  {
 //    qDebug()<<"Allo  "<<resizeDrawWillAfterBars<<event->size()<<dsize<<QSize(dwidth, dheight);
@@ -3047,7 +2972,7 @@ void DrawBars::resizeEvent(QResizeEvent* event)
                        pDraw->rawResizeModeNoScaled()? 0 : dw,
                        pDraw->rawResizeModeNoScaled()? 0 : dh
                                                        );
-//    qDebug()<<event->size()<<width()<<height();
+//    qDebug()<<esize<<width()<<height();
   }
   if (resizeDrawWillAfterBars)
     pDraw->resize(dsize);
@@ -3111,14 +3036,16 @@ bool DrawBars::event(QEvent* ev)
     else if (pImpl->clr_policy == CP_DEFAULT) /// not-strict movement! for not to lose -1 (manual) color_policy
       pImpl->upbackPalette(this);
   }
-  else if (ev->type() == QEvent::LayoutRequest)
+  else if (ev->type() == QEvent::LayoutRequest)   /// child widget changed size implicitly
   {
+//    qDebug()<<"EJ JO!";
+    updateGeometry();
   }
-//  else
-//  {
+  else
+  {
 //    if (this->objectName() == "VAU")
-//      qDebug()<<ev->type();
-//  }
+//    qDebug()<<ev->type();
+  }
   return QWidget::event(ev);
 }
 

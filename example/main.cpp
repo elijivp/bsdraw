@@ -24,7 +24,7 @@
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)17
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)19
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)21
-#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)25
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)25
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)26
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)29
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)30

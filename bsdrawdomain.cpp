@@ -7,6 +7,11 @@
 #include <memory.h>
 #include "core/sheigen/bsshei2d.h"
 
+#if !defined DIDOMAIN_CHECKBOUNDS_ASSERT && !defined DIDOMAIN_CHECKBOUNDS_CONDITION && !defined DIDOMAIN_CHECKBOUNDS_IGNORE
+#define DIDOMAIN_CHECKBOUNDS_ASSERT
+#endif
+
+
 void DIDomain::_init(unsigned int width, unsigned int height, bool incbackground, unsigned int* count, float* dataptr)
 {
   m_width = width;
@@ -27,20 +32,41 @@ void DIDomain::finish()
 
 void DIDomain::includeRow(int row)
 {
+#ifdef DIDOMAIN_CHECKBOUNDS_ASSERT
   Q_ASSERT(row >= 0 && row < (int)m_height);
+#elif defined DIDOMAIN_CHECKBOUNDS_CONDITION
+  if (row < 0 || row >= (int)m_height)
+    return;
+#endif
   for (unsigned int i=0; i<m_width; i++)
     m_dataptr[m_width*row + i] = *m_count;
 }
 
 void DIDomain::includeColumn(int column)
 {
+#ifdef DIDOMAIN_CHECKBOUNDS_ASSERT
   Q_ASSERT(column >= 0 && column < (int)m_width);
+#elif defined DIDOMAIN_CHECKBOUNDS_CONDITION
+  if (column < 0 || column >= (int)m_width)
+    return;
+#endif
   for (unsigned int i=0; i<m_height; i++)
     m_dataptr[m_width*i + column] = *m_count;
 }
 
 void DIDomain::includeRect(int left, int top, int width, int height)
 {
+#ifdef DIDOMAIN_CHECKBOUNDS_ASSERT
+  Q_ASSERT(width >= 0 && height >= 0);
+  Q_ASSERT(left >= 0 && left + width <= (int)m_width);
+  Q_ASSERT(top >= 0 && top + height <= (int)m_height);
+#elif defined DIDOMAIN_CHECKBOUNDS_CONDITION
+  if (width < 0 || height < 0)  return;
+  if (left < 0) left = 0;
+  if (top < 0)  top = 0;
+  if (left + width > (int)m_width)   width = (int)m_width - left;
+  if (top + height > (int)m_height)  height = (int)m_height - top;
+#endif
 //  for (int i=left; i<left+width; i++)
 //    for (int j=top; j<top+height; j++)
 //      m_dataptr[m_height*j + i] = *m_count;
@@ -51,7 +77,13 @@ void DIDomain::includeRect(int left, int top, int width, int height)
 
 void DIDomain::includePixel(int r, int c)
 {
-  Q_ASSERT(r >= 0 && c >= 0 && r < (int)m_height && c < (int)m_width);
+#ifdef DIDOMAIN_CHECKBOUNDS_ASSERT
+  Q_ASSERT(r >= 0 && r < (int)m_height);
+  Q_ASSERT(c >= 0 && c < (int)m_width);
+#elif defined DIDOMAIN_CHECKBOUNDS_CONDITION
+  if (r < 0 || r >= (int)m_height) return;
+  if (c < 0 || c >= (int)m_width) return;
+#endif
   m_dataptr[m_width*r + c] = *m_count;
 }
 
@@ -59,7 +91,12 @@ void DIDomain::includePixel(int r, int c)
 
 void DIDomain::includeRowFree(int row)
 {
+#ifdef DIDOMAIN_CHECKBOUNDS_ASSERT
   Q_ASSERT(row >= 0 && row < (int)m_height);
+#elif defined DIDOMAIN_CHECKBOUNDS_CONDITION
+  if (row < 0 || row >= (int)m_height)
+    return;
+#endif
   for (unsigned int i=0; i<m_width; i++)
     if (m_dataptr[m_width*row + i] == 0.0f)
       m_dataptr[m_width*row + i] = *m_count;
@@ -67,7 +104,12 @@ void DIDomain::includeRowFree(int row)
 
 void DIDomain::includeColumnFree(int column)
 {
+#ifdef DIDOMAIN_CHECKBOUNDS_ASSERT
   Q_ASSERT(column >= 0 && column < (int)m_width);
+#elif defined DIDOMAIN_CHECKBOUNDS_CONDITION
+  if (column < 0 || column >= (int)m_width)
+    return;
+#endif
   for (unsigned int i=0; i<m_height; i++)
     if (m_dataptr[m_width*i + column] == 0.0f)
       m_dataptr[m_width*i + column] = *m_count;
@@ -75,6 +117,17 @@ void DIDomain::includeColumnFree(int column)
 
 void DIDomain::includeRectFree(int left, int top, int width, int height)
 {
+#ifdef DIDOMAIN_CHECKBOUNDS_ASSERT
+  Q_ASSERT(width >= 0 && height >= 0);
+  Q_ASSERT(left >= 0 && left + width <= (int)m_width);
+  Q_ASSERT(top >= 0 && top + height <= (int)m_height);
+#elif defined DIDOMAIN_CHECKBOUNDS_CONDITION
+  if (width < 0 || height < 0)  return;
+  if (left < 0) left = 0;
+  if (top < 0)  top = 0;
+  if (left + width > (int)m_width)   width = (int)m_width - left;
+  if (top + height > (int)m_height)  height = (int)m_height - top;
+#endif
 //  for (int i=left; i<left+width; i++)
 //    for (int j=top; j<top+height; j++)
 //      m_dataptr[m_height*j + i] = *m_count;
@@ -86,13 +139,26 @@ void DIDomain::includeRectFree(int left, int top, int width, int height)
 
 void DIDomain::includePixelFree(int r, int c)
 {
-  Q_ASSERT(r >= 0 && c >= 0 && r < (int)m_height && c < (int)m_width);
+#ifdef DIDOMAIN_CHECKBOUNDS_ASSERT
+  Q_ASSERT(r >= 0 && r < (int)m_height);
+  Q_ASSERT(c >= 0 && c < (int)m_width);
+#elif defined DIDOMAIN_CHECKBOUNDS_CONDITION
+  if (r < 0 || r >= (int)m_height) return;
+  if (c < 0 || c >= (int)m_width) return;
+#endif
   if (m_dataptr[m_width*r + c] == 0.0f)
     m_dataptr[m_width*r + c] = *m_count;
 }
 
 bool DIDomain::isFree(int r, int c) const
 {
+#ifdef DIDOMAIN_CHECKBOUNDS_ASSERT
+  Q_ASSERT(r >= 0 && r < (int)m_height);
+  Q_ASSERT(c >= 0 && c < (int)m_width);
+#elif defined DIDOMAIN_CHECKBOUNDS_CONDITION
+  if (r < 0 || r >= (int)m_height) return false;
+  if (c < 0 || c >= (int)m_width) return false;
+#endif
   return m_dataptr[m_width*r + c] == 0.0f;
 }
 
@@ -100,20 +166,41 @@ bool DIDomain::isFree(int r, int c) const
 
 void DIDomain::excludeRow(int row)
 {
+#ifdef DIDOMAIN_CHECKBOUNDS_ASSERT
   Q_ASSERT(row >= 0 && row < (int)m_height);
+#elif defined DIDOMAIN_CHECKBOUNDS_CONDITION
+  if (row < 0 || row >= (int)m_height)
+    return;
+#endif
   for (unsigned int i=0; i<m_width; i++)
     m_dataptr[m_width*row + i] = 0.0f;
 }
 
 void DIDomain::excludeColumn(int column)
 {
+#ifdef DIDOMAIN_CHECKBOUNDS_ASSERT
   Q_ASSERT(column >= 0 && column < (int)m_width);
+#elif defined DIDOMAIN_CHECKBOUNDS_CONDITION
+  if (column < 0 || column >= (int)m_width)
+    return;
+#endif
   for (unsigned int i=0; i<m_height; i++)
     m_dataptr[m_width*i + column] = 0.0f;
 }
 
 void DIDomain::excludeRect(int left, int top, int width, int height)
 {
+#ifdef DIDOMAIN_CHECKBOUNDS_ASSERT
+  Q_ASSERT(width >= 0 && height >= 0);
+  Q_ASSERT(left >= 0 && left + width <= (int)m_width);
+  Q_ASSERT(top >= 0 && top + height <= (int)m_height);
+#elif defined DIDOMAIN_CHECKBOUNDS_CONDITION
+  if (width < 0 || height < 0)  return;
+  if (left < 0) left = 0;
+  if (top < 0)  top = 0;
+  if (left + width > (int)m_width)   width = (int)m_width - left;
+  if (top + height > (int)m_height)  height = (int)m_height - top;
+#endif
   for (int i=top; i<top+height; i++)
     for (int j=left; j<left+width; j++)
       m_dataptr[m_width*i + j] = 0.0f;
@@ -121,7 +208,13 @@ void DIDomain::excludeRect(int left, int top, int width, int height)
 
 void DIDomain::excludePixel(int r, int c)
 {
-  Q_ASSERT(r >= 0 && c >= 0 && r < (int)m_height && c < (int)m_width);
+#ifdef DIDOMAIN_CHECKBOUNDS_ASSERT
+  Q_ASSERT(r >= 0 && r < (int)m_height);
+  Q_ASSERT(c >= 0 && c < (int)m_width);
+#elif defined DIDOMAIN_CHECKBOUNDS_CONDITION
+  if (r < 0 || r >= (int)m_height) return;
+  if (c < 0 || c >= (int)m_width) return;
+#endif
   m_dataptr[m_width*r + c] = 0.0f;
 }
 

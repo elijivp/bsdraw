@@ -9,7 +9,115 @@ Source code for 4 principal types of graphs, drawed by fragment and vertex shade
 All shaders in bsdraw are compatible with glsl 130, but by default BSGLSLVER is not set. So
 if you have any issues, add DEFINES+=BSGLSLVER=130 in your .pro file.
 
-### Simple example:
+### Getting started with simple_example_1D_with_scales:
+```
+#include <QApplication>
+
+#include "bsdrawgraph.h"    // INCLUDEPATH includes bsdraw dir in .pro file
+#include "palettes/bspalettes_std.h"
+#include "bsdrawscales.h"
+
+int main(int argc, char *argv[])
+{
+  QApplication a(argc, argv);
+  
+  /// Data generation
+  const unsigned int COUNT_SAMPLES = 128;
+  const unsigned int COUNT_PORTIONS = 1;     /// graphs on draw
+  float arr_random[COUNT_SAMPLES*COUNT_PORTIONS];
+  for (unsigned int i=0; i<COUNT_SAMPLES*COUNT_PORTIONS; i++)
+    arr_random[i] = rand()/float(RAND_MAX);  /// default data diapason 0..1
+  
+  /// Drawing
+  DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES, COUNT_PORTIONS, graphopts_t::goInterp(0.5f, DE_LINTERP), coloropts_t::copts());
+  pDraw->setDataPalette(&paletteBkBlWh);  // dont forget to set palette. Default palette is null
+  pDraw->setScalingLimitsHorz(4);   // 'space' occupied by one sample. Default is 1
+  pDraw->setMinimumHeight(100);
+  pDraw->setData(arr_random);     // default draw bounds are 0..1
+  
+  DrawBars* pDB = new DrawBars(pDraw, DrawBars::CP_FROM_DRAWPALETTE);
+  pDB->addContour(AT_TOP, 0);   // horizontal line, serving as a delimiter, if you need it
+  pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED_POW2, 0, 1000.0f, 20, 36);
+  pDB->addScaleDrawGraphB(AT_LEFT, DBMODE_STRETCHED_POW2, 20, 20);
+  pDB->show();  // resize me :)
+  
+  return a.exec();
+}
+```
+Result:
+![simple_example_1D_with_scales.png](/demoimages/simple_example_1D_with_scales.png)
+
+### Getting started with simple_example_2D:
+```
+#include <QApplication>
+
+#include "bsdrawintensity.h"      // INCLUDEPATH includes bsdraw dir in .pro file
+#include "palettes/bspalettes_std.h"
+
+int main(int argc, char *argv[])
+{
+  QApplication a(argc, argv);
+  
+  /// Data generation
+  const unsigned int COUNT_SAMPLES = 80;
+  const unsigned int COUNT_ROWS = 40;
+  float arr_random[COUNT_SAMPLES*COUNT_ROWS];
+  for (unsigned int i=0; i<COUNT_SAMPLES*COUNT_ROWS; i++)
+    arr_random[i] = rand()/float(RAND_MAX);  /// default data diapason 0..1
+  
+  /// Drawing
+  DrawQWidget* pDraw = new DrawIntensity(COUNT_SAMPLES, COUNT_ROWS, 1, OR_LRBT);  // LRBT - left-to-right, bottom-to-top
+  pDraw->setDataPalette(&paletteBkBlWh);  // dont forget to set palette. default palette is null.
+  pDraw->setScalingLimitsSynced(4); // each sample is now 4 pixels
+  pDraw->setData(arr_random);     // default draw bounds are 0..1. default data is 0.
+  pDraw->show();
+  
+  return a.exec();
+}
+```
+Result:
+![simple_example_2D.png](/demoimages/simple_example_2D.png)
+
+### Getting started with simple_example_domain:
+```
+#include <QApplication>
+
+#include "bsdrawdomain.h"      // INCLUDEPATH includes bsdraw dir in .pro file
+#include "palettes/bspalettes_std.h"
+
+int main(int argc, char *argv[])
+{
+  QApplication a(argc, argv);
+  
+  /// Data generation
+  const unsigned int COUNT_SAMPLES = 80;
+  const unsigned int COUNT_ROWS = 40;
+  float arr_random[COUNT_SAMPLES*COUNT_ROWS];
+  for (unsigned int i=0; i<COUNT_SAMPLES*COUNT_ROWS; i++)
+    arr_random[i] = rand()/float(RAND_MAX);  /// default data diapason 0..1
+  
+  /// Drawing
+  DrawDomain* pDraw = new DrawDomain(COUNT_SAMPLES, COUNT_ROWS, 1, OR_LRBT);  // LRBT - left-to-right, bottom-to-top
+  DIDomain* dd = pDraw->domain();
+  for (int i=0; i<COUNT_ROWS/2; i++)
+  {
+    dd->start();
+    dd->includeRect(i, i, COUNT_SAMPLES - 2*i, COUNT_ROWS - 2*i);   /// rectangles inside
+    dd->finish();
+  }
+  
+  pDraw->setDataPalette(&paletteBkWh);  // dont forget to set palette. default palette is null.
+  pDraw->setScalingLimitsSynced(4); // each sample is now 4 pixels
+  pDraw->setData(arr_random);     // default draw bounds are 0..1. default data is 0.
+  pDraw->show();
+  
+  return a.exec();
+}
+```
+Result:
+![simple_example_domain.png](/demoimages/simple_example_domain.png)
+
+### One more example:
 ```
 DrawQWidget* pDraw = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.2f, DE_LINTEPR, 0x00333333, 1, 0.5f), DrawGraph::CP_OWNRANGE);
 pDraw->setDataPalette(&palette_gnu_latte);

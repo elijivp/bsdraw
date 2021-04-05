@@ -502,7 +502,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       if (i < 3)
         gts[i].postrect = PR_VALUEAROUND;
       else
+      {
         gts[i].opacity = 0.8f;
+        gts[i].smooth = -1.0f;
+      }
       draws[i] = new DrawGraph(SAMPLES, PORTIONS, gts[i]);
       draws[i]->setPostMask(fsp[i]);
       
@@ -642,9 +645,9 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(4, 1);
     
     graphopts_t  gopts[] = { graphopts_t::goDots(0, 0.0f, DE_NONE), 
-                             graphopts_t::goInterp(0.1f, DE_LINTERP), 
-                             graphopts_t::goInterp(0.1f, DE_SINTERP), 
-                             graphopts_t::goInterp(0.1f, DE_QINTERP), 
+                             graphopts_t::goInterp(0.2f, DE_LINTERP), 
+                             graphopts_t::goInterp(0.2f, DE_SINTERP), 
+                             graphopts_t::goInterp(0.2f, DE_QINTERP), 
                            };
     const char*  gnames[] = { "Original Data", "Linear interpolation", "Smooth by 3 points", "Smooth by 4 points" };
     
@@ -740,7 +743,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     for (unsigned int i=0; i<drawscount; i++)
     {
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.5f, DE_QINTERP), coloropts_t::copts(cps[i], 1.0f, 0.3f));
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.3f, DE_QINTERP), coloropts_t::copts(cps[i], 1.0f, 0.3f));
 //      draws[i]->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f));
       draws[i]->setScalingLimitsHorz(7);
       

@@ -6,6 +6,7 @@
 #include "core/sheigen/bsshgenmain.h"
 
 #include <QPainter>
+#include <QtMath>
 
 class SheiGeneratorPolar: public ISheiGenerator
 {
@@ -252,31 +253,31 @@ void DrawPolar::paintGL()
 //  qDebug()<<m_viewTurn;
   
   DrawQWidget::paintGL();
-  int countDataHorz = ((SheiGeneratorPolar*)m_pcsh)->m_samplesHorz;
-  if (!m_rawResizeModeNoScaled)
-  {
-    if (m_matrixSwitchAB)
-      glViewport(0, c_height - sizeA() - m_cttrTop - m_cttrBottom, sizeB() + m_cttrLeft + m_cttrRight, sizeA() + m_cttrTop + m_cttrBottom);
-    else
-      glViewport(0, c_height - sizeB() - m_cttrTop - m_cttrBottom, sizeA() + m_cttrLeft + m_cttrRight, sizeB() + m_cttrTop + m_cttrBottom);
-  }
+//  int countDataHorz = ((SheiGeneratorPolar*)m_pcsh)->m_samplesHorz;
+//  if (!m_rawResizeModeNoScaled)
+//  {
+//    if (m_matrixSwitchAB)
+//      glViewport(0, c_height - sizeA() - m_cttrTop - m_cttrBottom, sizeB() + m_cttrLeft + m_cttrRight, sizeA() + m_cttrTop + m_cttrBottom);
+//    else
+//      glViewport(0, c_height - sizeB() - m_cttrTop - m_cttrBottom, sizeA() + m_cttrLeft + m_cttrRight, sizeB() + m_cttrTop + m_cttrBottom);
+//  }
   
-  float rx = (sizeA() + 2)/float(sizeA() + m_cttrLeft + m_cttrRight);
-  float ry = (sizeB() + 2)/float(sizeB() + m_cttrTop + m_cttrBottom);
-  double g2p = M_PI/180.0;
-  double g2p2 = (m_deltaScale - 0.25f + m_viewTurn)*M_PI*2.0;
-  const int degree_step = 15;
-  for (int i=0; i<360/degree_step; i++)
-  {
-    int degree = i*degree_step;
-    float x = rx*sin(g2p*degree + g2p2);
-    float y = ry*cos(g2p*degree + g2p2);
-    y -= (ry - y)*m_dgt->marginVert()/sizeB();
-    int ew = m_dgt->width(degree);
-    x -= (rx - x)*ew/sizeA();
-    glRasterPos2f(x,y);
-    glDrawPixels(ew, m_dgt->marginVert(), GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, m_dgt->bits(degree));
-  }
+//  float rx = (sizeA() + 2)/float(sizeA() + m_cttrLeft + m_cttrRight);
+//  float ry = (sizeB() + 2)/float(sizeB() + m_cttrTop + m_cttrBottom);
+//  double g2p = M_PI/180.0;
+//  double g2p2 = (m_deltaScale - 0.25f + m_viewTurn)*M_PI*2.0;
+//  const int degree_step = 15;
+//  for (int i=0; i<360/degree_step; i++)
+//  {
+//    int degree = i*degree_step;
+//    float x = rx*sin(g2p*degree + g2p2);
+//    float y = ry*cos(g2p*degree + g2p2);
+//    y -= (ry - y)*m_dgt->marginVert()/sizeB();
+//    int ew = m_dgt->width(degree);
+//    x -= (rx - x)*ew/sizeA();
+//    glRasterPos2f(x,y);
+//    glDrawPixels(ew, m_dgt->marginVert(), GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, m_dgt->bits(degree));
+//  }
 //  QPixmap qpm(100, 20);
 //  QPainter pp(&qpm);
 //  pp.drawText(0,0, "ABC");

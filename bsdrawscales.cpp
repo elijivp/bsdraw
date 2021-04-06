@@ -1765,12 +1765,20 @@ protected:
         if (last != total-1)
         {
           texts[last].visible = 0;
+          if (algoType == DBMODE_STATIC)
+          {
+//            texts[total - 1].uarea_pos = texts[last].uarea_pos;
+            _recalcPos(total-1, area.atto, ua_marks[ua_marklinks2[last]].anchor, ua_marks[ua_marklinks2[last]].anchor, DOCK_PREV);  // why dock_prev? intuition
+          }
+          else
+          {
 #if 1
-//          _recalcPos(total-1, area.atto, ua_marks[ua_marklinks2[last]].anchor, ua_marks[ua_marklinks2[total]].anchor, docking == DOCK_PREV? DOCK_NEXT : docking == DOCK_NEXT? DOCK_PREV : DOCK_BETWEEN);
-          _recalcPos(total-1, area.atto, ua_marks[ua_marklinks2[last]].anchor, ua_marks[ua_marklinks2[total]].anchor, DOCK_NEXT);
+//            _recalcPos(total-1, area.atto, ua_marks[ua_marklinks2[last]].anchor, ua_marks[ua_marklinks2[total]].anchor, docking == DOCK_PREV? DOCK_NEXT : docking == DOCK_NEXT? DOCK_PREV : DOCK_BETWEEN);
+            _recalcPos(total-1, area.atto, ua_marks[ua_marklinks2[last]].anchor, ua_marks[ua_marklinks2[total]].anchor, DOCK_NEXT);
 #else
-          texts[total - 1].uarea_pos = texts[last].uarea_pos;
+            texts[total - 1].uarea_pos = texts[last].uarea_pos;
 #endif
+          }
         }
       }
     }
@@ -2597,13 +2605,12 @@ MEWScaleNN* DrawBars::addScaleFixedMod(ATTACHED_TO atto, int flags, float LL, fl
 
 inline int countMaxNumbers(int marksCount)
 {
-  int n = 1;
-  while (marksCount % 10 != 0)
-  {
-    marksCount /= 10;
-    n++;
-  }
-  return n;
+  static int power[] = { 0, 10, 100, 1000, 10000, 100000, 1000000, 10000000 };
+  static const int pcount = sizeof(power)/sizeof(unsigned int);
+  for (int i=0; i<pcount; i++)
+    if (marksCount < power[i])
+      return i;
+  return -1;
 }
 
 MEWScaleNM* DrawBars::addScaleEnumerator(ATTACHED_TO atto, int flags, int marksCount, int pixStep_pixSpacing, unsigned int step, const char* postfix)

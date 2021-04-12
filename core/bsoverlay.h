@@ -116,6 +116,8 @@ public:
   OVLCoordsStatic(OVLCoordsStatic* cpy, float x=0.0f, float y=0.0f): m_cn(cpy->m_cn){  m_coords.x = cpy->m_coords.x + x; m_coords.y = cpy->m_coords.y + y; }
   COORDINATION  getCoordination() const { return m_cn; }
   void          getCoordinates(float* x, float* y) const { *x = m_coords.x; *y = m_coords.y;  }
+  float         getCoordX() const { return m_coords.x; }
+  float         getCoordY() const { return m_coords.y; }
   void          getCoordinates(ovlcoords_t* coords) const { *coords = m_coords; }
 public:
   typedef   OVLCoordsStatic   coords_type_t;
@@ -127,6 +129,8 @@ public:
   OVLCoordsDynamic(COORDINATION cn, float x, float y): OVLCoordsStatic(cn, x, y) {  appendUniform(DT_2F, (const void*)&m_coords); }
   OVLCoordsDynamic(OVLCoordsStatic* cpy, float x, float y): OVLCoordsStatic(cpy, x, y) { appendUniform(DT_2F, (const void*)&m_coords); }
   void          setCoordinates(float x, float y){ m_coords.x = x; m_coords.y = y; overlayUpdateParameter(); }
+  void          setCoordX(float x){ m_coords.x = x; overlayUpdateParameter(); }
+  void          setCoordY(float y){ m_coords.y = y; overlayUpdateParameter(); }
 public:
   typedef   OVLCoordsDynamic  coords_type_t;
 };

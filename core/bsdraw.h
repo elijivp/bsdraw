@@ -227,6 +227,9 @@ public:
   void                  setBoundLow(float LL){ m_bounds.LL = LL; _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);       m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
   void                  setBoundHigh(float HL){ m_bounds.HL = HL; _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);      m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
   bounds_t              bounds() const { return m_bounds; }
+  float                 boundLow() const { return m_bounds.LL; }
+  float                 boundHigh() const { return m_bounds.HL; }
+  float                 boundLength() const { return m_bounds.HL - m_bounds.LL; }
   
   void                  setContrast(float k, float b){ m_loc_k = k; m_loc_b = b; _bsdraw_update_bnd(m_loc_k, m_loc_b, &m_bounds); m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
   void                  setContrastK(float k){ m_loc_k = k; _bsdraw_update_bnd(m_loc_k, m_loc_b, &m_bounds);            m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
@@ -383,7 +386,7 @@ public:
   }
   virtual void clearData()
   {
-    unsigned int total = m_countPortions * m_portionSize;
+    unsigned int total = m_allocatedPortions * m_portionSize;
     for (unsigned int i=0; i<total; i++)
       m_matrixData[i] = 0;
     m_bitmaskPendingChanges |= PC_DATA;

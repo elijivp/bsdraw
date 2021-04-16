@@ -2076,7 +2076,7 @@ class DrawBars_impl
 public:
   DrawBars_impl():
     c_mirroredHorz(false), c_mirroredVert(false),
-    drawCoreInited(false), main_opacity(1.0f){}
+    drawCoreInited(false), main_opacity(0.0f){}
   
   int           c_hint_draw_width, c_hint_draw_height;
   bool          c_mirroredHorz, c_mirroredVert;
@@ -3018,8 +3018,8 @@ void DrawBars::paintEvent(QPaintEvent* event)
   
   painter.setPen(pImpl->c_front_pen);
   painter.setBrush(pImpl->c_front_brush);
-  if (pImpl->main_opacity < 1.0f)
-    painter.setOpacity(pImpl->main_opacity);
+  if (pImpl->main_opacity > 0.0f)
+    painter.setOpacity(1.0f - pImpl->main_opacity);
   painter.translate(QPoint(pImpl->c_margins.left(), pImpl->c_margins.top()));
   for (int d=0; d<4; d++)
     for (int i=0; i<pImpl->elems[d].count(); i++)

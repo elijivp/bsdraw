@@ -258,7 +258,8 @@ inline linestyle_t    linestyle_blue(unsigned int lstroke, unsigned int lspace, 
 inline linestyle_t    linestyle_orange(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 1,0.6f,0.3f, 0, ols); }
 inline linestyle_t    linestyle_redlight(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 1,0.6f,0.6f, 0, ols); }
 inline linestyle_t    linestyle_green(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0,1,0, 0, ols); }
-inline linestyle_t    linestyle_bluelight(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0.6f,1,1, 0, ols); }
+inline linestyle_t    linestyle_bluelight(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0.5f,0.75f,1, 0, ols); }
+inline linestyle_t    linestyle_bluesoft(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0.35f,0.65f,1, 0, ols); }
 inline linestyle_t    linestyle_purple(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 1,0,1, 0, ols); }
 inline linestyle_t    linestyle_grey(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0.5f,0.5f,0.5f, 0, ols); }
 inline linestyle_t    linestyle_greylight(unsigned int lstroke, unsigned int lspace, unsigned int dots, OUTSIDELINE ols=OLS_OPACITY_LINEAR){ return __linestyle__(lstroke, lspace, dots, 0.7f,0.7f,0.7f, 0, ols); }

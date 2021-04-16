@@ -64,7 +64,8 @@ SOURCES += main.cpp\
     ../specdraws/bsdrawsdpicture.cpp \
     ../core/bsqoverlay.cpp \
     ../overlays/special/bsbounded.cpp \
-    ../palettes/QPaletteExtractor.cpp
+    ../palettes/QPaletteExtractor.cpp \
+    ../specdraws/bsdrawhint.cpp
 
 HEADERS  += \
     ../specdraws/bsdrawpolar.h \
@@ -215,7 +216,8 @@ HEADERS  += \
     ../palettes/advanced/mat_copper.h \
     ../palettes/advanced/idl_nature.h \
     ../palettes/QPaletteExtractor.h \
-    ../palettes/bspalettes_spec.h
+    ../palettes/bspalettes_spec.h \
+    ../specdraws/bsdrawhint.h
 
 RESOURCES += \
     ../palettes/QPaletteBox.qrc

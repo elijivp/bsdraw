@@ -18,6 +18,7 @@
 #include "specdraws/bsdrawempty.h"
 #include "specdraws/bsdrawsdpicture.h"
 #include "specdraws/bsdrawpolar.h"
+#include "specdraws/bsdrawhint.h"
 
 #include "overlays/bsinteractive.h"
 #include "overlays/bsgrid.h"
@@ -868,6 +869,38 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(1, 1);
     draws[0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.2f, DE_QINTERP), coloropts_t::copts(CP_SINGLE, 1.0f, 1.0f, 0x777777));
 //    sigtype = ST_MOVE;
+//    defaultPalette = ppalettes_adv[11];
+  }
+  else if (MW_TEST == HINTS)
+  {
+    SAMPLES = 180;
+    MAXLINES = 50;
+    PORTIONS = 3;
+//    PRECREATE(1 + PORTIONS, 1);
+//    draws[0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.2f, DE_QINTERP), coloropts_t::copts(CP_SINGLE, 0.5f, 1.0f, 0x777777));
+//    for (int i=0; i<PORTIONS; i++)
+//      draws[1 + i] = new DrawHint((DrawGraph*)draws[0], i, DH_LINE, OR_LRTB);
+//    sigtype = ST_MOVE;
+    int TD = PORTIONS+1;
+    PRECREATE(TD, PORTIONS);
+    for (int i=0; i<PORTIONS; i++)
+    {
+      draws[TD*i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.2f, DE_QINTERP), coloropts_t::copts(CP_SINGLE, 0.5f, 1.0f, 0x777777));
+      draws[TD*i]->setFixedHeight(600);
+    }
+    int flags[] = {
+      DH_LINE, DH_FILL, DH_DIAGONAL,
+      DH_SAW | 2, DH_TRIANGLE | 2, DH_MEANDER | 2,
+      DH_SAW | 12, DH_TRIANGLE | 12, DH_MEANDER | 12
+    };
+    for (int i=0; i<PORTIONS; i++)
+    {
+      for (int j=0; j<PORTIONS; j++)
+      {
+        draws[1 + TD*i + j] = new DrawHint((DrawGraph*)draws[TD*i], i, flags[i*PORTIONS + j] | DH_AUTOMARGIN_0, OR_LRTB);
+      }
+    }
+    sigtype = ST_MOVE;
 //    defaultPalette = ppalettes_adv[11];
   }
   else if (MW_TEST == ADV_PALETTES)    /// advanced palettes show

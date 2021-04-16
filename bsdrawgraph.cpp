@@ -451,42 +451,6 @@ public:
                     "}" SHNL                    
                   "}" SHNL);
       }
-  
-//      if (graphopts.dotsize)
-//      {       
-//        fmg.push( "{" SHNL
-//                    "float hscx = floor(iscaling.x/2.0 + 0.49);" SHNL);
-//        if (graphopts.dotsize > 0)
-//          fmg.cintvar("dotsize", graphopts.dotsize);
-//        else
-//        {
-//          fmg.cintvar("godot", -graphopts.dotsize - 1);
-//          fmg.push("int dotsize = max(int(hscx) + godot, 0);" SHNL);
-//        }
-//        fmg.push("int dist_limit = int(max((dotsize-1) - hscx + 1, 0.0));" SHNL);
-//        fmg.cfloatvar("dotsmooth", graphopts.dotsmooth);
-        
-//        if (deinterp)
-//          fmg.push("float remoded_x = float(relcoords.x*ibounds.x - immod.x)/fbounds.x*ibounds_noscaled.x + (1.0 - step(float(immod.x), hscx));" SHNL
-//                   "vec2  remodedoffs = vec2(hscx, 0.0);" SHNL
-//                   );
-//        else
-//          fmg.push("float remoded_x = float(relcoords.x*ibounds.x - immod.x)/fbounds.x*ibounds_noscaled.x;" SHNL
-//                   "vec2  remodedoffs = vec2(0.0, 0.0);" SHNL
-//                   );
-        
-//        fmg.push(   "for (int j=-dist_limit; j<=dist_limit; j++)" SHNL
-//                    "{" SHNL
-//                      "float reltoval = float(remoded_x + j)/ibounds_noscaled.x;" SHNL
-//                      "float NVALCLR = getValue1D(i, reltoval);" SHNL
-//                      "float fdist_weight = clamp("
-//                    "(dotsize - distance(fcoords + remodedoffs, vec2( floor(reltoval*fbounds.x), floor(NVALCLR*(ibounds.y-1))) + vec2(hscx, 0.0)) ) / float(dotsize), 0.0, float(dotsize));" SHNL
-//                      "fdist_weight = min(fdist_weight*(1.0 + dotsmooth), 1.0);" SHNL
-//                      "VALCLR = mix(NVALCLR, VALCLR, step(fdist_weight, MIXWELL));" SHNL // calc before new MIXWELL
-//                      "MIXWELL = mix(fdist_weight, MIXWELL, step(fdist_weight, MIXWELL));" SHNL
-//                    "}" SHNL                    
-//                  "}" SHNL);
-//      }
       
       float base = coloropts.cstart;
       float interval = coloropts.cstop - coloropts.cstart;

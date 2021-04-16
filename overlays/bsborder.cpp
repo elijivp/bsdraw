@@ -103,7 +103,7 @@ int ORowSelected::fshTrace(int overlay, bool rotated, char* to) const
     ocg.push("border = int(border/2.0 + 0.5);");
     ocg.push( 
                 "result.xy += vec2(step(iscaling.x*selected-border-1, icoords.x)*step(icoords.x, iscaling.x*selected-1), icoords.y);"
-                "result.xy += vec2(step(iscaling.x*selected + iscaling.x + 1, icoords.x)*step(icoords.x, iscaling.x*selected + iscaling.x + border + 1), icoords.y);"
+                "result.xy += vec2(step(iscaling.x*selected + iscaling.x , icoords.x)*step(icoords.x, iscaling.x*selected + iscaling.x + border ), icoords.y);"
           );
   }  
   ocg.goto_func_end(true);
@@ -126,7 +126,7 @@ int OColumnSelected::fshTrace(int overlay, bool rotated, char* to) const
     ocg.push("border = int(border/2.0 + 0.5);");
     ocg.push( 
                 "result.xy += vec2(step(iscaling.y*selected-border-1, icoords.y)*step(icoords.y, iscaling.y*selected-1), icoords.x);"
-                "result.xy += vec2(step(iscaling.y*selected + iscaling.y + 1, icoords.y)*step(icoords.y, iscaling.y*selected + iscaling.y + border + 1), icoords.x);"
+                "result.xy += vec2(step(iscaling.y*selected + iscaling.y , icoords.y)*step(icoords.y, iscaling.y*selected + iscaling.y + border ), icoords.x);"
           );
   }  
   ocg.goto_func_end(true);

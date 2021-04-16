@@ -743,12 +743,21 @@ void DrawQWidget::paintGL()
 
 void DrawQWidget::resizeGL(int w, int h)
 {
-//  qDebug()<<"@!E#!";
-//  c_height = height();
   c_width = w;
   c_height = h;
-  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
 //  qDebug()<<m_cttrLeft<<m_cttrTop<<m_cttrRight<<m_cttrBottom;
+#if 1
+  int ml, mt, mr, mb;
+  getContentsMargins(&ml, &mt, &mr, &mb);
+  if (ml != m_cttrLeft || mt != m_cttrTop || mr != m_cttrRight || mb != m_cttrBottom)
+  {
+    m_cttrLeft = ml;  m_cttrRight = mr;  m_cttrTop = mt;  m_cttrBottom = mb;
+    updateGeometry();
+    return;   /// ?????????
+  }
+#else
+  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
+#endif
   w -= m_cttrLeft + m_cttrRight;
   h -= m_cttrTop + m_cttrBottom;
   

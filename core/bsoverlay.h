@@ -128,9 +128,9 @@ class OVLCoordsDynamic: public OVLCoordsStatic, virtual protected AbstractDrawOv
 public:
   OVLCoordsDynamic(COORDINATION cn, float x, float y): OVLCoordsStatic(cn, x, y) {  appendUniform(DT_2F, (const void*)&m_coords); }
   OVLCoordsDynamic(OVLCoordsStatic* cpy, float x, float y): OVLCoordsStatic(cpy, x, y) { appendUniform(DT_2F, (const void*)&m_coords); }
-  void          setCoordinates(float x, float y){ m_coords.x = x; m_coords.y = y; overlayUpdateParameter(); }
-  void          setCoordX(float x){ m_coords.x = x; overlayUpdateParameter(); }
-  void          setCoordY(float y){ m_coords.y = y; overlayUpdateParameter(); }
+  void          setCoordinates(float x, float y, bool update=true){ m_coords.x = x; m_coords.y = y; if (update) overlayUpdateParameter(); }
+  void          setCoordX(float x, bool update=true){ m_coords.x = x; if (update) overlayUpdateParameter(); }
+  void          setCoordY(float y, bool update=true){ m_coords.y = y; if (update) overlayUpdateParameter(); }
 public:
   typedef   OVLCoordsDynamic  coords_type_t;
 };
@@ -159,7 +159,7 @@ public:
 class OVLDimms1Dynamic: public OVLDimms1Static, virtual protected AbstractDrawOverlay
 {
 public:
-  void          setSide(float side) { m_side = side; overlayUpdateParameter(); }
+  void          setSide(float side, bool update=true) { m_side = side; if (update) overlayUpdateParameter(); }
   OVLDimms1Dynamic(COORDINATION cn, float aside): OVLDimms1Static(cn, aside) { appendUniform(DT_1F, (const void*)&m_side); }
   typedef OVLDimms1Dynamic  dimms_type_t;
 };
@@ -184,7 +184,7 @@ class OVLDimms2Dynamic: public OVLDimms2Static, virtual protected AbstractDrawOv
 {
 public:
   OVLDimms2Dynamic(COORDINATION cn, float width, float height): OVLDimms2Static(cn, width, height){ appendUniform(DT_2F, (const void*)&m_sides); }
-  void          setDimms(float width, float height){ m_sides.w = width; m_sides.h = height; overlayUpdateParameter(false); }
+  void          setDimms(float width, float height, bool update=true){ m_sides.w = width; m_sides.h = height; if (update) overlayUpdateParameter(false); }
   typedef OVLDimms2Dynamic   dimms_type_t;
 };
 

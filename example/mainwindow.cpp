@@ -233,7 +233,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
       draws[3*i + 2] = new DrawGraph(SAMPLES, PORTIONS, gopts[i]);
       if (i == 0)
-        draws[3*i + 2]->setPostMask(DPostmask::postmask(PO_ALL, PM_PSEUDOCIRCLE, 0, 0.0f,0.1f,0.0f));
+        draws[3*i + 2]->setPostMask(DPostmask::postmask(PO_ALL, PM_CIRCLEBORDERED, 0, 0.0f,0.1f,0.0f));
       else
         draws[3*i + 2]->setPostMask(DPostmask::postmask(PO_ALL, PM_LINELEFT, 1, 0.0f,0.0f,0.0f));
     }
@@ -299,7 +299,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     draws[2]->setScalingLimitsVert(msc*2, msc*2);
     
     draws[3] = new DrawIntensity(1, 1, PORTIONS);
-    draws[3]->setPostMask(DPostmask::postmask(PO_EMPTY, PM_PSEUDOCIRCLE, 0, 0.2f));
+    draws[3]->setPostMask(DPostmask::postmask(PO_EMPTY, PM_CIRCLESMOOTH, 0, 0.2f));
     draws[3]->setScalingLimitsSynced(msc*2, msc*2);
     
     lw = LW_1000;    
@@ -491,7 +491,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     DPostmask fsp[] = {   DPostmask::postmask(PO_SIGNAL, PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f), 
                           DPostmask::postmask(PO_SIGNAL, PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f), 
                           DPostmask::postmask(PO_SIGNAL, PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f), 
-                          DPostmask::postmask(PO_ALL, PM_PSEUDOCIRCLE, 0, 0.1f,0.1f,0.1f)
+                          DPostmask::postmask(PO_ALL, PM_CIRCLESMOOTH, 0, 0.1f,0.1f,0.1f)
                            };
     
     const char* gnames[] = { "Histogram (cross over)", "Histogram (cross min)", "Histogram (cross max)", "Linterp + pseudocircle" };
@@ -699,9 +699,9 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                           DPostmask::postmask(PO_ALL, PM_DOTCONTOUR, 3, 0.0f, 0.0f),
     
                           // 4th row
-                          DPostmask::postmask(PO_ALL, PM_PSEUDOCIRCLE, 0, 0.0f),
-                          DPostmask::postmask(PO_ALL, PM_PSEUDOCIRCLE, 4, 0.0f),
-                          DPostmask::postmask(PO_SIGNAL, PM_PSEUDOCIRCLE, 0, 0.0f, 0.9f),
+                          DPostmask::postmask(PO_ALL, PM_CIRCLESMOOTH, 0, 0.0f),
+                          DPostmask::postmask(PO_ALL, PM_CIRCLESMOOTH, 4, 0.0f),
+                          DPostmask::postmask(PO_SIGNAL, PM_CIRCLESMOOTH, 0, 0.0f, 0.9f),
       
                           DPostmask::postmask(PO_SIGNAL, PM_FILL, 0, 0.0f, 0.8f),
                           DPostmask::postmask(PO_ALL, PM_DOT, 1, 0.0f, 0.0f),
@@ -890,14 +890,14 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     }
     int flags[] = {
       DH_LINE, DH_FILL, DH_DIAGONAL,
-      DH_SAW | 2, DH_TRIANGLE | 2, DH_MEANDER | 2,
+      DH_SAW | 4, DH_TRIANGLE | 4, DH_MEANDER | 4,
       DH_SAW | 12, DH_TRIANGLE | 12, DH_MEANDER | 12
     };
     for (int i=0; i<PORTIONS; i++)
     {
       for (int j=0; j<PORTIONS; j++)
       {
-        draws[1 + TD*i + j] = new DrawHint((DrawGraph*)draws[TD*i], i, flags[i*PORTIONS + j] | DH_AUTOMARGIN_0, OR_LRTB);
+        draws[1 + TD*i + j] = new DrawHint((DrawGraph*)draws[TD*i], i, flags[i*PORTIONS + j] | DH_AUTOMARGIN_8, OR_LRTB);
       }
     }
     sigtype = ST_MOVE;
@@ -1140,7 +1140,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //        else if (i == 2)
 //          draws[i]->setPostMask(DPostmask::postmask(PO_EMPTY, PM_LINELEFT, 0, 0.7f,0.7f,0.7f));
 //        else if (i == 3)
-//          draws[i]->setPostMask(DPostmask::postmask(PO_EMPTY, PM_PSEUDOCIRCLE, 0, 0.0f,0.0f,0.0f));
+//          draws[i]->setPostMask(DPostmask::postmask(PO_EMPTY, PM_CIRCLESMOOTH, 0, 0.0f,0.0f,0.0f));
 //      }
 //      else
 //        draws[i] = new DrawGraph(SAMPLES, 1, graphopts_t(GT_DOTS));

@@ -25,6 +25,7 @@
 /// Created By: Elijah Vlasov
 
 #include <QWidget>
+//#include <QFrame>
 
 class DrawQWidget;
 class QScrollBar;
@@ -168,6 +169,8 @@ public:
   void                setColors(unsigned int backgroundColor, unsigned int foregroundColor);
   
   void                setOpacity(float opacity);    // 0 - invisible, 1 - noopacity
+  
+  void                enableDrawBoundsUpdater(bool);
 public:
   DrawQWidget*        getDraw();
   const DrawQWidget*  getDraw() const;
@@ -227,10 +230,18 @@ protected:
   virtual void  resizeEvent(QResizeEvent *event);
   virtual void  paintEvent(QPaintEvent *event);
   virtual bool  event(QEvent*);
+  virtual void  mouseDoubleClickEvent(QMouseEvent* event);
 public:
   void    connectScrollBar(QScrollBar*, bool staticView=false, bool setOrientation=true);
 signals:
-  void    sig_allo();
+#ifdef REMIT_BOUNDS
+  void    sig_updatedBBoundHigh(float);
+  void    sig_updatedBBoundLow(float);
+#endif
+//#ifdef REMIT_CONTRAST
+  void    sig_updatedBContrastK(float);
+  void    sig_updatedBContrastB(float);
+//#endif
 public slots:
   void    slot_setScalingA(int);
   void    slot_setScalingB(int);
@@ -270,6 +281,8 @@ public slots:
   void    slot_updatedOrientation();
 protected slots:
   void    scrollDataTo(int);
+  void    updatedBoundBHigh(double);
+  void    updatedBoundBLow(double);
 };
 
 /**********************************************************************************************************************/

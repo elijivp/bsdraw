@@ -67,7 +67,7 @@ enum BSPOSTMASKOVER {  PO_OFF=0, PO_SIGNAL=1, PO_EMPTY=2, PO_ALL=3 };
 enum BSPOSTMASKTYPE {  
                   PM_CONTOUR, PM_LINELEFT, PM_LINERIGHT, PM_LINEBOTTOM, PM_LINETOP,
                   PM_LINELEFTBOTTOM, PM_LINERIGHTBOTTOM, PM_LINELEFTTOP, PM_LINERIGHTTOP,
-                  PM_PSEUDOCIRCLE, PM_DOT, 
+                  PM_CIRCLESMOOTH, PM_CIRCLEBORDERED, PM_DOT, 
                   PM_DOTLEFTBOTTOM, PM_DOTCONTOUR,
                   PM_SHTRICHL, PM_SHTRICHR, PM_CROSS, PM_GRID, PM_FILL, PM_SQUARES  
 };
@@ -380,16 +380,16 @@ private:
     return ownermask == 2;
   }
 public:
-  void  setOpacity(float opacity){ m_ots.opacity = opacity; updateParameter(false); } /// 0 for invisible
+  void  setOpacity(float opacity, bool update=true){ m_ots.opacity = opacity; if (update) updateParameter(false); }  /// 1.0f for invisible
   float getOpacity() const { return m_ots.opacity; }
   bool  opaque() const {  return m_ots.opacity >= 1.0f; }
-  void  setThickness(float thickness){ m_ots.thickness = thickness; updateParameter(false); }
+  void  setThickness(float thickness, bool update=true){ m_ots.thickness = thickness; if (update) updateParameter(false); }
   float getThickness() const { return m_ots.thickness; }
-  void  setSlice(float value) { m_ots.slice = value;  updateParameter(false); }
+  void  setSlice(float value, bool update=true) { m_ots.slice = value; if (update) updateParameter(false); }
   float getSlice() const { return m_ots.slice; }
 public:
-  void  setOTS(const ovlbasics_t& ob){ m_ots = ob; updateParameter(false); }
-  void  setOTS(float opacity, float thickness, float slice=1.0f){ m_ots.opacity = opacity; m_ots.thickness = thickness; m_ots.slice = slice; updateParameter(false); }
+  void  setOTS(const ovlbasics_t& ob, bool update=true){ m_ots = ob; if (update) updateParameter(false); }
+  void  setOTS(float opacity, float thickness, float slice, bool update=true){ m_ots.opacity = opacity; m_ots.thickness = thickness; m_ots.slice = slice; if (update) updateParameter(false); }
 public:
   void  setUpdateBan(bool updateban) { m_repaintban = updateban; }
 protected:

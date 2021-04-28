@@ -16,7 +16,9 @@
 #include <QVBoxLayout>
 #include <QScrollBar>
 
-//#include <QApplication>
+#include <QFrame>
+#include <QDoubleSpinBox>
+#include <cfloat>
 
 MarginElement::~MarginElement()
 {
@@ -149,6 +151,7 @@ public:
     precision_gethr = precis_gethr;
     rfm = RFM_DEFAULT;
   }
+  int   precision() const { return precision_l1; }
   void  autoFormat(){     setFormat('f', 1, 'g', 3, 100000.0, 'g', 2);  }
   void  autoFormat(float ll, float hl)
   {
@@ -370,6 +373,9 @@ protected:
   }                       tapctt;
 public:
   virtual ~MarginBoundDepended(){}
+  int cachedRTexttype() const { return c_rtexttype; }
+  const relatedopts_t& cachedRdata() const { return c_rdata; }
+  
   bool bdContentUpdate(bool forcedupdate=true)
   {
     return bdContentUpdate(c_rtexttype, c_rdata, forcedupdate);
@@ -569,7 +575,6 @@ protected:
     return false;
   }
   
-  const uarea_t&  cached_area() const { return c_area; }
 protected:
   QColor        c_color;
   bool          c_color_redefined;
@@ -579,6 +584,7 @@ public:
   {
   }
   ~MarginElementCached();
+  const uarea_t&  cached_area() const { return c_area; }
 };
 
 MarginElementCached::~MarginElementCached(){}
@@ -1463,6 +1469,7 @@ public:
 //    needRedrawByText = true;
   }
 public:
+  int   precision() const { return numfmt.precision(); }
 };
 
 class Margin1Mark1Text: public MarginMarksTexted
@@ -2076,8 +2083,9 @@ class DrawBars_impl
 public:
   DrawBars_impl():
     c_mirroredHorz(false), c_mirroredVert(false),
-    drawCoreInited(false), main_opacity(0.0f){}
-  
+    main_opacity(0.0f), drawBoundsUpdater(false), drawCoreInited(false)
+  {
+  }
   int           c_hint_draw_width, c_hint_draw_height;
   bool          c_mirroredHorz, c_mirroredVert;
   
@@ -2097,6 +2105,8 @@ public:
   QPen          c_front_pen;
   
   float         main_opacity;
+  
+  bool          drawBoundsUpdater;
   
   struct        
   {
@@ -2120,6 +2130,7 @@ public:
   QVector<melem_t>   elems[4];
   QVector<MarginBoundDepended*>   elemsBoundDepended;
   QVector<MarginBoundDepended*>   elemsScrollDepended;
+  QVector<MarginMarksTexted*>     elemsClickDepended;
   typedef QVector<melem_t>::iterator melem_iterator_t;
   bool  drawCoreInited;
 
@@ -2365,7 +2376,7 @@ DrawBars::~DrawBars()
 void DrawBars::setColorPolicy(DrawBars::COLORS cp)
 {
   pImpl->clr_policy = cp;
-  if (isDrawPaletteCP(cp))
+  if (isDrawPaletteCP(cp) && pDraw->dataPalette()!= nullptr)
   {
     const IPalette* ppal = pDraw->dataPalette();
     unsigned int  fc = ppal->first(), lc = ppal->last();
@@ -2401,6 +2412,11 @@ void DrawBars::setColors(unsigned int backgroundColor, unsigned int foregroundCo
 void DrawBars::setOpacity(float opacity)
 {
   pImpl->main_opacity = opacity;
+}
+
+void DrawBars::enableDrawBoundsUpdater(bool v)
+{
+  pImpl->drawBoundsUpdater = v;
 }
 
 //void DrawBars::slot_setBackgroundColor(const QColor& color)
@@ -2579,6 +2595,7 @@ MEWScaleNN* DrawBars::addScaleFixed(ATTACHED_TO atto, int flags, float LL, float
     else                    pImpl->c_hint_draw_width = fixedCount*pixStep_pixSpacing;
 //    updateGeometry();
   }
+//  pImpl->elemsClickDepended.push_back(mmt);
   return (MEWScaleNN*)addMarginElement(atto, mmt, new MEWScaleNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
@@ -2600,6 +2617,7 @@ MEWScaleNN* DrawBars::addScaleFixedMod(ATTACHED_TO atto, int flags, float LL, fl
     else                    pImpl->c_hint_draw_width = fixedCount*pixStep_pixSpacing;
 //    updateGeometry();
   }
+//  pImpl->elemsClickDepended.push_back(mmt);
   return (MEWScaleNN*)addMarginElement(atto, mmt, new MEWScaleNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
@@ -2734,6 +2752,7 @@ MEWScale* DrawBars::addScaleDrawGraphB(ATTACHED_TO atto, int flags, int marksCou
 //    updateGeometry();
   }
   pImpl->elemsBoundDepended.push_back(/*(MarginBoundDepended*)*/mmt);
+  pImpl->elemsClickDepended.push_back(mmt);
   return (MEWScale*)addMarginElement(atto, mmt, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
@@ -2750,6 +2769,7 @@ MEWScale* DrawBars::addScaleDrawGraphB(ATTACHED_TO atto, int flags, float LL, fl
 //    updateGeometry();
   }
   pImpl->elemsBoundDepended.push_back(mmt);
+  pImpl->elemsClickDepended.push_back(mmt);
   return (MEWScale*)addMarginElement(atto, mmt, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
 }
 
@@ -3056,6 +3076,108 @@ bool DrawBars::event(QEvent* ev)
   return QWidget::event(ev);
 }
 
+void DrawBars::mouseDoubleClickEvent(QMouseEvent* event)
+{
+  if (event->button() == Qt::LeftButton)
+  {
+    int x = event->x(), y = event->y();
+    bool inarea = false;
+    
+    float LL=0, HL=1; int precision=3;
+    for (int i=0; i<pImpl->elemsClickDepended.count(); i++)
+    {
+      bool inside = false;
+      const MarginElement::uarea_t& area = pImpl->elemsClickDepended[i]->cached_area();
+      switch (area.atto)
+      {
+      case AT_LEFT:
+      {
+        if (x > area.atto_end && x < area.atto_begin)
+          inside = true;
+        break;
+      }
+      case AT_RIGHT:
+      {
+        if (x > area.atto_begin && x < area.atto_end)
+          inside = true;
+        break;
+      }
+      case AT_TOP:
+      {
+        if (y > area.atto_end && y < area.atto_begin)
+          inside = true;
+        break;
+      }
+      case AT_BOTTOM:
+      {
+        if (y > area.atto_begin && y < area.atto_end)
+          inside = true;
+        break;
+      }
+      }
+      if (inside)
+      {
+        int rtt = pImpl->elemsClickDepended[i]->cachedRTexttype();
+  //        const relatedopts_t& rdata = pImpl->elemsClickDepended[i]->cachedRdata();
+        if (rtt == RF_SETBOUNDS)
+        {
+          relatedopts_t rdata = pImpl->elemsClickDepended[i]->cachedRdata();
+          LL = rdata.rel_fixed.LL;
+          HL = rdata.rel_fixed.HL;
+          precision = pImpl->elemsClickDepended[i]->precision();
+          inarea = true;
+          break;
+        }
+      }
+    }
+    
+    if (!inarea && pImpl->drawBoundsUpdater)
+    {
+//      qDebug()<<"DCLK!";
+//      if (pDraw->rect().contains(x, y))
+      {
+        LL = pDraw->boundLow();
+        HL = pDraw->boundHigh();
+        precision=3;
+        inarea = true;
+      }
+    }
+    
+    if (inarea)
+    {
+      QWidget* focused=nullptr;
+      QFrame* boundsSetup = new QFrame;
+      boundsSetup->setFrameStyle(QFrame::Box);
+      boundsSetup->setWindowFlags(Qt::Popup);
+      boundsSetup->setAttribute(Qt::WA_DeleteOnClose);
+      QVBoxLayout*  lay = new QVBoxLayout();
+      {
+        float values[] = { HL, LL };
+        for (int i=0; i<2; i++)
+        {
+          QDoubleSpinBox* qle = new QDoubleSpinBox();
+          qle->setRange(-FLT_MAX, +FLT_MAX);
+          qle->setDecimals(precision);
+          qle->setValue(values[i]);
+          qle->setAlignment(Qt::AlignRight);
+          qle->setFixedWidth(120);
+          if (i == 0)
+            focused = qle;
+          lay->addWidget(qle);
+          if (i == 0)
+            QObject::connect(qle, SIGNAL(valueChanged(double)), this, SLOT(updatedBoundBHigh(double)));
+          else
+            QObject::connect(qle, SIGNAL(valueChanged(double)), this, SLOT(updatedBoundBLow(double)));
+        }
+      }
+      boundsSetup->setLayout(lay);
+      boundsSetup->show();
+      boundsSetup->move(this->mapToGlobal(event->pos()));
+      focused->setFocus(Qt::TabFocusReason);
+    }
+  }
+}
+
 void DrawBars::connectScrollBar(QScrollBar* qsb, bool staticView, bool setOrientation)
 {
   pDraw->connectScrollBar(qsb, staticView, setOrientation);
@@ -3156,6 +3278,30 @@ void DrawBars::scrollDataTo(int)
     }
     update();
   }
+}
+
+void DrawBars::updatedBoundBHigh(double v)
+{
+  this->slot_setBoundHigh(v);
+#ifdef REMIT_BOUNDS
+  emit    sig_updatedBBoundHigh(v);
+#endif
+#ifdef REMIT_CONTRAST
+  emit    sig_updatedBContrastK(this->pDraw->contrastK());
+  emit    sig_updatedBContrastB(this->pDraw->contrastB());
+#endif
+}
+
+void DrawBars::updatedBoundBLow(double v)
+{
+  this->slot_setBoundLow(v);
+#ifdef REMIT_BOUNDS
+  void    sig_updatedBBoundLow(v);
+#endif
+#ifdef REMIT_CONTRAST
+  emit    sig_updatedBContrastK(this->pDraw->contrastK());
+  emit    sig_updatedBContrastB(this->pDraw->contrastB());
+#endif
 }
 
 

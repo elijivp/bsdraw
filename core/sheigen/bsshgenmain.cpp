@@ -338,9 +338,14 @@ void FshMainGenerator::main_end(const DPostmask &fsp)
                                   "float ppb_in = sign(step(imrect.x, post_mask[2])+step(imrect[3] - imrect.y, post_mask[2]));", //  PM_LINELEFTTOP
                                   "float ppb_in = sign(step(imrect[2] - imrect.x, post_mask[2])+step(imrect[3] - imrect.y, post_mask[2]));", // PM_LINERIGHTTOP 
                                   "vec2 _ppb_pos = vec2(abs(0.5 - float(imrect.x)/imrect[2]), abs(0.5 - float(imrect.y)/imrect[3]));"
-                                  "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
-//                                                                        "float ppb_in = smoothstep((post_mask[2]*0.1 + 0.2)*(post_mask[2]*0.1 + 0.2), 0.7*0.7, _ppb_d2);"
-                                  "float ppb_in = smoothstep(0.25*0.25, (0.66 - post_mask[2]*0.05)*(0.66 - post_mask[2]*0.05), _ppb_d2);", // PM_PSEUDOCIRCLE
+                                    "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
+//"float ppb_in = smoothstep((post_mask[2]*0.1 + 0.2)*(post_mask[2]*0.1 + 0.2), 0.7*0.7, _ppb_d2);"
+                                    "float ppb_in = smoothstep(0.25*0.25, (0.66 - post_mask[2]*0.05)*(0.66 - post_mask[2]*0.05), _ppb_d2);", // PM_CIRCLESMOOTH
+                                  "vec2 _ppb_pos = vec2(abs(0.5 - float(imrect.x)/imrect[2]), abs(0.5 - float(imrect.y)/imrect[3]));"
+                                    "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
+//                                    "float ppb_in = smoothstep(0.5*0.5, (0.9 - post_mask[2]*0.02)*(0.9 - post_mask[2]*0.02), _ppb_d2);", // PM_CIRCLEBORDERED
+//                                    "float ppb_in = smoothstep(0.3*0.3, (0.6 - post_mask[2]*0.02)*(0.6 - post_mask[2]*0.02), _ppb_d2);", // PM_CIRCLEBORDERED
+                                    "float ppb_in = smoothstep(0.4*0.4, (0.6 - post_mask[2]*0.02)*(0.6 - post_mask[2]*0.02), _ppb_d2);", // PM_CIRCLEBORDERED
                                   "float ppb_in = step(abs(imrect.x-imrect[2]/2), post_mask[2])*step(abs(imrect.y-imrect[3]/2), post_mask[2]);", // PM_DOT
                                   "float ppb_in = step(imrect.x, post_mask[2])*step(imrect.y, post_mask[2]);", // PM_DOTLEFTBOTTOM
                                   "float ppb_in = sign( "

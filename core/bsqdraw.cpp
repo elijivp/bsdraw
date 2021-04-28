@@ -407,6 +407,10 @@ void DrawQWidget::paintGL()
 //    qDebug()<<"paintGL binded:"<<m_ShaderProgram.isLinked()<<m_ShaderProgram.programId();
     
     int loc;
+    if (this->objectName() == "GAV")
+    {
+      loc = 333;
+    }
     
     if ((loc = m_locations[SF_DATA]) != -1)
     {      

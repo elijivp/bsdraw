@@ -796,39 +796,62 @@ void DrawQWidget::resizeGL(int w, int h)
       break;
     }
   }
-  
   m_doclearbackground = true;
   pendResize(false);
 }
 
 
-void DrawQWidget::fitSize(int width_in, int height_in, int* actualwidth, int* actualheight) const
+//void DrawQWidget::fitSize(int width_in, int height_in, int* actualwidth, int* actualheight) const
+//{
+//  width_in -= m_cttrLeft + m_cttrRight;
+//  height_in -= m_cttrTop + m_cttrBottom;
+  
+//  int wsizeA = m_matrixSwitchAB? height_in : width_in;
+//  int wsizeB = m_matrixSwitchAB? width_in : height_in;
+  
+//  unsigned int dimmA, dimmB, scalingA, scalingB;
+//  sizeAndScaleHint(wsizeA/m_splitterA, wsizeB/m_splitterB, &dimmA, &dimmB, &scalingA, &scalingB);
+//  if (m_matrixSwitchAB)
+//  {
+//    *actualwidth = dimmB*scalingB*m_splitterB;
+//    *actualheight = dimmA*scalingA*m_splitterA;
+//  }
+//  else
+//  {
+//    *actualwidth = dimmA*scalingA*m_splitterA;
+//    *actualheight = dimmB*scalingB*m_splitterB;
+//  }
+////  unsigned int dimmA, dimmB, scalingA, scalingB;
+////  if (m_matrixSwitchAB)
+////    sizeAndScaleHint(height_in, width_in, &dimmB, &dimmA, &scalingB, &scalingA);
+////  else
+////    sizeAndScaleHint(width_in, height_in, &dimmA, &dimmB, &scalingA, &scalingB);
+////  *actualwidth = dimmA*scalingA;
+////  *actualheight = dimmB*scalingB;
+//}
+
+void DrawQWidget::fitSize(int width_in, int height_in, dcsizecd_t* dc_horz, dcsizecd_t* dc_vert) const
 {
   width_in -= m_cttrLeft + m_cttrRight;
   height_in -= m_cttrTop + m_cttrBottom;
   
   int wsizeA = m_matrixSwitchAB? height_in : width_in;
   int wsizeB = m_matrixSwitchAB? width_in : height_in;
-  
-  unsigned int dimmA, dimmB, scalingA, scalingB;
-  sizeAndScaleHint(wsizeA/m_splitterA, wsizeB/m_splitterB, &dimmA, &dimmB, &scalingA, &scalingB);
+ 
+  dcsizecd_t  dcA, dcB;
+  sizeAndScaleHint(wsizeA/m_splitterA, wsizeB/m_splitterB, &dcA.dimm, &dcB.dimm, &dcA.scaling, &dcB.scaling);
+  dcA.splitter = m_splitterA;
+  dcB.splitter = m_splitterB;
   if (m_matrixSwitchAB)
   {
-    *actualwidth = dimmB*scalingB*m_splitterB;
-    *actualheight = dimmA*scalingA*m_splitterA;
+    *dc_horz = dcB;
+    *dc_vert = dcA;
   }
   else
   {
-    *actualwidth = dimmA*scalingA*m_splitterA;
-    *actualheight = dimmB*scalingB*m_splitterB;
+    *dc_horz = dcA;
+    *dc_vert = dcB;
   }
-//  unsigned int dimmA, dimmB, scalingA, scalingB;
-//  if (m_matrixSwitchAB)
-//    sizeAndScaleHint(height_in, width_in, &dimmB, &dimmA, &scalingB, &scalingA);
-//  else
-//    sizeAndScaleHint(width_in, height_in, &dimmA, &dimmB, &scalingA, &scalingB);
-//  *actualwidth = dimmA*scalingA;
-//  *actualheight = dimmB*scalingB;
 }
 
 void DrawQWidget::slot_compileShader()

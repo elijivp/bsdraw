@@ -40,23 +40,33 @@ class MarginElement
 public:
   virtual ~MarginElement();
 protected:
-  enum UPDATEFOR { UF_NONE=-2, UF_APPEND=-1, UF_RESIZE=0, UF_LVL1, UF_LVL2, UF_LVL3,      UF_FORCED=99999  };
+  enum UPDATEFOR { UF_RESIZE, UF_CONTENT, UF_FORCED };
   struct uarea_t
   {
     ATTACHED_TO atto;
     int atto_begin, atto_end;
-    int dlytotal, dly1, dly2, dly3;
+    int segm_pre, segm_main, segm_post, segm_over;
+    int segment_full;
     bool mirrored;
+    int ex_scaling;
     
     bool operator==(const uarea_t& cmp) const
     {
-      return cmp.atto == atto && cmp.atto_begin == atto_begin && cmp.atto_end == atto_end && cmp.dlytotal == dlytotal && cmp.dly1 == dly1 && cmp.dly2 == dly2 && cmp.dly3 == dly3 && cmp.mirrored == mirrored;
+      return cmp.atto == atto && cmp.atto_begin == atto_begin && cmp.atto_end == atto_end && 
+          cmp.segm_pre == segm_pre && cmp.segm_main == segm_main && cmp.segm_post == segm_post && cmp.segm_over == segm_over && 
+          cmp.mirrored == mirrored && cmp.ex_scaling == ex_scaling;
+    }
+    bool operator!=(const uarea_t& cmp) const
+    {
+      return cmp.atto != atto || cmp.atto_begin != atto_begin || cmp.atto_end != atto_end || 
+          cmp.segm_pre != segm_pre || cmp.segm_main != segm_main || cmp.segm_post != segm_post || cmp.segm_over != segm_over || 
+          cmp.mirrored != mirrored || cmp.ex_scaling != ex_scaling;
     }
   };
   virtual bool  updateArea(const uarea_t& uarea, int UPDATEFOR)=0;
 //  virtual bool  needredraw() const {  return true; }
   virtual void  draw(QPainter&)=0;
-  virtual void  sizeHint(ATTACHED_TO atto, int* atto_size, int* mindly, int* mindly1, int* mindly2) const =0;
+  virtual void  sizeHint(ATTACHED_TO atto, int* atto_size, int* mindly, int* minsegm_pre, int* minsegm_post) const =0;
   virtual void  relatedInit(const DrawQWidget*) {  }
   virtual void  changeColor(const QColor&)=0;
   friend class DrawBars;
@@ -189,10 +199,12 @@ public:
 //  MEWSpace*           addStretch(ATTACHED_TO atto, int space, int stepSelf=1, int stepDraw=10);
   MEWSpace*           addContour(ATTACHED_TO atto, int space=0, bool maxzone=false);
   
-  MEWPointer*         addPointerFixed(ATTACHED_TO atto, int flags, float LL, float HL, const char* postfix=nullptr);
-  MEWPointer*         addPointerFixedMod(ATTACHED_TO atto, int flags, float LL, float HL, float MOD, const char* postfix=nullptr);
-  MEWPointer*         addPointerDrawUniSide(ATTACHED_TO atto, int flags, const char* postfix=nullptr);
-  MEWPointer*         addPointerDrawGraphB(ATTACHED_TO atto, int flags, const char* postfix=nullptr);
+  MEWPointer*         addPointerFixed(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen=0, const char* postfix=nullptr);
+  MEWPointer*         addPointerFloating(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen=0, const char* postfix=nullptr);
+  MEWPointer*         addPointerFixedMod(ATTACHED_TO atto, int flags, float pos, float LL, float HL, float MOD, int marklen=0, const char* postfix=nullptr);
+  MEWPointer*         addPointerFloatingMod(ATTACHED_TO atto, int flags, float pos, float LL, float HL, float MOD, int marklen=0, const char* postfix=nullptr);
+  MEWPointer*         addPointerDrawUniSide(ATTACHED_TO atto, int flags, float pos, int marklen=0, bool floating=false, const char* postfix=nullptr);
+  MEWPointer*         addPointerDrawGraphB(ATTACHED_TO atto, int flags, float pos, int marklen=0, bool floating=false, const char* postfix=nullptr);
   
   MEWScale*           addScaleEmpty(ATTACHED_TO atto, int flags, int fixedCount=11, int pixStep_pixSpacing=30, int miniPerMaxiLIMIT=9);
   MEWScaleNN*         addScaleFixed(ATTACHED_TO atto, int flags, float LL, float HL, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
@@ -325,9 +337,9 @@ public:
   typedef float (*proconvert_bi_fn)(float x, float y, float* ptrbi01);
 public:
   DrawOverlayProactive*    createProactive();
-  DrawOverlayProactive*    createProactive(float start_x, float start_y);
-  DrawOverlayProactive*    createProactive(proconvert_fn);
-  DrawOverlayProactive*    createProactive(proconvert_bi_fn);
+//  DrawOverlayProactive*    createProactive(float start_x, float start_y);
+//  DrawOverlayProactive*    createProactive(proconvert_fn);
+//  DrawOverlayProactive*    createProactive(proconvert_bi_fn);
   
 //  void  setPrefix(const char* str);
 //  void  setPostfix(const char* str);

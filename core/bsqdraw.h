@@ -67,7 +67,8 @@ public:
   void  compileShaderNow();
   void  compileWhenInitializeGL(bool cflag);
   void  connectScrollBar(QScrollBar*, bool staticView=false, bool setOrientation=true);
-  void  fitSize(int width_in, int height_in, int* actualwidth, int* actualheight) const;
+//  void  fitSize(int width_in, int height_in, int* actualwidth, int* actualheight) const;
+  void  fitSize(int width_in, int height_in, dcsizecd_t* dc_horz, dcsizecd_t* dc_vert) const;
 public slots:
   void    slot_compileShader();
   void    slot_setScalingA(int);

@@ -21,6 +21,8 @@ struct  bounds_t
   bounds_t(float ll=0, float hl=1): LL(ll), HL(hl){}
 };
 
+inline float length(const bounds_t& bnd){ return bnd.HL - bnd.LL; }
+
 inline  void  _bsdraw_update_kb(const bounds_t& bnd, float* k, float *b)
 {
   *k = 1.0f/(bnd.HL - bnd.LL);
@@ -42,6 +44,17 @@ public:
 };
 //#########################
 
+struct dcsizecd_t        /// drawcore size components (for 1) direction
+{
+  unsigned int  dimm;
+  unsigned int  scaling;
+  unsigned int  splitter;
+};
+
+inline unsigned int length(const dcsizecd_t& s){ return s.dimm*s.scaling*s.splitter; }
+
+
+//#########################
 
 
 class DrawCore: public IDrawOverlayFriendly
@@ -237,25 +250,34 @@ public:
   float                 contrastK() const { return m_loc_k; }
   float                 contrastB() const { return m_loc_b; }
 public:
-  unsigned int          scalingA() const { return m_scalingA; }
-  unsigned int          scalingB() const { return m_scalingB; }
-  unsigned int          scalingHorz() const { return m_matrixSwitchAB? m_scalingB : m_scalingA; }
-  unsigned int          scalingVert() const { return m_matrixSwitchAB? m_scalingA : m_scalingB; }
-  
+  ///             size components
   unsigned int          sizeDataA() const { return m_matrixDimmA; }
   unsigned int          sizeDataB() const { return m_matrixDimmB; }
   unsigned int          sizeDataHorz() const { return m_matrixSwitchAB? m_matrixDimmB : m_matrixDimmA; }
   unsigned int          sizeDataVert() const { return m_matrixSwitchAB? m_matrixDimmA : m_matrixDimmB; }
+
+  unsigned int          scalingA() const { return m_scalingA; }
+  unsigned int          scalingB() const { return m_scalingB; }
+  unsigned int          scalingHorz() const { return m_matrixSwitchAB? m_scalingB : m_scalingA; }
+  unsigned int          scalingVert() const { return m_matrixSwitchAB? m_scalingA : m_scalingB; }
+
+  unsigned int          splitterA() const { return m_splitterA; }
+  unsigned int          splitterB() const { return m_splitterB; }
+  unsigned int          splitterHorz() const { return m_matrixSwitchAB? m_splitterB : m_splitterA; }
+  unsigned int          splitterVert() const { return m_matrixSwitchAB? m_splitterA : m_splitterB; }
   
+  ///             size total
   unsigned int          sizeA() const { return m_matrixDimmA*m_scalingA*m_splitterA; }
   unsigned int          sizeB() const { return m_matrixDimmB*m_scalingB*m_splitterB; }
   unsigned int          sizeHorz() const { return m_matrixSwitchAB? sizeB() : sizeA(); }
   unsigned int          sizeVert() const { return m_matrixSwitchAB? sizeA() : sizeB(); }
   
-  unsigned int          splitterA() const { return m_splitterA; }
-  unsigned int          splitterB() const { return m_splitterB; }
-  unsigned int          splitterHorz() const { return m_matrixSwitchAB? m_splitterB : m_splitterA; }
-  unsigned int          splitterVert() const { return m_matrixSwitchAB? m_splitterA : m_splitterB; }
+  dcsizecd_t            sizeComponentsA() const { return { m_matrixDimmA, m_scalingA, m_splitterA }; }
+  dcsizecd_t            sizeComponentsB() const { return { m_matrixDimmB, m_scalingB, m_splitterB }; }
+  dcsizecd_t            sizeComponentsHorz() const { return m_matrixSwitchAB? sizeComponentsB() : sizeComponentsA(); }
+  dcsizecd_t            sizeComponentsVert() const { return m_matrixSwitchAB? sizeComponentsA() : sizeComponentsB(); }
+
+
   
   bool                  isSplittedA() const { return ((m_splitPortions >> 8)&0xFF) == 0; }
   bool                  isSplittedB() const { return ((m_splitPortions >> 8)&0xFF) != 0; }

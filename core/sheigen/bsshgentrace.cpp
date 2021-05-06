@@ -272,6 +272,11 @@ void FshTraceGenerator::param_pass()
   m_paramsctr++;
 }
 
+void FshTraceGenerator::param_peek()
+{
+  m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr);
+}
+
 void FshTraceGenerator::param_for_arr_begin(const char *name, const char *arrlengthname, const char* additname)
 {
   m_offset += msprintf(&m_to[m_offset],   "int %s = int(opm%D_%D.length());" SHNL
@@ -379,11 +384,33 @@ void FshTraceGenerator::var_fixed(const char *name, float v1, float v2, float v3
 
 void FshTraceGenerator::var_const_fixed(const char *name, float v1, float v2, float v3, float v4){  m_offset += msprintf(&m_to[m_offset], "const vec4 %s = vec4(%f, %f, %f, %f);" SHNL, name, v1, v2, v3, v4); }
 
+
+
+void FshTraceGenerator::var_array_f_empty(const char* name, int size){  m_offset += msprintf(&m_to[m_offset], "float %s[%d];" SHNL, name, size);   }
+void FshTraceGenerator::var_array_ff_empty(const char* name, int size){  m_offset += msprintf(&m_to[m_offset], "vec2 %s[%d];" SHNL, name, size);   }
+void FshTraceGenerator::var_array_fff_empty(const char* name, int size){  m_offset += msprintf(&m_to[m_offset], "vec3 %s[%d];" SHNL, name, size);   }
+
+void FshTraceGenerator::var_array(const char* name, float v1){  m_offset += msprintf(&m_to[m_offset], "float %s[1] = { %f };" SHNL, name, v1);   }
+
+void FshTraceGenerator::var_array(const char* name, float v1, float v2){  m_offset += msprintf(&m_to[m_offset], "float %s[2] = { %f, %f };" SHNL, name, v1, v2);   }
+
+void FshTraceGenerator::var_array(const char* name, float v1, float v2, float v3){  m_offset += msprintf(&m_to[m_offset], "float %s[3] = { %f, %f, %f };" SHNL, name, v1, v2, v3);   }
+
+void FshTraceGenerator::var_array(const char* name, float v1, float v2, float v3, float v4){  m_offset += msprintf(&m_to[m_offset], "float %s[4] = { %f, %f, %f, %f };" SHNL, name, v1, v2, v3, v4);   }
+
+void FshTraceGenerator::var_array(const char* name, float v1, float v2, float v3, float v4, float v5){  m_offset += msprintf(&m_to[m_offset], "float %s[5] = { %f, %f, %f, %f, %f };" SHNL, name, v1, v2, v3, v4, v5);   }
+
+
+
+
 void FshTraceGenerator::var_static(DTYPE type, const char *name_eq_value){  m_offset += msprintf(&m_to[m_offset], "%s %s;" SHNL, glsl_types[(int)type], name_eq_value); }
 
 void FshTraceGenerator::var_static(const char *name, const char *value){  m_offset += msprintf(&m_to[m_offset], "%s = %s;" SHNL, name, value); }
 
 void FshTraceGenerator::var_const_static(DTYPE type, const char *name_eq_value){  m_offset += msprintf(&m_to[m_offset], "const %s %s;" SHNL, glsl_types[(int)type], name_eq_value); }
+
+
+
 
 void FshTraceGenerator::movecs_pix_x(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor((%s*movecs_pixing%d.x) + 0.49);" SHNL, name, name, resc_idx); }
 

@@ -86,6 +86,7 @@ public:
   void  param_get();
   void  param_mem(int memslot);
   void  param_pass();
+  void  param_peek();
   
   void  param_for_arr_begin(const char* name, const char* arrlengthname="arrlen", const char *additname=nullptr);
   void  param_for_rarr_begin(const char* name);
@@ -120,6 +121,16 @@ public:
   
   void  var_fixed(const char* name, float v1, float v2, float v3, float v4);
   void  var_const_fixed(const char* name, float v1, float v2, float v3, float v4);
+  
+  void  var_array_f_empty(const char* name, int size);
+  void  var_array_ff_empty(const char* name, int size);
+  void  var_array_fff_empty(const char* name, int size);
+  
+  void  var_array(const char* name, float v1);
+  void  var_array(const char* name, float v1, float v2);
+  void  var_array(const char* name, float v1, float v2, float v3);
+  void  var_array(const char* name, float v1, float v2, float v3, float v4);
+  void  var_array(const char* name, float v1, float v2, float v3, float v4, float v5);
   
 public:
   void  var_static(DTYPE type, const char* name_eq_value);

@@ -71,6 +71,8 @@ private:
                           COS_INSIDE, COS_COVERL, COS_COVERH, COS_CONTOUR, 
                           COS_SELECTOR, COS_SELECTOR2, COS_OBJECTIF,
                           COS_SPRITEALPHA, COS_FOREGROUND, COS_BACKGROUND };
+signals:
+  void    remitBounds(float);
 private slots:
   void    changeMargins(int value);
   void    changePaletteSTD(int palid);
@@ -104,6 +106,8 @@ private slots:
   void    metaOVLCreate(int);
   void    changeSigtype(int);
   void    changeScaling(int value);
+  
+  void    changePointer(int value);
   
   void    changeMarkData(int);
   void    changeClusterPalette();

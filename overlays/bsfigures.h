@@ -167,5 +167,23 @@ protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
+//class OFLevels: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimmsOff
+//{
+//public:
+//protected:
+//  int           m_lt;
+//  COORDINATION  m_featcn;
+//  float         m_param1;
+//  float         m_param2;
+//public:
+//  enum  LINETYPE {  LT_HORZ=0, LT_VERT=1  };
+//  OFLevels(LINETYPE linetype, COORDINATION cn, float base, const linestyle_t& kls=linestyle_solid(1,1,1));
+////public:
+////  OFLine(COORDINATION cn, float start_x, float start_y, float end_x, float end_y, const linestyle_t& linestyle=linestyle_solid(1,1,1));
+////  OFLine(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float end_x, float end_y, const linestyle_t& linestyle=linestyle_solid(1,1,1));
+//protected:
+//  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+//};
+
 #endif // BSFIGURES_H
 

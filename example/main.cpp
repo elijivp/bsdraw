@@ -15,7 +15,7 @@
 
 
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)14
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)30
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)23
 
 
 #ifndef MW_TEST_NOCHOOSE_DEFAULT

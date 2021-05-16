@@ -817,24 +817,33 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     SAMPLES = 5;
     MAXLINES = 1;
     PORTIONS = 1;
-    PRECREATE(5, 1);
+    PRECREATE(5, 2);
     
     impulsedata_t imp[] = { { impulsedata_t::IR_OFF },
                             { impulsedata_t::IR_A_COEFF, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
                             { impulsedata_t::IR_A_COEFF_NOSCALED, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
                             { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 30, 4, 0, {} },
-                            { impulsedata_t::IR_A_BORDERS, 30, 4, 0, {} },
+                            { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 30, 8, 0, {} },
+                            { impulsedata_t::IR_A_BORDERS, 30, 4, 0, {0.0f} },
+                            { impulsedata_t::IR_A_BORDERS, 30, 4, 0, {0.2f} },
+                            { impulsedata_t::IR_A_BORDERS, 30, 8, 0, {0.4f} },
+                            { impulsedata_t::IR_A_BORDERS, 30, 4, 0, {0.8f} },
+                            { impulsedata_t::IR_A_BORDERS, 30, 4, 0, {1.0f} },
     };
-    const char* cpnames[] = { "ORIGINAL", "COEFF", "COEFF_NOSCALED", "BORDERS_FIXED", "BORDERS", "" };
-    for (unsigned int i=0; i<drawscount; i++)
-    {
-      draws[i] = new DrawIntensity(SAMPLES, MAXLINES, 1);
-      draws[i]->setImpulse(imp[i]);
-      draws[i]->setScalingLimitsA(50);
-      draws[i]->setScalingLimitsB(50);
-      draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.05f, 0.05f, 8, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
-    }
+    const char* cpnames[] = { "ORIGINAL", "COEFF", "COEFF_NOSCALED", "BORDERS_FIXED", "BORDERS_FIXED2",
+                              "BORDERS c0.0f", "BORDERS c0.2f", "BORDERS c0.4f", "BORDERS c0.8f", "BORDERS c1.0f"
+                            };
+    for (unsigned int c=0; c<dccount; c++)
+      for (unsigned int i=0; i<drcount; i++)
+      {
+        draws[c*drcount + i] = new DrawIntensity(SAMPLES, MAXLINES, 1);
+        draws[c*drcount + i]->setImpulse(imp[c*drcount + i]);
+        draws[c*drcount + i]->setScalingLimitsA(50);
+        draws[c*drcount + i]->setScalingLimitsB(50);
+        draws[c*drcount + i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[c*drcount + i], 0, 10,2,10,2), CR_RELATIVE, 0.05f, 0.05f, 8, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
+      }
     sigtype = ST_RAMP;
+//    sigtype = ST_SIN;
 //    defaultPalette = ppalettes_adv[12];
   }
   else if (MW_TEST == IMPULSE_VERT)

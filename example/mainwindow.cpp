@@ -570,6 +570,20 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     sigtype = ST_MOVE;
     defaultPalette = ppalettes_adv[12];
   }
+  else if (MW_TEST == DRAW_SCALES_3)
+  {
+    SAMPLES = 180;
+    MAXLINES = 50;
+    PORTIONS = 1;
+    PRECREATE(3, 1);
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(2, 1.0f, DE_NONE), coloropts_t::copts(CP_SINGLE, 1.0f, 0.3f, 0xFFFFFFFF));
+      draws[i]->ovlPushBack(new OGridRegular(OGridRegular::REGULAR_HORZ, CR_RELATIVE, 0.5f, 0.125f, linestyle_inverse_1(4,1,0)));
+      draws[i]->ovlPushBack(new OGridRegular(OGridRegular::REGULAR_VERT, CR_RELATIVE, 0.5f, 0.125f, linestyle_inverse_1(4,1,0)));
+    }
+    sigtype = ST_GEN_NORM;
+  }
   else if (MW_TEST == DRAW_SDPICTURE)
   {
     SAMPLES = 500;
@@ -1103,6 +1117,32 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         draws[i*dccount + j]->ovlPushBack(oaf, id);
       }
     sigtype = ST_ZERO;
+  }
+  else if (MW_TEST == DEBUG_HISTO3)
+  {   
+    SAMPLES = 192;
+    MAXLINES = 1;
+    PORTIONS = 2;
+    PRECREATE(3, 1);
+    graphopts_t gts[] = { 
+      graphopts_t::goHistogram(0.0f, DE_LINTERP, 0.6f), 
+      graphopts_t::goHistogramMesh(0.0f, DE_LINTERP, 0.6f), 
+      graphopts_t::goHistogramSum(0.0f, DE_LINTERP, 0.6f) 
+    };
+    for (unsigned int c=0; c<dccount; c++)
+      for (unsigned int i=0; i<drcount; i++)
+      {
+        draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gts[c*drcount + i], coloropts_t::copts(CP_SINGLE, 1.0f, 0.49f) );
+        draws[c*drcount + i]->setScalingLimitsHorz(1);
+        draws[c*drcount + i]->setScalingLimitsVert(1);
+//        draws[c*drcount + i]->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_CONTOUR, 0));
+      }
+    
+    sp = SP_SLOWEST;
+    sigtype = ST_MOVE;
+    draws[0]->setMinimumWidth(1000);
+//    defaultPalette = &paletteBY;
+    defaultPalette = &paletteRG;
   }
   
 //  else if (MW_TEST == DEBUG_PALETTE2DX)
@@ -2127,75 +2167,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BSADD(draws[i])
           BS_STOP;
         }
-        else if (MW_TEST == DRAW_SCALES_2)
-        {
-          BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
-            DrawBars::COLORS cps[] = {DrawBars::CP_DEFAULT, DrawBars::CP_FROM_DRAWBACK, 
-                                      DrawBars::CP_FROM_DRAWBACK, DrawBars::CP_FROM_DRAWPALETTE_INV };
-            const char* labels_clr[][2] = {  {"colors: default", "Universe scale"},
-                                             {"colors: drawback", "Fixed scale, floating marks"},
-                                             {"colors: drawback", "Tap by alphabet"},
-                                             {"colors: inversed", "Fixed minimal scale"},
-                                          };
-            for (unsigned int i=0; i<drawscount; i++)
-            {
-              DrawBars* pDB = new DrawBars(draws[i], cps[i]);
-              if (cps[i] == DrawBars::CP_FROM_DRAWBACK)
-              {
-                pDB->addContour(AT_LEFT, 0);
-                pDB->addContour(AT_TOP, 0);
-                pDB->addContour(AT_BOTTOM, 0);
-                pDB->addContour(AT_RIGHT, 0);
-              }
-                
-              
-              if (i == 0)
-                pDB->addScaleDrawUniSide(AT_TOP, DBF_ENUMERATE_FROMZERO | DBF_ENUMERATE_SHOWLAST, 20);
-              else if (i == 1)
-                pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED, 0.0, SAMPLES-1, SAMPLES);
-              else if (i == 2)
-                pDB->addScaleTapNM(AT_TOP, DBMODE_STATIC, standard_tap_symbolate<-1>, 4, nullptr, SAMPLES, 20);
-              else
-                pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED_POW2 | DBF_ONLY2NOTES | DBF_NOTESINSIDE, 0.0, 1.0, SAMPLES, 10);
-              
-//              pDB->getDraw()->setPostMask(DPostmask::postmask(PO_EMPTY, PM_LINERIGHT, 0, 0.3f, 0.3f, 0.3f));
-//              MEPointer mpH = pDB->addPointerFixed(AT_BOTTOM, 0, 180);
-              MEWPointer* mpH = pDB->addPointerDrawUniSide(AT_BOTTOM, DBF_NOTESINSIDE, 0.0f);
-//              MEPointer mpV = pDB->addPointerDrawUniSide(AT_RIGHT);
-              MEWPointer* mpV = pDB->addPointerDrawGraphB(AT_RIGHT, DBF_NOTESINSIDE, 0.0f);
-//              mpH.setPosition(0.7f);
-              int oapH = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpH->createProactive()));
-              pDB->getDraw()->ovlPushBack(new OFLine(OFLine::LT_VERT_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_stroks(1.0f,0.0f,0.0f)), oapH);
-              
-//              mpV.setPosition(0.7f);
-              int oapV = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpV->createProactive()));
-              pDB->getDraw()->ovlPushBack(new OFLine(OFLine::LT_HORZ_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_stroks(1.0f,0.0f,0.0f)), oapV);
-//              pDB->getDraw()->ovlPushBack(new OFDouble(true, CR_RELATIVE, 0, CR_ABSOLUTE, 6, linestyle_stroks(1.0f,1.0f,0.0f)), oap);
-//              pDB->getDraw()->ovlPushBack(new OFDouble(false, CR_RELATIVE, 0, CR_ABSOLUTE, 6, linestyle_stroks(1.0f,1.0f,0.0f)), oap);
-              
-
-              if (i == drawscount - 1)
-              {
-//                pDB->addContour(AT_LEFT, 40);
-                pDB->addScaleDrawGraphB(AT_LEFT, 0 /*| DBF_NOTESINSIDE/* | DBF_INTERVENT*/, 3, 32);
-//                pDB->addSpace(AT_LEFT, 10);
-              }
-              else
-                pDB->addScaleDrawGraphB(AT_LEFT, 0 /*| DBF_NOTESINSIDE*/, 21, 32);
-              
-//              if (i < 3)
-              {
-                pDB->addLabel(AT_LEFT, 0 | DBF_LABELAREA_FULLBAR, labels_clr[i][0], Qt::AlignCenter, Qt::Vertical);
-                pDB->addLabel(AT_TOP, 0, labels_clr[i][1], Qt::AlignCenter, Qt::Horizontal);
-              }
-              
-              BSADD(pDB)
-            }
-          BS_STOP
-//          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-//            BSAUTO_TEXT_ADD("\tResize Me");
-//          BS_STOP
-        }
         else if (MW_TEST == DRAW_SCALES_1)
         {
           BS_START_FRAME_H_HMAX_VMAX(BS_FRAME_PANEL, 2)
@@ -2285,6 +2256,100 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             QObject::connect(qsb, SIGNAL(valueChanged(int)), this, SLOT(changePointer(int)));
             BSADD(qsb);
           BS_STOP
+        }
+        else if (MW_TEST == DRAW_SCALES_2)
+        {
+          BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
+            DrawBars::COLORS cps[] = {DrawBars::CP_DEFAULT, DrawBars::CP_FROM_DRAWBACK, 
+                                      DrawBars::CP_FROM_DRAWBACK, DrawBars::CP_FROM_DRAWPALETTE_INV };
+            const char* labels_clr[][2] = {  {"colors: default", "Universe scale"},
+                                             {"colors: drawback", "Fixed scale, floating marks"},
+                                             {"colors: drawback", "Tap by alphabet"},
+                                             {"colors: inversed", "Fixed minimal scale"},
+                                          };
+            for (unsigned int i=0; i<drawscount; i++)
+            {
+              DrawBars* pDB = new DrawBars(draws[i], cps[i]);
+              if (cps[i] == DrawBars::CP_FROM_DRAWBACK)
+              {
+                pDB->addContour(AT_LEFT, 0);
+                pDB->addContour(AT_TOP, 0);
+                pDB->addContour(AT_BOTTOM, 0);
+                pDB->addContour(AT_RIGHT, 0);
+              }
+                
+              
+              if (i == 0)
+                pDB->addScaleDrawUniSide(AT_TOP, DBF_ENUMERATE_FROMZERO | DBF_ENUMERATE_SHOWLAST, 20);
+              else if (i == 1)
+                pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED, 0.0, SAMPLES-1, SAMPLES);
+              else if (i == 2)
+                pDB->addScaleTapNM(AT_TOP, DBMODE_STATIC, standard_tap_symbolate<-1>, 4, nullptr, SAMPLES, 20);
+              else
+                pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED_POW2 | DBF_ONLY2NOTES | DBF_NOTESINSIDE, 0.0, 1.0, SAMPLES, 10);
+              
+//              pDB->getDraw()->setPostMask(DPostmask::postmask(PO_EMPTY, PM_LINERIGHT, 0, 0.3f, 0.3f, 0.3f));
+//              MEPointer mpH = pDB->addPointerFixed(AT_BOTTOM, 0, 180);
+              MEWPointer* mpH = pDB->addPointerDrawUniSide(AT_BOTTOM, DBF_NOTESINSIDE, 0.0f);
+//              MEPointer mpV = pDB->addPointerDrawUniSide(AT_RIGHT);
+              MEWPointer* mpV = pDB->addPointerDrawGraphB(AT_RIGHT, DBF_NOTESINSIDE, 0.0f);
+//              mpH.setPosition(0.7f);
+              int oapH = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpH->createProactive()));
+              pDB->getDraw()->ovlPushBack(new OFLine(OFLine::LT_VERT_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_stroks(1.0f,0.0f,0.0f)), oapH);
+              
+//              mpV.setPosition(0.7f);
+              int oapV = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpV->createProactive()));
+              pDB->getDraw()->ovlPushBack(new OFLine(OFLine::LT_HORZ_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_stroks(1.0f,0.0f,0.0f)), oapV);
+//              pDB->getDraw()->ovlPushBack(new OFDouble(true, CR_RELATIVE, 0, CR_ABSOLUTE, 6, linestyle_stroks(1.0f,1.0f,0.0f)), oap);
+//              pDB->getDraw()->ovlPushBack(new OFDouble(false, CR_RELATIVE, 0, CR_ABSOLUTE, 6, linestyle_stroks(1.0f,1.0f,0.0f)), oap);
+              
+
+              if (i == drawscount - 1)
+              {
+//                pDB->addContour(AT_LEFT, 40);
+                pDB->addScaleDrawGraphB(AT_LEFT, 0 /*| DBF_NOTESINSIDE/* | DBF_INTERVENT*/, 3, 32);
+//                pDB->addSpace(AT_LEFT, 10);
+              }
+              else
+                pDB->addScaleDrawGraphB(AT_LEFT, 0 /*| DBF_NOTESINSIDE*/, 21, 32);
+              
+//              if (i < 3)
+              {
+                pDB->addLabel(AT_LEFT, 0 | DBF_LABELAREA_FULLBAR, labels_clr[i][0], Qt::AlignCenter, Qt::Vertical);
+                pDB->addLabel(AT_TOP, 0, labels_clr[i][1], Qt::AlignCenter, Qt::Horizontal);
+              }
+              
+              BSADD(pDB)
+            }
+          BS_STOP
+//          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+//            BSAUTO_TEXT_ADD("\tResize Me");
+//          BS_STOP
+        }
+        else if (MW_TEST == DRAW_SCALES_3)
+        {
+          BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
+            int rounding[] = { 0, DBF_MARKS_DONTROUND, DBF_MARKS_DONTROUND1 };
+            for (unsigned int i=0; i<drawscount; i++)
+            {
+//              draws[i]->setOrientation(OR_BTLR);
+              DrawBars* pDB = new DrawBars(draws[i]);
+//              {
+//                pDB->addContour(AT_LEFT, 0);
+//                pDB->addContour(AT_TOP, 0);
+//                pDB->addContour(AT_BOTTOM, 0);
+//                pDB->addContour(AT_RIGHT, 0);
+//              }
+              pDB->setContentsMargins(10, 10, 10, 10);
+              pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED, 0.0, SAMPLES-1, SAMPLES);
+//              MEWPointer* mpV = pDB->addPointerDrawGraphB(AT_LEFT, DBF_NOTESINSIDE | rounding[i], 0.0f);
+              pDB->addScaleDrawGraphB(AT_LEFT, rounding[i], 11, 18);
+              BSADD(pDB)
+            }
+          BS_STOP
+//          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+//            BSAUTO_TEXT_ADD("\tResize Me");
+//          BS_STOP
         }
         else if (MW_TEST == DEBUG_TABS)
         {

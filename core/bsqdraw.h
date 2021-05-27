@@ -78,6 +78,7 @@ public slots:
   void    slot_setBounds(float low, float high);
   void    slot_setBoundLow(float);
   void    slot_setBoundHigh(float);
+  void    slot_setBounds01();
   void    slot_setContrast(float k, float b);
   void    slot_setContrastK(float);
   void    slot_setContrastB(float);
@@ -88,6 +89,10 @@ public slots:
   void    slot_setData(QVector<float>);
   void    slot_fillData(float);
   void    slot_clearData();
+  
+  void    slot_adjustBounds();
+  void    slot_adjustBoundsWithSpacingAdd(float add2min, float add2max);
+  void    slot_adjustBoundsWithSpacingMul(float mul2min, float mul2max);
   
   void    slot_setMirroredHorz();
   void    slot_setMirroredVert();

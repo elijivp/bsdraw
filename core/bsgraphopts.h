@@ -9,7 +9,9 @@ enum  BSGRAPHTYPE {
                     GT_LINTERPSMOOTH,       /// linear interpolation through glsl smoothstep method
                     GT_HISTOGRAM,           /// histogram
                     GT_HISTOGRAM_CROSSMAX,  /// histogram with max of many graphs on cross
-                    GT_HISTOGRAM_CROSSMIN   /// histogram with all graphs on cross
+                    GT_HISTOGRAM_CROSSMIN,  /// histogram with all graphs on cross
+                    GT_HISTOGRAM_MESH,      /// histogram with meshing graphs
+                    GT_HISTOGRAM_SUM,       /// histogram with rgb-sum graphs
                 };
 
 enum  BSDESCALING {
@@ -70,6 +72,16 @@ struct  graphopts_t
   { graphopts_t result = { GT_HISTOGRAM_CROSSMIN, ds, opacity, 0, 0.0f, 0.0f, PR_STANDARD}; return result; }
   static graphopts_t goHistogramCrossMin(BSPOSTRECT pr, BSDESCALING ds=DE_NONE)
   { graphopts_t result = { GT_HISTOGRAM_CROSSMIN, ds, 0.0f, 0, 0.0f, 0.0f, pr}; return result; }
+  
+  static graphopts_t goHistogramMesh(float opacity=0.0f, BSDESCALING ds=DE_NONE, float smoothcoef=0.0f, BSPOSTRECT pr=PR_STANDARD)
+  { graphopts_t result = { GT_HISTOGRAM_MESH, ds, opacity, 0, 0.0f, smoothcoef, pr }; return result; }
+  static graphopts_t goHistogramMesh(BSPOSTRECT pr, BSDESCALING ds=DE_NONE)
+  { graphopts_t result = { GT_HISTOGRAM_MESH, ds, 0.0f, 0, 0.0f, 0.0f, pr}; return result; }
+  
+  static graphopts_t goHistogramSum(float opacity=0.0f, BSDESCALING ds=DE_NONE, float smoothcoef=0.0f, BSPOSTRECT pr=PR_STANDARD)
+  { graphopts_t result = { GT_HISTOGRAM_SUM, ds, opacity, 0, 0.0f, smoothcoef, pr }; return result; }
+  static graphopts_t goHistogramSum(BSPOSTRECT pr, BSDESCALING ds=DE_NONE)
+  { graphopts_t result = { GT_HISTOGRAM_SUM, ds, 0.0f, 0, 0.0f, 0.0f, pr}; return result; }
 };
 
 inline graphopts_t& operator+=(graphopts_t& go, BSDESCALING ds){ go.descaling = ds; return go; }

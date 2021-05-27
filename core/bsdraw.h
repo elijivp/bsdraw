@@ -239,6 +239,7 @@ public:
   void                  setBounds(float LL, float HL){ setBounds(bounds_t(LL, HL)); }
   void                  setBoundLow(float LL){ m_bounds.LL = LL; _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);       m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
   void                  setBoundHigh(float HL){ m_bounds.HL = HL; _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);      m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
+  void                  setBounds01(){ m_bounds.LL = m_loc_b = 0.0f; m_bounds.HL = m_loc_k = 1.0f;                      m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
   bounds_t              bounds() const { return m_bounds; }
   float                 boundLow() const { return m_bounds.LL; }
   float                 boundHigh() const { return m_bounds.HL; }
@@ -424,6 +425,41 @@ public:
   const float*  getDataPtr() const {   return m_matrixData;    }
   float*        getDataPtr() {    return m_matrixData;   }     // You need manual update after data change
   void  manualDataPtrUpdate(){  vmanUpData(); }
+public:
+  bool  getMinMax(float* rmin, float* rmax)
+  {
+    if (m_portionSize <= 1) return false;
+    float min = m_matrixData[0], max = m_matrixData[0];
+    for (unsigned int p=0; p<m_countPortions; p++)
+      for (unsigned int i=0; i<m_portionSize; i++)
+      {
+        if (min > m_matrixData[p*m_portionSize + i])
+          min = m_matrixData[p*m_portionSize + i];
+        if (max < m_matrixData[p*m_portionSize + i])
+          max = m_matrixData[p*m_portionSize + i];
+      }
+    if (rmin) *rmin = min;
+    if (rmax) *rmax = max;
+    return true;
+  }
+  void  adjustBounds()
+  {
+    float min,max;
+    if (getMinMax(&min, &max))
+      setBounds(min, max);
+  }
+  void  adjustBoundsWithSpacingAdd(float add2min, float add2max)
+  {
+    float min,max;
+    if (getMinMax(&min, &max))
+      setBounds(min + add2min, max + add2max);
+  }
+  void  adjustBoundsWithSpacingMul(float mul2min, float mul2max)
+  {
+    float min,max;
+    if (getMinMax(&min, &max))
+      setBounds(min*mul2min, max*mul2max);
+  }
 protected:
   void  vmanUpInit(){ m_bitmaskPendingChanges |= PC_INIT; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();  }
   void  vmanUpData(){ m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();  }

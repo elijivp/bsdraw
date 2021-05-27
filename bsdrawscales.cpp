@@ -3662,6 +3662,7 @@ void DrawBars::slot_setScalingV(int sv){  pDraw->slot_setScalingV(sv);  }
 void DrawBars::slot_setBounds(float low, float high){ pDraw->slot_setBounds(low, high); slot_updatedBounds(); }
 void DrawBars::slot_setBoundLow(float v){  pDraw->slot_setBoundLow(v); slot_updatedBounds(); }
 void DrawBars::slot_setBoundHigh(float v){  pDraw->slot_setBoundHigh(v); slot_updatedBounds();  }
+void DrawBars::slot_setBounds01(){ pDraw->slot_setBounds01(); slot_updatedBounds();  }
 void DrawBars::slot_setContrast(float k, float b){  pDraw->slot_setContrast(k, b);  slot_updatedBounds();  }
 void DrawBars::slot_setContrastK(float v){  pDraw->slot_setContrastK(v);  slot_updatedBounds(); }
 void DrawBars::slot_setContrastB(float v){  pDraw->slot_setContrastB(v);  slot_updatedBounds(); }
@@ -3672,6 +3673,10 @@ void DrawBars::slot_setData(const float* v){  pDraw->slot_setData(v);  }
 void DrawBars::slot_setData(const QVector<float>& v){  pDraw->slot_setData(v);  }
 void DrawBars::slot_fillData(float v){  pDraw->slot_fillData(v);  }
 void DrawBars::slot_clearData(){  pDraw->slot_clearData();  }
+
+void DrawBars::slot_adjustBounds(){ pDraw->slot_adjustBounds(); slot_updatedBounds(); }
+void DrawBars::slot_adjustBoundsWithSpacingAdd(float add2min, float add2max){ pDraw->slot_adjustBoundsWithSpacingAdd(add2min, add2max); slot_updatedBounds(); }
+void DrawBars::slot_adjustBoundsWithSpacingMul(float mul2min, float mul2max){ pDraw->slot_adjustBoundsWithSpacingMul(mul2min, mul2max); slot_updatedBounds(); }
 
 void DrawBars::slot_setMirroredHorz(){  pDraw->slot_setMirroredHorz(); slot_updatedOrientation();  }
 void DrawBars::slot_setMirroredVert(){  pDraw->slot_setMirroredVert(); slot_updatedOrientation(); }

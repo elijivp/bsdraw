@@ -1059,6 +1059,7 @@ void DrawQWidget::slot_setScalingV(int s){  setScalingLimitsVert(s, s); }
 void DrawQWidget::slot_setBounds(float low, float high){  setBounds(low, high); }
 void DrawQWidget::slot_setBoundLow(float value){  setBoundLow(value); }
 void DrawQWidget::slot_setBoundHigh(float value){ setBoundHigh(value);  }
+void DrawQWidget::slot_setBounds01(){ setBounds(0.0f, 1.0f); }
 void DrawQWidget::slot_setContrast(float k, float b){ setContrast(k, b);  }
 void DrawQWidget::slot_setContrastK(float k){ setContrastK(k);  }
 void DrawQWidget::slot_setContrastB(float b){ setContrastB(b);  }
@@ -1069,6 +1070,10 @@ void DrawQWidget::slot_setData(const float* data){ setData(data); }
 void DrawQWidget::slot_setData(QVector<float> data){ setData(data.constData()); }
 void DrawQWidget::slot_fillData(float data){ fillData(data); }
 void DrawQWidget::slot_clearData(){ clearData(); }
+
+void DrawQWidget::slot_adjustBounds(){  adjustBounds();  }
+void DrawQWidget::slot_adjustBoundsWithSpacingAdd(float add2min, float add2max){  adjustBoundsWithSpacingAdd(add2min, add2max); }
+void DrawQWidget::slot_adjustBoundsWithSpacingMul(float mul2min, float mul2max){  adjustBoundsWithSpacingMul(mul2min, mul2max); }
 
 void DrawQWidget::slot_setMirroredHorz(){ setMirroredHorz(); }
 void DrawQWidget::slot_setMirroredVert(){ setMirroredVert(); }

@@ -15,11 +15,17 @@
 
 
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)14
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)23
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)15
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)34
 
 
 #ifndef MW_TEST_NOCHOOSE_DEFAULT
-#include <QInputDialog>
+//#include <QInputDialog>
+#include <QDialog>
+#include <QLabel>
+#include <QListWidget>
+#include <QPushButton>
+#include <QVBoxLayout>
 #endif
 
 int main(int argc, char *argv[])
@@ -56,9 +62,28 @@ int main(int argc, char *argv[])
     tests<<QString::number(i) + ". " + tname;
   }
   QString prepend = "You can change GLSL version\nby changing BSGLSLVER in .pro file *\n\n";
-  QString result = QInputDialog::getItem(nullptr, "bsdraw", prepend + "Choose test:", tests, 1, false, &ok);
-  if (!ok)  return 0;
-  MW_TEST = (tests_t)tests.indexOf(result);
+//  QString result = QInputDialog::getItem(nullptr, "bsdraw", prepend + "Choose test:", tests, 1, false, &ok);
+//  if (!ok)  return 0;
+//  int result;
+  {
+    QDialog dlg;
+    QVBoxLayout*  lay = new QVBoxLayout;
+    lay->addWidget(new QLabel(prepend));
+    QListWidget*    qlv = new QListWidget;
+    qlv->addItems(tests);
+    qlv->setSelectionMode(QAbstractItemView::SingleSelection);
+    qlv->setCurrentRow(1);
+    qlv->setMinimumHeight(qlv->sizeHintForRow(0)*tests.count() + 10);
+    lay->addWidget(qlv);
+    QPushButton*  btn = new QPushButton("Accept");
+    QObject::connect(btn, SIGNAL(clicked()), &dlg, SLOT(accept()));
+    lay->addWidget(btn);
+    dlg.setLayout(lay);
+    if (dlg.exec() != QDialog::Accepted)
+      return 0;
+    MW_TEST = (tests_t)qlv->currentIndex().row();
+  }
+//  MW_TEST = (tests_t)tests.indexOf(result);
 #endif
   MainWindow w(MW_TEST);
   w.move(100, 200);

@@ -48,7 +48,11 @@ public:
     fmg.push(graph_locals);
     {
       bool isDots = graphopts.graphtype == GT_DOTS;
-      bool isHistogram = graphopts.graphtype == GT_HISTOGRAM || graphopts.graphtype == GT_HISTOGRAM_CROSSMAX || graphopts.graphtype == GT_HISTOGRAM_CROSSMIN;
+      bool isHistogram = graphopts.graphtype == GT_HISTOGRAM || 
+                         graphopts.graphtype == GT_HISTOGRAM_CROSSMAX || 
+                         graphopts.graphtype == GT_HISTOGRAM_CROSSMIN || 
+                         graphopts.graphtype == GT_HISTOGRAM_MESH || 
+                         graphopts.graphtype == GT_HISTOGRAM_SUM;
       bool isLinterp = graphopts.graphtype == GT_LINTERP || graphopts.graphtype == GT_LINTERPSMOOTH;
       
       if (isHistogram)
@@ -199,11 +203,15 @@ public:
       
       if (isDots)
       {
-        fmg.push( 
-                    "float MIXWELL = step(distance(fcoords_noscaled, vec2(fcoords_noscaled.x, fy_ns[1])), 0.0);" SHNL // ??? 0.0?
-                    "post_mask[0] = post_mask[0]*(1.0 - MIXWELL) + MIXWELL;" SHNL
-                    "float VALCLR = fy[1];" SHNL
-                  );
+        if (graphopts.dotsize == 0)
+          fmg.push( 
+                      "float MIXWELL = step(distance(fcoords_noscaled, vec2(fcoords_noscaled.x, fy_ns[1])), 0.0);" SHNL // ??? 0.0?
+                      "post_mask[0] = post_mask[0]*(1.0 - MIXWELL) + MIXWELL;" SHNL
+                    );
+        else
+          fmg.push(   "float MIXWELL = 0.0;" SHNL );
+        
+        fmg.push("float VALCLR = fy[1];" SHNL);
       }
       else if (isLinterp)
       {
@@ -352,37 +360,62 @@ public:
       }
       else if (isHistogram)
       {
-        fmg.push(                 
-                  "vec3 fhit = vec3(sign(fcoords_noscaled.y - fy_ns[1]), 0.0, 0.0);" SHNL
-                  "fhit.xy = vec2(step(fhit.x, 0.0), 1.0 - abs(fhit.x));" SHNL
-                  "fhit.z = (1.0 - fhit.x)*specopc*(1.0 - clamp((fcoords_noscaled.y-fy_ns[1])/(1.0 + specsmooth*10.0), 0.0, 1.0));" SHNL
-//                "fhit.z = 0.0;" SHNL
-                  "float MIXWELL = fhit.y + (fhit.x - fhit.y)*specopc + fhit.z;" SHNL
-                  "fhit.z = 1.0 - step(fhit.z, 0.0);" SHNL
+        //        fmg.push(                 
+        //                  "vec3 fhit = vec3(sign(fcoords_noscaled.y - fy_ns[1]), 0.0, 0.0);" SHNL
+        //                  "fhit.xy = vec2(step(fhit.x, 0.0), 1.0 - abs(fhit.x));" SHNL
+        //                  "fhit.z = (1.0 - fhit.x)*specopc*(1.0 - clamp((fcoords_noscaled.y-fy_ns[1])/(1.0 + specsmooth*10.0), 0.0, 1.0));" SHNL
+        //                  "float MIXWELL = fhit.y + (fhit.x - fhit.y)*specopc + fhit.z;" SHNL
+        //                  "fhit.z = 1.0 - step(fhit.z, 0.0);" SHNL
+                  
+        //                  "float fneiprec = iy_view[1];" SHNL
+        //                  );
+        fmg.push(                               
+                  "float fmix_max = max(fy_ns[0], fy_ns[2]); " SHNL
+                  "float fy_addit = (fmix_max - fy_ns[1])*iscaling.y;" SHNL
+                  "fy_addit = fy_addit*step(0.0, fy_addit);" SHNL
+                  "fmix_max = fmix_max + 1.0 - step(fmix_max, fy_ns[1]);" SHNL      /// adding 1 outside pixel for future shading
+                  "fmix_max = (fmix_max - fcoords_noscaled.y)/(fmix_max-fy_ns[1]);" SHNL
+                  "fmix_max = fmix_max*step(0.0, fmix_max)*(1.0 - step(1.0, fmix_max));" SHNL   /// shot is not in (->0)
+                  "fmix_max = mix(fmix_max, 0.2, (1.0-step(fmix_max, 0.0))*step(fmix_max, 0.2));" SHNL    /// 0.2 level for all 0..0.2
+                  "fmix_max = mix(fmix_max, 1.0, step(1.0, fmix_max));" SHNL
+              
+                  "float fmix_self = fcoords_noscaled.y - fy_ns[1];" SHNL
+                  "vec3 fhit = vec3(step(fmix_self, 0.0), 0.0, 0.0);" SHNL
+                  "fhit.y = fhit.x*step(0.0, fmix_self);" SHNL
+//                  "fhit.z = (1.0 - fhit.x)*step(fmix_self, 1.0)*(0.25+specsmooth*0.375);" SHNL
+                  "float MIXWELL =  max(fhit.y, specopc*(max(fhit.x, fmix_max)) );" SHNL
           
-                  "float fneiprec = iy_view[1];" SHNL
+                  "float fneiprec = iy_view[1] + fy_addit;" SHNL
                   );
         
         if (graphopts.postrect == PR_VALUEAROUND || graphopts.postrect == PR_SUMMARY)
           fmg.push("vec2 fhit_rect = vec2(0.0, int(fy_ns[1])*iscaling.y + iscaling.y - 1);" SHNL);
         
-        if (graphopts.graphtype == GT_HISTOGRAM_CROSSMAX)
-          fmg.push( "neib[1] = max(neib[1], fneiprec);" SHNL
-                    "fneiprec = step(neib[1], fneiprec);" SHNL  /// reassign!!
-                    "MIXWELL = MIXWELL*fneiprec;" SHNL
-                    "fhit = fhit*fneiprec;" SHNL
-                    );
-        else if (graphopts.graphtype == GT_HISTOGRAM_CROSSMIN)
+        if (graphopts.graphtype == GT_HISTOGRAM_MESH)
           fmg.push( 
-                    "neib[0] = mix(neib[0], fneiprec, step(neib[0], fneiprec)*(1.0 - fhit.x));" SHNL
-                    "neib[1] = mix(fneiprec, neib[1], neib[2]*(1.0 - step(fneiprec, neib[1])*fhit.x));" SHNL
-                    "neib[2] = mix(fhit.x, 1.0, neib[2]);" SHNL   /// + 0.0*fhit.z
-
-                    "fneiprec = (fhit.z + neib[2])*step(neib[0], fneiprec)*step(floor(fneiprec), neib[1]);" SHNL  /// reassign!!
-                    "MIXWELL = MIXWELL*fneiprec;" SHNL
-                    "fhit = fhit*fneiprec;" SHNL
+//                    "MIXWELL = mix(MIXWELL*0.8, mix(MIXWELL, 0.5*MIXWELL, step(fcoords.y, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
+//                    "MIXWELL = mix(MIXWELL*0.6, mix(MIXWELL, 0.4*MIXWELL, step(fcoords.y, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
+                    "MIXWELL = mix(MIXWELL*0.6, mix(MIXWELL, 0.4*MIXWELL, step(fcoords.y, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
+                    "neib[0] = mix(neib[0], fneiprec, step(neib[0], fneiprec));" SHNL
+//                    "fhit = fhit*step(neib[0], fneiprec);" SHNL
                     );
-        
+        else if (graphopts.graphtype == GT_HISTOGRAM_CROSSMAX)
+            fmg.push( "neib[1] = max(neib[1], fneiprec);" SHNL
+                      "fneiprec = step(neib[1], fneiprec);" SHNL  /// reassign!!
+                      "MIXWELL = MIXWELL*fneiprec;" SHNL
+                      "fhit = fhit*fneiprec;" SHNL
+                      );
+        else if (graphopts.graphtype == GT_HISTOGRAM_CROSSMIN)
+            fmg.push( 
+                      "neib[0] = mix(neib[0], fneiprec, step(neib[0], fneiprec)*(1.0 - fhit.x));" SHNL
+                      "neib[1] = mix(fneiprec, neib[1], neib[2]*(1.0 - step(fneiprec, neib[1])*fhit.x));" SHNL
+                      "neib[2] = mix(fhit.x, 1.0, neib[2]);" SHNL   /// + 0.0*fhit.z
+  
+                      "fneiprec = (fhit.z + neib[2])*step(neib[0], fneiprec)*step(floor(fneiprec), neib[1]);" SHNL  /// reassign!!
+                      "MIXWELL = MIXWELL*fneiprec;" SHNL
+                      "fhit = fhit*fneiprec;" SHNL
+                      );
+          
         if (coloropts.cpolicy != CP_RANGE)
           fmg.push("float VALCLR = clamp(fcoords_noscaled.y/fy[1], 0.0, 1.0);" SHNL);
         else
@@ -480,9 +513,16 @@ public:
       }
 
       fmg.push(   "vec3  colorGraph = texture(texPalette, vec2(portionColor, 0.0)).rgb;" SHNL );
-      fmg.push(   "result = mix(result, colorGraph, MIXWELL);" SHNL
-                  "ovMix = max(ovMix, MIXWELL*relcoords.y);" SHNL
-                "}" SHNL // for
+      
+      if (graphopts.graphtype == GT_HISTOGRAM_SUM)
+        fmg.push(   "result = result + colorGraph*vec3(MIXWELL);" SHNL
+                    "ovMix = max(ovMix, MIXWELL*relcoords.y);" SHNL
+                  "}" SHNL // for
+            );
+      else
+        fmg.push(   "result = mix(result, colorGraph, MIXWELL);" SHNL
+                    "ovMix = max(ovMix, MIXWELL*relcoords.y);" SHNL
+                  "}" SHNL // for
             );
     }
     fmg.main_end(fsp);

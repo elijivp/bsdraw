@@ -425,6 +425,55 @@ int OFCross::fshTrace(int overlay, bool rotated, char *to) const
 //////////////////////////
 /// 
 
+OFVisir::OFVisir(COORDINATION cr, float center_x, float center_y, COORDINATION featcn, float gap, float size, const linestyle_t& linestyle): 
+  DrawOverlayTraced(linestyle), OVLCoordsDynamic(cr, center_x, center_y),
+  OVLDimms2Static(featcn == CR_SAME? cr : featcn, size, size),
+  m_gap(gap)
+{
+}
+
+OFVisir::OFVisir(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap, float size, const linestyle_t& linestyle): 
+  DrawOverlayTraced(linestyle), OVLCoordsDynamic(pcoords, offset_x, offset_y),
+  OVLDimms2Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, size, size),
+  m_gap(gap)
+{
+}
+
+int   OFVisir::fshTrace(int overlay, bool rotated, char* to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.goto_normed();
+    ocg.var_fixed("gap", m_gap, m_gap);
+    ocg.movecs_pix("gap", 1);
+
+    ocg.push("vec2 nosig = vec2(-1.0 + 2.0*step(0.0, float(inormed.x)), -1.0 + 2.0*step(0.0, float(inormed.y)));");
+    
+    ocg.push("ivec2 isaved = inormed;");
+//    ocg.push("inormed.x = inormed.x + mix(gap, -gap, step(0.0, float(inormed.x)));");
+    ocg.push("inormed.x = int(inormed.x - gap.x*nosig.x);");
+    ocg.trace_2linevert_c("float(idimms2.x)", "gap.x");
+    ocg.push("inormed = isaved;");
+//    ocg.push("inormed.y = inormed.y + mix(gap, -gap, step(0.0, inormed.y));");
+    ocg.push("inormed.y = int(inormed.y - gap.y*nosig.y);");
+    ocg.trace_2linehorz_c("float(idimms2.y)", "gap.y");
+    
+//    ocg.var_static(DT_2F, "cs_sizegapped = idimms2 - gap");
+//    ocg.trace_2linehorz_c("cs_sizegapped.x", "gap.x");
+//    ocg.trace_2linevert_c("cs_sizegapped.y", "gap.y");
+//    ocg.trace_rect_cc("idimms2", 0.0f);
+  }  
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
+
+
+
+/////////////////////////////////////////////
+//////////////////////////
+/// 
+
 OFFactor::OFFactor(COORDINATION cr, float center_x, float center_y, COORDINATION featcn, float gap, float size, const linestyle_t& linestyle): 
   DrawOverlayTraced(linestyle), OVLCoordsDynamic(cr, center_x, center_y),
   OVLDimms2Static(featcn == CR_SAME? cr : featcn, size, size),
@@ -505,14 +554,14 @@ int   OFObjectif::fshTrace(int overlay, bool rotated, char* to) const
 
 OFDouble::OFDouble(bool horz, COORDINATION cn, float center, COORDINATION featcn, float gap, const linestyle_t& kls): DrawOverlayTraced(kls), 
   OVLCoordsDynamic(cn, horz? 0.0f : center, horz? center: 0.0f),
-  OVLDimms2Static(featcn == CR_SAME? cn : featcn, horz? 0.0f : gap, horz? gap : 0.0f),
+  OVLDimms2Dynamic(featcn == CR_SAME? cn : featcn, horz? 0.0f : gap, horz? gap : 0.0f),
   m_horz(horz), m_gap(gap)
 {
 }
 
 OFDouble::OFDouble(bool horz, OVLCoordsStatic* pcoords, float center, COORDINATION featcn, float gap, const linestyle_t& kls): DrawOverlayTraced(kls),
   OVLCoordsDynamic(pcoords, horz? 0.0f : center, horz? center: 0.0f),
-  OVLDimms2Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, horz? gap : 0.0f, horz? 0.0f : gap),
+  OVLDimms2Dynamic(featcn == CR_SAME? pcoords->getCoordination() : featcn, horz? gap : 0.0f, horz? 0.0f : gap),
   m_horz(horz), m_gap(gap)
 {
 }

@@ -702,7 +702,7 @@ void DrawGraphMoveEx::setData(const float *data)
 {
   m_memory.onSetData(data, m_stepSamples);
   
-  if (m_sbStatic && m_filloffset != 0) m_filloffset+=m_countPortions*m_stepSamples;
+  if (m_sbStatic && m_filloffset != 0) m_filloffset += m_countPortions*m_stepSamples;
   fillMatrix();
   
   DrawQWidget::vmanUpData();
@@ -712,7 +712,7 @@ void DrawGraphMoveEx::setData(const float* data, DataDecimator* decim)
 {
   m_memory.onSetData(data, m_stepSamples, decim);
   
-  if (m_sbStatic && m_filloffset != 0) m_filloffset+=m_countPortions*m_stepSamples;
+  if (m_sbStatic && m_filloffset != 0) m_filloffset += m_countPortions*m_stepSamples;
   fillMatrix();
   
   DrawQWidget::vmanUpData();
@@ -722,6 +722,27 @@ void DrawGraphMoveEx::clearData()
 {
   m_memory.onClearData();
   DrawQWidget::clearData();
+}
+
+void DrawGraphMoveEx::appendData(const float* data, unsigned int length)
+{
+  if (length > m_memory.total())
+    length = m_memory.total();
+  m_memory.onSetData(data, length);
+  
+  if (m_sbStatic && m_filloffset != 0) m_filloffset += m_countPortions*length;
+  
+  int showlength = this->sizeDataA();
+  m_memory.onFillData(m_filloffset + showlength, showlength, m_matrixData, 0);
+  
+  DrawQWidget::vmanUpData();
+}
+
+void DrawGraphMoveEx::resetData(const float* data, unsigned int length)
+{
+  m_filloffset = 0;
+  m_memory.onClearData();
+  appendData(data, length);
 }
 
 void DrawGraphMoveEx::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
@@ -771,7 +792,11 @@ void DrawGraphMoveEx::clampFilloffset()
   int a2 = m - m_filloffset;
   int a1 = a2 - ps;
   if (a1 < 0 || a2 < ps)
+  {
     m_filloffset = m - ps;
+    if (m_filloffset < 0)     ///  ntc!
+      m_filloffset = 0;
+  }
   else if (a2 > m)
     m_filloffset = 0;
 }

@@ -164,14 +164,16 @@ protected:
   protected:
     const unsigned int  pc, pt;
     unsigned int  pm;
+    bool          anchoring;
   protected:
     bool          rounded;
     unsigned int  current;
     float*        m_extendeddataarr;
   public:
-    MemExpand1D(unsigned int portionsCount, unsigned int portionSize, unsigned int additionalMemorySizeFor1Portion);
+    MemExpand1D(unsigned int portionsCount, unsigned int portionSize, unsigned int additionalMemorySizeFor1Portion, bool anchor=false);
     ~MemExpand1D();
     unsigned int  rangeMemsize(unsigned int memorySize);  // between 0 and startmemsize
+    void  setAnchoring(bool a){ anchoring = a; }
   public:
     void  onSetData(const float* data, unsigned int newsize);
     void  onSetData(const float* data, unsigned int newsize, DataDecimator* decim);

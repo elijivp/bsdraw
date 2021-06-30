@@ -326,13 +326,15 @@ protected:
 private:
   void  clampScalingManually()
   {
-    unsigned int old_scaling = m_scalingB;
+    unsigned int old_scaling_A = m_scalingA;
+    unsigned int old_scaling_B = m_scalingB;
     clampScaling(&m_scalingA, &m_scalingB);
-    if (m_scalingB != old_scaling  && m_datex == DATEX_1D)
+    if (m_scalingB != old_scaling_B  && m_datex == DATEX_1D)
     {
-      float coeff = float(old_scaling) / m_scalingB;
+      float coeff = float(old_scaling_B) / m_scalingB;
       m_matrixDimmB = (unsigned int)(m_matrixDimmB*coeff + 0.5f);
     }
+//    m_bitmaskPendingChanges |= sizeAndScaleChanged(old_scaling_A != m_scalingA, old_scaling_B != m_scalingB);
   }
 public:
   void  setDataTextureInterpolation(bool interp)

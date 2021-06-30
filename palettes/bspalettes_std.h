@@ -6,19 +6,50 @@
 
 #include "bsipalette.h"
 
+
+// Use PaletteBords (from bsipalette.h) for more detailed palettes
+inline PaletteConstFWD<2> constructPalette(unsigned int color1, unsigned int color2)
+{
+  unsigned int tmp[] = { color1, color2 };
+  return PaletteConstFWD<2>(tmp);
+}
+
+// Use PaletteBords (from bsipalette.h) for more detailed palettes
+inline PaletteConstFWD<3> constructPalette(unsigned int color1, unsigned int color2, unsigned int color3)
+{
+  unsigned int tmp[] = { color1, color2, color3 };
+  return PaletteConstFWD<3>(tmp);
+}
+
+
 const unsigned int colors_std_GnYe[] = { 0x00002000, 0x0000ff00, 0x0000ffff };
 const PaletteConstFWD<sizeof(colors_std_GnYe) / sizeof(unsigned int)>   paletteGnYe(colors_std_GnYe);
 const PaletteConstBWD<sizeof(colors_std_GnYe) / sizeof(unsigned int)>   paletteGnYe_inv(colors_std_GnYe);
 const unsigned int colors_std_BkWh[] = { 0x00000000, 0x00ffffff };
 const PaletteConstFWD<sizeof(colors_std_BkWh) / sizeof(unsigned int)>   paletteBkWh(colors_std_BkWh);
 const PaletteConstBWD<sizeof(colors_std_BkWh) / sizeof(unsigned int)>   paletteBkWh_inv(colors_std_BkWh);
+
 const unsigned int colors_std_BlWh[] = { 0x00ff0000, 0x00ffffff };
 const PaletteConstFWD<sizeof(colors_std_BlWh) / sizeof(unsigned int)>   paletteBlWh(colors_std_BlWh);
 const PaletteConstBWD<sizeof(colors_std_BlWh) / sizeof(unsigned int)>   paletteBlWh_inv(colors_std_BlWh);
 const unsigned int colors_std_RdWh[] = { 0x000000ff, 0x00ffffff };
 const PaletteConstFWD<sizeof(colors_std_RdWh) / sizeof(unsigned int)>   paletteRdWh(colors_std_RdWh);
 const PaletteConstBWD<sizeof(colors_std_RdWh) / sizeof(unsigned int)>   paletteRdWh_inv(colors_std_RdWh);
-const unsigned int colors_std_GrGn[] = { 0x0044444444, 0x0000ff00 };
+const unsigned int colors_std_GnWh[] = { 0x0000ff00, 0x00ffffff };
+const PaletteConstFWD<sizeof(colors_std_GnWh) / sizeof(unsigned int)>   paletteGnWh(colors_std_GnWh);
+const PaletteConstBWD<sizeof(colors_std_GnWh) / sizeof(unsigned int)>   paletteGnWh_inv(colors_std_GnWh);
+
+const unsigned int colors_std_hBlWh[] = { 0x00770000, 0x00ffffff };
+const PaletteConstFWD<sizeof(colors_std_hBlWh) / sizeof(unsigned int)>   palettehBlWh(colors_std_hBlWh);
+const PaletteConstBWD<sizeof(colors_std_hBlWh) / sizeof(unsigned int)>   palettehBlWh_inv(colors_std_hBlWh);
+const unsigned int colors_std_hRdWh[] = { 0x00000077, 0x00ffffff };
+const PaletteConstFWD<sizeof(colors_std_hRdWh) / sizeof(unsigned int)>   palettehRdWh(colors_std_hRdWh);
+const PaletteConstBWD<sizeof(colors_std_hRdWh) / sizeof(unsigned int)>   palettehRdWh_inv(colors_std_hRdWh);
+const unsigned int colors_std_hGnWh[] = { 0x00007700, 0x00ffffff };
+const PaletteConstFWD<sizeof(colors_std_hGnWh) / sizeof(unsigned int)>   palettehGnWh(colors_std_hGnWh);
+const PaletteConstBWD<sizeof(colors_std_hGnWh) / sizeof(unsigned int)>   palettehGnWh_inv(colors_std_hGnWh);
+
+const unsigned int colors_std_GrGn[] = { 0x00444444, 0x0000ff00 };
 const PaletteConstFWD<sizeof(colors_std_GrGn) / sizeof(unsigned int)>   paletteGrGn(colors_std_GrGn);
 const PaletteConstBWD<sizeof(colors_std_GrGn) / sizeof(unsigned int)>   paletteGrGn_inv(colors_std_GrGn);
 const unsigned int colors_std_BkRdWh[] = { 0x00000000, 0x000000ff, 0x00ffffff };

@@ -103,3 +103,23 @@ MQOverlayLined::MQOverlayLined(DrawOverlay* ovl, bool owner, QObject* parent): M
 //  }
 //  return false;
 //}
+
+bool  OQRemitPress_Release::overlayReactionMouse(OVL_REACTION_MOUSE orm, const void* data, bool* /*doStop*/)
+{
+  float v = m_horz? ((const float*)data)[0] : ((const float*)data)[1];
+  if (orm == ORM_LMPRESS)
+    emit mouseAction(true, v);
+  else if (orm == ORM_LMRELEASE)
+    emit mouseAction(false, v);
+  return false;
+}
+
+bool  OQRemitPressMove_Release::overlayReactionMouse(OVL_REACTION_MOUSE orm, const void* data, bool* /*doStop*/)
+{
+  float v = m_horz? ((const float*)data)[0] : ((const float*)data)[1];
+  if (orm == ORM_LMPRESS || orm == ORM_LMMOVE)
+    emit mouseAction(true, v);
+  else if (orm == ORM_LMRELEASE)
+    emit mouseAction(false, v);
+  return false;
+}

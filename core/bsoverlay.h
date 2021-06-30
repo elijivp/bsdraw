@@ -132,6 +132,10 @@ public:
   void          setCoordX(float x, bool update=true){ m_coords.x = x; if (update) overlayUpdateParameter(); }
   void          setCoordY(float y, bool update=true){ m_coords.y = y; if (update) overlayUpdateParameter(); }
 public:
+  void          moveCoordinates(float dx, float dy, bool update=true){ m_coords.x += dx; m_coords.y += dy; if (update) overlayUpdateParameter(); }
+  float         moveCoordX(float dx, bool update=true){ m_coords.x += dx; if (update) overlayUpdateParameter(); return m_coords.x; }
+  float         moveCoordY(float dy, bool update=true){ m_coords.y += dy; if (update) overlayUpdateParameter(); return m_coords.y; }
+public:
   typedef   OVLCoordsDynamic  coords_type_t;
 };
 

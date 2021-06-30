@@ -89,6 +89,7 @@ public slots:
   void  remove();
   void  removeAndLeftSpace();
   void  setVisible(bool);
+  void  setVisibleWithoutUpdate(bool);
   void  moveToAnotherSide();
   void  changeColor(const QColor& clr);
 };
@@ -119,7 +120,7 @@ typedef QWidget*  (*mtap_qwidget_fn)(int mark, int dimmarea, int reloffset, void
 
 
 class MEWLabel;
-class MEWSpace;
+class MEWSpace; class MEWColoredSpace;
 class MEWPointer;
 class MEWScaleNN;      // NN - 1 note per 1 mark
 class MEWScaleNM;      // NM notes between marks
@@ -154,6 +155,10 @@ enum   // DrawBarsFlags
   DBF_POSTFIX_TO_PREFIX=0x1000,
   DBF_DOCKTO_PREVMARK=0x2000,   // for NM
   DBF_DOCKTO_NEXTMARK=0x4000,   // for NM
+  
+  DBF_RETAP_ON_RESIZE=0x8000,
+  
+  DBF_IGNORE_ORIENT=0x10000
 };
 
 
@@ -192,12 +197,14 @@ public:
   int                 barSizeTop() const { return barSize(AT_TOP); }
   int                 barSizeBottom() const { return barSize(AT_BOTTOM); }
 public:
-  MEQWrapper*         addMarginElement(ATTACHED_TO atto, MarginElement* pme, MEQWrapper* pwp, bool sharedWithPrev, bool interventBanned);
+  MEQWrapper*         addMarginElement(ATTACHED_TO atto, MarginElement* pme, MEQWrapper* pwp, bool sharedWithPrev, bool interventBanned, bool invertBanned=false);
 public:
   MEWLabel*           addLabel(ATTACHED_TO atto, int flags, QString text, Qt::Alignment  align=Qt::AlignCenter, Qt::Orientation orient=Qt::Horizontal/*, float orientAngleGrad=0.0f*/);
   MEWSpace*           addSpace(ATTACHED_TO atto, int space);
+  MEWColoredSpace*    addSpace(ATTACHED_TO atto, int space, QColor color, bool maxzone=false);
 //  MEWSpace*           addStretch(ATTACHED_TO atto, int space, int stepSelf=1, int stepDraw=10);
   MEWSpace*           addContour(ATTACHED_TO atto, int space=0, bool maxzone=false);
+  MEWSpace*           addContour(ATTACHED_TO atto, int space, QColor color, bool maxzone);
   
   MEWPointer*         addPointerFixed(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen=0, const char* postfix=nullptr);
   MEWPointer*         addPointerFloating(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen=0, const char* postfix=nullptr);
@@ -228,7 +235,7 @@ public:
   
 public:
   void                retrieveMElement(MEQWrapper*, bool replaceWithEqSpace);
-  void                setVisible(MEQWrapper*, bool);
+  void                setVisible(MEQWrapper*, bool v, bool autoupdate=true);
   void                switchToAnotherSide(MEQWrapper*);
 //  void                changeColor(MEQWrapper*, const QColor& clr);
   void                swapBars(ATTACHED_TO);
@@ -324,6 +331,14 @@ public slots:
 };
 
 class MEWSpace: public MEQWrapper
+{
+  Q_OBJECT
+  friend class DrawBars;
+public slots:
+  void  setSpace(int space);
+};
+
+class MEWColoredSpace: public MEQWrapper
 {
   Q_OBJECT
   friend class DrawBars;

@@ -72,10 +72,12 @@ public:
   unsigned int  memfloatsFilled() const { return m_memory.filled(); }  // in floats
   unsigned int  memfloatsNonfilled() const { return m_memory.nonfilled(); }  // in floats
   unsigned int  memfloatsTotal() const { return m_memory.total(); }  // in floats
+           int  memFillOffset() const { return m_filloffset; }  // in floats
   
   void  viewDiap(unsigned int* from, unsigned int* to);  
   void  memoryPreClear() { m_memory.onClearData();  m_filloffset = 0; }
   void  memoryRangeSize(int mem);
+  void  memoryAnchor(bool v){ m_memory.setAnchoring(v); }
   
   float*        getMemfloats() { return m_memory.rawData(); }
   void          setMemfloatsUpdate();
@@ -83,6 +85,9 @@ public:
   virtual void  setData(const float* data);
   virtual void  setData(const float* data, DataDecimator* dcim);
   virtual void  clearData();
+  
+  virtual void  appendData(const float* data, unsigned int length);
+  virtual void  resetData(const float* data, unsigned int length);
 public:
 public:
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;

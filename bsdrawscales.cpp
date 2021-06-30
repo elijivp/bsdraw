@@ -419,6 +419,7 @@ class MarginBoundDepended
   int                     c_rtexttype;
   relatedopts_t           c_rdata;
   float                   c_reloffset;
+  bool                    c_updatesetDimm;
 protected:
   
   char*                   prefix, *postfix;  
@@ -487,7 +488,7 @@ protected:
   virtual void  bdContentUpdateTaps(QString& base, mtap_qstring_fn, const void* param, float relatedoffset, const tapcontent_t&)=0;
   virtual void  bdContentUpdateEnumerate(int from, int count, int recycle, float relatedoffset)=0;
 public:
-  MarginBoundDepended(): c_reloffset(0), prefix(nullptr), postfix(nullptr)
+  MarginBoundDepended(): c_reloffset(0), c_updatesetDimm(false), prefix(nullptr), postfix(nullptr)
   {
     c_rtexttype = RF_NONE;
     c_rdata.rel_fixed.LL = c_rdata.rel_fixed.HL = 0;
@@ -495,6 +496,8 @@ public:
     tapctt.lmoffset = 0;
     tapctt.lmardimm = 1;
   }
+  
+  void    setUpdateOnSetDimm(bool ups){ c_updatesetDimm = ups; }
   
   void    setRelatedOffset(int offset, bool autocallupdates=true)
   {
@@ -510,14 +513,16 @@ public:
       }
     }
   }
-  void    storeDimm(int dimm, bool autocallupdates=false)
+  void    storeDimm(int dimm/*, bool autocallupdates=false*/)
   {
     if (dimm != 0)    // ntf??
     {
       tapctt.lmardimm = dimm;
       c_reloffset = tapctt.lmoffset / tapctt.lmardimm;
-      if (autocallupdates)
-        bdContentUpdate(c_rtexttype, c_rdata, autocallupdates);
+//      if (autocallupdates)
+//        bdContentUpdate(c_rtexttype, c_rdata, autocallupdates);
+      if (c_updatesetDimm && dimm > 0)
+        bdContentUpdate(c_rtexttype, c_rdata, c_updatesetDimm);
     }
   }
   
@@ -572,6 +577,32 @@ protected:
   }
   virtual void  changeColor(const QColor&){}
 };
+
+//class MarginColoredSpace: public MarginElement
+//{
+//  int     space;
+//  QColor  color;
+//public:
+//  MarginColoredSpace(int space, QColor color)
+//  {
+//    this->space = space;
+//    this->color = color;
+//  }
+//  void  setSpace(int newspace)
+//  {
+//    space = newspace;
+//  }
+//protected:
+//  virtual bool  updateArea(const uarea_t&, int){ return true; }
+//  virtual void  draw(QPainter& p){    }
+//  virtual void  sizeHint(ATTACHED_TO, int* atto_size, int* mindly, int* minsegm_pre, int* minsegm_post) const
+//  {
+//    *atto_size = space;
+//    *mindly = *minsegm_pre = *minsegm_post = 0;
+//  }
+//  virtual void  changeColor(const QColor& c){ this->color = c; }
+//};
+
 
 //class MarginStretch: public MarginElement
 //{
@@ -641,11 +672,52 @@ public:
     _cached.filled = false;
     _cached2.filled = false;
   }
+  MarginElementCached(QColor color): c_color(color), c_color_redefined(true)
+  {
+    _cached.filled = false;
+    _cached2.filled = false;
+  }
   ~MarginElementCached();
 };
 
 MarginElementCached::~MarginElementCached(){}
 
+
+class MarginColoredSpace: public MarginElementCached
+{
+  int     space;
+  QColor  color;
+  QRect   dtrt;
+  bool    useAllZone;
+public:
+  MarginColoredSpace(int space, QColor color, bool maxzone=true): MarginElementCached(color), useAllZone(maxzone) { this->space = space; }
+  void  setSpace(int newspace){ space = newspace; }
+protected:
+  virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
+  {
+    if (MarginElementCached::updateArea(area, UPDATEFOR) == false)
+      return false;
+    int d1 = useAllZone? 0 : area.segm_pre, d2 = (useAllZone? area.segment_full : area.segment_full - area.segm_post - area.segm_over)-1;
+    if (area.atto == AT_LEFT)
+      dtrt.setCoords(area.atto_begin, d1, area.atto_end, d2);
+    else if (area.atto == AT_RIGHT)
+      dtrt.setCoords(area.atto_begin, d1, area.atto_end, d2);
+    else if (area.atto == AT_TOP)
+      dtrt.setCoords(d1, area.atto_begin, d2, area.atto_end);
+    else if (area.atto == AT_BOTTOM)
+      dtrt.setCoords(d1, area.atto_begin, d2, area.atto_end);
+    return true;
+  }
+  virtual void  draw(QPainter& painter)
+  { 
+    painter.fillRect(dtrt, c_color);
+  }
+  virtual void  sizeHint(ATTACHED_TO, int* atto_size, int* mindly, int* minsegm_pre, int* minsegm_post) const
+  {
+    *atto_size = space;
+    *mindly = *minsegm_pre = *minsegm_post = 0;
+  }
+};
 
 class MarginContour: public MarginElementCached
 {
@@ -654,10 +726,9 @@ class MarginContour: public MarginElementCached
   QRect   dtrt[3];
   bool    useAllZone;
 public:
-  MarginContour(int space=0, bool maxzone=true): count(space == 0? 1 : 3), useAllZone(maxzone)
-  {
-    this->space = space;
-  }
+  MarginContour(int space=0, bool maxzone=true):  count(space == 0? 1 : 3), useAllZone(maxzone) { this->space = space; }
+  MarginContour(int space, QColor color, bool maxzone=true): MarginElementCached(color), 
+                                                  count(space == 0? 1 : 3), useAllZone(maxzone) { this->space = space; }
   void  setSpace(int newspace)
   {
     space = newspace;
@@ -2522,10 +2593,11 @@ public:
     MarginElement*  pme;
     MEQWrapper*     pwp;
     int             offset, length;
-    bool            shared, visible, ivbanned;
+    bool            shared, visible, ivbanned, ignmirror;
     melem_t(){}
-    melem_t(MarginElement* _pme, MEQWrapper* _pwp, bool isshared, bool interventBanned): 
-      pme(_pme), pwp(_pwp), offset(0), length(0), shared(isshared), visible(true), ivbanned(interventBanned) {}
+    melem_t(MarginElement* _pme, MEQWrapper* _pwp, bool isshared, bool interventBanned, bool invertBanned): 
+      pme(_pme), pwp(_pwp), offset(0), length(0), 
+      shared(isshared), visible(true), ivbanned(interventBanned), ignmirror(invertBanned) {}
   };
   QVector<melem_t>   elems[4];
   QVector<MarginBoundDepended*>   elemsBoundDepended;
@@ -2574,6 +2646,7 @@ public:
         int apt = ttr[AT_LEFT].c_size - 1 - elems[0][i].offset;
         areaVert.atto_begin = apt;
         areaVert.atto_end = apt - elems[0][i].length;
+        areaVert.mirrored = elems[0][i].ignmirror? false : c_mirroredVert;
         elems[0][i].pme->updateArea(areaVert, UF_LEFT);
       }
     
@@ -2585,6 +2658,7 @@ public:
         int apt = c_width - 1 - ttr[AT_RIGHT].c_size + 1 + elems[1][i].offset;
         areaVert.atto_begin = apt;
         areaVert.atto_end = apt + elems[1][i].length;
+        areaVert.mirrored = elems[1][i].ignmirror? false : c_mirroredVert;
         elems[1][i].pme->updateArea(areaVert, UF_RIGHT);
       }
     
@@ -2601,9 +2675,10 @@ public:
     if (UF_TOP != -1)
       for (int i=0; i<elems[2].count(); i++)
       {
-        int apt = ttr[AT_TOP].c_size - 1 - elems[2][i].offset;
+        int apt = ttr[AT_TOP].c_size/* - 1*/ - elems[2][i].offset;
         areaHorz.atto_begin = apt;
         areaHorz.atto_end = apt - elems[2][i].length;
+        areaHorz.mirrored = elems[2][i].ignmirror? false : c_mirroredHorz;
         elems[2][i].pme->updateArea(areaHorz, UF_TOP);
       }
     
@@ -2615,6 +2690,7 @@ public:
         int apt = c_height - 1 - ttr[AT_BOTTOM].c_size + 1 + elems[3][i].offset;
         areaHorz.atto_begin = apt;
         areaHorz.atto_end = apt + elems[3][i].length;
+        areaHorz.mirrored = elems[3][i].ignmirror? false : c_mirroredHorz;
         elems[3][i].pme->updateArea(areaHorz, UF_BOTTOM);
       }
   }
@@ -2907,7 +2983,7 @@ int DrawBars::barSize(ATTACHED_TO atto) const
 
 
 
-MEQWrapper*   DrawBars::addMarginElement(ATTACHED_TO atto, MarginElement* pme, MEQWrapper* pwp, bool sharedWithPrev, bool interventBanned)
+MEQWrapper*   DrawBars::addMarginElement(ATTACHED_TO atto, MarginElement* pme, MEQWrapper* pwp, bool sharedWithPrev, bool interventBanned, bool invertBanned)
 {
 //  bool cttr_updated = true;
   ATTACHED_TO atto_was = atto;
@@ -2915,7 +2991,7 @@ MEQWrapper*   DrawBars::addMarginElement(ATTACHED_TO atto, MarginElement* pme, M
     pImpl->recalcTTRforBar(atto_was);
   
   pme->relatedInit(pDraw);
-  pImpl->elems[int(atto)].push_back(DrawBars_impl::melem_t(pme, pwp, sharedWithPrev, interventBanned));
+  pImpl->elems[int(atto)].push_back(DrawBars_impl::melem_t(pme, pwp, sharedWithPrev, interventBanned, invertBanned));
   pImpl->recalcTTRforBar(atto);
   pImpl->reupdateBars_oneSide(atto);
   PDRAWMOVE;
@@ -2948,13 +3024,19 @@ MEQWrapper*   DrawBars::addMarginElement(ATTACHED_TO atto, MarginElement* pme, M
 MEWLabel* DrawBars::addLabel(ATTACHED_TO atto, int flags, QString text, Qt::Alignment align, Qt::Orientation orient)
 {
   MarginLabel*  pme = new MarginLabel(text, this->font(), flags & DBF_LABELAREA_FULLBAR, align, orient);
-  return (MEWLabel*)addMarginElement(atto, pme, new MEWLabel, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWLabel*)addMarginElement(atto, pme, new MEWLabel, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWSpace* DrawBars::addSpace(ATTACHED_TO atto, int space)
 {
   MarginElement*  pme = new MarginSpace(space);
   return (MEWSpace*)addMarginElement(atto, pme, new MEWSpace, false, false);
+}
+
+MEWColoredSpace* DrawBars::addSpace(ATTACHED_TO atto, int space, QColor color, bool maxzone)
+{
+  MarginElement*  pme = new MarginColoredSpace(space, color, maxzone);
+  return (MEWColoredSpace*)addMarginElement(atto, pme, new MEWColoredSpace, false, false);
 }
 
 //MEWSpace*DrawBars::addStretch(ATTACHED_TO atto, int space, int stepSelf, int stepDraw)
@@ -2968,12 +3050,18 @@ MEWSpace* DrawBars::addContour(ATTACHED_TO atto, int space, bool maxzone)
   return (MEWSpace*)addMarginElement(atto, pme, new MEWSpace, false, false);
 }
 
+MEWSpace*DrawBars::addContour(ATTACHED_TO atto, int space, QColor color, bool maxzone)
+{
+  MarginElement*  pme = new MarginContour(space, color, maxzone);
+  return (MEWSpace*)addMarginElement(atto, pme, new MEWSpace, false, false);
+}
+
 MEWPointer* DrawBars::addPointerFixed(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen, const char* postfix)
 {
   MarginPointer*  pme = new MarginPointer(marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   flags & DBF_POSTFIX_TO_PREFIX? pme->setPrefix(postfix) : pme->setPostfix(postfix);
   pme->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL)));
-  return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWPointer*DrawBars::addPointerFloating(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen, const char* postfix)
@@ -2981,7 +3069,7 @@ MEWPointer*DrawBars::addPointerFloating(ATTACHED_TO atto, int flags, float pos, 
   MarginPointer*  pme = new MarginPointer(marklen, pos, true, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   flags & DBF_POSTFIX_TO_PREFIX? pme->setPrefix(postfix) : pme->setPostfix(postfix);
   pme->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL)));
-  return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWPointer* DrawBars::addPointerFixedMod(ATTACHED_TO atto, int flags, float pos, float LL, float HL, float MOD, int marklen, const char* postfix)
@@ -2989,7 +3077,7 @@ MEWPointer* DrawBars::addPointerFixedMod(ATTACHED_TO atto, int flags, float pos,
   MarginPointer*  pme = new MarginPointer(marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   flags & DBF_POSTFIX_TO_PREFIX? pme->setPrefix(postfix) : pme->setPostfix(postfix);
   pme->bdContentUpdate(RF_SETBOUNDSMOD, relatedopts_t(bounds_t(LL, HL), MOD));
-  return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWPointer*DrawBars::addPointerFloatingMod(ATTACHED_TO atto, int flags, float pos, float LL, float HL, float MOD, int marklen, const char* postfix)
@@ -2997,7 +3085,7 @@ MEWPointer*DrawBars::addPointerFloatingMod(ATTACHED_TO atto, int flags, float po
   MarginPointer*  pme = new MarginPointer(marklen, pos, true, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   flags & DBF_POSTFIX_TO_PREFIX? pme->setPrefix(postfix) : pme->setPostfix(postfix);
   pme->bdContentUpdate(RF_SETBOUNDSMOD, relatedopts_t(bounds_t(LL, HL), MOD));
-  return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWPointer* DrawBars::addPointerDrawUniSide(ATTACHED_TO atto, int flags, float pos, int marklen, bool floating, const char* postfix)
@@ -3006,7 +3094,7 @@ MEWPointer* DrawBars::addPointerDrawUniSide(ATTACHED_TO atto, int flags, float p
   flags & DBF_POSTFIX_TO_PREFIX? pme->setPrefix(postfix) : pme->setPostfix(postfix);
   int sizeDimm = BAR_VERT[atto]? int(pDraw->sizeDataVert() + 1) : int(pDraw->sizeDataHorz() + 1);
   pme->bdContentUpdate(RF_SETENUMERATE, relatedopts_t(sizeDimm-1, 0/*flags & DBF_ENUMERATE_FROMZERO? 0 : 1*/, -1));
-  return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWPointer* DrawBars::addPointerDrawGraphB(ATTACHED_TO atto, int flags, float pos, int marklen, bool floating, const char* postfix)
@@ -3015,7 +3103,7 @@ MEWPointer* DrawBars::addPointerDrawGraphB(ATTACHED_TO atto, int flags, float po
   flags & DBF_POSTFIX_TO_PREFIX? pme->setPrefix(postfix) : pme->setPostfix(postfix);
   pme->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(pDraw->bounds()));
   pImpl->elemsBoundDepended.push_back(pme);
-  return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWPointer*)addMarginElement(atto, pme, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 
@@ -3034,7 +3122,7 @@ MEWScale* DrawBars::addScaleEmpty(ATTACHED_TO atto, int flags, int fixedCount, i
     else                    pImpl->c_hint_draw_width = fixedCount*pixStep_pixSpacing;
 //    updateGeometry();
   }
-  return (MEWScale*)addMarginElement(atto, pme, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScale*)addMarginElement(atto, pme, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWScaleNN* DrawBars::addScaleFixed(ATTACHED_TO atto, int flags, float LL, float HL, int fixedCount, int pixStep_pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
@@ -3056,7 +3144,7 @@ MEWScaleNN* DrawBars::addScaleFixed(ATTACHED_TO atto, int flags, float LL, float
 //    updateGeometry();
   }
 //  pImpl->elemsClickDepended.push_back(mmt);
-  return (MEWScaleNN*)addMarginElement(atto, mmt, new MEWScaleNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScaleNN*)addMarginElement(atto, mmt, new MEWScaleNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWScaleNN* DrawBars::addScaleFixedMod(ATTACHED_TO atto, int flags, float LL, float HL, float MOD, int fixedCount, int pixStep_pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
@@ -3078,7 +3166,7 @@ MEWScaleNN* DrawBars::addScaleFixedMod(ATTACHED_TO atto, int flags, float LL, fl
 //    updateGeometry();
   }
 //  pImpl->elemsClickDepended.push_back(mmt);
-  return (MEWScaleNN*)addMarginElement(atto, mmt, new MEWScaleNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScaleNN*)addMarginElement(atto, mmt, new MEWScaleNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 inline int countMaxNumbers(int marksCount)
@@ -3105,7 +3193,7 @@ MEWScaleNM* DrawBars::addScaleEnumerator(ATTACHED_TO atto, int flags, int marksC
     else                    pImpl->c_hint_draw_width = (marksCount-1)*pixStep_pixSpacing;
 //    updateGeometry();
   }
-  return (MEWScaleNM*)addMarginElement(atto, mmt, new MEWScaleNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScaleNM*)addMarginElement(atto, mmt, new MEWScaleNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWScaleTAPNN* DrawBars::addScaleTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksCount, int pixStep_pixSpacing, const char* postfix)
@@ -3115,13 +3203,14 @@ MEWScaleTAPNN* DrawBars::addScaleTapNN(ATTACHED_TO atto, int flags, mtap_qstring
   flags & DBF_POSTFIX_TO_PREFIX? mmt->setPrefix(postfix) : mmt->setPostfix(postfix);
   mmt->setFont(this->font());
   mmt->bdContentUpdate(RF_SETTAPS, relatedopts_t(fn, param, maxtextlen));
+  mmt->setUpdateOnSetDimm(flags & DBF_RETAP_ON_RESIZE);
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = marksCount*(pixStep_pixSpacing);
     else                    pImpl->c_hint_draw_width = marksCount*(pixStep_pixSpacing);
 //    updateGeometry();
   }
-  return (MEWScaleTAPNN*)addMarginElement(atto, mmt, new MEWScaleTAPNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScaleTAPNN*)addMarginElement(atto, mmt, new MEWScaleTAPNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWScaleTAPNM* DrawBars::addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksCount, int pixStep_pixSpacing, const char* postfix)
@@ -3131,13 +3220,14 @@ MEWScaleTAPNM* DrawBars::addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qstring
   flags & DBF_POSTFIX_TO_PREFIX? mmt->setPrefix(postfix) : mmt->setPostfix(postfix);
   mmt->setFont(this->font());
   mmt->bdContentUpdate(RF_SETTAPS, relatedopts_t(fn, param, maxtextlen));
+  mmt->setUpdateOnSetDimm(flags & DBF_RETAP_ON_RESIZE);
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = (marksCount-1)*pixStep_pixSpacing;
     else                    pImpl->c_hint_draw_width = (marksCount-1)*pixStep_pixSpacing;
 //    updateGeometry();
   }
-  return (MEWScaleTAPNM*)addMarginElement(atto, mmt, new MEWScaleTAPNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScaleTAPNM*)addMarginElement(atto, mmt, new MEWScaleTAPNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWScaleTAPNM* DrawBars::addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param, int marksCount, int pixStep_pixSpacing)
@@ -3150,7 +3240,7 @@ MEWScaleTAPNM* DrawBars::addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qwidget
     else                    pImpl->c_hint_draw_width = (marksCount-1)*pixStep_pixSpacing;
 //    updateGeometry();
   }
-  return (MEWScaleTAPNM*)addMarginElement(atto, mmt, new MEWScaleTAPNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScaleTAPNM*)addMarginElement(atto, mmt, new MEWScaleTAPNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWScaleNM* DrawBars::addScaleWidgetsNM(ATTACHED_TO atto, int flags, int maxperpendiculardimm, int marksNwidgetsCount, QWidget* wdgs[], int pixStep_pixSpacing)
@@ -3163,7 +3253,7 @@ MEWScaleNM* DrawBars::addScaleWidgetsNM(ATTACHED_TO atto, int flags, int maxperp
     else                    pImpl->c_hint_draw_width = (marksNwidgetsCount-1)*pixStep_pixSpacing;
 //    updateGeometry();
   }
-  return (MEWScaleNM*)addMarginElement(atto, mmt, new MEWScaleNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScaleNM*)addMarginElement(atto, mmt, new MEWScaleNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWScale* DrawBars::addScaleDrawUniSide(ATTACHED_TO atto, int flags, int pixSpacing, unsigned int step, const char* postfix)
@@ -3179,7 +3269,7 @@ MEWScale* DrawBars::addScaleDrawUniSide(ATTACHED_TO atto, int flags, int pixSpac
     else                    pImpl->c_hint_draw_width = (sizeDimm)*(pixSpacing);
 //    updateGeometry();
   }
-  return (MEWScale*)addMarginElement(atto, mmt, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScale*)addMarginElement(atto, mmt, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWScale* DrawBars::addScaleDrawUniSide(ATTACHED_TO atto, int flags, float LL, float HL, int pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
@@ -3197,7 +3287,7 @@ MEWScale* DrawBars::addScaleDrawUniSide(ATTACHED_TO atto, int flags, float LL, f
     else                    pImpl->c_hint_draw_width = sizeDimm*(pixSpacing);
 //    updateGeometry();
   }
-  return (MEWScale*)addMarginElement(atto, mmt, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScale*)addMarginElement(atto, mmt, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWScale* DrawBars::addScaleDrawGraphB(ATTACHED_TO atto, int flags, int marksCount, int pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
@@ -3215,7 +3305,7 @@ MEWScale* DrawBars::addScaleDrawGraphB(ATTACHED_TO atto, int flags, int marksCou
   }
   pImpl->elemsBoundDepended.push_back(/*(MarginBoundDepended*)*/mmt);
   pImpl->elemsClickDepended.push_back(mmt);
-  return (MEWScale*)addMarginElement(atto, mmt, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScale*)addMarginElement(atto, mmt, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWScale* DrawBars::addScaleDrawGraphB(ATTACHED_TO atto, int flags, float LL, float HL, int marksCount, int pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
@@ -3232,7 +3322,7 @@ MEWScale* DrawBars::addScaleDrawGraphB(ATTACHED_TO atto, int flags, float LL, fl
   }
   pImpl->elemsBoundDepended.push_back(mmt);
   pImpl->elemsClickDepended.push_back(mmt);
-  return (MEWScale*)addMarginElement(atto, mmt, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScale*)addMarginElement(atto, mmt, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWScaleTAP*          DrawBars::addScaleDrawRecorderB(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, const void* param, int miniPerMaxiLIMIT)
@@ -3248,7 +3338,7 @@ MEWScaleTAP*          DrawBars::addScaleDrawRecorderB(ATTACHED_TO atto, int flag
 //    updateGeometry();
   }
   pImpl->elemsScrollDepended.push_back(mmt);
-  return (MEWScaleTAP*)addMarginElement(atto, mmt, new MEWScaleTAP, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScaleTAP*)addMarginElement(atto, mmt, new MEWScaleTAP, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 MEWScaleTAP* DrawBars::addScaleDrawRecorderNM(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, const void* param, int miniPerMaxiLIMIT)
@@ -3256,6 +3346,7 @@ MEWScaleTAP* DrawBars::addScaleDrawRecorderNM(ATTACHED_TO atto, int flags, int m
   MarginMarksTexted* mmt = new MarginMarksTextBetween();
   mmt->init(DB_HIDDEN_MODE(flags, DBMODE_STATIC), marksCount, pixStep, DB_ROUNDING(flags), miniPerMaxiLIMIT);
   mmt->bdContentUpdate(RF_SETTAPS, relatedopts_t(mtfn, param, maxtextlen));
+  mmt->setUpdateOnSetDimm(flags & DBF_RETAP_ON_RESIZE);
   if (flags & DBF_MINSIZE_BY_PIXSTEP)
   {
     if (BAR_VERT[atto])     pImpl->c_hint_draw_height = (marksCount-1)*(pixStep);
@@ -3263,7 +3354,7 @@ MEWScaleTAP* DrawBars::addScaleDrawRecorderNM(ATTACHED_TO atto, int flags, int m
 //    updateGeometry();
   }
   pImpl->elemsScrollDepended.push_back(mmt);
-  return (MEWScaleTAP*)addMarginElement(atto, mmt, new MEWScaleTAP, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED);
+  return (MEWScaleTAP*)addMarginElement(atto, mmt, new MEWScaleTAP, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
 void DrawBars::retrieveMElement(MEQWrapper* mw, bool replaceWithEqSpace)
@@ -3300,14 +3391,15 @@ void DrawBars::retrieveMElement(MEQWrapper* mw, bool replaceWithEqSpace)
       }
 }
 
-void DrawBars::setVisible(MEQWrapper* pwp, bool visible)
+void DrawBars::setVisible(MEQWrapper* pwp, bool v, bool autoupdate)
 {
   for (int d=0; d<4; d++)
     for (DrawBars_impl::melem_iterator_t iter=pImpl->elems[d].begin(); iter!=pImpl->elems[d].end(); iter++)
       if (iter->pwp == pwp)
       {
-        iter->visible = visible;
-        update();
+        iter->visible = v;
+        if (autoupdate)
+          update();
         return;
       }
 }
@@ -3887,6 +3979,11 @@ void MEQWrapper::setVisible(bool visible)
   m_premote->setVisible(this, visible);
 }
 
+void MEQWrapper::setVisibleWithoutUpdate(bool visible)
+{
+  m_premote->setVisible(this, visible, false);
+}
+
 void MEQWrapper::moveToAnotherSide()
 {
   m_premote->switchToAnotherSide(this);
@@ -3923,6 +4020,11 @@ void MEWSpace::setSpace(int space)
   remoteRebound();
 }
 
+void MEWColoredSpace::setSpace(int space)
+{
+  ((MarginColoredSpace*)m_pme)->setSpace(space);
+  remoteRebound();
+}
 
 
 /***/

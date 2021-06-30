@@ -132,6 +132,17 @@ protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
+class OFVisir: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimms2Static
+{
+protected:
+  float         m_gap;
+public:
+  OFVisir(COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float gap, float size, const linestyle_t& kls=linestyle_solid(1,1,1));
+  OFVisir(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap, float size=-1, const linestyle_t& kls=linestyle_solid(1,1,1));
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+};
+
 class OFFactor: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimms2Static
 {
 protected:
@@ -155,7 +166,7 @@ protected:
 };
 
 
-class OFDouble: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimms2Static
+class OFDouble: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimms2Dynamic
 {
 protected:
   bool          m_horz;

@@ -29,6 +29,10 @@ public slots:
   void      setOpacity(float opacity){ m_povl->setOpacity(c_opacity = opacity); } /// 0 for invisible
   void      setThickness(float thickness){  m_povl->setThickness(thickness); }
   void      setSlice(float slice){  m_povl->setSlice(slice); }
+  
+  void      setOTS(const ovlbasics_t& ob){ m_povl->setOTS(ob); }
+  void      setOTS(float opacity, float thickness, float slice){ m_povl->setOTS(opacity, thickness, slice); }
+  
   void      setVisible(bool v);
   
   void      show();
@@ -72,6 +76,29 @@ public:
 //};
 
 /****/
+
+class OQRemitPress_Release: public QObject, public DrawOverlayProactive
+{
+  Q_OBJECT
+  bool    m_horz;
+public:
+  OQRemitPress_Release(bool isHorz): m_horz(isHorz){}
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE orm, const void* data, bool* /*doStop*/);
+signals:
+  void  mouseAction(bool activePhase, float center);
+};
+
+class OQRemitPressMove_Release: public QObject, public DrawOverlayProactive
+{
+  Q_OBJECT
+  bool    m_horz;
+public:
+  OQRemitPressMove_Release(bool isHorz): m_horz(isHorz){}
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE orm, const void* data, bool* /*doStop*/);
+signals:
+  void  mouseAction(bool activePhase, float center);
+};
+
 
 //class OQClicker: public QObject, public DrawOverlayProactive
 //{

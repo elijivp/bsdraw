@@ -1168,9 +1168,9 @@ void DrawQWidget::MemExpand2D::extendeddataarr_release(mem_t md) const
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-DrawQWidget::MemExpand1D::MemExpand1D(unsigned int portionsCount, unsigned int portionSize, unsigned int additionalMemorySizeFor1Portion): 
+DrawQWidget::MemExpand1D::MemExpand1D(unsigned int portionsCount, unsigned int portionSize, unsigned int additionalMemorySizeFor1Portion, bool anchor): 
   pc(portionsCount), pt(portionSize + additionalMemorySizeFor1Portion),
-  pm(portionSize + additionalMemorySizeFor1Portion), 
+  pm(portionSize + additionalMemorySizeFor1Portion), anchoring(anchor),
   rounded(false), current(0)
 {
   m_extendeddataarr = new float[pc*pt];
@@ -1257,6 +1257,8 @@ void DrawQWidget::MemExpand1D::onFillData(int offsetBack, unsigned int samples, 
   }
   unsigned int fillSize[] = { samples, 0 };  /// first copy, second copy (by loop or emptyfill)
   bool sndIsEmpty = false;
+  int  anchoro1 = 0;
+  int  anchoro2 = 0;
   
   if (rounded == false && pos > (int)current)
   {
@@ -1269,6 +1271,11 @@ void DrawQWidget::MemExpand1D::onFillData(int offsetBack, unsigned int samples, 
     fillSize[0] = current - pos;
     fillSize[1] = samples - fillSize[0];
     sndIsEmpty = true;
+    if (anchoring)
+    {
+      anchoro1 = samples - fillSize[0];
+      anchoro2 = -fillSize[0];
+    }
   }
   else if (rounded == true && pos + samples > pm)
   {
@@ -1278,12 +1285,12 @@ void DrawQWidget::MemExpand1D::onFillData(int offsetBack, unsigned int samples, 
   
   for (unsigned int p=0; p<pc; p++)
   {
-    memcpy(rslt + p*samples, &m_extendeddataarr[p*pm + pos], fillSize[0]*sizeof(float));
+    memcpy(rslt + p*samples + anchoro1, &m_extendeddataarr[p*pm + pos], fillSize[0]*sizeof(float));
     if (sndIsEmpty == false)
-      memcpy(rslt  + p*samples + fillSize[0], &m_extendeddataarr[p*pm + 0], fillSize[1]*sizeof(float));
+      memcpy(rslt  + p*samples + fillSize[0] + anchoro2, &m_extendeddataarr[p*pm + 0], fillSize[1]*sizeof(float));
     else
       for (unsigned int i=0; i<fillSize[1]; i++)
-        rslt[fillSize[0]  + p*samples + i] = emptyfill;
+        rslt[i + p*samples + fillSize[0] + anchoro2] = emptyfill;
   }
 }
 
@@ -1420,7 +1427,7 @@ bool BSQSelectorB::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE or
       unsigned int ssB = pwdg->sizeB()/pwdg->sizeDataB();
       int x = ((const float*)dataptr)[2], y = ((const float*)dataptr)[3];
       unsigned int cellB = (orientationTransposed(orient)? x : y) / ssB;
-      if (orientationMirroredVert(orient))
+      if (orientationMirroredVert(orient) == false)
         cellB = pwdg->sizeDataB() - 1 - cellB;
       emit selectionChanged(cellB + m_startswith);
     }

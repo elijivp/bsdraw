@@ -922,6 +922,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       for (int j=0; j<PORTIONS; j++)
       {
         draws[1 + TD*i + j] = new DrawHint((DrawGraph*)draws[TD*i], i, flags[i*PORTIONS + j] | DH_AUTOMARGIN_8, OR_LRTB);
+//        draws[1 + TD*i + j] = new DrawHint(0.25*i);
+//        draws[1 + TD*i + j]->setScalingLimitsSynced(10,10);
       }
     }
     sigtype = ST_MOVE;

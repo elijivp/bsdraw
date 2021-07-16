@@ -38,6 +38,7 @@ class DrawHint: public DrawQWidget
 {
 public:
   DrawHint(const class DrawGraph* pdg, int portion, int flags=0, ORIENTATION orient=OR_LRTB, unsigned int backgroundColor=0xFFFFFFFF);
+  DrawHint(float value, ORIENTATION orient=OR_LRTB, unsigned int backgroundColor=0xFFFFFFFF);
 public:
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
   virtual unsigned int    colorBack() const;

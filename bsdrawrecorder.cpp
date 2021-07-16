@@ -16,6 +16,13 @@ DrawRecorder::DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, un
   m_matrixLmSize = linesMemory;
 }
 
+void DrawRecorder::setFillDirection(int fd)
+{
+  m_filldirection = fd;
+  fillMatrix();
+  DrawQWidget::vmanUpData();
+}
+
 void DrawRecorder::setData(const float* data)
 {  
   m_memory.onSetData(data);
@@ -71,18 +78,36 @@ void DrawRecorder::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDi
 
 void DrawRecorder::fillMatrix()
 {
-  for (unsigned int p = 0; p < m_countPortions; ++p)
-    for (unsigned int i = 0; i < m_matrixDimmB; ++i)
-    {
-      if (m_memory.onFillData(p, i + m_stopped, &m_matrixData[p*m_matrixDimmB*m_matrixDimmA +  i*m_matrixDimmA]) == false)
-//      if (m_memory.onFillData(p + m_portionSize, i + m_stopped, &m_matrixData[p*m_matrixDimmB*m_matrixDimmA +  i*m_matrixDimmA]) == false)
+  if (m_filldirection == FILL_OUTSIDE)
+  {
+    for (unsigned int p = 0; p < m_countPortions; ++p)
+      for (unsigned int i = 0; i < m_matrixDimmB; ++i)
       {
-        for (unsigned int j = 0; j < m_matrixDimmA; ++j)
+        if (m_memory.onFillData(p, i + m_stopped, &m_matrixData[p*m_matrixDimmB*m_matrixDimmA +  i*m_matrixDimmA]) == false)
+  //      if (m_memory.onFillData(p + m_portionSize, i + m_stopped, &m_matrixData[p*m_matrixDimmB*m_matrixDimmA +  i*m_matrixDimmA]) == false)
         {
-          m_matrixData[p*m_matrixDimmB*m_matrixDimmA + i*m_matrixDimmA + j] = 0;
+          for (unsigned int j = 0; j < m_matrixDimmA; ++j)
+          {
+            m_matrixData[p*m_matrixDimmB*m_matrixDimmA + i*m_matrixDimmA + j] = 0;
+          }
         }
       }
-    }
+  }
+  else if (m_filldirection == FILL_INSIDE)
+  {
+    for (unsigned int p = 0; p < m_countPortions; ++p)
+      for (unsigned int i = 0; i < m_matrixDimmB; ++i)
+      {
+        if (m_memory.onFillDataBackward(p, i + m_stopped, &m_matrixData[p*m_matrixDimmB*m_matrixDimmA +  i*m_matrixDimmA]) == false)
+  //      if (m_memory.onFillData(p + m_portionSize, i + m_stopped, &m_matrixData[p*m_matrixDimmB*m_matrixDimmA +  i*m_matrixDimmA]) == false)
+        {
+          for (unsigned int j = 0; j < m_matrixDimmA; ++j)
+          {
+            m_matrixData[p*m_matrixDimmB*m_matrixDimmA + i*m_matrixDimmA + j] = 0;
+          }
+        }
+      }
+  }
 }
 
 int DrawRecorder::scrollValue() const

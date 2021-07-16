@@ -22,7 +22,7 @@ public:
 #define SHNL "\n"
 #endif
 
-class SheiGeneratorHint_Single: public ISheiGeneratorHint_Base
+class SheiGeneratorHint_Graph: public ISheiGeneratorHint_Base
 {
 private:
   float   m_start, m_stop;
@@ -36,7 +36,7 @@ public:
   int     m_mindimmA, m_mindimmB;
   unsigned int  m_bckclr;
 public:
-  SheiGeneratorHint_Single(int flags, float start, float stop, int portion, int allocatedPortions, BSCOLORPOLICY cp, unsigned int backgroundColor): 
+  SheiGeneratorHint_Graph(int flags, float start, float stop, int portion, int allocatedPortions, BSCOLORPOLICY cp, unsigned int backgroundColor): 
     m_start(start), m_stop(stop), 
     m_portion(portion), m_allocatedPortions(allocatedPortions),
     m_cpolicy(cp), m_bckclr(backgroundColor)
@@ -52,7 +52,7 @@ public:
     default: break;
     }
   }
-  ~SheiGeneratorHint_Single();
+  ~SheiGeneratorHint_Graph();
 public:
   virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, 
                                          ORIENTATION orient, SPLITPORTIONS splitPortions, const impulsedata_t& imp,
@@ -174,11 +174,74 @@ public:
     return fmg.written();
   }
 };
-SheiGeneratorHint_Single::~SheiGeneratorHint_Single(){}
+SheiGeneratorHint_Graph::~SheiGeneratorHint_Graph(){}
+
+class SheiGeneratorHint_Intensity: public ISheiGeneratorHint_Base
+{
+  float   m_value;
+public:
+  int     m_mindimmA, m_mindimmB;
+  unsigned int  m_bckclr;
+public:
+  SheiGeneratorHint_Intensity(float value, unsigned int backgroundColor): 
+    m_value(value), m_bckclr(backgroundColor)
+  {
+  }
+  ~SheiGeneratorHint_Intensity();
+public:
+  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, 
+                                         ORIENTATION orient, SPLITPORTIONS splitPortions, const impulsedata_t& imp,
+                                         unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
+  {
+    FshMainGenerator fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
+    fmg.main_begin(FshMainGenerator::INIT_BYVALUE, m_bckclr, orient, fsp);
+    
+    
+    fmg.push( "ivec2 icoords = ivec2(relcoords*(ibounds));" SHNL);
+    fmg.push( "float mixwell = 1.0;"  SHNL );
+    
+    fmg.cfloatvar("pcBase", m_value);
+    fmg.cfloatvar("pcInterval", 0);
+    fmg.cintvar("i", 0);
+    
+    fmg.push("float portionColor = pcBase;" SHNL);
+    
+//    if (m_allocatedPortions > 1)
+//    {
+//      fmg.cintvar("allocatedPortions", m_allocatedPortions);
+//      if (m_cpolicy == CP_SINGLE)                   fmg.push("float portionColor = pcBase + pcInterval*(float(i)/float(allocatedPortions-1));" SHNL);                   /// -1!
+//      else if (m_cpolicy == CP_OWNRANGE)            fmg.push("float portionColor = pcBase + pcInterval/float(allocatedPortions)*(i + 1.0 - VALCLR);" SHNL);             /// not -1!
+//      else if (m_cpolicy == CP_OWNRANGE_GROSS)      fmg.push("float portionColor = pcBase + pcInterval/float(allocatedPortions)*(i + 1.0 - sqrt(VALCLR));" SHNL);       /// not -1!
+//      else if (m_cpolicy == CP_OWNRANGE_SYMMETRIC)  fmg.push("float portionColor = pcBase + pcInterval/float(allocatedPortions)*(i + 0.5 - abs(VALCLR - 0.5) );" SHNL); /// not -1!
+//      else if (m_cpolicy == CP_RANGE)               fmg.push("float portionColor = (pcBase + pcInterval*(float(i)/float(allocatedPortions)))*VALCLR;" SHNL);            /// not -1!
+//      else if (m_cpolicy == CP_SUBPAINTED)          fmg.push("float portionColor = fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
+//      else if (m_cpolicy == CP_RANGESUBPAINTED)     fmg.push("float portionColor = pcBase + pcInterval*float(i)/float(allocatedPortions)*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
+//    }
+//    else
+//    {
+//      if (m_cpolicy == CP_SINGLE)                   fmg.push("float portionColor = pcBase;" SHNL);
+//      else if (m_cpolicy == CP_OWNRANGE)            fmg.push("float portionColor = pcBase + pcInterval*VALCLR;" SHNL);
+//      else if (m_cpolicy == CP_OWNRANGE_GROSS)      fmg.push("float portionColor = pcBase + pcInterval*sqrt(VALCLR);" SHNL);
+//      else if (m_cpolicy == CP_OWNRANGE_SYMMETRIC)  fmg.push("float portionColor = pcBase + pcInterval*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL);
+//      else if (m_cpolicy == CP_RANGE)               fmg.push("float portionColor = pcBase + pcInterval*VALCLR;" SHNL);
+//      else if (m_cpolicy == CP_SUBPAINTED)          fmg.push("float portionColor = fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
+//      else if (m_cpolicy == CP_RANGESUBPAINTED)     fmg.push("float portionColor = pcBase + pcInterval*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
+//    }
+    
+    fmg.push( "float distwell = 0.0;"  SHNL );
+    fmg.push( "vec3  colorGraph = texture(texPalette, vec2(portionColor, 0.0)).rgb;" SHNL
+              "result = mix(result, colorGraph, mixwell);" SHNL
+    );
+    
+    fmg.main_end(fsp);
+    return fmg.written();
+  }
+};
+SheiGeneratorHint_Intensity::~SheiGeneratorHint_Intensity(){}
 
 DrawHint::DrawHint(const DrawGraph* pdg, int portion, int flags, ORIENTATION orient, unsigned int backgroundColor):
   DrawQWidget(DATEX_2D, 
-              new SheiGeneratorHint_Single(flags, pdg->coloropts().cstart, pdg->coloropts().cstop, 
+              new SheiGeneratorHint_Graph(flags, pdg->coloropts().cstart, pdg->coloropts().cstop, 
                                            portion, pdg->allocatedPortions(), pdg->coloropts().cpolicy, 
                                            backgroundColor == 0xFFFFFFFF? pdg->coloropts().backcolor : backgroundColor)
               , 1, orient)
@@ -187,7 +250,7 @@ DrawHint::DrawHint(const DrawGraph* pdg, int portion, int flags, ORIENTATION ori
   m_matrixDimmB = 1;
   m_portionSize = 1;
   
-  SheiGeneratorHint_Single* shs = (SheiGeneratorHint_Single*)m_pcsh;
+  SheiGeneratorHint_Graph* shs = (SheiGeneratorHint_Graph*)m_pcsh;
   if (m_matrixSwitchAB)
     setMinimumSize(shs->m_mindimmB, shs->m_mindimmA);
   else
@@ -195,6 +258,17 @@ DrawHint::DrawHint(const DrawGraph* pdg, int portion, int flags, ORIENTATION ori
   
 //  int automargin = 32;
 //  if (automargin) this->setContentsMargins(automargin, automargin, automargin, automargin);
+  deployMemory();
+}
+
+DrawHint::DrawHint(float value, ORIENTATION orient, unsigned int backgroundColor):
+  DrawQWidget(DATEX_2D, 
+              new SheiGeneratorHint_Intensity(value, backgroundColor)
+              , 1, orient)
+{
+  m_matrixDimmA = 1;
+  m_matrixDimmB = 1;
+  m_portionSize = 1;
   deployMemory();
 }
 
@@ -209,7 +283,7 @@ void DrawHint::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA,
 
 unsigned int DrawHint::colorBack() const
 {
-  unsigned int bc = ((SheiGeneratorHint_Single*)m_pcsh)->m_bckclr;
+  unsigned int bc = ((SheiGeneratorHint_Graph*)m_pcsh)->m_bckclr;
   if (bc == 0xFFFFFFFF)
     return DrawQWidget::colorBack();
   return bc;

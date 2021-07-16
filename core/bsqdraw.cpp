@@ -1146,6 +1146,18 @@ bool DrawQWidget::MemExpand2D::onFillData(int portion, int pos, float *rslt) con
   return false;
 }
 
+bool DrawQWidget::MemExpand2D::onFillDataBackward(int portion, int pos, float *rslt) const
+{
+  if (pos < (int)mb.filled)
+  {
+    int j = (int)mb.current - ((int)mb.filled - 1 - (int)pos);
+    if (j < 0)  j += memoryLines;
+    memcpy(rslt, &mb.extendeddataarr[j*pc*ps + portion*ps], ps*sizeof(float));
+    return true;
+  }
+  return false;
+}
+
 DrawQWidget::MemExpand2D::mem_t DrawQWidget::MemExpand2D::extendeddataarr_replicate()
 {
   DrawQWidget::MemExpand2D::mem_t result = mb;

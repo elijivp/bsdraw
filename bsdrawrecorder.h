@@ -21,11 +21,14 @@ class DrawRecorder: public DrawQWidget
 {
   Q_OBJECT
 protected:
+  int                     m_filldirection;
   int                     m_stopped;
   MemExpand2D             m_memory;
   unsigned int            m_resizelim;
 public:
+  enum  { FILL_OUTSIDE, FILL_INSIDE, FILL_DEFAULT=FILL_OUTSIDE };
   DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory=1000, unsigned int portions=1, ORIENTATION orient=OR_LRTB, SPLITPORTIONS splitPortions=SL_NONE, unsigned int resizeLimit=2160);
+          void            setFillDirection(int fd);
 public:
   virtual void            setData(const float*);
   virtual void            setData(const float*, DataDecimator* decim);

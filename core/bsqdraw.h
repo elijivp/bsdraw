@@ -12,6 +12,7 @@
 
 #include "bsdraw.h"
 
+
 #include <QtGlobal>
 #include <QVector>
 #if QT_VERSION >= 0x050000
@@ -31,6 +32,9 @@
 #endif
 
 class QScrollBar;
+inline QColor bsqcolor(unsigned int v){ return QColor((v)&0xFF, (v>>8)&0xFF, (v>>16)&0xFF); }
+
+
 class DrawQWidget: public QOpenGLWidget, protected QOpenGLFunctions, public DrawCore
 {
   Q_OBJECT
@@ -152,6 +156,7 @@ protected:
     void  onSetData(const float* data, DataDecimator* decim);
     void  onClearData();
     bool  onFillData(int portion, int pos, float* rslt) const;
+    bool  onFillDataBackward(int portion, int pos, float* rslt) const;
   public:
     mem_t   extendeddataarr_replicate();
     mem_t   extendeddataarr_replace(mem_t);

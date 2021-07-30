@@ -808,15 +808,17 @@ int DrawGraphMoveEx::scrollValue() const
 
 void DrawGraphMoveEx::scrollDataTo(int pp)
 {
-//  unsigned int cf = m_matrixLmSize;
-//  if (cf < m_matrixDimmA)
-//    m_filloffset = 0;
-//  else
-//    m_filloffset = int(((float)pp/cf)*(cf - m_matrixDimmA));
-//  fillMatrix();
-//  DrawQWidget::vmanUpData();
-  
   m_filloffset = int(((float)pp/m_memory.allowed())*(m_memory.allowed() - this->m_portionSize));
+  clampFilloffset();
+  fillMatrix();
+  DrawQWidget::vmanUpData();
+}
+
+void DrawGraphMoveEx::scrollDataToAbs(int v)
+{
+  if (v > m_memory.allowed() - this->m_portionSize)
+    v = m_memory.allowed() - this->m_portionSize;
+  m_filloffset = v;
   clampFilloffset();
   fillMatrix();
   DrawQWidget::vmanUpData();
@@ -824,8 +826,6 @@ void DrawGraphMoveEx::scrollDataTo(int pp)
 
 void DrawGraphMoveEx::scrollRelativeTo(int pp)
 {
-//  qDebug()<<"Memory:  filled= "<<m_memory.filled()<<"; nonfilled= "<<m_memory.nonfilled();
-//  qDebug()<<"Scroll:  stopped= "<<m_filloffset<<"; posto= "<<pp;
   m_filloffset += pp;
   clampFilloffset();
   fillMatrix();

@@ -1100,6 +1100,10 @@ void  DrawQWidget::scrollDataTo(int)
 {
 }
 
+void DrawQWidget::scrollDataToAbs(int)
+{
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 DrawQWidget::MemExpand2D::MemExpand2D(unsigned int portionsCount, unsigned int portionSize, unsigned int linesMemory): pc(portionsCount), ps(portionSize), memoryLines(linesMemory)

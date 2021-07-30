@@ -7,7 +7,7 @@
 DrawRecorder::DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory, 
                            unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions, unsigned int resizeLimit): 
   DrawQWidget(DATEX_15D, new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient, splitPortions),
-  m_stopped(0), m_memory(portions, samplesHorz, linesMemory), m_resizelim(resizeLimit)
+  m_filldirection(FILL_DEFAULT), m_stopped(0), m_memory(portions, samplesHorz, linesMemory), m_resizelim(resizeLimit)
 {
   m_matrixDimmA = samplesHorz;
   m_matrixDimmB = linesStart;
@@ -115,12 +115,26 @@ int DrawRecorder::scrollValue() const
   return m_stopped;
 }
 
+unsigned int DrawRecorder::filled() const
+{
+  return m_memory.filled();
+}
+
 void DrawRecorder::scrollDataTo(int pp)
 {
   if (m_matrixLmSize < m_matrixDimmB*m_scalingB)
     m_stopped = 0;
   else
     m_stopped = ((float)pp/m_matrixLmSize)*(m_matrixLmSize - m_matrixDimmB*m_scalingB);
+  fillMatrix();
+  DrawQWidget::vmanUpData();
+}
+
+void DrawRecorder::scrollDataToAbs(int v)
+{
+  if (v > m_matrixLmSize - m_matrixDimmB*m_scalingB)
+    v = m_matrixLmSize - m_matrixDimmB*m_scalingB;
+  m_stopped = v;
   fillMatrix();
   DrawQWidget::vmanUpData();
 }

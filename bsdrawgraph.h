@@ -100,6 +100,7 @@ public:
   virtual int             scrollValue() const;
 public slots:
   virtual void            scrollDataTo(int);
+  virtual void            scrollDataToAbs(int);
   virtual void            scrollRelativeTo(int);
 };
 

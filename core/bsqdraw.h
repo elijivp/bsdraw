@@ -131,8 +131,9 @@ private:
 public:
   virtual  int    scrollValue() const;
   unsigned int    lmSize() const;
-protected slots:
+public slots:
   virtual void    scrollDataTo(int);
+  virtual void    scrollDataToAbs(int);
 protected:  
   class MemExpand2D
   {
@@ -157,6 +158,10 @@ protected:
     void  onClearData();
     bool  onFillData(int portion, int pos, float* rslt) const;
     bool  onFillDataBackward(int portion, int pos, float* rslt) const;
+  public:
+    unsigned int  filled() const { return mb.filled; }  // in floats
+    unsigned int  nonfilled() const { return memoryLines - mb.filled; } // in floats
+    unsigned int  total() const { return memoryLines; }  // in floats
   public:
     mem_t   extendeddataarr_replicate();
     mem_t   extendeddataarr_replace(mem_t);

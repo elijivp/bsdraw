@@ -40,8 +40,11 @@ protected:
           void            fillMatrix();
 public:
   virtual int             scrollValue() const;
-protected slots:
+          
+          unsigned int    filled() const;
+public slots:
   virtual void            scrollDataTo(int);
+  virtual void            scrollDataToAbs(int);
 };
 
 class DrawRecorderPaged: public DrawRecorder

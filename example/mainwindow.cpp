@@ -101,6 +101,21 @@ public:
   ~BSUOD_DPM(){ if (id == 0) delete dpm; }
 };
 
+struct test_rgb_p
+{
+  struct  compo
+  {
+    int  start, stop, clamp;
+    
+    int   get(float step)
+    {
+      int result = start + qRound(step*(stop - start));
+      if (clamp && result > clamp) result = clamp;
+      return result;
+    }
+  } r, g, b;
+};
+
 const IPalette* const ppalettes_loc_std[] = {  &paletteBkWh, &paletteBkGyGyGyWh, &paletteGnYe, &paletteBlWh, &paletteBkRdWh, &paletteBkBlWh, &paletteBkGrWh, &paletteBkBlGrYeWh };
 const IPalette* const ppalettes_rgb[] = {  &paletteRG, &paletteRB, &paletteRGB, &paletteBGR };
 
@@ -999,36 +1014,73 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     static unsigned int colors[2][clc];
     int dm = clc/2;
     
-    QColor clr("#EE9999");
-    const char* schemaname[2] = { "LG", "LR" };
+    const char* schemaname[2] = { "R", "G" };
+//    const char* postfix = "";
+    const char* postfix = "_dark";
+//    int rp1[][2] = { {25, 0x550000}, {59, 0x550000}, {25, 0x550000} };
+//    int rgb_p1[][2] = { { 0,0xFF }, {0,0}, {0,0} };
+//    int rgb_p2[][2] = { { 0,0 }, {0,0}, {0,0xFF} };
 //    int rgb_p1[][2] = { { 0,0xA0 }, {0,0xED}, {0,0xA0} };
-//    int rgb_p2[][2] = { { 0,0xEE }, {0,0x99}, {0,0x99} };
+//    int rgb_p2[][2] = { { 0,0xED }, {0,0x99}, {0,0xA0} };
+    test_rgb_p  p1 = { { 0,0xFF }, {0,0}, {0x0,0x0} };
+    test_rgb_p  p2 = { { 0,0 }, {0,0xFF}, {0x0,0x0} };
     
-    int rp1[][2] = { {25, 0x550000}, {59, 0x550000}, {25, 0x550000} };
-    
-    int rgb_p1[][2] = { { 0,0xA0 }, {0,0xED}, {0,0xA0} };
-    int rgb_p2[][2] = { { 0,0xED }, {0,0x99}, {0,0xA0} };
+    test_rgb_p* cc[][2] = {  { &p1, &p2 },
+                             { &p2, &p1 }
+                          };
     
     for (int c=0; c<2; c++)
     {
-      int rw[][2] = { { rgb_p1[0][0], rgb_p1[0][1] }, { rgb_p2[0][0], rgb_p2[0][1] }  };
-      int gw[][2] = { { rgb_p1[1][0], rgb_p1[1][1] }, { rgb_p2[1][0], rgb_p2[1][1] }  };
-      int bw[][2] = { { rgb_p1[2][0], rgb_p1[2][1] }, { rgb_p2[2][0], rgb_p2[2][1] }  };
       for (int h=0; h<2; h++)
       {
-        int cr=rw[h][0];
-        int cg=gw[h][0];
-        int cb=bw[h][0];
+        int cr=cc[c][h]->r.start;
+        int cg=cc[c][h]->g.start;
+        int cb=cc[c][h]->b.start;
         for (int i=0; i<dm; i++)
         {
           float step = float(i)/(dm-1);
-          cr = rw[h][0] + qRound(step*(rw[h][1] - rw[h][0]));
-          cg = gw[h][0] + qRound(step*(gw[h][1] - gw[h][0]));
-          cb = bw[h][0] + qRound(step*(bw[h][1] - bw[h][0]));
+          //mathf = [ x - (c*decay*(0.25 - (x-0.5)**2)) for c in coeffs ]
+          float cs = step - ((0.25f - (step - 0.5f)*(step - 0.5f)));
+          cr = cc[c][h]->r.get(cs);
+          cg = cc[c][h]->g.get(cs);
+          cb = cc[c][h]->b.get(cs);
           colors[c][dm*h + i] = (cb&0xFF) << 16 | (cg&0xFF) << 8 | (cr&0xFF);
         }
       }
     }
+    
+//    int rgb_p1[][3] = { { 0,0xFF }, {0,0xFF,0x33}, {0x0,0xFF,0x33} }; // start, stop, clamp for r,g,b
+//    int rgb_p2[][3] = { { 0,0xFF,0x33 }, {0,0xFF}, {0x0,0xFF,0x33} };
+//    int rw[2][2][3] = {
+//                        { { rgb_p1[0][0], rgb_p1[0][1] }, { rgb_p2[0][0], rgb_p2[0][1] }  },
+//                        { { rgb_p2[0][0], rgb_p2[0][1] }, { rgb_p1[0][0], rgb_p1[0][1] }  } 
+//                      };
+//    int gw[2][2][3] = {
+//                        { { rgb_p1[1][0], rgb_p1[1][1] }, { rgb_p2[1][0], rgb_p2[1][1] }  },
+//                        { { rgb_p2[1][0], rgb_p2[1][1] }, { rgb_p1[1][0], rgb_p1[1][1] }  } 
+//                      };
+//    int bw[2][2][3] = {
+//                        { { rgb_p1[2][0], rgb_p1[2][1] }, { rgb_p2[2][0], rgb_p2[2][1] }  },
+//                        { { rgb_p2[2][0], rgb_p2[2][1] }, { rgb_p1[2][0], rgb_p1[2][1] }  } 
+//                      };
+    
+//    for (int c=0; c<2; c++)
+//    {
+//      for (int h=0; h<2; h++)
+//      {
+//        int cr=rw[c][h][0];
+//        int cg=gw[c][h][0];
+//        int cb=bw[c][h][0];
+//        for (int i=0; i<dm; i++)
+//        {
+//          float step = float(i)/(dm-1);
+//          cr = rw[c][h][0] + qRound(step*(rw[c][h][1] - rw[c][h][0]));
+//          cg = gw[c][h][0] + qRound(step*(gw[c][h][1] - gw[c][h][0]));
+//          cb = bw[c][h][0] + qRound(step*(bw[c][h][1] - bw[c][h][0]));
+//          colors[c][dm*h + i] = (cb&0xFF) << 16 | (cg&0xFF) << 8 | (cr&0xFF);
+//        }
+//      }
+//    }
 //    int red_way[][2] = { { 0, 0 }, {255,255} };
 //    int green_way[][2] = { { 0, 0 }, {0,255} };
 //    int blue_way[][2] = { { 0, 255}, {0,0} };
@@ -1053,8 +1105,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //        }
 //      }
 //    }
-    qDebug()<<palette2string(QString("%1%2").arg(schemaname[0]).arg(schemaname[1]), colors[0], clc).toStdString().c_str();
-    qDebug()<<palette2string(QString("%1%2").arg(schemaname[1]).arg(schemaname[0]), colors[1], clc).toStdString().c_str();
+    qDebug()<<palette2string(QString("%1%2%3").arg(schemaname[0]).arg(schemaname[1]).arg(postfix), colors[0], clc).toStdString().c_str();
+    qDebug()<<palette2string(QString("%1%2%3").arg(schemaname[1]).arg(schemaname[0]).arg(postfix), colors[1], clc).toStdString().c_str();
     
     static PalettePArray palettes[2] = { PalettePArray(colors[0], clc, false), PalettePArray(colors[1], clc, false) };
     const IPalette* pptr[2] = { &palettes[0], &palettes[1] };

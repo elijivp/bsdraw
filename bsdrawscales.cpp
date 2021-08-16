@@ -531,10 +531,15 @@ public:
   int rmaxlen() const {  return c_rtexttype == RF_SETBOUNDS || c_rtexttype == RF_SETBOUNDSMOD ? 7 + numfmt_locked*2 : c_rtexttype == RF_SETENUMERATE? c_rdata.rel_enumerate.numcount :
                                 c_rtexttype == RF_SETTAPS? c_rdata.rel_tap_qstring.slen : 0; }
 public:
-  enum  FMT { FMT_X2, FMT_X4 };
+  enum  FMT { FMT_X0, FMT_X2, FMT_X4 };
   void    setFormat(FMT fmt)
   { 
-    if (fmt == FMT_X2)
+    if (fmt == FMT_X0)
+    {
+      numfmt.setFormat('f', 0, 'g', 0, 100000.0, 'g', 0);
+      numfmt_locked = 3;
+    }
+    else if (fmt == FMT_X2)
     {
       numfmt.setFormat('f', 4, 'g', 4, 100000.0, 'g', 3);
       numfmt_locked = 1;
@@ -3045,8 +3050,9 @@ inline int countMaxNumbers(int marksCount)
   return -1;
 }
 
-#define   MARG_OPTS_TEXT    if (flags & DBF_PRECISION_X2)       pmarg->setFormat(MarginBoundDepended::FMT_X2); \
-                            else if (flags & DBF_PRECISION_X2)  pmarg->setFormat(MarginBoundDepended::FMT_X4); \
+#define   MARG_OPTS_TEXT    if (flags & DBF_PRECISION_X0)       pmarg->setFormat(MarginBoundDepended::FMT_X0); \
+                            else if (flags & DBF_PRECISION_X2)  pmarg->setFormat(MarginBoundDepended::FMT_X2); \
+                            else if (flags & DBF_PRECISION_X4)  pmarg->setFormat(MarginBoundDepended::FMT_X4); \
                             flags & DBF_POSTFIX_TO_PREFIX? pmarg->setPrefix(postfix) : pmarg->setPostfix(postfix);
 
 

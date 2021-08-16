@@ -495,28 +495,28 @@ public:
       if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
     }
   }
-  void  setImpulseCoeffA(int count, const float coeffs[], int central, bool noscaled=false, bool rotated=false)
+  void  setImpulseCoeffA(int count, const float coeffs[], int central, bool noscaled=false, bool cycled=false)
   {
-    impulsedata_t idt = { noscaled? impulsedata_t::IR_A_COEFF_NOSCALED : impulsedata_t::IR_A_COEFF, count, central, rotated? 1 : 0 };
+    impulsedata_t idt = { noscaled? impulsedata_t::IR_A_COEFF_NOSCALED : impulsedata_t::IR_A_COEFF, count, central, cycled? 1 : 0, {} };
     for (int i=0; i<count; i++)
       m_impulsedata.coeff[i] = coeffs[i];
     setImpulse(idt);
   }
-  void  setImpulseCoeffB(int count, const float coeffs[], int central, bool noscaled=false, bool rotated=false)
+  void  setImpulseCoeffB(int count, const float coeffs[], int central, bool noscaled=false, bool cycled=false)
   {
-    impulsedata_t idt = { noscaled? impulsedata_t::IR_B_COEFF_NOSCALED : impulsedata_t::IR_B_COEFF, count, central, rotated? 1 : 0 };
+    impulsedata_t idt = { noscaled? impulsedata_t::IR_B_COEFF_NOSCALED : impulsedata_t::IR_B_COEFF, count, central, cycled? 1 : 0, {} };
     for (int i=0; i<count; i++)
       m_impulsedata.coeff[i] = coeffs[i];
     setImpulse(idt);
   }
   void  setImpulseBordersA(int minscaling, int bordersize, bool fixed=true)
   {
-    impulsedata_t idt = { fixed? impulsedata_t::IR_A_BORDERS_FIXEDCOUNT : impulsedata_t::IR_A_BORDERS, minscaling, bordersize, 0 };
+    impulsedata_t idt = { fixed? impulsedata_t::IR_A_BORDERS_FIXEDCOUNT : impulsedata_t::IR_A_BORDERS, minscaling, bordersize, 0, {} };
     setImpulse(idt);
   }
   void  setImpulseBordersB(int minscaling, int bordersize, bool fixed=true)
   {
-    impulsedata_t idt = { fixed? impulsedata_t::IR_B_BORDERS_FIXEDCOUNT : impulsedata_t::IR_B_BORDERS, minscaling, bordersize, 0 };
+    impulsedata_t idt = { fixed? impulsedata_t::IR_B_BORDERS_FIXEDCOUNT : impulsedata_t::IR_B_BORDERS, minscaling, bordersize, 0, {} };
     setImpulse(idt);
   }
   const impulsedata_t& impulse() const { return m_impulsedata; }

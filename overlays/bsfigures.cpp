@@ -420,6 +420,46 @@ int OFCross::fshTrace(int overlay, bool rotated, char *to) const
 }
 
 
+/////////////////////////////////////////////
+//////////////////////////
+/// 
+
+OFAngle::OFAngle(OFAngle::ORIENT orient, COORDINATION cr, float center_x, float center_y, COORDINATION featcn, float size_x, float size_y, const linestyle_t& linestyle): 
+  DrawOverlayTraced(linestyle), OVLCoordsDynamic(cr, center_x, center_y),
+  OVLDimms2Static(featcn == CR_SAME? cr : featcn, size_x, size_y), 
+  m_orient(orient)
+{
+}
+
+OFAngle::OFAngle(OFAngle::ORIENT orient, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float size_x, float size_y, const linestyle_t& linestyle): 
+  DrawOverlayTraced(linestyle), OVLCoordsDynamic(pcoords, offset_x, offset_y),
+  OVLDimms2Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, size_x, size_y), 
+  m_orient(orient)
+{
+}
+
+int   OFAngle::fshTrace(int overlay, bool rotated, char* to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.goto_normed();
+    
+    if (m_orient == OR_LT || m_orient == OR_LB)
+      ocg.trace_linehorz_l("float(idimms2.x)");
+    else if (m_orient == OR_RT || m_orient == OR_RB)
+      ocg.trace_linehorz_r("float(idimms2.x)");
+    
+    if (m_orient == OR_LT || m_orient == OR_RT)
+      ocg.trace_linevert_t("float(idimms2.y)");
+    else if (m_orient == OR_LB || m_orient == OR_RB)
+      ocg.trace_linevert_b("float(idimms2.y)");
+  }      
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
+
+
 
 /////////////////////////////////////////////
 //////////////////////////

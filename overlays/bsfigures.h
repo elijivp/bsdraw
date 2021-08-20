@@ -108,8 +108,6 @@ protected:
 
 class OFArrow: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimmsOff
 {
-public:
-  enum  ARROWTYPE {  AT_SUKA, AT_BLET, AT_SUKABLET  };
 protected:
   int           m_at;
   float         m_param1;
@@ -128,6 +126,18 @@ protected:
 public:
   OFCross(COORDINATION cn, float start_x, float start_y, COORDINATION featcn, float gap, float size=-1, const linestyle_t& linestyle=linestyle_solid(1,1,1));
   OFCross(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap, float size=-1, const linestyle_t& linestyle=linestyle_solid(1,1,1));
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+};
+
+class OFAngle: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimms2Static
+{
+protected:
+  int     m_orient;
+public:
+  enum  ORIENT { OR_LT, OR_RT, OR_LB, OR_RB };
+  OFAngle(ORIENT orient, COORDINATION cn, float start_x, float start_y, COORDINATION featcn, float size_x, float size_y, const linestyle_t& linestyle=linestyle_solid(1,1,1));
+  OFAngle(ORIENT orient, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float size_x, float size_y, const linestyle_t& linestyle=linestyle_solid(1,1,1));
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
@@ -177,6 +187,7 @@ public:
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
+
 
 //class OFLevels: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimmsOff
 //{

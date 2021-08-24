@@ -116,10 +116,22 @@ struct test_rgb_p
   } r, g, b;
 };
 
+enum  { C_R, C_G, C_B };
+struct myrgb_t
+{
+  uchar t[3];
+};
+//inline unsigned int cast(const myrgb_t& clr){  return clr.t[C_R] << 16 | clr.t[C_G] << 8 | clr.t[C_B]; }
+inline myrgb_t cast(unsigned int clr){  myrgb_t result = { uchar(clr & 0xFF), uchar((clr >> 8) & 0xFF), uchar((clr >> 16) & 0xFF) }; return result; }
+
+
+
 const IPalette* const ppalettes_loc_std[] = {  &paletteBkWh, &paletteBkGyGyGyWh, &paletteGnYe, &paletteBlWh, &paletteBkRdWh, &paletteBkBlWh, &paletteBkGrWh, &paletteBkBlGrYeWh };
 const IPalette* const ppalettes_rgb[] = {  &paletteRG, &paletteRB, &paletteRGB, &paletteBGR };
 
-QString palette2string(const QString& name, unsigned int pptr[], unsigned int clc)
+
+template <typename T>
+QString palette2string(const QString& name, const T& pptr, unsigned int clc)
 {
   QString nc = QString("colors_rgb_%1").arg(name);
   QString pc = QString("palette%1").arg(name), pci = QString("palette%1_inv").arg(name);
@@ -140,6 +152,7 @@ QString palette2string(const QString& name, unsigned int pptr[], unsigned int cl
   result += QString("const PaletteConstBWD<sizeof(%1) / sizeof(unsigned int)>   %2(%1);").arg(nc).arg(pci) + "\n";
   return result;
 }
+
 
 MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent), 
   MW_TEST(testnumber), randomer(nullptr), active_ovl(0), ovl_visir(-1), ovl_marks(-1), ovl_figures(-1), ovl_snowflake(-1), ovl_active_mark(9), ovl_is_synced(true), sigtype(ST_PEAK3), sig_k(1), sig_b(0)
@@ -1009,7 +1022,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   }
   else if (MW_TEST == DEBUG_PALETTE2D)
   {
-#if 1
+#if 0
     static const int clc = 172;
     static unsigned int colors[2][clc];
     int dm = clc/2;
@@ -1048,76 +1061,64 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         }
       }
     }
-    
-//    int rgb_p1[][3] = { { 0,0xFF }, {0,0xFF,0x33}, {0x0,0xFF,0x33} }; // start, stop, clamp for r,g,b
-//    int rgb_p2[][3] = { { 0,0xFF,0x33 }, {0,0xFF}, {0x0,0xFF,0x33} };
-//    int rw[2][2][3] = {
-//                        { { rgb_p1[0][0], rgb_p1[0][1] }, { rgb_p2[0][0], rgb_p2[0][1] }  },
-//                        { { rgb_p2[0][0], rgb_p2[0][1] }, { rgb_p1[0][0], rgb_p1[0][1] }  } 
-//                      };
-//    int gw[2][2][3] = {
-//                        { { rgb_p1[1][0], rgb_p1[1][1] }, { rgb_p2[1][0], rgb_p2[1][1] }  },
-//                        { { rgb_p2[1][0], rgb_p2[1][1] }, { rgb_p1[1][0], rgb_p1[1][1] }  } 
-//                      };
-//    int bw[2][2][3] = {
-//                        { { rgb_p1[2][0], rgb_p1[2][1] }, { rgb_p2[2][0], rgb_p2[2][1] }  },
-//                        { { rgb_p2[2][0], rgb_p2[2][1] }, { rgb_p1[2][0], rgb_p1[2][1] }  } 
-//                      };
-    
-//    for (int c=0; c<2; c++)
-//    {
-//      for (int h=0; h<2; h++)
-//      {
-//        int cr=rw[c][h][0];
-//        int cg=gw[c][h][0];
-//        int cb=bw[c][h][0];
-//        for (int i=0; i<dm; i++)
-//        {
-//          float step = float(i)/(dm-1);
-//          cr = rw[c][h][0] + qRound(step*(rw[c][h][1] - rw[c][h][0]));
-//          cg = gw[c][h][0] + qRound(step*(gw[c][h][1] - gw[c][h][0]));
-//          cb = bw[c][h][0] + qRound(step*(bw[c][h][1] - bw[c][h][0]));
-//          colors[c][dm*h + i] = (cb&0xFF) << 16 | (cg&0xFF) << 8 | (cr&0xFF);
-//        }
-//      }
-//    }
-//    int red_way[][2] = { { 0, 0 }, {255,255} };
-//    int green_way[][2] = { { 0, 0 }, {0,255} };
-//    int blue_way[][2] = { { 0, 255}, {0,0} };
-    
-//    for (int c=0; c<2; c++)
-//    {
-//      int rw[][2] = { { red_way[c][0], red_way[c][1] }, { red_way[1-c][0], red_way[1-c][1] }  };
-//      int gw[][2] = { { green_way[c][0], green_way[c][1] }, { green_way[1-c][0], green_way[1-c][1] } };
-//      int bw[][2] = { { blue_way[c][0], blue_way[c][1] }, { blue_way[1-c][0], blue_way[1-c][1] } };
-//      for (int h=0; h<2; h++)
-//      {
-//        int cr=rw[h][0];
-//        int cg=gw[h][0];
-//        int cb=bw[h][0];
-//        for (int i=0; i<dm; i++)
-//        {
-//          float step = float(i)/(dm-1);
-//          cr = rw[h][0] + qRound(step*(rw[h][1] - rw[h][0]));
-//          cg = gw[h][0] + qRound(step*(gw[h][1] - gw[h][0]));
-//          cb = bw[h][0] + qRound(step*(bw[h][1] - bw[h][0]));
-//          colors[c][dm*h + i] = (cb&0xFF) << 16 | (cg&0xFF) << 8 | (cr&0xFF);
-//        }
-//      }
-//    }
     qDebug()<<palette2string(QString("%1%2%3").arg(schemaname[0]).arg(schemaname[1]).arg(postfix), colors[0], clc).toStdString().c_str();
     qDebug()<<palette2string(QString("%1%2%3").arg(schemaname[1]).arg(schemaname[0]).arg(postfix), colors[1], clc).toStdString().c_str();
     
     static PalettePArray palettes[2] = { PalettePArray(colors[0], clc, false), PalettePArray(colors[1], clc, false) };
     const IPalette* pptr[2] = { &palettes[0], &palettes[1] };
+    PORTIONS = 2;
 #else
-    const IPalette* pptr[2] = { &paletteGB, &paletteBG };
+    static const int clc = 172;
+    static PaletteBORDS<clc> brd0(0xFFFFFF);
+    static PaletteBORDS<clc> brd1(0xFFFFFF);
+    PaletteBORDS<clc>*  pbrd[] = { &brd0, &brd1 }; 
+    float starter[] = { 0.2f, 0.3f };
+    int   finaler = 0x9F;
+    for (int b=0; b<2; b++)
+    {
+      int start = int(clc*starter[b]);
+      for (int i=start; i<clc; i++)
+      {
+        float step = float(i - start)/(clc - start);
+        float cs = step - ((0.25f - (step - 0.5f)*(step - 0.5f)));
+        unsigned int cc = 0xFF * (1.0f - cs);
+        unsigned int fc = 0xFF - (0xFF - finaler)*cs;
+//        (*pbrd[b])[i] = ((*pbrd[b])[i] & 0x0000FF) | (cc << 16) | (cc << 8);
+        (*pbrd[b])[i] = (fc) | (cc << 16) | (cc << 8);
+//        (*pbrd[b])[i] = (fc << 8) | (cc << 16) | (cc);
+//        (*pbrd[b])[i] = (fc << 8) | (fc) | (cc << 16);
+      }
+    }
+    
+    QString names[2];
+    for (int b=0; b<2; b++)
+      names[b] = QString("WR_0%1").arg(int(starter[b]*10));
+    
+    qDebug()<<palette2string(names[0], brd0, clc).toStdString().c_str();
+    qDebug()<<palette2string(names[1], brd1, clc).toStdString().c_str();
+    
+    for (int b=0; b<2; b++)
+    {
+      QImage img(clc, 16, QImage::Format_RGB888);
+      for (int j=0; j<16; j++)
+      {
+        myrgb_t*  bits = (myrgb_t*)img.scanLine(j);
+        for (int i=0; i<clc; i++)
+        {
+          bits[i] = cast((*pbrd[b])[i]);
+        }
+      }
+      img = img.scaled(clc*2, 16);
+      img.save(QString("spec_") + names[b] + QString(".png"), nullptr);
+    }
+    
+    const IPalette* pptr[2] = { &brd0, &brd1 };
+    PORTIONS = 1;
 #endif
     
     
     SAMPLES = 100;
     MAXLINES = 100;
-    PORTIONS = 2;
     PRECREATE(1, 2);
     for (int i=0; i < drawscount; i++)
     {

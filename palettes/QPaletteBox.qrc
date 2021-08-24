@@ -109,5 +109,29 @@
         <file>special/spec_BlGnYe.png</file>
         <file>special/spec_GnYe.png</file>
         <file>special/spec_BlYeRd.png</file>
+        <file>special/spec_WY_08.png</file>
+        <file>special/spec_WY_09.png</file>
+        <file>special/spec_WY_06.png</file>
+        <file>special/spec_WY_07.png</file>
+        <file>special/spec_WY_04.png</file>
+        <file>special/spec_WY_05.png</file>
+        <file>special/spec_WG_04.png</file>
+        <file>special/spec_WG_05.png</file>
+        <file>special/spec_WG_06.png</file>
+        <file>special/spec_WG_07.png</file>
+        <file>special/spec_WG_08.png</file>
+        <file>special/spec_WG_09.png</file>
+        <file>special/spec_WR_08.png</file>
+        <file>special/spec_WR_09.png</file>
+        <file>special/spec_WR_06.png</file>
+        <file>special/spec_WR_07.png</file>
+        <file>special/spec_WR_04.png</file>
+        <file>special/spec_WR_05.png</file>
+        <file>special/spec_WR_02.png</file>
+        <file>special/spec_WR_03.png</file>
+        <file>special/spec_WG_02.png</file>
+        <file>special/spec_WG_03.png</file>
+        <file>special/spec_WY_02.png</file>
+        <file>special/spec_WY_03.png</file>
     </qresource>
 </RCC>

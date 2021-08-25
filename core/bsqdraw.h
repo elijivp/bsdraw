@@ -58,6 +58,7 @@ protected:
   unsigned int            m_matrixLmSize;
   bool                    m_sbStatic;
   int                     m_cttrLeft, m_cttrTop, m_cttrRight, m_cttrBottom;
+  float                   c_dpr;
   int                     c_width, c_height;
   float                   m_viewTurn;
 protected:

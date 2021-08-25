@@ -10,6 +10,11 @@
 
 #include "../palettes/bsipalette.h"
 
+#if QT_VERSION >= 0x050000
+#include <QApplication>
+#include <QScreen>
+#endif
+
 #include <QMouseEvent>
 #include <QResizeEvent>
 
@@ -53,7 +58,11 @@ DrawQWidget::DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int
 //  fmt.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
   this->setFormat(fmt);
   
-  
+#if QT_VERSION >= 0x050000
+  c_dpr = (float)QApplication::primaryScreen()->devicePixelRatio();
+#else
+  c_dpr = 1.0f;
+#endif
 //  setMouseTracking(true);
 }
 
@@ -307,7 +316,7 @@ void DrawQWidget::initCollectAndCompileShader()
 }
 
 void DrawQWidget::initializeGL()
-{
+{  
   m_SurfaceVertex[0] = -1.0f; m_SurfaceVertex[1] = -1.0f;
   m_SurfaceVertex[2] =  1.0f; m_SurfaceVertex[3] = -1.0f;
   m_SurfaceVertex[4] = -1.0f; m_SurfaceVertex[5] =  1.0f;
@@ -747,8 +756,11 @@ void DrawQWidget::paintGL()
 
 void DrawQWidget::resizeGL(int w, int h)
 {
-  c_width = w;
-  c_height = h;
+  c_width = w = qRound(w * c_dpr);
+  c_height = h = qRound(h * c_dpr);
+  
+//  c_width = w;
+//  c_height = h;
 //  qDebug()<<m_cttrLeft<<m_cttrTop<<m_cttrRight<<m_cttrBottom;
 #if 1
   int ml, mt, mr, mb;
@@ -889,15 +901,15 @@ void DrawQWidget::innerUpdateGeometry()
 
 QSize DrawQWidget::minimumSizeHint() const
 {
-  int sizeA = m_scalingAMin * m_matrixDimmA * m_splitterA;
-  int sizeB = m_scalingBMin * (m_datex == DATEX_1D? 1 : m_matrixDimmB) * m_splitterB;
+  int sizeA = m_scalingAMin * m_matrixDimmA * m_splitterA / c_dpr;
+  int sizeB = m_scalingBMin * (m_datex == DATEX_1D? 1 : m_matrixDimmB) * m_splitterB / c_dpr;
   return m_matrixSwitchAB ? QSize( sizeB + m_cttrLeft + m_cttrRight, sizeA + m_cttrTop + m_cttrBottom ) : QSize( sizeA + m_cttrLeft + m_cttrRight, sizeB + m_cttrTop + m_cttrBottom );
 }
 
 QSize DrawQWidget::sizeHint() const
 { 
-  int sizeA = m_scalingA * m_matrixDimmA * m_splitterA;
-  int sizeB = m_scalingB * (m_datex == DATEX_1D? 1 : m_matrixDimmB) * m_splitterB;
+  int sizeA = m_scalingA * m_matrixDimmA * m_splitterA / c_dpr;
+  int sizeB = m_scalingB * (m_datex == DATEX_1D? 1 : m_matrixDimmB) * m_splitterB / c_dpr;
   return m_matrixSwitchAB ? QSize( sizeB + m_cttrLeft + m_cttrRight, sizeA + m_cttrTop + m_cttrBottom ) : QSize( sizeA + m_cttrLeft + m_cttrRight, sizeB + m_cttrTop + m_cttrBottom );
 }
 

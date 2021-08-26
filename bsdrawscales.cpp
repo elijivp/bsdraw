@@ -2583,7 +2583,6 @@ public:
   int           c_width, c_height, c_overheadRight, c_overheadBottom;
   QMargins      c_margins;
   int           c_width_margins, c_height_margins;
-  QSize         c_dsize;
   int           c_scalingHorz, c_scalingVert;
   
   bool          expandNeighborBarsIfNeed;
@@ -2888,15 +2887,15 @@ DrawBars::DrawBars(DrawQWidget* pdraw, COLORS colorsPolicy, QWidget *parent) : Q
   pImpl->c_mirroredHorz = orientationMirroredHorz(pDraw->orientation());
   pImpl->c_mirroredVert = orientationMirroredVert(pDraw->orientation());
   
-  pImpl->c_hint_draw_width = pDraw->size().width();
-  pImpl->c_hint_draw_height = pDraw->size().height();
+  QSize sdraw = pDraw->size()/* * pDraw->devicePixelRatio()*/;
+  pImpl->c_hint_draw_width = sdraw.width();
+  pImpl->c_hint_draw_height = sdraw.height();
   
   pImpl->c_width = pImpl->c_height = 0;
   
   pImpl->c_width_margins = 0;
   pImpl->c_height_margins = 0;
   
-  pImpl->c_dsize = QSize(0,0);
   pImpl->c_scalingHorz = pDraw->scalingHorz();
   pImpl->c_scalingVert = pDraw->scalingVert();
   
@@ -3521,10 +3520,10 @@ QSize DrawBars::minimumSizeHint() const
 //  return QSize(pImpl->c_width_margins + pImpl->ttr[AT_LEFT].c_size + pImpl->c_hint_draw_width + pImpl->ttr[AT_RIGHT].c_size, 
 //               pImpl->c_height_margins + pImpl->ttr[AT_TOP].c_size + pImpl->c_hint_draw_height + pImpl->ttr[AT_BOTTOM].c_size);
   
-  int dw = qMax(pImpl->c_hint_draw_width, pDraw->minimumWidth());
-  int dh = qMax(pImpl->c_hint_draw_height, pDraw->minimumHeight());
+  int dw = qMax(pImpl->c_hint_draw_width, int(pDraw->minimumWidth()*pDraw->devicePixelRatio()));
+  int dh = qMax(pImpl->c_hint_draw_height, int(pDraw->minimumHeight()*pDraw->devicePixelRatio()));
   return QSize(pImpl->c_width_margins + pImpl->ttr[AT_LEFT].c_size + dw + pImpl->ttr[AT_RIGHT].c_size, 
-               pImpl->c_height_margins + pImpl->ttr[AT_TOP].c_size + dh + pImpl->ttr[AT_BOTTOM].c_size);
+               pImpl->c_height_margins + pImpl->ttr[AT_TOP].c_size + dh + pImpl->ttr[AT_BOTTOM].c_size)/* / pDraw->devicePixelRatio()*/;
 }
 
 //QSize DrawBars::sizeHint() const
@@ -3537,6 +3536,8 @@ void DrawBars::resizeEvent(QResizeEvent* event)
   QWidget::resizeEvent(event);
   QSize esize = event->size();
   
+  /***************************************************************************************************************/
+  
   pImpl->c_margins = contentsMargins();
   int margin_width = pImpl->c_margins.left() + pImpl->c_margins.right();
   int margin_height = pImpl->c_margins.top() + pImpl->c_margins.bottom();
@@ -3548,7 +3549,7 @@ void DrawBars::resizeEvent(QResizeEvent* event)
     PDRAWMOVE;
     updateGeometry();
   }
-  const QSize dsize = esize - QSize(pImpl->ttr[AT_LEFT].c_size + pImpl->ttr[AT_RIGHT].c_size,
+  QSize dsize = esize - QSize(pImpl->ttr[AT_LEFT].c_size + pImpl->ttr[AT_RIGHT].c_size,
                                       pImpl->ttr[AT_TOP].c_size + pImpl->ttr[AT_BOTTOM].c_size)
                       - QSize(pImpl->c_width_margins, pImpl->c_height_margins);
   
@@ -3561,13 +3562,19 @@ void DrawBars::resizeEvent(QResizeEvent* event)
 
   dcsizecd_t  dcHorz, dcVert;  
   if (resizeDrawWillAfterBars)
+  {
+//    dsize = dsize * pDraw->devicePixelRatio();
     pDraw->fitSize(dsize.width(), dsize.height(), &dcHorz, &dcVert);
+  }
   else
   {
     pDraw->resize(dsize);
     dcHorz = pDraw->sizeComponentsHorz();
     dcVert = pDraw->sizeComponentsVert();
   }  
+  
+//  dsize = dsize / pDraw->devicePixelRatio();
+  
 //  qDebug()<<pDraw->height()<<pDraw->sizeVert()<<pDraw->minimumHeight()<<dheight<<esize.height();
 //  if (this->accessibleName() == "Allo")
 //  {
@@ -3576,14 +3583,17 @@ void DrawBars::resizeEvent(QResizeEvent* event)
   
   if (/*isVisible() && */height() > 5 && width() > 5)
   {
-    int dw = dsize.width() - length(dcHorz);    if (dw < 0) dw = 0;
-    int dh = dsize.height() - length(dcVert);   if (dh < 0) dh = 0;
+    int dw = dsize.width() - length(dcHorz)/pDraw->devicePixelRatio();    if (dw < 0) dw = 0;
+    int dh = dsize.height() - length(dcVert)/pDraw->devicePixelRatio();   if (dh < 0) dh = 0;
 //    pImpl->resizeBars(MarginElement::UF_RESIZE, width() - pImpl->c_width_margins, height() - pImpl->c_height_margins, 
 //                       pDraw->rawResizeModeNoScaled()? 0 : dw,
 //                       pDraw->rawResizeModeNoScaled()? 0 : dh
 //                                                       );
-    pImpl->c_width = width() - pImpl->c_width_margins;
-    pImpl->c_height = height() - pImpl->c_height_margins;
+//    pImpl->c_width = width() - pImpl->c_width_margins;
+//    pImpl->c_height = height() - pImpl->c_height_margins;
+//    qDebug()<<event->size()<<esize<<size();
+    pImpl->c_width = esize.width() - pImpl->c_width_margins;
+    pImpl->c_height = esize.height() - pImpl->c_height_margins;
     pImpl->c_overheadRight = pDraw->rawResizeModeNoScaled()? 0 : dw;
     pImpl->c_overheadBottom = pDraw->rawResizeModeNoScaled()? 0 : dh;
     pImpl->c_scalingHorz = dcHorz.scaling;
@@ -3593,8 +3603,6 @@ void DrawBars::resizeEvent(QResizeEvent* event)
   }
   if (resizeDrawWillAfterBars)
     pDraw->resize(dsize);
-  
-  pImpl->c_dsize = dsize;
 }
 
 void DrawBars::paintEvent(QPaintEvent* event)

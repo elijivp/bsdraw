@@ -63,6 +63,7 @@ DrawQWidget::DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int
 #else
   c_dpr = 1.0f;
 #endif
+  c_dpr_inv = 1.0f / c_dpr;
 //  setMouseTracking(true);
 }
 
@@ -756,8 +757,8 @@ void DrawQWidget::paintGL()
 
 void DrawQWidget::resizeGL(int w, int h)
 {
-  c_width = w = qRound(w * c_dpr);
-  c_height = h = qRound(h * c_dpr);
+  c_width = w = /*qRound*/(w * c_dpr);
+  c_height = h = /*qRound*/(h * c_dpr);
   
 //  c_width = w;
 //  c_height = h;
@@ -844,8 +845,12 @@ void DrawQWidget::resizeGL(int w, int h)
 
 void DrawQWidget::fitSize(int width_in, int height_in, dcsizecd_t* dc_horz, dcsizecd_t* dc_vert) const
 {
+  width_in *= c_dpr;
+  height_in *= c_dpr;
+  
   width_in -= m_cttrLeft + m_cttrRight;
   height_in -= m_cttrTop + m_cttrBottom;
+  
   
   int wsizeA = m_matrixSwitchAB? height_in : width_in;
   int wsizeB = m_matrixSwitchAB? width_in : height_in;
@@ -901,15 +906,15 @@ void DrawQWidget::innerUpdateGeometry()
 
 QSize DrawQWidget::minimumSizeHint() const
 {
-  int sizeA = m_scalingAMin * m_matrixDimmA * m_splitterA / c_dpr;
-  int sizeB = m_scalingBMin * (m_datex == DATEX_1D? 1 : m_matrixDimmB) * m_splitterB / c_dpr;
+  int sizeA = m_scalingAMin * m_matrixDimmA * m_splitterA * c_dpr_inv;    if (sizeA < 1)  sizeA = 1;
+  int sizeB = m_scalingBMin * (m_datex == DATEX_1D? 1 : m_matrixDimmB) * m_splitterB * c_dpr_inv;   if (sizeB < 1)  sizeB = 1;
   return m_matrixSwitchAB ? QSize( sizeB + m_cttrLeft + m_cttrRight, sizeA + m_cttrTop + m_cttrBottom ) : QSize( sizeA + m_cttrLeft + m_cttrRight, sizeB + m_cttrTop + m_cttrBottom );
 }
 
 QSize DrawQWidget::sizeHint() const
 { 
-  int sizeA = m_scalingA * m_matrixDimmA * m_splitterA / c_dpr;
-  int sizeB = m_scalingB * (m_datex == DATEX_1D? 1 : m_matrixDimmB) * m_splitterB / c_dpr;
+  int sizeA = m_scalingA * m_matrixDimmA * m_splitterA * c_dpr_inv;       if (sizeA < 1)  sizeA = 1;
+  int sizeB = m_scalingB * (m_datex == DATEX_1D? 1 : m_matrixDimmB) * m_splitterB * c_dpr_inv;      if (sizeB < 1)  sizeB = 1;
   return m_matrixSwitchAB ? QSize( sizeB + m_cttrLeft + m_cttrRight, sizeA + m_cttrTop + m_cttrBottom ) : QSize( sizeA + m_cttrLeft + m_cttrRight, sizeB + m_cttrTop + m_cttrBottom );
 }
 
@@ -930,7 +935,8 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
   int totalDimmWidth = singleDimmWidth * (m_matrixSwitchAB? m_splitterB : m_splitterA);
   int totalDimmHeight = singleDimmHeight * (m_matrixSwitchAB? m_splitterA : m_splitterB);
   
-  x -= m_cttrLeft;    y -= m_cttrTop;  
+  x -= m_cttrLeft;    y -= m_cttrTop;
+  x *=  c_dpr;        y *=  c_dpr;
 
   if (isPress[oreact] == false)
   {
@@ -940,16 +946,31 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
   else if (x >= totalDimmWidth || y >= totalDimmHeight)
     return;
 
+//  float fx, fy;
+//  if (orientationTransposed(m_orient))
+//  {
+//    fx = float((!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y) % singleDimmHeight) / singleDimmHeight;
+//    fy = float((orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x) % singleDimmWidth) / singleDimmWidth;
+//  }
+//  else
+//  {
+//    fx = float((orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x) % singleDimmWidth) / singleDimmWidth;
+//    fy = float((!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y) % singleDimmHeight) / singleDimmHeight;
+//  }
   float fx, fy;
   if (orientationTransposed(m_orient))
   {
-    fx = float((!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y) % singleDimmHeight) / singleDimmHeight;
-    fy = float((orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x) % singleDimmWidth) / singleDimmWidth;
+    fx = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y);
+    fy = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x);
+    fx = float(int(fx) % singleDimmHeight) / singleDimmHeight;
+    fy = float(int(fy) % singleDimmWidth) / singleDimmWidth;
   }
   else
   {
-    fx = float((orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x) % singleDimmWidth) / singleDimmWidth;
-    fy = float((!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y) % singleDimmHeight) / singleDimmHeight;
+    fx = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x);
+    fy = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y);
+    fx = float(int(fx) % singleDimmWidth) / singleDimmWidth;
+    fy = float(int(fy) % singleDimmHeight) / singleDimmHeight;
   }
   float dataptr[] = { fx, fy, float(x), float(y) };
 

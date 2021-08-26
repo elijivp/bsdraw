@@ -58,7 +58,7 @@ protected:
   unsigned int            m_matrixLmSize;
   bool                    m_sbStatic;
   int                     m_cttrLeft, m_cttrTop, m_cttrRight, m_cttrBottom;
-  float                   c_dpr;
+  float                   c_dpr, c_dpr_inv;
   int                     c_width, c_height;
   float                   m_viewTurn;
 protected:
@@ -74,6 +74,7 @@ public:
   void  connectScrollBar(QScrollBar*, bool staticView=false, bool setOrientation=true);
 //  void  fitSize(int width_in, int height_in, int* actualwidth, int* actualheight) const;
   void  fitSize(int width_in, int height_in, dcsizecd_t* dc_horz, dcsizecd_t* dc_vert) const;
+  float devicePixelRatio() const{ return c_dpr; }
 public slots:
   void    slot_compileShader();
   void    slot_setScalingA(int);

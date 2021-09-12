@@ -1095,6 +1095,7 @@ void DrawQWidget::slot_setBoundHigh(float value){ setBoundHigh(value);  }
 void DrawQWidget::slot_setBounds01(){ setBounds(0.0f, 1.0f); }
 void DrawQWidget::slot_setContrast(float k, float b){ setContrast(k, b);  }
 void DrawQWidget::slot_setContrastK(float k){ setContrastK(k);  }
+void DrawQWidget::slot_setContrastKinv(float k){ setContrastKinv(k); }
 void DrawQWidget::slot_setContrastB(float b){ setContrastB(b);  }
 void DrawQWidget::slot_setDataTextureInterpolation(bool d){ setDataTextureInterpolation(d); }
 void DrawQWidget::slot_setDataPalette(const IPalette* ppal){ setDataPalette(ppal); }

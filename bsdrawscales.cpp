@@ -2871,7 +2871,7 @@ inline bool isDrawPaletteCP(int cp)
 }
 
 
-DrawBars::DrawBars(DrawQWidget* pdraw, COLORS colorsPolicy, QWidget *parent) : QWidget(parent), pDraw(pdraw)
+DrawBars::DrawBars(DrawQWidget* pdraw, COLORS colorsPolicy, QWidget *parent) : QWidget(parent), pDraw(pdraw), pTool(nullptr)
 {
   this->setAutoFillBackground(false);
   pImpl = new DrawBars_impl();
@@ -3763,9 +3763,9 @@ void DrawBars::mouseDoubleClickEvent(QMouseEvent* event)
             focused = qle;
           lay->addWidget(qle);
           if (i == 0)
-            QObject::connect(qle, SIGNAL(valueChanged(double)), this, SLOT(updatedBoundBHigh(double)));
+            QObject::connect(qle, SIGNAL(valueChanged(double)), this, SLOT(toolUpdateBoundHigh(double)));
           else
-            QObject::connect(qle, SIGNAL(valueChanged(double)), this, SLOT(updatedBoundBLow(double)));
+            QObject::connect(qle, SIGNAL(valueChanged(double)), this, SLOT(toolUpdateBoundLow(double)));
         }
       }
       boundsSetup->setLayout(lay);
@@ -3793,6 +3793,7 @@ void DrawBars::slot_setBoundHigh(float v){  pDraw->slot_setBoundHigh(v); slot_up
 void DrawBars::slot_setBounds01(){ pDraw->slot_setBounds01(); slot_updatedBounds();  }
 void DrawBars::slot_setContrast(float k, float b){  pDraw->slot_setContrast(k, b);  slot_updatedBounds();  }
 void DrawBars::slot_setContrastK(float v){  pDraw->slot_setContrastK(v);  slot_updatedBounds(); }
+void DrawBars::slot_setContrastKinv(float v){  pDraw->slot_setContrastKinv(v);  slot_updatedBounds(); }
 void DrawBars::slot_setContrastB(float v){  pDraw->slot_setContrastB(v);  slot_updatedBounds(); }
 void DrawBars::slot_setDataTextureInterpolation(bool v){  pDraw->slot_setDataTextureInterpolation(v);  }
 void DrawBars::slot_setDataPalette(const IPalette* v){  pDraw->slot_setDataPalette(v); slot_updatedDataPalette();  }
@@ -3883,28 +3884,18 @@ void DrawBars::scrollDataTo(int)
   }
 }
 
-void DrawBars::updatedBoundBHigh(double v)
+void DrawBars::toolUpdateBoundHigh(double v)
 {
   this->slot_setBoundHigh(v);
-#ifdef REMIT_BOUNDS
-  emit    sig_updatedBBoundHigh(v);
-#endif
-#ifdef REMIT_CONTRAST
-  emit    sig_updatedBContrastK(this->pDraw->contrastK());
-  emit    sig_updatedBContrastB(this->pDraw->contrastB());
-#endif
+  if (pTool)
+    pTool->bndUpdated(this->pDraw);
 }
 
-void DrawBars::updatedBoundBLow(double v)
+void DrawBars::toolUpdateBoundLow(double v)
 {
   this->slot_setBoundLow(v);
-#ifdef REMIT_BOUNDS
-  void    sig_updatedBBoundLow(v);
-#endif
-#ifdef REMIT_CONTRAST
-  emit    sig_updatedBContrastK(this->pDraw->contrastK());
-  emit    sig_updatedBContrastB(this->pDraw->contrastB());
-#endif
+  if (pTool)
+    pTool->bndUpdated(this->pDraw);
 }
 
 

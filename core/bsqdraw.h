@@ -87,6 +87,7 @@ public slots:
   void    slot_setBounds01();
   void    slot_setContrast(float k, float b);
   void    slot_setContrastK(float);
+  void    slot_setContrastKinv(float);
   void    slot_setContrastB(float);
   void    slot_setDataTextureInterpolation(bool);
   void    slot_setDataPalette(const IPalette*);

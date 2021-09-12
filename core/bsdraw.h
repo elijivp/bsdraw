@@ -28,6 +28,11 @@ inline  void  _bsdraw_update_kb(const bounds_t& bnd, float* k, float *b)
   *k = 1.0f/(bnd.HL - bnd.LL);
   *b = -bnd.LL*1.0f/(bnd.HL - bnd.LL);
 }
+inline  void  _bsdraw_update_kinvb(const bounds_t& bnd, float* kinv, float *b)
+{
+  *kinv = (bnd.HL - bnd.LL);
+  *b = -bnd.LL*1.0f/(bnd.HL - bnd.LL);
+}
 inline  void  _bsdraw_update_bnd(const float k, const float b, bounds_t* bnd)
 {
   bnd->LL = -b/k;
@@ -247,9 +252,11 @@ public:
   
   void                  setContrast(float k, float b){ m_loc_k = k; m_loc_b = b; _bsdraw_update_bnd(m_loc_k, m_loc_b, &m_bounds); m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
   void                  setContrastK(float k){ m_loc_k = k; _bsdraw_update_bnd(m_loc_k, m_loc_b, &m_bounds);            m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
+  void                  setContrastKinv(float k){ m_loc_k = 1.0f/k; _bsdraw_update_bnd(m_loc_k, m_loc_b, &m_bounds);    m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
   void                  setContrastB(float b){ m_loc_b = b; _bsdraw_update_bnd(m_loc_k, m_loc_b, &m_bounds);            m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); }
-  float                 contrastK() const { return m_loc_k; }
-  float                 contrastB() const { return m_loc_b; }
+  float                 contrastK()     const { return m_loc_k; }
+  float                 contrastKinv()  const { return 1.0f/m_loc_k; }
+  float                 contrastB()     const { return m_loc_b; }
 public:
   ///             size components
   unsigned int          sizeDataA() const { return m_matrixDimmA; }

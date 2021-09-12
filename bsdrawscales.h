@@ -115,8 +115,12 @@ typedef QWidget*  (*mtap_qwidget_fn)(int mark, int dimmarea, int reloffset, void
 //  reservedResult = latins[mark % int(latinslen + latinslen*(float(reloffset)/dimmarea))];
 //}
 
-
-
+class IToolUpdateReactor
+{
+public:
+  virtual ~IToolUpdateReactor(){}
+  virtual void    bndUpdated(const DrawQWidget* bnds)=0;
+};
 
 
 class MEWLabel;
@@ -171,6 +175,7 @@ class DrawBars : public QWidget
   Q_OBJECT
   class DrawBars_impl*  pImpl;
   DrawQWidget*          pDraw;
+  IToolUpdateReactor*   pTool;
 public:
   enum  COLORS {  CP_DEFAULT,       // use default widget palette
                   CP_FROM_DRAWBACK,     // use DrawQWidget colorBack function
@@ -200,6 +205,9 @@ public:
   int                 barSizeRight() const { return barSize(AT_RIGHT); }
   int                 barSizeTop() const { return barSize(AT_TOP); }
   int                 barSizeBottom() const { return barSize(AT_BOTTOM); }
+public:
+  void                setToolUpdateReactor(IToolUpdateReactor* ptool){  pTool = ptool; }
+  void                clearToolUpdateReactor(){  pTool = nullptr; }
 public:
   MEQWrapper*         addMarginElement(ATTACHED_TO atto, MarginElement* pme, MEQWrapper* pwp, bool sharedWithPrev, bool interventBanned, bool invertBanned=false);
 public:
@@ -256,15 +264,6 @@ protected:
   virtual void  mouseDoubleClickEvent(QMouseEvent* event);
 public:
   void    connectScrollBar(QScrollBar*, bool staticView=false, bool setOrientation=true);
-signals:
-#ifdef REMIT_BOUNDS
-  void    sig_updatedBBoundHigh(float);
-  void    sig_updatedBBoundLow(float);
-#endif
-//#ifdef REMIT_CONTRAST
-  void    sig_updatedBContrastK(float);
-  void    sig_updatedBContrastB(float);
-//#endif
 public slots:
   void    slot_setScalingA(int);
   void    slot_setScalingB(int);
@@ -276,6 +275,7 @@ public slots:
   void    slot_setBounds01();
   void    slot_setContrast(float k, float b);
   void    slot_setContrastK(float);
+  void    slot_setContrastKinv(float);
   void    slot_setContrastB(float);
   void    slot_setDataTextureInterpolation(bool);
   void    slot_setDataPalette(const class IPalette*);
@@ -309,8 +309,8 @@ public slots:
   void    slot_updatedOrientation();
 protected slots:
   void    scrollDataTo(int);
-  void    updatedBoundBHigh(double);
-  void    updatedBoundBLow(double);
+  void    toolUpdateBoundHigh(double);
+  void    toolUpdateBoundLow(double);
 };
 
 /**********************************************************************************************************************/

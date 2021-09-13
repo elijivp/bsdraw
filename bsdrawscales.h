@@ -30,8 +30,7 @@
 class DrawQWidget;
 class QScrollBar;
 class DrawBars;
-
-
+class MEQWrapper;
 
 enum  ATTACHED_TO { AT_LEFT, AT_RIGHT, AT_TOP, AT_BOTTOM };
 
@@ -40,7 +39,8 @@ class MarginElement
 public:
   virtual ~MarginElement();
 protected:
-  enum UPDATEFOR { UF_RESIZE, UF_CONTENT, UF_FORCED };
+  enum UPDATEFOR  { UF_RESIZE, UF_CONTENT, UF_FORCED };
+  enum MOUSEEVENT { ME_LPRESS, ME_LRELEASE, ME_LMOVE, ME_RPRESS, ME_RRELEASE, ME_RMOVE };
   struct uarea_t
   {
     ATTACHED_TO atto;
@@ -64,8 +64,8 @@ protected:
     }
   };
   virtual bool  updateArea(const uarea_t& uarea, int UPDATEFOR)=0;
-//  virtual bool  needredraw() const {  return true; }
   virtual void  draw(QPainter&)=0;
+  virtual void  mouseEvent(MOUSEEVENT /*mev*/, int /*pos_segm*/, int /*pos_atto*/, int /*dimm_segm*/, int /*dimm_atto*/, bool* /*doUpdate*/, MEQWrapper* /*selfwrap*/=nullptr){}
   virtual void  sizeHint(ATTACHED_TO atto, int* atto_size, int* mindly, int* minsegm_pre, int* minsegm_post) const =0;
   virtual void  relatedInit(const DrawQWidget*) {  }
   virtual void  changeColor(const QColor&)=0;
@@ -252,6 +252,7 @@ public:
 //  void                changeColor(MEQWrapper*, const QColor& clr);
   void                swapBars(ATTACHED_TO);
   void                removeAllMElements(bool squeeze=false);
+  void                mouseEvent(MarginElement::MOUSEEVENT mev, int x, int y);
 protected:
   void                elemSizeHintChanged(MarginElement* me);
   friend class        MEQWrapper;
@@ -261,6 +262,9 @@ protected:
   virtual void  resizeEvent(QResizeEvent *event);
   virtual void  paintEvent(QPaintEvent *event);
   virtual bool  event(QEvent*);
+  virtual void  mousePressEvent(QMouseEvent* event);
+  virtual void  mouseMoveEvent(QMouseEvent* event);
+  virtual void  mouseReleaseEvent(QMouseEvent* event);
   virtual void  mouseDoubleClickEvent(QMouseEvent* event);
 public:
   void    connectScrollBar(QScrollBar*, bool staticView=false, bool setOrientation=true);

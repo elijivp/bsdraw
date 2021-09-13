@@ -2582,7 +2582,6 @@ public:
   
   int           c_width, c_height, c_overheadRight, c_overheadBottom;
   QMargins      c_margins;
-  int           c_width_margins, c_height_margins;
   int           c_scalingHorz, c_scalingVert;
   
   bool          expandNeighborBarsIfNeed;
@@ -2621,7 +2620,7 @@ public:
   QVector<melem_t>   elems[4];
   QVector<MarginBoundDepended*>   elemsBoundDepended;
   QVector<MarginBoundDepended*>   elemsScrollDepended;
-  QVector<MarginMarksTexted*>     elemsClickDepended;
+  QVector<MarginMarksTexted*>     elemsBoundsSetupDepended;
   typedef QVector<melem_t>::iterator melem_iterator_t;
   bool  drawCoreInited;
   
@@ -2893,8 +2892,7 @@ DrawBars::DrawBars(DrawQWidget* pdraw, COLORS colorsPolicy, QWidget *parent) : Q
   
   pImpl->c_width = pImpl->c_height = 0;
   
-  pImpl->c_width_margins = 0;
-  pImpl->c_height_margins = 0;
+  pImpl->c_margins = QMargins(0,0,0,0);
   
   pImpl->c_scalingHorz = pDraw->scalingHorz();
   pImpl->c_scalingVert = pDraw->scalingVert();
@@ -3022,8 +3020,8 @@ MEQWrapper*   DrawBars::addMarginElement(ATTACHED_TO atto, MarginElement* pme, M
   {
     updateGeometry();
     setGeometry(0,0, 
-                pImpl->c_width_margins + pImpl->ttr[AT_LEFT].c_size + pImpl->c_hint_draw_width + pImpl->ttr[AT_RIGHT].c_size,
-                pImpl->c_height_margins + pImpl->ttr[AT_TOP].c_size + pImpl->c_hint_draw_height + pImpl->ttr[AT_BOTTOM].c_size);
+                pImpl->c_margins.left() + pImpl->ttr[AT_LEFT].c_size + pImpl->c_hint_draw_width + pImpl->ttr[AT_RIGHT].c_size + pImpl->c_margins.right(),
+                pImpl->c_margins.top() + pImpl->ttr[AT_TOP].c_size + pImpl->c_hint_draw_height + pImpl->ttr[AT_BOTTOM].c_size + pImpl->c_margins.bottom());
   }
   
   if (pwp != nullptr)
@@ -3179,7 +3177,7 @@ MEWScaleNN* DrawBars::addScaleFixed(ATTACHED_TO atto, int flags, float LL, float
     else                    pImpl->c_hint_draw_width = fixedCount*pixStep_pixSpacing;
 //    updateGeometry();
   }
-//  pImpl->elemsClickDepended.push_back(pmarg);
+//  pImpl->elemsBoundsSetupDepended.push_back(pmarg);
   return (MEWScaleNN*)addMarginElement(atto, pmarg, new MEWScaleNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
@@ -3201,7 +3199,7 @@ MEWScaleNN* DrawBars::addScaleFixedMod(ATTACHED_TO atto, int flags, float LL, fl
     else                    pImpl->c_hint_draw_width = fixedCount*pixStep_pixSpacing;
 //    updateGeometry();
   }
-//  pImpl->elemsClickDepended.push_back(pmarg);
+//  pImpl->elemsBoundsSetupDepended.push_back(pmarg);
   return (MEWScaleNN*)addMarginElement(atto, pmarg, new MEWScaleNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
@@ -3330,7 +3328,7 @@ MEWScale* DrawBars::addScaleDrawGraphB(ATTACHED_TO atto, int flags, int marksCou
 //    updateGeometry();
   }
   pImpl->elemsBoundDepended.push_back(/*(MarginBoundDepended*)*/pmarg);
-  pImpl->elemsClickDepended.push_back(pmarg);
+  pImpl->elemsBoundsSetupDepended.push_back(pmarg);
   return (MEWScale*)addMarginElement(atto, pmarg, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
@@ -3348,7 +3346,7 @@ MEWScale* DrawBars::addScaleDrawGraphB(ATTACHED_TO atto, int flags, float LL, fl
 //    updateGeometry();
   }
   pImpl->elemsBoundDepended.push_back(pmarg);
-  pImpl->elemsClickDepended.push_back(pmarg);
+  pImpl->elemsBoundsSetupDepended.push_back(pmarg);
   return (MEWScale*)addMarginElement(atto, pmarg, new MEWScale, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 
@@ -3487,10 +3485,66 @@ void DrawBars::removeAllMElements(bool squeeze)
   {
     pImpl->clearTTR();
     pDraw->setGeometry(pImpl->c_margins.left(), pImpl->c_margins.top(), 
-                       this->width() - pImpl->c_width_margins, this->height() - pImpl->c_height_margins);
+                       this->width() - pImpl->c_margins.left() - pImpl->c_margins.right(), 
+                       this->height() - pImpl->c_margins.top() - pImpl->c_margins.bottom());
     updateGeometry();
   }
   update();
+}
+
+void DrawBars::mouseEvent(MarginElement::MOUSEEVENT mev, int x, int y)
+{
+  if (x < pImpl->c_margins.left() || y < pImpl->c_margins.top())
+    return;
+  x -= pImpl->c_margins.left();
+  y -= pImpl->c_margins.top();
+  if (x > pImpl->c_width || y > pImpl->c_height)
+    return;
+  
+  bool doUpdate = false;
+  if (x < pImpl->ttr[AT_LEFT].c_size)
+  {
+    int at = AT_LEFT;
+    x = pImpl->ttr[AT_LEFT].c_size - 1 - x;
+    for (int i=0; i<pImpl->elems[at].count(); i++)
+    {
+      if (pImpl->elems[at][i].visible && x >= pImpl->elems[at][i].offset && x < pImpl->elems[at][i].offset + pImpl->elems[at][i].length)
+        pImpl->elems[at][i].pme->mouseEvent(mev, y, x - pImpl->elems[at][i].offset, pImpl->c_height, pImpl->elems[at][i].length, &doUpdate, pImpl->elems[at][i].pwp);
+    }
+  }
+  if (x > pImpl->c_width - pImpl->ttr[AT_RIGHT].c_size)
+  {
+    int at = AT_RIGHT;
+    x = x - (pImpl->c_width - pImpl->ttr[AT_RIGHT].c_size);
+    for (int i=0; i<pImpl->elems[at].count(); i++)
+    {
+      if (pImpl->elems[at][i].visible && x >= pImpl->elems[at][i].offset && x < pImpl->elems[at][i].offset + pImpl->elems[at][i].length)
+        pImpl->elems[at][i].pme->mouseEvent(mev, y, x - pImpl->elems[at][i].offset, pImpl->c_height, pImpl->elems[at][i].length, &doUpdate, pImpl->elems[at][i].pwp);
+    }
+  }
+  if (y < pImpl->ttr[AT_TOP].c_size)
+  {
+    int at = AT_TOP;
+    y = pImpl->ttr[AT_TOP].c_size - 1 - y;
+    for (int i=0; i<pImpl->elems[at].count(); i++)
+    {
+      if (pImpl->elems[at][i].visible && y >= pImpl->elems[at][i].offset && y < pImpl->elems[at][i].offset + pImpl->elems[at][i].length)
+        pImpl->elems[at][i].pme->mouseEvent(mev, x, y - pImpl->elems[at][i].offset, pImpl->c_width, pImpl->elems[at][i].length, &doUpdate, pImpl->elems[at][i].pwp);
+    }
+  }
+  if (y > pImpl->c_height - pImpl->ttr[AT_BOTTOM].c_size)
+  {
+    int at = AT_BOTTOM;
+    y = y - (pImpl->c_height - pImpl->ttr[AT_BOTTOM].c_size);
+    for (int i=0; i<pImpl->elems[at].count(); i++)
+    {
+      if (pImpl->elems[at][i].visible && y >= pImpl->elems[at][i].offset && y < pImpl->elems[at][i].offset + pImpl->elems[at][i].length)
+        pImpl->elems[at][i].pme->mouseEvent(mev, x, y - pImpl->elems[at][i].offset, pImpl->c_width, pImpl->elems[at][i].length, &doUpdate, pImpl->elems[at][i].pwp);
+    }
+  }
+  
+  if (doUpdate)
+    update();
 }
 
 void DrawBars::elemSizeHintChanged(MarginElement* me)
@@ -3522,8 +3576,8 @@ QSize DrawBars::minimumSizeHint() const
   
   int dw = qMax(pImpl->c_hint_draw_width, int(pDraw->minimumWidth()*pDraw->devicePixelRatio()));
   int dh = qMax(pImpl->c_hint_draw_height, int(pDraw->minimumHeight()*pDraw->devicePixelRatio()));
-  return QSize(pImpl->c_width_margins + pImpl->ttr[AT_LEFT].c_size + dw + pImpl->ttr[AT_RIGHT].c_size, 
-               pImpl->c_height_margins + pImpl->ttr[AT_TOP].c_size + dh + pImpl->ttr[AT_BOTTOM].c_size)/* / pDraw->devicePixelRatio()*/;
+  return QSize(pImpl->c_margins.left() + pImpl->ttr[AT_LEFT].c_size + dw + pImpl->ttr[AT_RIGHT].c_size + pImpl->c_margins.right(), 
+               pImpl->c_margins.top() + pImpl->ttr[AT_TOP].c_size + dh + pImpl->ttr[AT_BOTTOM].c_size + pImpl->c_margins.bottom());
 }
 
 //QSize DrawBars::sizeHint() const
@@ -3534,24 +3588,22 @@ QSize DrawBars::minimumSizeHint() const
 void DrawBars::resizeEvent(QResizeEvent* event)
 {
   QWidget::resizeEvent(event);
-  QSize esize = event->size();
+  const QSize esize = event->size();
   
   /***************************************************************************************************************/
   
-  pImpl->c_margins = contentsMargins();
-  int margin_width = pImpl->c_margins.left() + pImpl->c_margins.right();
-  int margin_height = pImpl->c_margins.top() + pImpl->c_margins.bottom();
-  
-  if (margin_width != pImpl->c_width_margins || margin_height != pImpl->c_height_margins) 
+  QMargins margins = contentsMargins();
+  if (margins != pImpl->c_margins) 
   {
-    pImpl->c_width_margins = margin_width;
-    pImpl->c_height_margins = margin_height;
+    pImpl->c_margins = contentsMargins();
     PDRAWMOVE;
     updateGeometry();
   }
+  int margins_width = margins.left() + margins.right();
+  int margins_height = margins.top() + margins.bottom();
   QSize dsize = esize - QSize(pImpl->ttr[AT_LEFT].c_size + pImpl->ttr[AT_RIGHT].c_size,
-                                      pImpl->ttr[AT_TOP].c_size + pImpl->ttr[AT_BOTTOM].c_size)
-                      - QSize(pImpl->c_width_margins, pImpl->c_height_margins);
+                              pImpl->ttr[AT_TOP].c_size + pImpl->ttr[AT_BOTTOM].c_size)
+                      - QSize(margins_width, margins_height);
   
 #ifdef RAKOFLAG
   bool resizeDrawWillAfterBars = pImpl->rakoflag || !pDraw->isVisible();
@@ -3581,19 +3633,12 @@ void DrawBars::resizeEvent(QResizeEvent* event)
 //    qDebug()<<"Allo  "<<resizeDrawWillAfterBars<<event->size()<<dsize<<QSize(dwidth, dheight);
 //  }
   
+  pImpl->c_width = esize.width() - margins_width;
+  pImpl->c_height = esize.height() - margins_height;
   if (/*isVisible() && */height() > 5 && width() > 5)
   {
     int dw = dsize.width() - length(dcHorz)/pDraw->devicePixelRatio();    if (dw < 0) dw = 0;
     int dh = dsize.height() - length(dcVert)/pDraw->devicePixelRatio();   if (dh < 0) dh = 0;
-//    pImpl->resizeBars(MarginElement::UF_RESIZE, width() - pImpl->c_width_margins, height() - pImpl->c_height_margins, 
-//                       pDraw->rawResizeModeNoScaled()? 0 : dw,
-//                       pDraw->rawResizeModeNoScaled()? 0 : dh
-//                                                       );
-//    pImpl->c_width = width() - pImpl->c_width_margins;
-//    pImpl->c_height = height() - pImpl->c_height_margins;
-//    qDebug()<<event->size()<<esize<<size();
-    pImpl->c_width = esize.width() - pImpl->c_width_margins;
-    pImpl->c_height = esize.height() - pImpl->c_height_margins;
     pImpl->c_overheadRight = pDraw->rawResizeModeNoScaled()? 0 : dw;
     pImpl->c_overheadBottom = pDraw->rawResizeModeNoScaled()? 0 : dh;
     pImpl->c_scalingHorz = dcHorz.scaling;
@@ -3674,6 +3719,24 @@ bool DrawBars::event(QEvent* ev)
   return QWidget::event(ev);
 }
 
+void DrawBars::mousePressEvent(QMouseEvent* event)
+{
+  if (event->button() == Qt::LeftButton || event->button() == Qt::RightButton)
+    this->mouseEvent(event->button() == Qt::LeftButton? MarginElement::ME_LPRESS : MarginElement::ME_RPRESS, event->x(), event->y());
+}
+
+void DrawBars::mouseMoveEvent(QMouseEvent* event)
+{
+  if (event->button() == Qt::LeftButton || event->button() == Qt::RightButton)
+    this->mouseEvent(event->button() == Qt::LeftButton? MarginElement::ME_LMOVE: MarginElement::ME_RMOVE, event->x(), event->y());
+}
+
+void DrawBars::mouseReleaseEvent(QMouseEvent* event)
+{
+  if (event->button() == Qt::LeftButton || event->button() == Qt::RightButton)
+    this->mouseEvent(event->button() == Qt::LeftButton? MarginElement::ME_LRELEASE: MarginElement::ME_RRELEASE, event->x(), event->y());
+}
+
 void DrawBars::mouseDoubleClickEvent(QMouseEvent* event)
 {
   if (event->button() == Qt::LeftButton)
@@ -3682,10 +3745,10 @@ void DrawBars::mouseDoubleClickEvent(QMouseEvent* event)
     bool inarea = false;
     
     float LL=0, HL=1; int precision=3;
-    for (int i=0; i<pImpl->elemsClickDepended.count(); i++)
+    for (int i=0; i<pImpl->elemsBoundsSetupDepended.count(); i++)
     {
       bool inside = false;
-      const MarginElement::uarea_t& area = pImpl->elemsClickDepended[i]->mec_area();
+      const MarginElement::uarea_t& area = pImpl->elemsBoundsSetupDepended[i]->mec_area();
       switch (area.atto)
       {
       case AT_LEFT:
@@ -3715,14 +3778,14 @@ void DrawBars::mouseDoubleClickEvent(QMouseEvent* event)
       }
       if (inside)
       {
-        int rtt = pImpl->elemsClickDepended[i]->cachedRTexttype();
-  //        const relatedopts_t& rdata = pImpl->elemsClickDepended[i]->cachedRdata();
+        int rtt = pImpl->elemsBoundsSetupDepended[i]->cachedRTexttype();
+  //        const relatedopts_t& rdata = pImpl->elemsBoundsSetupDepended[i]->cachedRdata();
         if (rtt == RF_SETBOUNDS)
         {
-          relatedopts_t rdata = pImpl->elemsClickDepended[i]->cachedRdata();
+          relatedopts_t rdata = pImpl->elemsBoundsSetupDepended[i]->cachedRdata();
           LL = rdata.rel_fixed.LL;
           HL = rdata.rel_fixed.HL;
-          precision = pImpl->elemsClickDepended[i]->precision();
+          precision = pImpl->elemsBoundsSetupDepended[i]->precision();
           inarea = true;
           break;
         }

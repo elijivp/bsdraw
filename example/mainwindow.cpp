@@ -63,6 +63,30 @@
 #include <QComboBox>
 #include <QColorDialog>
 
+class MarginDebug: public MarginElement
+{
+  QString   caption;
+  int       space;
+public:
+  MarginDebug(const QString& cap, int _space=20): caption(cap), space(_space) {}
+protected:
+  virtual bool  updateArea(const uarea_t& /*uarea*/, int /*UPDATEFOR*/){ return false; }
+  virtual void  draw(QPainter&){}
+  virtual void  mouseEvent(MOUSEEVENT mev, int pos_segm, int pos_atto, int dimm_segm, int dimm_atto, bool* /*doUpdate*/, MEQWrapper* /*selfwrap*/)
+  {
+    static const char* mevnames[] = { "LPRE", "LREL", "LMOV", "RPRE", "RREL", "RMOV" };
+    Q_ASSERT(int(mev) < sizeof(mevnames)/sizeof(const char*));
+    qDebug()<<caption<<"   "<<mevnames[mev]<<":  ->"<<pos_atto<<"("<<dimm_atto<<")"<<"    | "<<pos_segm<<dimm_segm;
+  }
+  virtual void  sizeHint(ATTACHED_TO /*atto*/, int* atto_size, int* mindly, int* minsegm_pre, int* minsegm_post) const
+  {
+    *atto_size = space;
+    *minsegm_pre = *minsegm_post = *mindly = 0;
+  }
+  virtual void  relatedInit(const DrawQWidget*){  }
+  virtual void  changeColor(const QColor&){ }
+};
+
 /// Widget weight for layout
 enum LAYOUT_WEIGHT{ LW_1, LW_0111, LW_1000, LW_012, LW_1110 } 
                   lw = LW_1;
@@ -1198,6 +1222,19 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     draws[0]->setMinimumWidth(1000);
 //    defaultPalette = &paletteBY;
     defaultPalette = &paletteRG;
+  }
+  else if (MW_TEST == DEBUG_MEVSCALES)
+  {   
+    SAMPLES = 192;
+    MAXLINES = 1;
+    PORTIONS = 1;
+    PRECREATE(1, 1);
+    for (unsigned int c=0; c<dccount; c++)
+      for (unsigned int i=0; i<drcount; i++)
+        draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP), coloropts_t::copts(CP_SINGLE, 1.0f, 0.49f));
+    
+    sp = SP_SLOWEST;
+    sigtype = ST_MOVE;
   }
   
 //  else if (MW_TEST == DEBUG_PALETTE2DX)
@@ -2433,6 +2470,24 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             stackedLayoutIsFullOfShit->addWidget(draws[0]);
           BS_STOP
           BS_STRETCH
+        }
+        else if (MW_TEST == DEBUG_MEVSCALES)
+        {
+          BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
+            for (unsigned int i=0; i<drawscount; i++)
+            {
+              DrawBars* pDB = new DrawBars(draws[i]);
+//              pDB->setContentsMargins(10, 10, 10, 10);
+              pDB->addMarginElement(AT_LEFT, new MarginDebug("LEFT_"), nullptr, false, false);
+              pDB->addMarginElement(AT_TOP, new MarginDebug("TOP__"), nullptr, false, false);
+              pDB->addMarginElement(AT_RIGHT, new MarginDebug("RIGHT"), nullptr, false, false);
+              pDB->addMarginElement(AT_BOTTOM, new MarginDebug("BOT__"), nullptr, false, false);
+              BSADD(pDB)
+            }
+          BS_STOP
+//          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+//            BSAUTO_TEXT_ADD("\tResize Me");
+//          BS_STOP
         }
         else
         {

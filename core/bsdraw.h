@@ -22,6 +22,7 @@ struct  bounds_t
 };
 
 inline float length(const bounds_t& bnd){ return bnd.HL - bnd.LL; }
+inline float pos01(float value, const bounds_t& bnd){ return (value - bnd.LL)/(bnd.HL - bnd.LL); }
 
 inline  void  _bsdraw_update_kb(const bounds_t& bnd, float* k, float *b)
 {

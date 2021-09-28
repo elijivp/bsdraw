@@ -418,6 +418,7 @@ public:
 class DrawOverlayProactive
 {
 public:
+  virtual void  setVisible(bool){}
   virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void*, bool* /*doStop*/){  return false; }
   virtual bool  overlayReactionKey(int /*key*/, int /*modifiersOMK*/, bool* /*doStop*/){  return false; }
   virtual ~DrawOverlayProactive(){}

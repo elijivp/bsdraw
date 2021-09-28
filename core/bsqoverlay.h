@@ -14,10 +14,9 @@ class MQOverlay: public QObject
   Q_OBJECT
 protected:  
   DrawOverlay*     m_povl;
+  bool          c_visible;
   float         c_opacity;    // cached opacity for roll back visible state
   bool          m_owner;
-private:
-  void      _vischecker();
 public:
   MQOverlay(DrawOverlay* ovl, bool owner=false, QObject* parent=nullptr);
   ~MQOverlay();
@@ -26,7 +25,7 @@ public:
   DrawOverlay* operator*() { return m_povl; }
   const DrawOverlay* operator*() const { return m_povl; }
 public slots:
-  void      setOpacity(float opacity){ m_povl->setOpacity(c_opacity = opacity); } /// 0 for invisible
+  void      setOpacity(float opacity); /// 0 for invisible
   void      setThickness(float thickness){  m_povl->setThickness(thickness); }
   void      setSlice(float slice){  m_povl->setSlice(slice); }
   

@@ -316,6 +316,15 @@ void FshTraceGenerator::param_for_oarr_begin(const char *name_cur, const char *n
   m_paramsctr += 2;
 }
 
+void FshTraceGenerator::param_for_carr_begin(const char* name, const char* arrlengthname)
+{
+  m_offset += msprintf(&m_to[m_offset],   "int %s = opm%D_%D;" SHNL
+                                          "for (int i=0; i<%s; i++){" SHNL
+                                            "%s %s = opm%D_%D[i];" SHNL,  arrlengthname, m_overlay, m_paramsctr + 1,
+                                            arrlengthname, glsl_types[loc_uniforms[m_paramsctr].type], name, m_overlay, m_paramsctr);
+  m_paramsctr += 2;
+}
+
 void FshTraceGenerator::param_for_end() {  m_offset += msprintf(&m_to[m_offset], "}");  }
 
 void FshTraceGenerator::goto_normed()

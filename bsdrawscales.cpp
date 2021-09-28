@@ -209,16 +209,15 @@ public:
     rfm = RFM_DEFAULT;
   }
   int   precision() const { return precision_l1; }
-  void  autoFormat(){     setFormat('f', 1, 'g', 3, 100000.0, 'g', 2);  }
   void  autoFormat(float ll, float hl)
   {
-    float dhl = qAbs(hl - ll);
-    if (dhl >= 1000.0f)
+    float diap = qAbs(hl - ll);
+    if (diap >= 1000.0f)
       setFormat('f', 1, 'g', 2, 100000.0, 'g', 2);
-    else if (dhl >= 10.0f || ll >= 1.0f)
+    else if (diap > 10.0f || ll >= 1.0f)
       setFormat('f', 1, 'f', 2, 100000.0, 'g', 2);
-    else if (dhl >= 1.0f)
-      setFormat('f', 2, 'f', 3, 100000.0, 'g', 2);
+    else if (diap >= 1.0f)
+      setFormat('f', 3, 'f', 2, 100000.0, 'g', 2);
     else
       setFormat('f', 3, 'f', 3, 100000.0, 'g', 2);
   }
@@ -541,12 +540,12 @@ public:
     }
     else if (fmt == FMT_X2)
     {
-      numfmt.setFormat('f', 4, 'g', 4, 100000.0, 'g', 3);
+      numfmt.setFormat('f', 3, 'g', 3, 100000.0, 'g', 3);
       numfmt_locked = 1;
     }
     else if (fmt == FMT_X4)
     {
-      numfmt.setFormat('f', 6, 'g', 6, 100000.0, 'g', 6);
+      numfmt.setFormat('f', 5, 'g', 5, 100000.0, 'g', 6);
       numfmt_locked = 2;
     }
   }
@@ -2229,7 +2228,7 @@ protected:
     storeDimm(area.segm_main);
     
     const int total = countMaxiNoted + countMaxiHided - 1;
-    int last=0, subctr = 0;
+    int last0=0, last1=0, subctr = 0;
     
     for (int i=0; i<total; )
     {
@@ -2247,7 +2246,8 @@ protected:
           texts[i].visible = 0;
         else
         {
-          texts[last = i].visible = (subctr++ % int(submod) == 0)? 1 : 0;
+          last1 = last0;
+          texts[last0 = i].visible = (subctr++ % int(submod) == 0)? 1 : 0;
           QPoint& mcur = ua_marks[ua_marklinks2[i]].anchor, &mnext = j == total+1? ua_marks[ua_marklinks2[i]].anchor : ua_marks[ua_marklinks2[j]].anchor;
 ////          qDebug()<<i<<ua_marklinks2[i]<<j<<ua_marklinks2[j]<<total+1<<-(mnext - mcur).y()/2;
           _recalcPos(i, area.atto, mcur, mnext, docking);
@@ -2260,22 +2260,22 @@ protected:
     
     if (showLastEnumer)
     {
-      if (last && texts[total-1].visible != 1)
+      if (last0 && texts[total-1].visible != 1)
       {
         texts[total - 1].visible = 1;
-        if (last != total-1)
+        if (last0 != total-1)
         {
-          texts[last].visible = 0;
+          texts[last0].visible = 0;
           if (algoType == DBMODE_STATIC)
           {
 //            texts[total - 1].uarea_pos = texts[last].uarea_pos;
-            _recalcPos(total-1, area.atto, ua_marks[ua_marklinks2[last]].anchor, ua_marks[ua_marklinks2[last]].anchor, DOCK_PREV);  // why dock_prev? intuition
+            _recalcPos(total-1, area.atto, ua_marks[ua_marklinks2[last1]].anchor, ua_marks[ua_marklinks2[last0]].anchor, docking);  // why dock_prev? intuition
           }
           else
           {
 #if 1
 //            _recalcPos(total-1, area.atto, ua_marks[ua_marklinks2[last]].anchor, ua_marks[ua_marklinks2[total]].anchor, docking == DOCK_PREV? DOCK_NEXT : docking == DOCK_NEXT? DOCK_PREV : DOCK_BETWEEN);
-            _recalcPos(total-1, area.atto, ua_marks[ua_marklinks2[last]].anchor, ua_marks[ua_marklinks2[total]].anchor, DOCK_NEXT);
+            _recalcPos(total-1, area.atto, ua_marks[ua_marklinks2[last0]].anchor, ua_marks[ua_marklinks2[total]].anchor, docking == DOCK_PREV? DOCK_NEXT : docking == DOCK_NEXT? DOCK_PREV : DOCK_BETWEEN);
 #else
             texts[total - 1].uarea_pos = texts[last].uarea_pos;
 #endif
@@ -4120,23 +4120,24 @@ void MEWColoredSpace::setSpace(int space)
 /***/
   class MEPointerOProactive: public DrawOverlayProactive
   {
-    MarginPointer*  m_ptr;
+    MarginPointer*  m_pme;
     DrawBars*       m_premote;
   public:
-    MEPointerOProactive(MarginPointer* ptr, DrawBars* premote): m_ptr(ptr), m_premote(premote)
+    MEPointerOProactive(MarginPointer* ptr, DrawBars* premote): m_pme(ptr), m_premote(premote)
     {   if (m_premote) m_premote->update(); }
-    MEPointerOProactive(MarginPointer* ptr, DrawBars* premote, float x01, float y01): m_ptr(ptr), m_premote(premote)
-    {   m_ptr->setPosition(x01, y01); if (m_premote) m_premote->update(); }
+    MEPointerOProactive(MarginPointer* ptr, DrawBars* premote, float x01, float y01): m_pme(ptr), m_premote(premote)
+    {   m_pme->setPosition(x01, y01); if (m_premote) m_premote->update(); }
+    virtual void  setVisible(bool v){ m_pme->setVisible(v); }
     virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void *dataptr, bool*)
     {
       if (oreact == ORM_LMPRESS || oreact == ORM_LMMOVE)
       {
-        m_ptr->setPosition(((const float*)dataptr)[0], ((const float*)dataptr)[1]);
+        m_pme->setPosition(((const float*)dataptr)[0], ((const float*)dataptr)[1]);
         if (m_premote)  m_premote->update();
       }
       else if (oreact == ORM_RMPRESS)
       {
-        m_ptr->setVisible(false);
+        m_pme->setVisible(false);
         if (m_premote)  m_premote->update();
       }
       return true;
@@ -4207,6 +4208,12 @@ DrawOverlayProactive* MEWPointer::createProactive()
 void MEWPointer::setPosition(float pos01)
 {
   ((MarginPointer*)m_pme)->setPosition(pos01);
+  remoteUpdate();
+}
+
+void MEWPointer::setPositionBifunc(float pos01, float posText)
+{
+  ((MarginPointer*)m_pme)->setPositionBifunc(pos01, posText);
   remoteUpdate();
 }
 

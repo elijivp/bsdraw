@@ -17,6 +17,8 @@ enum  BSGRAPHTYPE {
 enum  BSDESCALING {
                     DE_NONE,                /// no descaling (default)
                     DE_LINTERP,             /// descaling through linear interpolation
+                      DE_LINTERP_SCALINGLEFT = DE_LINTERP,
+                      DE_LINTERP_SCALINGCENTER,
                     DE_CENTER,              /// only central point left
                     DE_TRIANGLE,            /// ... additional smooth descaling algos
                     DE_TRIANGLE2, 

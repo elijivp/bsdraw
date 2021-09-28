@@ -167,7 +167,7 @@ unsigned int VshMainGenerator2D::operator()(char *to)
 
 unsigned int FshMainGenerator::basePendingSize(const impulsedata_t& imp, unsigned int ovlscount)
 {
-  unsigned int base = 2000 + ovlscount*700;
+  unsigned int base = 2200 + ovlscount*700;
   if (imp.type == impulsedata_t::IR_OFF)
     ;
   else if (imp.type == impulsedata_t::IR_A_COEFF || imp.type == impulsedata_t::IR_A_COEFF_NOSCALED)

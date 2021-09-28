@@ -91,6 +91,7 @@ public:
   void  param_for_arr_begin(const char* name, const char* arrlengthname="arrlen", const char *additname=nullptr);
   void  param_for_rarr_begin(const char* name);
   void  param_for_oarr_begin(const char* name_cur, const char* name_next="next", const char* arrlengthname="arrlen");
+  void  param_for_carr_begin(const char* name, const char* arrlengthname="arrlen");
   void  param_for_end();
 public:
   void  goto_normed();

@@ -1391,6 +1391,31 @@ bool BSQClickerPoint::overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE orea
 }
 
 
+
+BSQMousePoint::BSQMousePoint(BSQMousePoint::MOUSEBUTTON btn, QObject* parent): QObject(parent)
+{
+  if (btn == MSP_LEFTBUTTON)
+  {
+    emitset[0] = ORM_LMPRESS; emitset[1] = ORM_LMMOVE; emitset[2] = ORM_LMRELEASE;
+  }
+  else if (btn == MSP_RIGHTBUTTON)
+  {
+    emitset[0] = ORM_RMPRESS; emitset[1] = ORM_RMMOVE; emitset[2] = ORM_RMRELEASE;
+  }
+}
+
+bool BSQMousePoint::overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
+{
+  if (oreact == emitset[0] || oreact == emitset[1] || oreact == emitset[2])
+  {
+    emit active(QPoint(((const float*)dataptr)[2], ((const float*)dataptr)[3]));
+    emit active(QPointF(((const float*)dataptr)[0], ((const float*)dataptr)[1]));
+    return true;
+  }
+  return false;
+}
+
+
 bool BSQDoubleClicker::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)
 {
   if (oreact == ORM_LMDOUBLE)

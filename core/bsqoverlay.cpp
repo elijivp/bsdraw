@@ -3,7 +3,67 @@
 /// Created By: Elijah Vlasov
 #include "bsqoverlay.h"
 
+#if 1
 
+MQOverlay::MQOverlay(DrawOverlay* ovl, bool owner, QObject* parent): QObject(parent), m_povl(ovl), m_owner(owner)
+{
+  c_opacity = m_povl->getOpacity();
+  c_visible = c_opacity < 1.0f;
+}
+
+MQOverlay::~MQOverlay()
+{
+  if (m_owner)
+    delete m_povl;
+}
+
+void MQOverlay::setOpacity(float opacity)
+{
+  if (c_opacity != opacity)
+  {
+    c_opacity = opacity;
+    c_visible = c_opacity < 1.0f;
+    m_povl->setOpacity(opacity);
+  }
+}
+
+void MQOverlay::setVisible(bool v)
+{
+  if (v != c_visible)
+  {
+    m_povl->setOpacity(v? c_opacity : 1.0f);
+    c_visible = v;
+  }
+}
+
+void MQOverlay::show()
+{
+  setVisible(true);
+}
+
+void MQOverlay::hide()
+{
+  setVisible(false);
+}
+
+DrawOverlay* MQOverlay::replace(DrawOverlay* ovl)
+{
+  DrawOverlay* tmp = m_povl;
+  m_povl->eject(ovl, false);
+  m_povl = ovl;
+  return tmp;
+}
+
+void MQOverlay::remove()
+{
+  m_povl->eject();
+  if (m_owner)
+    delete m_povl;
+  m_povl = nullptr;
+}
+
+
+#else
 void MQOverlay::_vischecker()
 {
   float unfortunchanged_opacity = m_povl->getOpacity();
@@ -20,12 +80,18 @@ void MQOverlay::_vischecker()
 MQOverlay::MQOverlay(DrawOverlay* ovl, bool owner, QObject* parent): QObject(parent), m_povl(ovl), m_owner(owner)
 {
   c_opacity = m_povl->getOpacity();
+  
 }
 
 MQOverlay::~MQOverlay()
 {
   if (m_owner)
     delete m_povl;
+}
+
+void MQOverlay::setOpacity(float opacity)
+{
+  m_povl->setOpacity(c_opacity = opacity);
 }
 
 void MQOverlay::setVisible(bool v)
@@ -61,6 +127,7 @@ void MQOverlay::remove()
     delete m_povl;
   m_povl = nullptr;
 }
+#endif
 
 MQOverlayLined::MQOverlayLined(DrawOverlay* ovl, bool owner, QObject* parent): MQOverlay(ovl, owner, parent)
 {

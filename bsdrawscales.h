@@ -373,6 +373,7 @@ public:
 //  void  setPostfix(const char* str);
 public slots:
   void  setPosition(float pos01);
+  void  setPositionBifunc(float pos01, float posText);
 };
 
 class MEWScale: public MEQWrapper

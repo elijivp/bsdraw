@@ -21,10 +21,9 @@ int   OActivePoint::fshTrace(int overlay, bool rotated, char* to) const
 }
 
 
-
-
 /********************************************************************************************************************************************/
 /********************************************************************************************************************************************/
+
 OActiveCursor::OActiveCursor(bool linkToScaledCenter): DrawOverlaySimple(),
   OVLCoordsDynamic(CR_RELATIVE, 0.5, 0.5), OVLDimmsOff(), m_linked(linkToScaledCenter) {}
 
@@ -63,15 +62,18 @@ bool OActiveCursor::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* 
 }
 
 
-OActiveCursorCarrier::OActiveCursorCarrier(DrawOverlayProactive* iop, bool linkToScaledCenter): OActiveCursor(linkToScaledCenter),
+OActiveCursorCarrier::OActiveCursorCarrier(DrawOverlayProactive* iop, bool linkToScaledCenter): OActiveCursor(CR_RELATIVE, -1.0, -1.0, linkToScaledCenter),
   m_iop(iop)
 {
+  m_iop->setVisible(false);
 }
 
 OActiveCursorCarrier::OActiveCursorCarrier(DrawOverlayProactive* iop, COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter):
   OActiveCursor(cn, default_x, default_y, linkToScaledCenter),
   m_iop(iop)
 {
+  float dataptr[] = {default_x, default_y};
+  m_iop->overlayReactionMouse(ORM_RMPRESS, dataptr, nullptr);
 }
 
 bool OActiveCursorCarrier::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)

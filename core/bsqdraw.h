@@ -212,6 +212,19 @@ signals:
   void  clicked(QPoint);
 };
 
+class BSQMousePoint: public QObject, public IProactive
+{
+  Q_OBJECT
+  OVL_REACTION_MOUSE  emitset[3];
+public:
+  enum MOUSEBUTTON  { MSP_LEFTBUTTON, MSP_RIGHTBUTTON };
+  BSQMousePoint(MOUSEBUTTON btn, QObject* parent=nullptr);
+  virtual bool  overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const void*, bool* /*doStop*/);
+signals:
+  void  active(QPoint);
+  void  active(QPointF);
+};
+
 class BSQDoubleClicker: public QObject, public IProactive
 {
   Q_OBJECT

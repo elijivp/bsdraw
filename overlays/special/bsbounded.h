@@ -17,7 +17,6 @@ protected:
   virtual int fshTrace(int overlay, bool rotated, char* to) const;
 };
 
-
 //class _OLevelSet: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff
 //{
 //private:

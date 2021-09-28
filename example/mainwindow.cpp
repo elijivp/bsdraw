@@ -742,14 +742,23 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     SAMPLES = 60;
     MAXLINES = 200;
     PORTIONS = 2;
-    PRECREATE(4, 1);
+    PRECREATE(8, 1);
     
-    graphopts_t  gopts[] = { graphopts_t::goDots(0, 0.0f, DE_NONE), 
-                             graphopts_t::goInterp(0.2f, DE_LINTERP), 
-                             graphopts_t::goInterp(0.2f, DE_SINTERP), 
-                             graphopts_t::goInterp(0.2f, DE_QINTERP), 
-                           };
-    const char*  gnames[] = { "Original Data", "Linear interpolation", "Smooth by 3 points", "Smooth by 4 points" };
+    graphopts_t  gopts[] = { 
+       graphopts_t::goInterp(0.2f, DE_LINTERP_SCALINGLEFT), 
+       graphopts_t::goInterp(-1.0f, DE_LINTERP_SCALINGLEFT), 
+       graphopts_t::goInterp(0.2f, DE_LINTERP_SCALINGCENTER),
+       graphopts_t::goInterp(-1.0f, DE_LINTERP_SCALINGCENTER), 
+      
+       graphopts_t::goDots(0, 0.0f, DE_NONE), 
+       graphopts_t::goInterp2(0.2f, DE_LINTERP), 
+       graphopts_t::goInterp(0.2f, DE_SINTERP), 
+       graphopts_t::goInterp(0.2f, DE_QINTERP), 
+      
+    };
+//    const char*  gnames[] = { "Original Data", "Linear interpolation", "Smooth by 3 points", "Smooth by 4 points" };
+    const char*  gnames[] = { "Linear interp. Leftscaled", "Linear interp. Leftscaled, 8bit", "Linear interp. Centercaled", "Linear interp. Centerscaled, 8bit", 
+                              "Original Data", "Linear interp.v2", "Smooth by 3 points", "Smooth by 4 points" };
     
     for (unsigned int i=0; i<sizeof(gopts)/sizeof(graphopts_t); i++)
     {

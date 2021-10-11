@@ -527,7 +527,7 @@ public:
     }
   }
   
-  int rmaxlen() const {  return c_rtexttype == RF_SETBOUNDS || c_rtexttype == RF_SETBOUNDSMOD ? 7 + numfmt_locked*2 : c_rtexttype == RF_SETENUMERATE? c_rdata.rel_enumerate.numcount :
+  int rmaxlen() const {  return c_rtexttype == RF_SETBOUNDS || c_rtexttype == RF_SETBOUNDSMOD ? 7 + numfmt_locked*2 : c_rtexttype == RF_SETENUMERATE? /*c_rdata.rel_enumerate.numcount*/7 + numfmt_locked*2 :
                                 c_rtexttype == RF_SETTAPS? c_rdata.rel_tap_qstring.slen : 0; }
 public:
   enum  FMT { FMT_X0, FMT_X2, FMT_X4 };
@@ -1422,6 +1422,7 @@ protected:
     MarginSingle::bdContentUpdateEnumerate(from, count, recycle, relatedoffset);
     MOD = 0.0f;
     numfmt.integerFormat(false);
+//    qDebug()<<pos_mark<<c_LL<<c_HL<<from<<count;
     assignText(&pointer, redact(numfmt(_update_pointer_pos(pos_mark))));  // ntf: reloffset
   }
 }; 
@@ -3127,7 +3128,7 @@ MEWPointer* DrawBars::addPointerDrawUniSide(ATTACHED_TO atto, int flags, float p
   MarginPointer*  pmarg = new MarginPointer(marklen, pos, floating, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   MARG_OPTS_TEXT
   int sizeDimm = BAR_VERT[atto]? int(pDraw->sizeDataVert() + 1) : int(pDraw->sizeDataHorz() + 1);
-  pmarg->bdContentUpdate(RF_SETENUMERATE, relatedopts_t(countMaxNumbers(sizeDimm-1), 0/*flags & DBF_ENUMERATE_FROMZERO? 0 : 1*/, -1));
+  pmarg->bdContentUpdate(RF_SETENUMERATE, relatedopts_t(sizeDimm-1, flags & DBF_ENUMERATE_FROMZERO? 0 : 1, -1)); // ?????
   return (MEWPointer*)addMarginElement(atto, pmarg, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, flags & DBF_IGNORE_ORIENT);
 }
 

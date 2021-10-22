@@ -59,11 +59,14 @@ public:
                   unsigned int pages=1, ORIENTATION orient=OR_LRTB, SPLITPORTIONS splitPortions=SL_NONE, unsigned int resizeLimit=2160);
   ~DrawRecorderPaged();
 
+  unsigned int  currentPage() const { return m_pagehole; }
   unsigned int  countPages() const { return m_pagescount; }
 public:
   virtual void            implicitSetData(const float*);
   void                    switchPage(int idx, bool currentPageImplicitlyUpdated);
   void                    switchPageNoUpdate(int idx);  // for setData immediately
+  
+  void                    clearAllPages();
 public slots:
   void              slt_switchPage(int idx);          // implicitlyUpdated = true
   void              slt_switchPageNoUpdate(int idx);  // for setData immediately

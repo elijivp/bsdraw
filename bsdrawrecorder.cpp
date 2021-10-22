@@ -192,6 +192,14 @@ void DrawRecorderPaged::switchPageNoUpdate(int idx)
   }
 }
 
+void DrawRecorderPaged::clearAllPages()
+{
+  for (int i=0; i<m_pagescount; i++)
+    if (i != m_pagehole)
+      m_pages[i].filled = 0;
+  DrawRecorder::clearData(); // for self
+}
+
 void DrawRecorderPaged::slt_switchPage(int idx)
 {
   switchPage(idx, true);

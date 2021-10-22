@@ -1372,7 +1372,10 @@ protected:
   {
     MarginSingle::sizeHint(atto, atto_size, mindly, minsegm_pre, minsegm_post);
     QFontMetrics fm(font);
-    QSize meansize(5 + fm.averageCharWidth()*rmaxlen(), fm.height());
+    int maxlen = rmaxlen();
+    if (prefix)   maxlen += strlen(prefix);
+    if (postfix)  maxlen += strlen(postfix);
+    QSize meansize(5 + fm.averageCharWidth()*maxlen, fm.height());
     *atto_size += (BAR_VERT[atto]? meansize.width() : meansize.height());
     *mindly += BAR_VERT[atto]? meansize.height() : meansize.width();
     int d_half_dly = textInnerPlaced? 0 : BAR_VERT[atto]? meansize.height()/2 : meansize.width()/2;

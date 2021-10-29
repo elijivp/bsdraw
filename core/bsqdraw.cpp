@@ -18,6 +18,22 @@
 #include <QMouseEvent>
 #include <QResizeEvent>
 
+extern int msprintf(char* to, const char* format, ...);
+
+int DrawOverlayEmpty::fshTrace(int overlay, bool /*rotated*/, char* to) const
+{
+  return msprintf(to, "vec4 overlayTrace%d(in ivec2 icell, in vec4 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition){ return vec4(0.0,0.0,0.0,0.0); }\n", overlay);
+}
+
+int DrawOverlayEmpty::fshColor(int overlay, char* to) const
+{
+  return msprintf(to, "vec3 overlayColor%d(in vec4 overcolor, in vec3 undercolor) { return undercolor; }\n", overlay);
+}
+
+
+///////////////////////////////////////
+
+
 const char*   DrawQWidget::vardesc(SHEIFIELD sf)
 {
   if (sf == SF_DATA)            return "texData";
@@ -166,9 +182,11 @@ void DrawQWidget::initCollectAndCompileShader()
      
   /// 1. Vertex shader
   /// mem alloc
-  if (m_vshalloc == 0)
+  unsigned int vshps = m_pcsh->shvertex_pendingSize();
+  if (m_vshalloc < vshps)
   {
-    m_vshalloc = m_pcsh->shvertex_pendingSize();
+    if (m_vshalloc) delete []m_vshmem;
+    m_vshalloc = vshps;
     m_vshmem = new char[m_vshalloc];
   }
   
@@ -186,11 +204,11 @@ void DrawQWidget::initCollectAndCompileShader()
   
   /// 2. Fragment shader
   /// mem alloc
-  if (m_fshalloc == 0 || m_fshalloc < m_pcsh->shfragment_pendingSize(m_impulsedata, m_overlaysCount))
+  unsigned int fshps = m_pcsh->shfragment_pendingSize(m_impulsedata, m_overlaysCount);
+  if (m_fshalloc < fshps)
   {
-    if (m_fshalloc != 0)
-      delete []m_fshmem;
-    m_fshalloc = m_pcsh->shfragment_pendingSize(m_impulsedata, m_overlaysCount);
+    if (m_fshalloc)  delete []m_fshmem;
+    m_fshalloc = fshps;
     m_fshmem = new char[m_fshalloc];
   }
   
@@ -1113,6 +1131,8 @@ void DrawQWidget::slot_setMirroredHorz(){ setMirroredHorz(); }
 void DrawQWidget::slot_setMirroredVert(){ setMirroredVert(); }
 void DrawQWidget::slot_setPortionsCount(int count){  setPortionsCount(count); }
 
+void DrawQWidget::slot_ovlReplace(int idx, DrawOverlay* ovl){ ovlReplace(idx, ovl, false); }
+
 void DrawQWidget::slot_enableAutoUpdate(bool enabled){  banAutoUpdate(!enabled); }
 void DrawQWidget::slot_disableAutoUpdate(bool disabled){  banAutoUpdate(disabled); }
 void DrawQWidget::slot_enableAutoUpdateByData(bool enabled){  banAutoUpdate(RD_BYDATA, !enabled); }
@@ -1345,30 +1365,6 @@ void DrawQWidget::MemExpand1D::onFillData(int offsetBack, unsigned int samples, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-
-class OverlayEmpty: public DrawOverlay
-{
-public:
-  virtual int  fshTrace(int, char*) const;
-  virtual int  fshColor(int, char*) const;
-};
-
-///////////////////////////////////////
-extern int msprintf(char* to, const char* format, ...);
-
-int DrawCore::OverlayEmpty::fshTrace(int overlay, bool /*rotated*/, char* to) const
-{
-  return msprintf(to, "vec4 overlayTrace%d(in ivec2 icell, in vec4 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition){ return vec4(0.0,0.0,0.0,0.0); }\n", overlay);
-}
-
-int DrawCore::OverlayEmpty::fshColor(int overlay, char* to) const
-{
-  return msprintf(to, "vec3 overlayColor%d(in vec4 overcolor, in vec3 undercolor) { return undercolor; }\n", overlay);
-}
-
-
-///////////////////////////////////////
 
 
 BSQProactiveSelectorBase::~BSQProactiveSelectorBase(){}

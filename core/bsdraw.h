@@ -41,6 +41,15 @@ inline  void  _bsdraw_update_bnd(const float k, const float b, bounds_t* bnd)
 }
 
 //#########################
+
+class DrawOverlayEmpty: public DrawOverlay
+{
+public:
+  virtual int  fshTrace(int, bool, char*) const;
+  virtual int  fshColor(int, char*) const;
+};
+
+//#########################
 class IProactive
 {
 public:
@@ -172,13 +181,7 @@ protected:
   unsigned int          m_overlaysCount;
   IProactive*           m_proactive;
   bool                  m_proactiveOwner;
-  class OverlayEmpty: public DrawOverlay
-  {
-  public:
-    virtual int  fshTrace(int, bool, char*) const;
-    virtual int  fshColor(int, char*) const;
-  };
-  OverlayEmpty          m_overlaySingleEmpty;
+  DrawOverlayEmpty      m_overlaySingleEmpty;
 public:
   DrawCore(DATAASTEXTURE datex, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): m_datex(datex), 
                                                         m_portionSize(0), m_allocatedPortions(portions), 

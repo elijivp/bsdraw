@@ -60,9 +60,11 @@ void DrawRecorder::clearData()
 void DrawRecorder::resizeGL(int w, int h)
 {
   DrawQWidget::resizeGL(w,h);
+//  if (m_matrixLmSize < m_matrixDimmB*m_scalingB)
+//    m_stopped = 0;
+//  else
+//    m_stopped = ((float)pp/m_matrixLmSize)*(m_matrixLmSize - m_matrixDimmB*m_scalingB);
   fillMatrix();
-//  if (m_matrixDimmB > old_dimmB  || (m_matrixDimmB < old_dimmB  && (m_countPortions > 1)))
-//    fillMatrix();
 }
 
 void DrawRecorder::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const

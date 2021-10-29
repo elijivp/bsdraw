@@ -105,6 +105,8 @@ public slots:
   void    slot_setMirroredVert();
   void    slot_setPortionsCount(int count);
   
+  void    slot_ovlReplace(int idx, DrawOverlay* ovl); // for not-owners only
+  
   void    slot_enableAutoUpdate(bool);
   void    slot_disableAutoUpdate(bool);
   void    slot_enableAutoUpdateByData(bool);

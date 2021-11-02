@@ -25,8 +25,8 @@ OGridRegular::OGridRegular(OGridRegular::REGULAR go, COORDINATION cn, float star
 {
 }
 
-OGridRegular::OGridRegular(COORDINATION cn, float start, float stepsize, const linestyle_t& linestyle, int maxsteps, bool showGridAtZero): DrawOverlayTraced(linestyle), 
-  OVLCoordsDynamic(cn, 0.0f, start),
+OGridRegular::OGridRegular(float start, float stepsize, const linestyle_t& linestyle, int maxsteps, bool showGridAtZero): DrawOverlayTraced(linestyle), 
+  OVLCoordsDynamic(CR_RELATIVE, 0.0f, start),
   OVLDimmsOff(),
   m_gridtype(EGO_REGULAR_B), m_stepsize(stepsize), m_maxsteps(maxsteps), m_zeroreg(showGridAtZero), m_additcn(CR_SAME)
 {
@@ -47,9 +47,9 @@ OGridRegular::OGridRegular(OGridRegular::RISK gr, COORDINATION cn, float startch
 {
 }
 
-OGridRegular::OGridRegular(COORDINATION cn, float start, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps)
+OGridRegular::OGridRegular(float start, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps)
   : DrawOverlayTraced(linestyle),
-    OVLCoordsDynamic(cn, start, mark_centeroffset),
+    OVLCoordsDynamic(CR_RELATIVE, mark_centeroffset, start),
     OVLDimmsOff(),
     m_gridtype(EGO_RISK_B), m_stepsize(stepsize), m_specheight(risk_height), m_babsheight(absolute_height), m_maxsteps(maxsteps), m_additcn(CR_SAME)
 {
@@ -64,7 +64,17 @@ int OGridRegular::fshTrace(int overlay, bool rotated, char *to) const
                            FshTraceGenerator::OINC_DATABOUNDS : 0);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
-    ocg.goto_normed();
+    if (m_gridtype == EGO_REGULAR_B || m_gridtype == EGO_RISK_B)
+    {
+      int cb = ocg.add_movecs_pixing(CR_RELATIVE);
+      if (rotated)
+        ocg.goto_normed("vec2((ioffset[1]-databounds[0])/(databounds[1]-databounds[0]), 0.0)", cb);
+      else
+        ocg.goto_normed("vec2(0.0, (ioffset[1]-databounds[0])/(databounds[1]-databounds[0]))", cb);
+    }
+    else
+      ocg.goto_normed();
+    
     if (m_maxsteps == 0 || m_stepsize < 0.00001f)
       ;
     else
@@ -80,12 +90,12 @@ int OGridRegular::fshTrace(int overlay, bool rotated, char *to) const
         ocg.var_fixed("grid_limit", m_maxsteps == -1? 65536:m_maxsteps);
 //        int relstep = ocg.add_movecs_rel(coords_type_t::getCoordination());
 //        if ()
-        if (m_gridtype == EGO_REGULAR_H || m_gridtype == EGO_REGULAR_B)
+        if (m_gridtype == EGO_REGULAR_H || (!rotated && m_gridtype == EGO_REGULAR_B))
         {
           ocg.push_cs_rel_y("grid_step", relstep);
           ocg.var_static(DT_1F, "crossed = inormed.y/float(ibounds.y-1)");
         }
-        else if (m_gridtype == EGO_REGULAR_V)
+        else if (m_gridtype == EGO_REGULAR_V || (rotated && m_gridtype == EGO_REGULAR_B))
         {
           ocg.push_cs_rel_x("grid_step", relstep);
           ocg.var_static(DT_1F, "crossed = inormed.x/float(ibounds.x-1)"); 
@@ -94,13 +104,13 @@ int OGridRegular::fshTrace(int overlay, bool rotated, char *to) const
         ocg.push( "int optiid = int(crossed/grid_step + sign(crossed)*0.49);"
                   "float offset = grid_step*optiid;" );
   
-        if (m_gridtype == EGO_REGULAR_H || m_gridtype == EGO_REGULAR_B)
+        if (m_gridtype == EGO_REGULAR_H || (!rotated && m_gridtype == EGO_REGULAR_B))
         { 
           ocg.pop_cs_rel_y("offset");  
           ocg.trace_2linehorz_c(nullptr, nullptr, "offset", m_zeroreg ? "(1.0 - step(float(grid_limit), float(optiid)))":
                                                                         "(1.0 - step(float(grid_limit), float(optiid)))*sign(icoords.y)");
         }
-        else
+        else if (m_gridtype == EGO_REGULAR_V || (rotated && m_gridtype == EGO_REGULAR_B))
         {
           ocg.pop_cs_rel_x("offset");
           ocg.trace_2linevert_c(nullptr, nullptr, "offset", m_zeroreg? "(1.0 - step(float(grid_limit), float(optiid)))":
@@ -124,14 +134,13 @@ int OGridRegular::fshTrace(int overlay, bool rotated, char *to) const
         }
         ocg.var_fixed("grid_limit", m_maxsteps == -1? 65536:m_maxsteps);
         
-//        int relstep = ocg.add_movecs_rel(coords_type_t::getCoordination());
-        if (m_gridtype == EGO_RISK_H || m_gridtype == EGO_RISK_B)
+        if (m_gridtype == EGO_RISK_H || (!rotated && m_gridtype == EGO_RISK_B))
         {
           ocg.push_cs_rel_y("grid_step", relstep); 
           ocg.movecs_pix_x("grid_height", pixing_height);
           ocg.var_static(DT_1F, "crossed = inormed.y/float(ibounds.y)"); 
         }
-        else
+        else if (m_gridtype == EGO_RISK_V || (rotated && m_gridtype == EGO_RISK_B))
         {
           ocg.push_cs_rel_x("grid_step", relstep);
           ocg.movecs_pix_y("grid_height", pixing_height);
@@ -140,16 +149,15 @@ int OGridRegular::fshTrace(int overlay, bool rotated, char *to) const
         
         ocg.push( "int optiid = int(crossed/grid_step + sign(crossed)*0.49);"
                   "float offset = grid_step*optiid;" );
-        if (m_gridtype == EGO_RISK_H || m_gridtype == EGO_RISK_B)
+        if (m_gridtype == EGO_RISK_H || (!rotated && m_gridtype == EGO_RISK_B))
         {
           ocg.pop_cs_rel_y("offset");
           ocg.trace_2linehorz_c("grid_height", nullptr, "offset", "(1.0 - step(float(grid_limit), float(optiid)))"); // no *sign(icoords.x), cos of little risks
         }
-        else
+        else if (m_gridtype == EGO_RISK_V || (rotated && m_gridtype == EGO_RISK_B))
         {
           ocg.pop_cs_rel_x("offset");
           ocg.trace_2linevert_c("grid_height", nullptr, "offset", "(1.0 - step(float(grid_limit), float(optiid)))"); // no *sign(icoords.x), cos of little risks
-          
         }
       }
     }

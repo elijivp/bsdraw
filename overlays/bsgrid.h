@@ -17,12 +17,12 @@ public:
   OGridRegular(REGULAR  go, COORDINATION cn, float startchannel, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, bool showGridAtZero=false);
   OGridRegular(REGULAR  go, COORDINATION cn, float startchannel, COORDINATION cnstep, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, bool showGridAtZero=false);
   /// bounded regular variant
-  OGridRegular(COORDINATION cn, float start, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, bool showGridAtZero=false);
+  OGridRegular(float start, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, bool showGridAtZero=false);
   enum RISK     {  RISK_HORZ, RISK_VERT };
   OGridRegular(RISK     gr, COORDINATION cn, float startchannel, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps=-1);  
   OGridRegular(RISK     gr, COORDINATION cn, float startchannel, COORDINATION cnstep, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps=-1);  
   /// bounded regular variant
-  OGridRegular(COORDINATION cn, float start, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps=-1);  
+  OGridRegular(float start, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps=-1);  
 protected:
   int           m_gridtype;
   float         m_stepsize;

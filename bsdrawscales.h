@@ -140,33 +140,34 @@ enum   // DrawBarsFlags
   DBMODE_STATIC=3,
   
   /// 2. flags
-  DBF_SHARED=0x4,
-  DBF_INTERVENTBANNED=0x8,
+  DBF_ORIENT_IGNORE=    0x10,
+  DBF_ORIENT_INVERT=    0x20,
+  DBF_SHARED=           0x40,
+  DBF_INTERVENTBANNED=  0x80,
   
-  DBF_ONLY2NOTES=0x10,
-  DBF_NOTESINSIDE=0x20,
+  DBF_ONLY2NOTES=       0x100,
+  DBF_NOTESINSIDE=      0x200,
   
-  DBF_LABELAREA_FULLBAR=0x40,
+  DBF_LABELAREA_FULLBAR=0x400,
   
-  DBF_ENUMERATE_FROMZERO=0x80,
-  DBF_ENUMERATE_SHOWLAST=0x100,
+  DBF_ENUMERATE_FROMZERO=0x800,
+  DBF_ENUMERATE_SHOWLAST=0x1000,
   
-  DBF_MINSIZE_BY_PIXSTEP=0x200,
+  DBF_MINSIZE_BY_PIXSTEP=0x2000,
   
-  DBF_MARKS_DONTROUND=0x400,
-  DBF_MARKS_DONTROUND1=0x800,
+  DBF_MARKS_DONTROUND=  0x4000,
+  DBF_MARKS_DONTROUND1= 0x8000,
   
-  DBF_POSTFIX_TO_PREFIX=0x1000,
-  DBF_DOCKTO_PREVMARK=0x2000,   // for NM
-  DBF_DOCKTO_NEXTMARK=0x4000,   // for NM
+  DBF_POSTFIX_TO_PREFIX=0x10000,
+  DBF_DOCKTO_PREVMARK=  0x20000,   // for NM
+  DBF_DOCKTO_NEXTMARK=  0x40000,   // for NM
   
-  DBF_RETAP_ON_RESIZE=0x8000,
+  DBF_RETAP_ON_RESIZE=  0x80000,
   
-  DBF_IGNORE_ORIENT=0x10000,
   
-  DBF_PRECISION_X0 =0x20000,
-  DBF_PRECISION_X2 =0x40000,
-  DBF_PRECISION_X4 =0x80000
+  DBF_PRECISION_X0 =  0x200000,
+  DBF_PRECISION_X2 =  0x400000,
+  DBF_PRECISION_X4 =  0x800000
 };
 
 
@@ -209,7 +210,7 @@ public:
   void                setToolUpdateReactor(IToolUpdateReactor* ptool){  pTool = ptool; }
   void                clearToolUpdateReactor(){  pTool = nullptr; }
 public:
-  MEQWrapper*         addMarginElement(ATTACHED_TO atto, MarginElement* pme, MEQWrapper* pwp, bool sharedWithPrev, bool interventBanned, bool invertBanned=false);
+  MEQWrapper*         addMarginElement(ATTACHED_TO atto, MarginElement* pme, MEQWrapper* pwp, bool sharedWithPrev, bool interventBanned, int mirrorAlgo=0);   // Miralg = 0 - off, 1 - mirroring ignore, 2 - mirroring invert
 public:
   MEWLabel*           addLabel(ATTACHED_TO atto, int flags, QString text, Qt::Alignment  align=Qt::AlignCenter, Qt::Orientation orient=Qt::Horizontal/*, float orientAngleGrad=0.0f*/);
   MEWSpace*           addSpace(ATTACHED_TO atto, int space);

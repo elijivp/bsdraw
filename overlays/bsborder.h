@@ -9,11 +9,14 @@
 
 #include "../core/bsoverlay.h"
 
+enum  { OBLINE_LEFT=1, OBLINE_TOP=2, OBLINE_RIGHT=4, OBLINE_BOTTOM=8 };
+
 class OBorder: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff
 {
   unsigned int  m_width;
+  unsigned int  m_lineset;
 public:
-  OBorder(unsigned int widthpixels, const linestyle_t& kls=linestyle_solid(1,1,1));
+  OBorder(unsigned int widthpixels, const linestyle_t& kls=linestyle_solid(1,1,1), int lineset=OBLINE_LEFT|OBLINE_TOP|OBLINE_RIGHT|OBLINE_BOTTOM);
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };

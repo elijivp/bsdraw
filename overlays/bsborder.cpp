@@ -25,8 +25,8 @@
 //  return m_banclicks;
 //}
 
-OBorder::OBorder(unsigned int widthpixels, const linestyle_t &kls): DrawOverlayTraced(kls), OVLDimmsOff(),
-  m_width(widthpixels)
+OBorder::OBorder(unsigned int widthpixels, const linestyle_t &kls, int lineset): DrawOverlayTraced(kls), OVLDimmsOff(),
+  m_width(widthpixels), m_lineset(lineset)
 {
 }
 
@@ -35,13 +35,16 @@ int OBorder::fshTrace(int overlay, bool rotated, char *to) const
   FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
-    ocg.goto_normed_empty();
-    ocg.var_const_fixed("border", (int)m_width);
-    ocg.push( "for (int i=0; i<2; i++){"
-                "result += (1.0 - step(float(border), float(icoords[i])))*insider(icoords[1-i], ivec2(0, ibounds[1-i]));"
-                "result += step(float(ibounds[i] - border), float(icoords[i]))*insider(icoords[1-i], ivec2(0, ibounds[1-i]));"
-              "}"
-          );
+    ocg.goto_normed();
+    if (m_lineset & OBLINE_BOTTOM)
+      ocg.trace_linehorz_l(nullptr, nullptr, nullptr, nullptr);
+    if (m_lineset & OBLINE_LEFT)
+      ocg.trace_linevert_b(nullptr, nullptr, nullptr, nullptr);
+    ocg.push("inormed = icoords - ibounds + ivec2(1,1);");
+    if (m_lineset & OBLINE_TOP)
+      ocg.trace_linehorz_r(nullptr, nullptr, nullptr, nullptr);
+    if (m_lineset & OBLINE_RIGHT)
+      ocg.trace_linevert_t(nullptr, nullptr, nullptr, nullptr);
   }  
   ocg.goto_func_end(true);
   return ocg.written();

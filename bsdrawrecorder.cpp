@@ -122,6 +122,26 @@ unsigned int DrawRecorder::filled() const
   return m_memory.filled();
 }
 
+bool DrawRecorder::getHistoryData(int offset, float* result) const
+{
+  for (unsigned int p = 0; p < m_countPortions; ++p)
+  {
+    if (m_memory.onFillData(p, offset, &result[p*m_portionSize]) == false)
+      return false;
+  }
+  return true;
+}
+
+bool DrawRecorder::getHistoryData(int offset, int portion, float* result) const
+{
+  return m_memory.onFillData(portion, offset, result);
+}
+
+//const float* DrawRecorder::getHistoryDataPtr(int offset, int portion) const {   return &m_matrixData[portion*m_matrixDimmB*m_matrixDimmA + offset*m_matrixDimmA];    }
+
+//float* DrawRecorder::getHistoryDataPtr(int offset, int portion) {    return &m_matrixData[portion*m_matrixDimmB*m_matrixDimmA + offset*m_matrixDimmA];   }
+
+
 void DrawRecorder::scrollDataTo(int pp)
 {
   if (m_matrixLmSize < m_matrixDimmB*m_scalingB)

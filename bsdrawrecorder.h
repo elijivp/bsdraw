@@ -42,6 +42,11 @@ public:
   virtual int             scrollValue() const;
           
           unsigned int    filled() const;
+public:
+          bool            getHistoryData(int offset, float* result) const;    // portions concatenation
+          bool            getHistoryData(int offset, int portion, float* result) const;
+//          const float*    getHistoryDataPtr(int offset, int portion) const;
+//          float*          getHistoryDataPtr(int offset, int portion);
 public slots:
   virtual void            scrollDataTo(int);
   virtual void            scrollDataToAbs(int);

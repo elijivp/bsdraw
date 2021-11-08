@@ -2567,6 +2567,221 @@ public:
 MarginMarksWidgetBetween::~MarginMarksWidgetBetween(){}
 
 
+
+
+/************************************************************************************************************/
+#if 0
+class MarginStricts: public MarginElementCached, public MarginBoundDepended
+{
+protected:
+  memark_t*     ua_marks;
+  int*          ua_marklinks2;
+  int           countMaxiNoted, countMaxiHided, countMini;
+  float         BASE;
+  int           pixSpace;
+  int           miniPerMaxi;
+  int           round; // 0 - default rounding, 1 - no round, 2 - no round and +1 for all except first and last
+protected:
+  int           mlenmaxi, mlenmini, mwid;
+public:
+  MarginStricts(): //needRedrawByMark(false),
+    ua_marks(nullptr), ua_marklinks2(nullptr), countMaxiNoted(0), countMaxiHided(0), countMini(0), pixSpace(0), 
+    miniPerMaxi(0), round(0),
+    mlenmaxi(4), mlenmini(2), mwid(1)
+  {
+  }
+  ~MarginStricts()
+  {
+    if (ua_marks && ua_marklinks2)
+    {
+      delete []ua_marks;
+      delete []ua_marklinks2;
+    }
+  }
+  
+  void  init(int marksCount, float base, int pixSpacing, int roundsteps, int miniPerMaxiLIMIT) /// marksCount = 0 for init later
+  {
+    BASE = base;
+    pixSpace = pixSpacing;
+    miniPerMaxi = miniPerMaxiLIMIT;
+    round = roundsteps;
+    
+    if (marksCount)
+    {
+      if (ua_marks) delete []ua_marks;
+      if (ua_marklinks2)  delete []ua_marklinks2;
+      countMaxiNoted = marksCount;
+      countMaxiHided = 0;
+      countMini = 0;
+      
+      ua_marks = new memark_t[marksCount + miniPerMaxi*countMaxiNoted];
+      ua_marklinks2 = new int[marksCount];
+      for (int i=0; i<marksCount; i++)
+        ua_marklinks2[i] = i;
+    }
+  }
+  void    setMarkLength(int length){ mlenmaxi = length; /*needRedrawByMark = true;*/ }
+  void    setMarkMiniLength(int length){ mlenmini = length; /*needRedrawByMark = true;*/ }
+  void    setMarkWidth(int width){ mwid = width; /*needRedrawByMark = true;*/ }
+  void    setMarkSize(int length, int width, int lengthmini=4)
+  { mlenmaxi = length; mlenmini = lengthmini; mwid = width; /*needRedrawByMark = true;*/ }
+protected:
+  virtual void  draw(QPainter& painter)
+  {
+    if (c_color_redefined)
+      for (int i=0; i<countMaxiNoted + (miniPerMaxi > 0? countMini : 0); i++)
+        painter.fillRect(ua_marks[i].rect, c_color);
+    else
+      for (int i=0; i<countMaxiNoted + (miniPerMaxi > 0? countMini : 0); i++)
+        painter.fillRect(ua_marks[i].rect, painter.brush());
+  }
+  
+  virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
+  {
+    if (MarginElementCached::updateArea(area, UPDATEFOR) == false)    // forced for strict for bounds
+      return false;
+    
+    const int dimm_main = area.segm_main - 1;
+    const int countMaxiTotal = countMaxiNoted + countMaxiHided;
+    int   over_recycle = 1;
+    float over_deltapix[] = { 1, 1 };
+    int   over_step[] =  { 1, 1 };  // each x element still alive
+    int   jumpfrom(0), jumpto(0);  // center elements highlight
+    int   over_count[] = { 0, 0 };
+    int   minimod = 1;
+    
+    {
+      over_deltapix[0] = (cachedRdata().rel_fixed.HL - cachedRdata().rel_fixed.LL) / BASE;
+      countMaxiNoted = dimm_main / pixStep_pixSpace + 1;
+      if (countMaxiNoted > countMaxiTotal)
+        countMaxiNoted = countMaxiTotal;
+      countMini = 0;
+      int miniover=0;
+//      if (miniPerMaxi)
+//      {
+//        over_recycle += 1;
+//        minimod = miniPerMaxi + 1;
+//        miniover = int(((dimm_main % pixStep_pixSpace) / float(pixStep_pixSpace)) * (miniPerMaxi + 1));
+//        if (miniover < 0)
+//          miniover = 0;
+//        countMini = miniPerMaxi*(countMaxiNoted-1) + miniover;
+//        over_deltapix[1] = over_deltapix[0] / minimod;
+//      }    
+      over_count[0] = countMaxiNoted;
+      over_count[1] = minimod*(countMaxiNoted-1) + miniover + 1;
+    }
+    else
+    {
+      over_deltapix[0] = dimm_main/float(countMaxiTotal - 1);
+      if (algoType == DBMODE_STRETCHED_POW2)
+      {
+        countMaxiNoted = countMaxiTotal;
+        if (over_deltapix[0] < pixStep_pixSpace && countMaxiNoted > 2)
+        {
+          float odp = dimm_main/float(countMaxiNoted - 1);
+          while (odp < pixStep_pixSpace)
+          {
+            countMaxiNoted -= countMaxiNoted/2;
+            odp = dimm_main/float(countMaxiNoted - 1);
+            over_step[0] *= 2;
+    //        qDebug()<<countMaxiNoted<<over_deltapix[0]<<pixStep_pixSpace;
+            if (countMaxiNoted < 3)
+              break;
+          }
+        }
+      }
+      else
+      {
+        countMaxiNoted = calcCountStepAndJump(countMaxiTotal, dimm_main, pixStep_pixSpace, &over_step[0], &jumpfrom, &jumpto);
+      }
+      countMini = 0;
+      if (miniPerMaxi && countMaxiNoted == countMaxiTotal)
+      {
+        if (over_deltapix[0]/(miniPerMaxi+1) > 4)
+        {
+          over_recycle += 1;
+          minimod = miniPerMaxi + 1;
+          countMini = miniPerMaxi*(countMaxiNoted-1);
+          over_step[1] = 1;
+          over_deltapix[1] = over_deltapix[0] / minimod;
+        }
+      }
+      over_count[0] = countMaxiTotal;
+      over_count[1] = minimod*(countMaxiNoted-1);
+    }
+    
+    countMaxiHided = countMaxiTotal - countMaxiNoted;
+    
+    int   over_mlen[] = { mlenmaxi, mlenmini };
+    int m=0;
+    for (int i=0; i<countMaxiNoted + countMaxiHided; i++)
+      ua_marklinks2[i] = -1;
+    
+    for (int o=0; o<2; o++)
+    {
+      if (over_count[o] == 0)
+        continue;
+      if (BAR_VERT[area.atto])
+      {
+        int d2 = area.mirrored? area.segm_pre : area.segm_pre + area.segm_main - 1;
+        float d3 = area.mirrored? -over_deltapix[o] : over_deltapix[o];
+        int l1 = area.atto_begin;
+        int l2 = area.atto_begin + (area.atto == AT_LEFT? -(over_mlen[o]-1) : (over_mlen[o]-1));
+        for (int i=0; i<over_count[o]; i += over_step[o])
+        {
+          if (o == 1 && i % minimod == 0)  continue;
+          if (o == 0) ua_marklinks2[i] = m;
+          int offs = d2 - (round == 0 || i == 0 || i == over_count[0]-1? qRound(i*d3) : round == 1? int(i*d3) : int(i*d3) + 1);
+          ua_marks[m].anchor = QPoint(l1, offs);
+          if (area.atto == AT_LEFT)
+            ua_marks[m].rect.setCoords(l2, offs, l1, offs);
+          else
+            ua_marks[m].rect.setCoords(l1, offs, l2, offs);
+          m++;
+          if (jumpfrom && i + over_step[0] == jumpfrom){ i = jumpto - over_step[0]; jumpfrom = 0; }
+        }
+      }
+      else
+      {
+        int d2 = area.mirrored? area.segm_pre + area.segm_main - 1 : area.segm_pre;
+        float d3 = area.mirrored? -over_deltapix[o] : over_deltapix[o];
+        int l1 = area.atto_begin;
+        int l2 = area.atto_begin + (area.atto == AT_TOP? -(over_mlen[o]-1) : (over_mlen[o]-1));
+        for (int i=0; i<over_count[o]; i += over_step[o])
+        {
+          if (o == 1 && i % minimod == 0)  continue;
+          if (o == 0) ua_marklinks2[i] = m;
+          int offs = d2 + (round == 0 || i == 0 || i == over_count[0]-1? qRound(i*d3) : round == 1? int(i*d3) : int(i*d3) + 1);
+          ua_marks[m].anchor = QPoint(offs, l1);
+          if (area.atto == AT_TOP)
+            ua_marks[m].rect.setCoords(offs, l2, offs, l1);
+          else
+            ua_marks[m].rect.setCoords(offs, l1, offs, l2);
+          m++;
+          if (jumpfrom && i + over_step[0] == jumpfrom){ i = jumpto - over_step[0]; jumpfrom = 0; }
+        }
+      }
+    } // for over
+    
+    return true;
+  }
+  virtual void sizeHint(ATTACHED_TO /*atto*/, int* atto_size, int* mindly, int* minsegm_pre, int* minsegm_post) const
+  {
+    *atto_size = mlenmaxi + 2;
+    *mindly = 1;
+    *minsegm_pre = *minsegm_post = 0;
+  }
+protected:
+  virtual void  bdContentUpdateBounds(float LL, float HL)=0;
+  virtual void  bdContentUpdateBoundsMod(float LL, float HL, float MOD)=0;
+  virtual void  bdContentUpdateTaps(QString& base, mtap_qstring_fn, const void* param, float relatedoffset, const tapcontent_t&)=0;
+  virtual void  bdContentUpdateEnumerate(int from, int count, int recycle, float relatedoffset)=0;
+};
+
+#endif
+/**************************/
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //#define RAKOFLAG
@@ -3206,6 +3421,29 @@ MEWScaleNN* DrawBars::addScaleFixedMod(ATTACHED_TO atto, int flags, float LL, fl
 //  pImpl->elemsBoundsSetupDepended.push_back(pmarg);
   return (MEWScaleNN*)addMarginElement(atto, pmarg, new MEWScaleNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
 }
+
+//MEWScaleNN* DrawBars::addScaleFixedOdd(ATTACHED_TO atto, int flags, float LL, float HL, float ODD, int fixedCount, int pixStep_pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
+//{
+//  Q_ASSERT(false);
+//  MarginMarksTexted* pmarg;
+//  if (flags & DBF_ONLY2NOTES)
+//    pmarg = new MarginMinTexts(flags & DBF_NOTESINSIDE);
+//  else
+//    pmarg = new Margin1Mark1Text(flags & DBF_NOTESINSIDE);
+
+//  pmarg->init(DBMODE_STATIC_2, fixedCount, pixStep_pixSpacing, DB_ROUNDING(flags), miniPerMaxiLIMIT);
+//  MARG_OPTS_TEXT
+//  pmarg->setFont(this->font());
+//  pmarg->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL)));
+//  if (flags & DBF_MINSIZE_BY_PIXSTEP)
+//  {
+//    if (BAR_VERT[atto])     pImpl->c_hint_draw_height = fixedCount*pixStep_pixSpacing;
+//    else                    pImpl->c_hint_draw_width = fixedCount*pixStep_pixSpacing;
+////    updateGeometry();
+//  }
+////  pImpl->elemsBoundsSetupDepended.push_back(pmarg);
+//  return (MEWScaleNN*)addMarginElement(atto, pmarg, new MEWScaleNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
+//}
 
 MEWScaleNM* DrawBars::addScaleEnumerator(ATTACHED_TO atto, int flags, int marksCount, int pixStep_pixSpacing, unsigned int step, const char* postfix)
 {

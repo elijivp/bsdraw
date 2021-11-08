@@ -25,8 +25,7 @@
 //  return m_banclicks;
 //}
 
-OBorder::OBorder(unsigned int widthpixels, const linestyle_t &kls, int lineset): DrawOverlayTraced(kls), OVLDimmsOff(),
-  m_width(widthpixels), m_lineset(lineset)
+OBorder::OBorder(const linestyle_t &kls, int lineset): DrawOverlayTraced(kls), OVLDimmsOff(), m_lineset(lineset)
 {
 }
 

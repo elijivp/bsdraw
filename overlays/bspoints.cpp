@@ -334,3 +334,23 @@ int OSelectorCirc::fshTrace(int overlay, bool rotated, char *to) const
   ocg.goto_func_end(true);
   return ocg.written();
 }
+
+OSelectorBand::OSelectorBand(const linestyle_t& kls, float alpha, bool moveable): OSelectorReaction(kls, alpha, moveable, false)
+{
+}
+
+int OSelectorBand::fshTrace(int overlay, bool rotated, char *to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    {
+      ocg.push("ioffset[1] = 0;");
+      ocg.goto_normed();
+      ocg.push("idimms2[1] = ibounds.y;");
+      ocg.trace_rect_xywh("idimms2", m_alpha);
+    }
+  }
+  ocg.goto_func_end(true);
+  return ocg.written();
+}

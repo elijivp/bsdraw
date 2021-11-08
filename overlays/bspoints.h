@@ -107,4 +107,12 @@ protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
+class OSelectorBand: public OSelectorReaction
+{
+public:
+  OSelectorBand(const linestyle_t& kls, float alpha=0.2f, bool moveable=false);
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+};
+
 #endif // POINTS_H

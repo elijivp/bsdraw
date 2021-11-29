@@ -488,9 +488,9 @@ void FshTraceGenerator::ban_trace(bool ban)
 
 void FshTraceGenerator::trace_triangle_cc(const char *side, int direction, float fillcoeff)
 {
-  char rd[32];    msprintf(rd, "(%s)", side);
-  char rd_plus[32];     msprintf(rd_plus, "(0.707*%s)", side);
-  char rd_minus[32];    msprintf(rd_minus, "(-0.707*%s)", side);
+  char rd[48];    msprintf(rd, "(%s)", side);
+  char rd_plus[48];     msprintf(rd_plus, "(0.707*%s)", side);
+  char rd_minus[48];    msprintf(rd_minus, "(-0.707*%s)", side);
   
   m_offset += msprintf(&m_to[m_offset],   "vec3 _tri = vec3(float(inormed.y) + %s + 0.49 - 1.0, 0.0, 0.0);" SHNL
                                           "_tri[1] = %s;" SHNL, 
@@ -519,8 +519,8 @@ void FshTraceGenerator::trace_triangle_cc(const char *side, int direction, float
 
 void FshTraceGenerator::trace_rect_xywh(const char *wh, float fillcoeff, const char *crosslimit)
 {
-//  char r0[32], r1[32], r01[64], r11[64]; msprintf(r0, "%s[0]", wh); msprintf(r1, "%s[1]", wh); msprintf(r01, "%s[0]-sign(%s[0])", wh,wh); msprintf(r11, "%s[1]-sign(%s[1])", wh,wh); 
-  char r0[32], r1[32], r01[64], r11[64]; msprintf(r0, "%s[0]", wh); msprintf(r1, "%s[1]", wh); msprintf(r01, "(%s[0])", wh); msprintf(r11, "(%s[1])", wh); 
+//  char r0[48], r1[48], r01[64], r11[64]; msprintf(r0, "%s[0]", wh); msprintf(r1, "%s[1]", wh); msprintf(r01, "%s[0]-sign(%s[0])", wh,wh); msprintf(r11, "%s[1]-sign(%s[1])", wh,wh); 
+  char r0[48], r1[48], r01[64], r11[64]; msprintf(r0, "%s[0]", wh); msprintf(r1, "%s[1]", wh); msprintf(r01, "(%s[0])", wh); msprintf(r11, "(%s[1])", wh); 
   trace_linehorz_l(r0, nullptr, nullptr, crosslimit); trace_linehorz_l(r0, nullptr, r11, crosslimit);
   trace_linevert_b(r1, nullptr, nullptr, crosslimit); trace_linevert_b(r1, nullptr, r01, crosslimit);
   if (fillcoeff > 0.0f)
@@ -538,8 +538,8 @@ void FshTraceGenerator::trace_rect_xywh(const char *wh, float fillcoeff, const c
 
 void FshTraceGenerator::trace_rect_cc(const char *rdimms, float fillcoeff, const char *crosslimit)
 {   
-//  char r0[32], r1[32], r01[64], r11[64]; msprintf(r0, "%s[0]", rdimms); msprintf(r1, "%s[1]", rdimms); msprintf(r01, " (%s[0]-sign(%s[0]))", rdimms,rdimms); msprintf(r11, " (%s[1]-sign(%s[1]))", rdimms,rdimms); 
-  char r0[32], r1[32], r01[64], r11[64]; msprintf(r0, "%s[0]", rdimms); msprintf(r1, " %s[1]", rdimms); msprintf(r01, " (%s[0])", rdimms); msprintf(r11, " (%s[1])", rdimms); 
+//  char r0[48], r1[48], r01[64], r11[64]; msprintf(r0, "%s[0]", rdimms); msprintf(r1, "%s[1]", rdimms); msprintf(r01, " (%s[0]-sign(%s[0]))", rdimms,rdimms); msprintf(r11, " (%s[1]-sign(%s[1]))", rdimms,rdimms); 
+  char r0[48], r1[48], r01[64], r11[64]; msprintf(r0, "%s[0]", rdimms); msprintf(r1, " %s[1]", rdimms); msprintf(r01, " (%s[0])", rdimms); msprintf(r11, " (%s[1])", rdimms); 
   trace_2linehorz_c(r0, nullptr, &r11[1], crosslimit); r11[0] = '-'; trace_2linehorz_c(r0, nullptr, r11, crosslimit);
   trace_2linevert_c(r1, nullptr, &r01[1], crosslimit); r01[0] = '-'; trace_2linevert_c(r1, nullptr, r01, crosslimit);
   if (fillcoeff > 0.0f)

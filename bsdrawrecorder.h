@@ -42,9 +42,10 @@ public:
   virtual int             scrollValue() const;
           
           unsigned int    filled() const;
+  unsigned int            collectVertData(unsigned int portion, int pos, unsigned int sampleHorz, float* result, unsigned int countVerts, bool reverse) const;
 public:
           bool            getHistoryData(int offset, float* result) const;    // portions concatenation
-          bool            getHistoryData(int offset, int portion, float* result) const;
+          bool            getHistoryData(int offset, unsigned int portion, float* result) const;
 //          const float*    getHistoryDataPtr(int offset, int portion) const;
 //          float*          getHistoryDataPtr(int offset, int portion);
 public slots:

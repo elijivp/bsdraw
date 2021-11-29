@@ -16,7 +16,7 @@
 
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)14
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)15
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)20
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)36
 
 
 #ifndef MW_TEST_NOCHOOSE_DEFAULT
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
   };
 #undef REGTEST
   
-  bool ok;
+//  bool ok;
   QStringList   tests;
   for (unsigned int i=0; i<sizeof(testnames)/sizeof(const char*); i++)
   {

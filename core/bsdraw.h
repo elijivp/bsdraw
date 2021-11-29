@@ -319,7 +319,7 @@ public:
     m_bitmaskPendingChanges |= sizeAndScaleChanged(changedDimmA, changedDimmB);
   }
 protected:
-  virtual int           sizeAndScaleChanged(bool changedDimmA, bool changedDimmB) { return 0; }
+  virtual int           sizeAndScaleChanged(bool /*changedDimmA*/, bool /*changedDimmB*/) { return 0; }
 protected:
   void  clampScaling(unsigned int* scalingA, unsigned int* scalingB) const
   {
@@ -437,6 +437,8 @@ public:
   }
   const float*  getDataPtr() const {   return m_matrixData;    }
   float*        getDataPtr() {    return m_matrixData;   }     // You need manual update after data change
+  virtual const float*  getDataPtr(int portion) const { if (portion < 0 || portion >= m_allocatedPortions)  return nullptr; return &m_matrixData[portion*m_portionSize]; }
+  virtual float*        getDataPtr(int portion) { if (portion < 0 || portion >= m_allocatedPortions)  return nullptr; return &m_matrixData[portion*m_portionSize]; }     // You need manual update after data change
   void  manualDataPtrUpdate(){  vmanUpData(); }
 public:
   bool  getMinMax(float* rmin, float* rmax)

@@ -281,7 +281,7 @@ void DrawQWidget::initCollectAndCompileShader()
     
     /// 2. Init ovl locations and textures
     {
-      char _tempvd[32];
+      char _tempvd[64];
       unsigned int  texNew[96 - HT_OVERLAYSSTART];
       unsigned int  texNewCount=0;
       for (unsigned int i=0; i<m_overlaysCount; i++)
@@ -1192,7 +1192,7 @@ void DrawQWidget::MemExpand2D::onClearData()
   mb.filled = 0;
 }
 
-bool DrawQWidget::MemExpand2D::onFillData(int portion, int pos, float *rslt) const
+bool DrawQWidget::MemExpand2D::onFillData(unsigned int portion, int pos, float *rslt) const
 {
   if (pos < (int)mb.filled)
   {
@@ -1204,7 +1204,7 @@ bool DrawQWidget::MemExpand2D::onFillData(int portion, int pos, float *rslt) con
   return false;
 }
 
-bool DrawQWidget::MemExpand2D::onFillDataBackward(int portion, int pos, float *rslt) const
+bool DrawQWidget::MemExpand2D::onFillDataBackward(unsigned int portion, int pos, float *rslt) const
 {
   if (pos < (int)mb.filled)
   {
@@ -1214,6 +1214,35 @@ bool DrawQWidget::MemExpand2D::onFillDataBackward(int portion, int pos, float *r
     return true;
   }
   return false;
+}
+
+unsigned int DrawQWidget::MemExpand2D::onCollectData(unsigned int portion, int pos, unsigned int sampleHorz, float* result, unsigned int countVerts, bool reverse) const
+{
+  if (pos < (int)mb.filled)
+  {
+    if (pos + countVerts > mb.filled)
+      countVerts = mb.filled - pos;
+    if (reverse == false)
+    {
+      for (unsigned int i=0; i<countVerts; i++)
+      {
+        int j = (int)mb.current - (int)(pos + i)/*((int)mb.filled - 1 - (int)i)*/;
+        if (j < 0)  j += memoryLines;
+        result[i] = mb.extendeddataarr[j*pc*ps + portion*ps + sampleHorz];
+      }
+    }
+    else
+    {
+      for (unsigned int i=0; i<countVerts; i++)
+      {
+        int j = (int)mb.current - (int)(pos + i)/*((int)mb.filled - 1 - (int)i)*/;
+        if (j < 0)  j += memoryLines;
+        result[countVerts - 1 - i] = mb.extendeddataarr[j*pc*ps + portion*ps + sampleHorz];
+      }
+    }
+    return countVerts;
+  }
+  return 0;
 }
 
 DrawQWidget::MemExpand2D::mem_t DrawQWidget::MemExpand2D::extendeddataarr_replicate()
@@ -1357,10 +1386,11 @@ void DrawQWidget::MemExpand1D::onFillData(int offsetBack, unsigned int samples, 
   {
     memcpy(rslt + p*samples + anchoro1, &m_extendeddataarr[p*pm + pos], fillSize[0]*sizeof(float));
     if (sndIsEmpty == false)
-      memcpy(rslt  + p*samples + fillSize[0] + anchoro2, &m_extendeddataarr[p*pm + 0], fillSize[1]*sizeof(float));
+      memcpy(rslt + p*samples + fillSize[0] + anchoro2, &m_extendeddataarr[p*pm + 0], fillSize[1]*sizeof(float));
     else
       for (unsigned int i=0; i<fillSize[1]; i++)
-        rslt[i + p*samples + fillSize[0] + anchoro2] = emptyfill;
+        *(rslt + i + p*samples + fillSize[0] + anchoro2) = emptyfill;
+//        rslt[int(i + p*samples + fillSize[0]) + anchoro2] = emptyfill;
   }
 }
 

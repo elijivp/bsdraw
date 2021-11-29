@@ -679,7 +679,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //    draws[3]->ovlPushBack(new OFLine(OFLine::LT_VERT_BYBOTTOM, CR_RELATIVE, 0.5f, 0.0f, CR_ABSOLUTE, 0));
     
     draws[4] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS, OR_LRBT, SL_VERT2);
-    draws[4]->ovlPushBack(new OBorder(1, linestyle_solid(1.0f, 1.0f, 1.0f)));
+    draws[4]->ovlPushBack(new OBorder(linestyle_solid(1.0f, 1.0f, 1.0f)));
 //    setMinimumWidth(1200); ??? 
 
 //    sigtype = ST_RAMP;
@@ -1235,6 +1235,19 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   else if (MW_TEST == DEBUG_MEVSCALES)
   {   
     SAMPLES = 192;
+    MAXLINES = 1;
+    PORTIONS = 1;
+    PRECREATE(1, 1);
+    for (unsigned int c=0; c<dccount; c++)
+      for (unsigned int i=0; i<drcount; i++)
+        draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP), coloropts_t::copts(CP_SINGLE, 1.0f, 0.49f));
+    
+    sp = SP_SLOWEST;
+    sigtype = ST_MOVE;
+  }
+  else if (MW_TEST == DEBUG_MAINSCALE)
+  {   
+    SAMPLES = 512;
     MAXLINES = 1;
     PORTIONS = 1;
     PRECREATE(1, 1);
@@ -2498,6 +2511,52 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //            BSAUTO_TEXT_ADD("\tResize Me");
 //          BS_STOP
         }
+        else if (MW_TEST == DEBUG_MAINSCALE)
+        {
+          MEWScaleNN* scs[32];
+          int scscount=0;
+          BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
+            for (unsigned int i=0; i<drawscount; i++)
+            {
+//              draws[i]->setOrientation(OR_RLBT);
+              DrawBars* pDB = new DrawBars(draws[i]);
+//              pDB->setContentsMargins(10, 10, 10, 10);
+//              scs[scscount++] = pDB->addScaleregFixed(AT_TOP, 0, 200.0f, 1200.0f, 200.0f, 0, 11, 50, 4);
+              scs[scscount++] = pDB->addScaleregFixed(AT_BOTTOM, 0, 0.1f, 1.0f, 0.25f, 0, 11, 50, 4);
+//              scs[scscount++] = pDB->addScaleFixed(AT_BOTTOM, DBMODE_STRETCHED, 0.0f, 1.0f, 11, 50, 4);
+              
+//              pDB->addScaleregFixed(AT_TOP, 0, -1200.0f, 1200.0f, 250.0f, 0, 11, 50, 4);
+//              pDB->addScaleregFixed(AT_BOTTOM, 0, 200.0f, 1200.0f, 200.0f, 0, 11, 50, 4);
+//              pDB->addScaleregFixed(AT_BOTTOM, 0, -1200.0f, 1200.0f, 250.0f, 0, 11, 50, 4);
+              
+//              pDB->addScaleregFixed(AT_BOTTOM, 0, 33.0f, 10000.0f, 500.0f, 0, 3, 50, 4);
+//              pDB->addScaleregFixed(AT_BOTTOM, 0, 33.0f, 10000.0f, 50.0f, 0, 100, 50, 4);
+              
+              BSADD(pDB)
+            }
+          BS_STOP
+          BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+            BS_STRETCH
+            QDoubleSpinBox* qdsblow = new QDoubleSpinBox();
+            qdsblow->setPrefix("Low  ");
+            qdsblow->setRange(-1e-5, 1e+5);
+            qdsblow->setValue(0);
+            BSADD(qdsblow)
+            for (int s=0; s<scscount; s++)
+              QObject::connect(qdsblow, SIGNAL(valueChanged(double)), scs[s], SLOT(setBoundLow(double)));
+            QDoubleSpinBox* qdsbhigh = new QDoubleSpinBox();
+            qdsbhigh->setPrefix("High  ");
+            qdsbhigh->setRange(-1e-5, 1e+5);
+            qdsbhigh->setValue(100);
+            BSADD(qdsbhigh)
+            for (int s=0; s<scscount; s++)
+              QObject::connect(qdsbhigh, SIGNAL(valueChanged(double)), scs[s], SLOT(setBoundHigh(double)));
+            BS_STRETCH
+          BS_STOP
+//          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
+//            BSAUTO_TEXT_ADD("\tResize Me");
+//          BS_STOP
+        }
         else
         {
           QScrollBar* qsb = MW_TEST == DRAW_GRAPHS_MOVE? new QScrollBar(Qt::Horizontal) : nullptr;
@@ -3500,7 +3559,7 @@ void MainWindow::createOverlaySTD(int id)
     {
     case COS_DEKART:
     {
-      draws[i]->ovlPushBack(new OBorder(1, linestyle_red(1,0,0)));
+      draws[i]->ovlPushBack(new OBorder(linestyle_red(1,0,0)));
       draws[i]->ovlPushBack(new OGridDecart(CR_RELATIVE, 0.5, 0.5, 0.05, 0.05, 3));
       
       if (!ovl_is_synced || i == 0)
@@ -3584,7 +3643,7 @@ void MainWindow::createOverlaySTD(int id)
     }
     case COS_FOLLOWERS:
     {
-      draws[i]->ovlPushBack(new OBorder(2, linestyle_yellow(4,1,0)));
+      draws[i]->ovlPushBack(new OBorder(linestyle_yellow(4,1,0)));
       if (!ovl_is_synced || i == 0)
         ovl_visir = draws[i]->ovlPushBack(new OActiveCursor());
       else
@@ -3874,7 +3933,7 @@ void MainWindow::metaOVLReplace(int vistype)
           case BTV_FACTOR:  newOverlay = new OFFactor(ocs, 0.0, 0.0, CR_ABSOLUTE_NOSCALED, 10, 30, linestyle_yellow(5,1,0)); break;
           case BTV_CROSS:  newOverlay = new OFLine(OFLine::LT_CROSS, ocs, 0.0, 0.0, CR_ABSOLUTE, 10, -1, linestyle_green(1,0,0)); break;
           case BTV_TEXT: newOverlay = new OTextTraced("CREATED", ocs, 0.0, 0.0, 12, OO_INHERITED, true, linestyle_solid(1,0,0)); break;
-          case BTV_BORDER: newOverlay = new OBorder(4, linestyle_solid(1,0,0)); break;
+          case BTV_BORDER: newOverlay = new OBorder(linestyle_solid(1,0,0)); break;
           default: break;
         }
         if (newOverlay)
@@ -3903,7 +3962,7 @@ void MainWindow::metaOVLCreate(int vistype)
         case BTV_FACTOR:  newOverlay = new OFFactor(cr, 0.5, 0.5, CR_ABSOLUTE_NOSCALED, 10, 30, linestyle_yellow(5,1,0)); break;
         case BTV_CROSS:  newOverlay = new OFLine(OFLine::LT_CROSS, cr, 0.5, 0.5, CR_ABSOLUTE, 10, -1, linestyle_green(1,0,0)); break;
         case BTV_TEXT: newOverlay = new OTextTraced("CREATED", CR_RELATIVE, 0.5, 0.5, 12, OO_INHERITED, true, linestyle_solid(1,0,0)); break;
-        case BTV_BORDER: newOverlay = new OBorder(4, linestyle_solid(1,0,0)); break;
+        case BTV_BORDER: newOverlay = new OBorder(linestyle_solid(1,0,0)); break;
         default: break;
       }
       if (newOverlay)

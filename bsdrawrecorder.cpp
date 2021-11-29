@@ -122,6 +122,11 @@ unsigned int DrawRecorder::filled() const
   return m_memory.filled();
 }
 
+unsigned int DrawRecorder::collectVertData(unsigned int portion, int pos, unsigned int sampleHorz, float* result, unsigned int countVerts, bool reverse) const
+{
+  return m_memory.onCollectData(portion, pos, sampleHorz, result, countVerts, reverse);
+}
+
 bool DrawRecorder::getHistoryData(int offset, float* result) const
 {
   for (unsigned int p = 0; p < m_countPortions; ++p)
@@ -132,7 +137,7 @@ bool DrawRecorder::getHistoryData(int offset, float* result) const
   return true;
 }
 
-bool DrawRecorder::getHistoryData(int offset, int portion, float* result) const
+bool DrawRecorder::getHistoryData(int offset, unsigned int portion, float* result) const
 {
   return m_memory.onFillData(portion, offset, result);
 }

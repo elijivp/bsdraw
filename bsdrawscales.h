@@ -229,8 +229,10 @@ public:
   MEWScale*           addScaleEmpty(ATTACHED_TO atto, int flags, int fixedCount=11, int pixStep_pixSpacing=30, int miniPerMaxiLIMIT=9);
   MEWScaleNN*         addScaleFixed(ATTACHED_TO atto, int flags, float LL, float HL, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
   MEWScaleNN*         addScaleFixedMod(ATTACHED_TO atto, int flags, float LL, float HL, float MOD, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
-//  MEWScaleNN*         addScaleFixedOdd(ATTACHED_TO atto, int flags, float LL, float HL, float ODD, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
   MEWScaleNM*         addScaleEnumerator(ATTACHED_TO atto, int flags, int marksCount, int pixStep_pixSpacing, unsigned int step=1, const char* postfix=nullptr);
+  
+  MEWScaleNN*         addScaleregFixed(ATTACHED_TO atto, int flags, float LL, float HL, float minSTEP, float minSTEPbase=0, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
+  MEWScaleNN*         addScaleregFixedMod(ATTACHED_TO atto, int flags, float LL, float HL, float MOD, float minSTEP, float minSTEPbase=0, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
   
   MEWScaleTAPNN*      addScaleTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30, const char* postfix=nullptr);
   MEWScaleTAPNM*      addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30, const char* postfix=nullptr);
@@ -242,6 +244,8 @@ public:
   MEWScale*           addScaleDrawUniSide(ATTACHED_TO atto, int flags, float LL, float HL, int pixSpacing, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
   MEWScale*           addScaleDrawGraphB(ATTACHED_TO atto, int flags, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
   MEWScale*           addScaleDrawGraphB(ATTACHED_TO atto, int flags, float LL, float HL, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
+  MEWScale*           addScaleregDrawGraphB(ATTACHED_TO atto, int flags, float minSTEP, float minSTEPbase, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
+  MEWScale*           addScaleregDrawGraphB(ATTACHED_TO atto, int flags, float LL, float HL, float minSTEP, float minSTEPbase, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
   
   MEWScaleTAP*        addScaleDrawRecorderB(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, const void* param=nullptr, int miniPerMaxiLIMIT=0);
   MEWScaleTAP*        addScaleDrawRecorderNM(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, const void* param=nullptr, int miniPerMaxiLIMIT=0);
@@ -249,7 +253,7 @@ public:
   
 public:
   void                retrieveMElement(MEQWrapper*, bool replaceWithEqSpace);
-  void                setVisible(MEQWrapper*, bool v, bool autoupdate=true);
+  void                setMElementVisible(MEQWrapper*, bool v, bool autoupdate=true);
   void                switchToAnotherSide(MEQWrapper*);
 //  void                changeColor(MEQWrapper*, const QColor& clr);
   void                swapBars(ATTACHED_TO);
@@ -326,7 +330,6 @@ protected slots:
 class MEQWTexted: public MEQWrapper
 {
   Q_OBJECT
-//  using MEQWrapper::MEQWrapper;   // awwww fuck you C11
   friend class DrawBars;
 public slots:
   void  setFont(const QFont& font);
@@ -400,6 +403,11 @@ class MEWScaleNN: public MEWScale
   friend class DrawBars;
 public slots:
   void  setBounds(float LL, float HL);
+  void  setBoundLow(float LL);
+  void  setBoundHigh(float HL);
+  void  setBounds(double LL, double HL);
+  void  setBoundLow(double LL);
+  void  setBoundHigh(double HL);
 };
 
 class MEWScaleNM: public MEWScale

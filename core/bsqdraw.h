@@ -161,8 +161,10 @@ protected:
     void  onSetData(const float* data);
     void  onSetData(const float* data, DataDecimator* decim);
     void  onClearData();
-    bool  onFillData(int portion, int pos, float* rslt) const;
-    bool  onFillDataBackward(int portion, int pos, float* rslt) const;
+    bool  onFillData(unsigned int portion, int pos, float* rslt) const;
+    bool  onFillDataBackward(unsigned int portion, int pos, float* rslt) const;
+  public:
+    unsigned int onCollectData(unsigned int portion, int pos, unsigned int sampleHorz, float* result, unsigned int countVerts, bool reverse) const;
   public:
     unsigned int  filled() const { return mb.filled; }  // in floats
     unsigned int  nonfilled() const { return memoryLines - mb.filled; } // in floats

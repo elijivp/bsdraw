@@ -712,7 +712,7 @@ void DrawGraphMoveEx::setData(const float *data)
 {
   m_memory.onSetData(data, m_stepSamples);
   
-  if (m_sbStatic && m_filloffset != 0) m_filloffset += m_countPortions*m_stepSamples;
+  if (m_sbStatic && m_filloffset != 0) m_filloffset += m_stepSamples;
   fillMatrix();
   
   DrawQWidget::vmanUpData();
@@ -722,7 +722,7 @@ void DrawGraphMoveEx::setData(const float* data, DataDecimator* decim)
 {
   m_memory.onSetData(data, m_stepSamples, decim);
   
-  if (m_sbStatic && m_filloffset != 0) m_filloffset += m_countPortions*m_stepSamples;
+  if (m_sbStatic && m_filloffset != 0) m_filloffset += m_stepSamples;
   fillMatrix();
   
   DrawQWidget::vmanUpData();
@@ -736,14 +736,19 @@ void DrawGraphMoveEx::clearData()
 
 void DrawGraphMoveEx::appendData(const float* data, unsigned int length)
 {
-  if (length > m_memory.total())
-    length = m_memory.total();
+//  m_memory.onSetData(data, length);
+  
+//  if (m_sbStatic && m_filloffset != 0) m_filloffset += m_countPortions*length;
+  
+//  int showlength = this->sizeDataA();
+//  m_memory.onFillData(m_filloffset + showlength, showlength, m_matrixData, 0);
+  
+//  DrawQWidget::vmanUpData();
+  
   m_memory.onSetData(data, length);
   
-  if (m_sbStatic && m_filloffset != 0) m_filloffset += m_countPortions*length;
-  
-  int showlength = this->sizeDataA();
-  m_memory.onFillData(m_filloffset + showlength, showlength, m_matrixData, 0);
+  if (m_sbStatic && m_filloffset != 0) m_filloffset += length;
+  fillMatrix();
   
   DrawQWidget::vmanUpData();
 }

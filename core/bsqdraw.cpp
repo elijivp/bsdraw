@@ -34,21 +34,22 @@ int DrawOverlayEmpty::fshColor(int overlay, char* to) const
 ///////////////////////////////////////
 
 
-const char*   DrawQWidget::vardesc(SHEIFIELD sf)
-{
-  if (sf == SF_DATA)            return "texData";
-  if (sf == SF_PALETTE)         return "texPalette";
-  if (sf == SF_DOMAIN)          return "texGround";
-  if (sf == SF_PORTIONSIZE)     return "countGround";
-  if (sf == SF_COUNTPORTIONS)   return "countPortions";
-  if (sf == SF_DIMM_A)          return "viewdimm_a";
-  if (sf == SF_DIMM_B)          return "viewdimm_b";
-  if (sf == SF_CHNL_SCALING_A)  return "scaling_a";
-  if (sf == SF_CHNL_SCALING_B)  return "scaling_b";
-  if (sf == SF_DATABOUNDS)      return "databounds";
-  if (sf == SF_VIEW_TURN)       return "viewturn";
-  return nullptr;
-}
+//const char*   DrawQWidget::vardesc(SHEIFIELD sf)
+//{
+//  if (sf == SF_DATA)            return "texData";
+//  if (sf == SF_PALETTE)         return "texPalette";
+//  if (sf == SF_DOMAIN)          return "texGround";
+//  if (sf == SF_PORTIONSIZE)     return "countGround";
+//  if (sf == SF_COUNTPORTIONS)   return "countPortions";
+//  if (sf == SF_DIMM_A)          return "viewdimm_a";
+//  if (sf == SF_DIMM_B)          return "viewdimm_b";
+//  if (sf == SF_CHNL_SCALING_A)  return "scaling_a";
+//  if (sf == SF_CHNL_SCALING_B)  return "scaling_b";
+//  if (sf == SF_DATABOUNDS)      return "databounds";
+//  if (sf == SF_DYNRANGE)      return "databounds";
+//  if (sf == SF_VIEW_TURN)       return "viewturn";
+//  return nullptr;
+//}
 
 DrawQWidget::DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): 
   DrawCore(datex, portions, orient, splitPortions),
@@ -273,9 +274,14 @@ void DrawQWidget::initCollectAndCompileShader()
   
   if (m_ShaderProgram.link())
   {
+    static const char* vd_corresponding_array[] = { "texData", "texPalette", "texGround", "countGround", "countPortions",
+                                      "viewdimm_a", "viewdimm_b", "scaling_a", "scaling_b", "databounds", "palrange", 
+                                      "viewturn" };
+    
+    Q_ASSERT(_SF_COUNT == sizeof(vd_corresponding_array)/sizeof(const char*));
     for (int i=0; i<_SF_COUNT; i++)
     {
-      const char* vd = vardesc((SHEIFIELD)i);
+      const char* vd = vd_corresponding_array[i];
       m_locations[i] = vd != 0? m_ShaderProgram.uniformLocation(vd) : -1;
     }    
     
@@ -598,7 +604,8 @@ void DrawQWidget::paintGL()
     if (havePendOn(PC_PARAMS, bitmaskPendingChanges))
     {
       if ((loc = m_locations[SF_COUNTPORTIONS]) != -1)  m_ShaderProgram.setUniformValue(loc, this->m_countPortions);
-      if ((loc = m_locations[SF_VIEW_TURN]) != -1)  m_ShaderProgram.setUniformValue(loc, this->m_viewTurn);
+      if ((loc = m_locations[SF_VIEW_TURN]) != -1)      m_ShaderProgram.setUniformValue(loc, this->m_viewTurn);
+      if ((loc = m_locations[SF_COLORRANGE]) != -1)     m_ShaderProgram.setUniformValue(loc, *(const QVector2D*)this->m_ppalrange);
     }
     
     for (unsigned int i=0; i<m_texOvlCount; i++)
@@ -1118,6 +1125,8 @@ void DrawQWidget::slot_setContrastB(float b){ setContrastB(b);  }
 void DrawQWidget::slot_setDataTextureInterpolation(bool d){ setDataTextureInterpolation(d); }
 void DrawQWidget::slot_setDataPalette(const IPalette* ppal){ setDataPalette(ppal); }
 void DrawQWidget::slot_setDataPaletteDiscretion(bool d){ setDataPaletteDiscretion(d); }
+void DrawQWidget::slot_setDataPaletteRangeStart(float v){ setDataPaletteRangeStart(v); }
+void DrawQWidget::slot_setDataPaletteRangeStop(float v){ setDataPaletteRangeStop(v); }
 void DrawQWidget::slot_setData(const float* data){ setData(data); }
 void DrawQWidget::slot_setData(QVector<float> data){ setData(data.constData()); }
 void DrawQWidget::slot_fillData(float data){ fillData(data); }

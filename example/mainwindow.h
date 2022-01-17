@@ -89,6 +89,8 @@ private slots:
   void    changePostmask(int sigid);
   void    changeInterpolation(int sigid);
   void    changeBans(bool banned);
+  void    changePalrangeStart(int);
+  void    changePalrangeStop(int);
 private slots:
   void    createOverlaySTD(int);
   void    createOverlayADD();

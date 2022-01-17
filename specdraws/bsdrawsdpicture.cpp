@@ -45,6 +45,7 @@ public:
       fmg.push(
                   "float marker = mod(pixsdp[2]*255.0, 4.0)*16.0 + mod(pixsdp[1]*255.0, 4.0)*4.0 + mod(pixsdp[0]*255.0, 4.0);"
                   "float value = texture(texData, vec2((marker - 1.0)/float(countGround-1), 0.0)).r;"
+                  "value = palrange[0] + (palrange[1] - palrange[0])*value;"
                   "vec3  mmc = texture(texPalette, vec2(value, 0.0)).rgb;"
                   "result = mix(mix(result, pixsdp.bgr, pixsdp.a), mmc, 1.0 - step(marker, 0.0));"
   //                "result = pixsdp.bgr;"

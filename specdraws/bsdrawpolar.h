@@ -21,7 +21,9 @@ class DrawPolar: public DrawQWidget
 {
   Q_OBJECT
 protected:
+#ifdef DEGRATOR_IS_SHIT
   class Degrator*             m_dgt;
+#endif
   float                       m_deltaScale;
 protected:
   void  reConstructor(unsigned int samplesHorz, unsigned int samplesVert);

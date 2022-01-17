@@ -110,6 +110,8 @@ protected:
   const IPalette*       m_ppal;
   bool                  m_ppaldiscretise;
   float                 m_clearcolor[3];
+  float                 m_ppalrange[2];
+  enum                  { PRNG_START, PRNG_STOP };
   
   enum  CLEARSOURCE     { CS_WIDGET, CS_PALETTE, CS_MANUAL };
   bool                  m_doclearbackground;
@@ -202,6 +204,9 @@ public:
     
     m_impulsedata.type = impulsedata_t::IR_OFF;
     m_impulsedata.count = 0;
+    
+    m_ppalrange[PRNG_START] = 0.0f;
+    m_ppalrange[PRNG_STOP] = 1.0f;
         
     int spDivider = m_splitPortions&0xFF;
     int divider2 = spDivider == 0? 1 : m_allocatedPortions / spDivider + (m_allocatedPortions % spDivider? 1 : 0);
@@ -390,7 +395,29 @@ public:
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
   const IPalette* dataPalette() const { return m_ppal; }
-  bool            paletteInterpolation()const { return m_dataTextureInterp; }
+  bool            dataPaletteInterpolation()const { return m_dataTextureInterp; }
+  
+  void  setDataPaletteRange(float start=0.0f, float stop=1.0f)
+  {
+    m_ppalrange[PRNG_START] = start;
+    m_ppalrange[PRNG_STOP] = stop;
+    m_bitmaskPendingChanges |= PC_PARAMS;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+  }
+  void  setDataPaletteRangeStart(float start)
+  {
+    m_ppalrange[PRNG_START] = start;
+    m_bitmaskPendingChanges |= PC_PARAMS;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+  }
+  void  setDataPaletteRangeStop(float stop)
+  {
+    m_ppalrange[PRNG_STOP] = stop;
+    m_bitmaskPendingChanges |= PC_PARAMS;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+  }
+  float   dataPaletteRangeStart() const {  return m_ppalrange[PRNG_START]; }
+  float   dataPaletteRangeStop() const {  return m_ppalrange[PRNG_STOP]; }
 public:
   /// 1. Data methods
   virtual void setData(const float* data)

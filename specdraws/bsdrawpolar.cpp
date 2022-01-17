@@ -61,6 +61,7 @@ public:
     fmg.push( "{" );
     {
       fmg.value2D("float value", "datacoords");
+      fmg.push("value = palrange[0] + (palrange[1] - palrange[0])*value;");
       fmg.push("ovMix = max(ovMix, value);");
       
       if ( splitPortions == SL_NONE )
@@ -99,6 +100,8 @@ struct drawscaleelem_t
   unsigned int w,h;
   float     angle;
 };
+
+#ifdef DEGRATOR_IS_SHIT
 
 class Degrator
 {
@@ -170,6 +173,8 @@ public:
   }
 };
 
+#endif
+
 void DrawPolar::reConstructor(unsigned int samplesHorz, unsigned int samplesVert)
 {
   m_matrixDimmA = samplesVert*2;
@@ -177,11 +182,13 @@ void DrawPolar::reConstructor(unsigned int samplesHorz, unsigned int samplesVert
   m_portionSize = samplesHorz*samplesVert;
   deployMemory();
   
+#ifdef DEGRATOR_IS_SHIT
   m_dgt = new Degrator(font());
   
   m_cttrLeft = m_cttrRight = m_dgt->marginHorz() + 4;
   m_cttrTop = m_cttrBottom = m_dgt->marginVert() + 4;
   setContentsMargins(m_cttrLeft, m_cttrTop, m_cttrRight, m_cttrBottom);
+#endif
 }
 
 DrawPolar::DrawPolar(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, unsigned int backgroundColor, SPLITPORTIONS splitGraphs):
@@ -199,7 +206,9 @@ DrawPolar::DrawPolar(unsigned int samplesHorz, unsigned int samplesVert, unsigne
 
 DrawPolar::~DrawPolar()
 {
+#ifdef DEGRATOR_IS_SHIT
   delete m_dgt;
+#endif
 }
 
 void DrawPolar::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const

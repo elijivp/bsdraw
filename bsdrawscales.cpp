@@ -44,12 +44,10 @@ inline void  assignText(texts_t* tt, const QString& text)
 {
   tt->uin_text.setText(text);
   QSize loc = tt->uin_text.size().toSize();
-  if (tt->uarea_atto != -1)
-  {
-    int delta = tt->uin_locsize.width() - loc.width();
+//  if (tt->uarea_atto != -1)   ???
+  if (tt->uin_locsize.isValid())
     if (tt->uarea_atto != AT_RIGHT)
-      tt->uarea_pos.rx() += delta;
-  }
+      tt->uarea_pos.rx() += tt->uin_locsize.width() - loc.width();
   tt->uin_locsize = loc;
 }
 
@@ -2130,9 +2128,10 @@ protected:
   texts_t*      texts;
   bool          textUp;
 public:
-  MarginEXMarks():  ua_marks(nullptr), countMaxiNoted(0), countMaxiHided(0), countMini(0), pixSpace(0), 
-    miniPerMaxi(0), round(0),
-    textInnerPlaced(false), texts(nullptr), textUp(true)
+  MarginEXMarks(bool innerTextPlacement): 
+    ua_marks(nullptr), countMaxiNoted(0), countMaxiHided(0), countMini(0), pixSpace(0), 
+    miniPerMaxi(0), round(0), textInnerPlaced(innerTextPlacement),
+    texts(nullptr), textUp(true)
   {
   }
   ~MarginEXMarks();
@@ -2152,7 +2151,7 @@ public:
       countMaxiHided = 0;
       countMini = 0;
       
-      ua_marks = new memark_t[marksCount + miniPerMaxi*countMaxiNoted];
+      ua_marks = new memark_t[marksCount + (marksCount-1)*miniPerMaxi];
       texts = new texts_t[marksCount];
     }
   }
@@ -2224,107 +2223,223 @@ private:
   void  recalculate(const uarea_t& area, bool boundsChanged)
   {
     const int countMaxiTotal = countMaxiNoted + countMaxiHided;
-    const int countMaxiInside = countMaxiNoted + countMaxiHided - 2;
     float LL = cachedRdata().rel_fixed.LL, HL = cachedRdata().rel_fixed.HL;
     bool isMOD = cachedRdata().rel_fixed.MOD != 0.0f;
     
-    /*
-    int countByBounds = int((HL - LL)/odd);
-    float multiplier = 1.0f;
-    while (countByBounds > countMaxiInside)
-    {
-      countByBounds /= 2;
-      multiplier *= 2;
-    }
-    */
-    
-    float countByBoundsF = (HL - LL)/odd;
-    int countByBounds = int((HL - LL)/odd);
-    if (countByBoundsF <= countByBounds)
-      countByBounds -= 1;
-    
-    float multiplier = 1.0f;
-    int divs[] = { 10, 5, 2 };
-    for (int d=0; d<sizeof(divs)/sizeof(int); d++)
-    {
-      while (countByBounds/divs[d] > countMaxiInside)
-      {
-        countByBounds /= divs[d];
-        multiplier *= divs[d];
-      }
-    }
-    if (countByBounds > countMaxiInside)
-    {
-      countByBounds /= 2;
-      multiplier *= 2;
-    }
-    
-//    qDebug()<<countByBounds;
-    int m=0;
-    float step0=0;  // bnd-offset by odd
-    float step1=0;  // multiplied true bnd-offset by odd
-    int d3=0;  // dimm-offset by odd
-    
-    const bool MVORIG = BAR_VERT[area.atto] ^ !area.mirrored;   // original plus-based formula
-    
     int l1 = area.atto_begin;
     int l2 = area.atto_begin + (area.atto == AT_LEFT || area.atto == AT_TOP? -(mlenmaxi-1) : (mlenmaxi-1));
+    bool MVORIG = BAR_VERT[area.atto] ^ !area.mirrored;   // original plus-based formula
+    
+    if (LL > HL)
     {
-      int d2 = MVORIG? area.segm_pre : area.segm_pre + area.segm_main - 1;
+      MVORIG = !MVORIG;
+      float tmp = LL; LL = HL; HL = tmp;
+    }
+    
+    float multiplier = 1.0f;
+    {
+      const int countMaxiInside = countMaxiTotal - 2;
+      float countReglineF = (HL - LL)/odd;
+      int divs[] = { 1000, 10, 5, 2 };
+      for (int d=0; d<sizeof(divs)/sizeof(int); d++)
+      {
+        while (countReglineF/divs[d] > countMaxiInside)
+        {
+          countReglineF /= divs[d];
+          multiplier *= divs[d];
+        }
+      }
+//      qDebug()<<"CRmed "<<countReglineF<<"max: "<<countMaxiTotal;
+      if (countReglineF > countMaxiInside)
+      {
+        countReglineF /= 2;
+        multiplier *= 2;
+      }
+    }
+    
+    int m=0;
+    float step1=0;  // multiplied true bnd-offset by odd
+    int pxBegin=0;
+    int pxFirst=0;  // dimm-offset by odd
+    int pxLast=0;
+    int pxEnd=0;
+    {
+      pxBegin = MVORIG? area.segm_pre : area.segm_pre + area.segm_main - 1;
+      pxEnd = MVORIG? area.segm_pre + area.segm_main - 1 : area.segm_pre;
       
-      ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, d2) : QPoint(d2, l1);
-      if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, d2, l1, d2);
-      else if (area.atto == AT_RIGHT)   ua_marks[m].rect.setCoords(l1, d2, l2, d2);
-      else if (area.atto == AT_TOP)     ua_marks[m].rect.setCoords(d2, l2, d2, l1);
-      else if (area.atto == AT_BOTTOM)  ua_marks[m].rect.setCoords(d2, l1, d2, l2);
+      ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, pxBegin) : QPoint(pxBegin, l1);
+      if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, pxBegin, l1, pxBegin);
+      else if (area.atto == AT_RIGHT)   ua_marks[m].rect.setCoords(l1, pxBegin, l2, pxBegin);
+      else if (area.atto == AT_TOP)     ua_marks[m].rect.setCoords(pxBegin, l2, pxBegin, l1);
+      else if (area.atto == AT_BOTTOM)  ua_marks[m].rect.setCoords(pxBegin, l1, pxBegin, l2);
       texts[m].uarea_pos = ua_marks[m].anchor;
       texts[m].uarea_atto = area.atto;
       if (boundsChanged)
         assignText(&texts[m], redact(isMOD? modcast(LL): LL), m_fontReplaced, m_font);
+      texts[m].visible = 1;
       m++;
       
-      if (countByBounds > 0)
       {
         float odd1 = multiplier*odd;
-        step0 = (LL - oddbase) - int((LL - oddbase)/odd1)*odd1;
-        if (step0 < 0)
-          step0 = LL - (odd1 + step0) + odd1;
+        float mover = (LL - oddbase) - int((LL - oddbase)/odd1)*odd1;     // bnd-offset by odd
+        if (mover < 0)
+          mover = LL - (odd1 + mover) + odd1;
         else
-          step0 = LL - step0 + odd1;
+          mover = LL - mover + odd1;
         
-        int dlen0 = (step0 - LL)/(HL - LL)*area.segm_main;
-        d3 = d2 + (MVORIG? dlen0 : -dlen0);
-        step1 = (MVORIG? 1.0f : -1.0f)*odd1/(HL-LL)*area.segm_main;
-        for (int i=0; i<countByBounds; i++)
+        int dlen0 = (mover - LL)/(HL - LL)*area.segm_main;
+        pxFirst = pxBegin + (MVORIG? dlen0 : -dlen0);
+        step1 = (MVORIG? odd1 : -odd1)/(HL-LL)*area.segm_main;
+//        while (mover < HL)
+//        {
+//          Q_ASSERT(m + 2 <= countMaxiTotal);
+//          float pos1 = (m - 1)*step1;
+//          pxLast = pxFirst + (round == 0 ? qRound(pos1) : round == 1? int(pos1) : int(pos1) + 1);
+//          ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, pxLast) : QPoint(pxLast, l1);
+//          if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, pxLast, l1, pxLast);
+//          else if (area.atto == AT_RIGHT)   ua_marks[m].rect.setCoords(l1, pxLast, l2, pxLast);
+//          else if (area.atto == AT_TOP)     ua_marks[m].rect.setCoords(pxLast, l2, pxLast, l1);
+//          else if (area.atto == AT_BOTTOM)  ua_marks[m].rect.setCoords(pxLast, l1, pxLast, l2);
+//          texts[m].uarea_pos = ua_marks[m].anchor;
+//          texts[m].uarea_atto = area.atto;
+//          if (boundsChanged)
+//            assignText(&texts[m], redact(isMOD? modcast(mover): mover), m_fontReplaced, m_font);
+//          if ((MVORIG ? (pxLast - pxPrev) : -(pxLast - pxPrev)) > pixSpace)
+//          {
+//            texts[m].visible = 1;
+//            pxPrev = pxLast;
+//          }
+//          else
+//            texts[m].visible = 0;
+//          mover += odd1;
+//          m++;
+//        }
+        
+#define FAST_ASSIGN_TEXT \
+          texts[m].uarea_pos = ua_marks[m].anchor; \
+          texts[m].uarea_atto = area.atto; \
+          if (boundsChanged) \
+            assignText(&texts[m], redact(isMOD? modcast(mover): mover), m_fontReplaced, m_font);
+        
+        if (area.atto == AT_LEFT)
         {
-          int offs = d3 + (round == 0 ? qRound(i*step1) : round == 1? int(i*step1) : int(i*step1) + 1);
-          ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, offs) : QPoint(offs, l1);
-          if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, offs, l1, offs);
-          else if (area.atto == AT_RIGHT)   ua_marks[m].rect.setCoords(l1, offs, l2, offs);
-          else if (area.atto == AT_TOP)     ua_marks[m].rect.setCoords(offs, l2, offs, l1);
-          else if (area.atto == AT_BOTTOM)  ua_marks[m].rect.setCoords(offs, l1, offs, l2);
-          texts[m].uarea_pos = ua_marks[m].anchor;
-          texts[m].uarea_atto = area.atto;
-          if (boundsChanged)
-            assignText(&texts[m], redact(isMOD? modcast(step0 + odd1*i): step0 + odd1*i), m_fontReplaced, m_font);
-          m++;
+          while (mover < HL)
+          {
+            Q_ASSERT(m + 2 <= countMaxiTotal);
+            float pos1 = (m - 1)*step1;
+            pxLast = pxFirst + (round == 0 ? qRound(pos1) : round == 1? int(pos1) : int(pos1) + 1);
+            ua_marks[m].anchor = QPoint(l1, pxLast);
+            ua_marks[m].rect.setCoords(l2, pxLast, l1, pxLast);
+            FAST_ASSIGN_TEXT
+            mover += odd1;
+            m++;
+          }
+        }
+        else if (area.atto == AT_RIGHT) 
+        {
+          while (mover < HL)
+          {
+            Q_ASSERT(m + 2 <= countMaxiTotal);
+            float pos1 = (m - 1)*step1;
+            pxLast = pxFirst + (round == 0 ? qRound(pos1) : round == 1? int(pos1) : int(pos1) + 1);
+            ua_marks[m].anchor = QPoint(l1, pxLast);
+            ua_marks[m].rect.setCoords(l1, pxLast, l2, pxLast);
+            FAST_ASSIGN_TEXT
+            mover += odd1;
+            m++;
+          }
+        }
+        else if (area.atto == AT_TOP)
+        {
+          while (mover < HL)
+          {
+            Q_ASSERT(m + 2 <= countMaxiTotal);
+            float pos1 = (m - 1)*step1;
+            pxLast = pxFirst + (round == 0 ? qRound(pos1) : round == 1? int(pos1) : int(pos1) + 1);
+            ua_marks[m].anchor = QPoint(pxLast, l1);
+            ua_marks[m].rect.setCoords(pxLast, l2, pxLast, l1);
+            FAST_ASSIGN_TEXT
+            mover += odd1;
+            m++;
+          }
+        }
+        else if (area.atto == AT_BOTTOM) 
+        {
+          while (mover < HL)
+          {
+            Q_ASSERT(m + 2 <= countMaxiTotal);
+            float pos1 = (m - 1)*step1;
+            pxLast = pxFirst + (round == 0 ? qRound(pos1) : round == 1? int(pos1) : int(pos1) + 1);
+            ua_marks[m].anchor = QPoint(pxLast, l1);
+            ua_marks[m].rect.setCoords(pxLast, l1, pxLast, l2);
+            FAST_ASSIGN_TEXT
+            mover += odd1;
+            m++;
+          }
+        }
+        
+#define FAST_CHECK_FOR_HIDE_TEXT(xy) \
+      int pxPrev = ua_marks[0].anchor.xy(); \
+      if (MVORIG) for (int i=1; i<m; i++){ \
+                    if (ua_marks[i].anchor.xy() - pxPrev > pixSpace) \
+                    { \
+                      texts[i].visible = 1; \
+                      pxPrev = ua_marks[i].anchor.xy(); \
+                    } \
+                    else \
+                      texts[i].visible = 0; \
+                  } \
+      else        for (int i=1; i<m; i++){ \
+                    if (pxPrev - ua_marks[i].anchor.xy() > pixSpace) \
+                    { \
+                      texts[i].visible = 1; \
+                      pxPrev = ua_marks[i].anchor.xy(); \
+                    } \
+                    else \
+                      texts[i].visible = 0; \
+                  } 
+        
+        if (area.atto == AT_LEFT)
+        {
+          FAST_CHECK_FOR_HIDE_TEXT(y)
+        }
+        else if (area.atto == AT_RIGHT) 
+        {
+          FAST_CHECK_FOR_HIDE_TEXT(y)
+        }
+        else if (area.atto == AT_TOP)
+        {
+          FAST_CHECK_FOR_HIDE_TEXT(x)
+        }
+        else if (area.atto == AT_BOTTOM) 
+        {
+          FAST_CHECK_FOR_HIDE_TEXT(x)
+        }
+        
+//        for (int i=1; i<m; i++)
+//          texts[i].visible = 1;
+        
+        if (m > 1)
+        {
+          if (texts[m-1].visible)
+            texts[m-1].visible = (MVORIG ? (pxEnd - pxLast) : -(pxEnd - pxLast)) > (BAR_VERT[area.atto] ? texts[m-1].uin_locsize.height() : texts[m-1].uin_locsize.width())? 1 : 0;
         }
       }
       
-      int d4 = MVORIG? area.segm_pre + area.segm_main - 1 : area.segm_pre;
-      ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, d4) : QPoint(d4, l1);
-      if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, d4, l1, d4);
-      else if (area.atto == AT_RIGHT)   ua_marks[m].rect.setCoords(l1, d4, l2, d4);
-      else if (area.atto == AT_TOP)     ua_marks[m].rect.setCoords(d4, l2, d4, l1);
-      else if (area.atto == AT_BOTTOM)  ua_marks[m].rect.setCoords(d4, l1, d4, l2);
+      ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, pxEnd) : QPoint(pxEnd, l1);
+      if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, pxEnd, l1, pxEnd);
+      else if (area.atto == AT_RIGHT)   ua_marks[m].rect.setCoords(l1, pxEnd, l2, pxEnd);
+      else if (area.atto == AT_TOP)     ua_marks[m].rect.setCoords(pxEnd, l2, pxEnd, l1);
+      else if (area.atto == AT_BOTTOM)  ua_marks[m].rect.setCoords(pxEnd, l1, pxEnd, l2);
       texts[m].uarea_pos = ua_marks[m].anchor;
       texts[m].uarea_atto = area.atto;
       if (boundsChanged)
         assignText(&texts[m], redact(isMOD? modcast(HL): HL), m_fontReplaced, m_font);
+      texts[m].visible = 1;
       m++;
     }
     
-    countMaxiNoted = countByBounds + 2;
+    countMaxiNoted = m;
     countMaxiHided = countMaxiTotal - countMaxiNoted;
     Q_ASSERT(countMaxiHided >= 0);
     
@@ -2341,42 +2456,47 @@ private:
         luptp_end(&texts[i], decays[area.atto]);
       else
         luptp_mid(&texts[i], decays[area.atto]);
-      texts[i].visible = 1;
     }
 //    rearrange(BAR_VERT[area.atto], area.mirrored, texts, countMaxiNoted);
     
-    if (miniPerMaxi)
+    if (miniPerMaxi && qAbs(step1)/(miniPerMaxi+1) > 5 && m > 2)
     {
-      if (step1/(miniPerMaxi+1) > 4)
+      countMini = m;
+      l2 = area.atto_begin + (area.atto == AT_LEFT || area.atto == AT_TOP? -(mlenmini-1) : (mlenmini-1));
+      float step2 = step1/(miniPerMaxi+1);
+      
+      int pxMini = pxFirst, oddplus = 0, ncount=(m-2-1)*(miniPerMaxi + 1);
+//        if (MVORIG)
       {
-        countMini = m;
-        l2 = area.atto_begin + (area.atto == AT_LEFT || area.atto == AT_TOP? -(mlenmini-1) : (mlenmini-1));
-        float step2 = step1/miniPerMaxi;
-  //      for (int i=1; i<miniPerMaxi; i++)
-  //      {
-  //        int offs = d3 - (round == 0 ? qRound(i*step2) : round == 1? int(i*step2) : int(i*step2) - 1);
-  //        ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, offs) : QPoint(offs, l1);
-  //        if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, offs, l1, offs);
-  //        else if (area.atto == AT_RIGHT)   ua_marks[m].rect.setCoords(l1, offs, l2, offs);
-  //        else if (area.atto == AT_TOP)     ua_marks[m].rect.setCoords(offs, l2, offs, l1);
-  //        else if (area.atto == AT_BOTTOM)  ua_marks[m].rect.setCoords(offs, l1, offs, l2);
-  //        m++;
-  //      }
-        for (int i=0; i<countByBounds*miniPerMaxi; i++)
+        if ((pxFirst - pxBegin + 1) / step2 >= 2)
         {
-          if (i % miniPerMaxi == 0)
-            continue;
-          int offs = d3 + (round == 0 ? qRound(i*step2) : round == 1? int(i*step2) : int(i*step2) + 1);
-          ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, offs) : QPoint(offs, l1);
-          if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, offs, l1, offs);
-          else if (area.atto == AT_RIGHT)   ua_marks[m].rect.setCoords(l1, offs, l2, offs);
-          else if (area.atto == AT_TOP)     ua_marks[m].rect.setCoords(offs, l2, offs, l1);
-          else if (area.atto == AT_BOTTOM)  ua_marks[m].rect.setCoords(offs, l1, offs, l2);
-          m++;
+          pxMini -= int((pxFirst - pxBegin) / step2) * step2;
+          oddplus = (pxFirst - pxBegin) / step2;
+          ncount += oddplus;
         }
-        countMini = m - countMini;
+        if ((pxEnd - pxLast + 1) / step2 >= 2)
+        {
+          ncount += (pxEnd - pxLast + 1) / step2;
+        }
       }
+      for (int i=0; i<ncount; i++)
+      {
+        if ((i - oddplus) % (miniPerMaxi+1) == 0)
+          continue;
+        int offs = pxMini + (round == 0 ? qRound(i*step2) : round == 1? int(i*step2) : int(i*step2) + 1);
+//        ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, offs) : QPoint(offs, l1);
+        if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, offs, l1, offs);
+        else if (area.atto == AT_RIGHT)   ua_marks[m].rect.setCoords(l1, offs, l2, offs);
+        else if (area.atto == AT_TOP)     ua_marks[m].rect.setCoords(offs, l2, offs, l1);
+        else if (area.atto == AT_BOTTOM)  ua_marks[m].rect.setCoords(offs, l1, offs, l2);
+        m++;
+      }
+      countMini = m - countMini;
     }
+    else
+      countMini = 0;
+    Q_ASSERT(m <= countMaxiTotal + (countMaxiTotal-1)*miniPerMaxi);
+//    qDebug()<<m<<countMaxiTotal + (countMaxiTotal-1)*miniPerMaxi;
   }
 };
 MarginEXMarks::~MarginEXMarks()
@@ -3050,7 +3170,7 @@ MEWScaleNM* DrawBars::addScaleEnumerator(ATTACHED_TO atto, int flags, int marksC
 
 MEWScaleNN*   DrawBars::addScaleregFixed(ATTACHED_TO atto, int flags, float LL, float HL, float minSTEP, float minSTEPbase, int fixedCount, int pixStep_pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
 {
-  MarginEXMarks* pmarg = new MarginEXMarks();
+  MarginEXMarks* pmarg = new MarginEXMarks(flags & DBF_NOTESINSIDE);
   pmarg->init(fixedCount, minSTEP, minSTEPbase, pixStep_pixSpacing, DB_ROUNDING(flags), miniPerMaxiLIMIT);
   MARG_OPTS_TEXT
 //  pmarg->setFont(this->font());
@@ -3067,7 +3187,7 @@ MEWScaleNN*   DrawBars::addScaleregFixed(ATTACHED_TO atto, int flags, float LL, 
 
 MEWScaleNN*   DrawBars::addScaleregFixedMod(ATTACHED_TO atto, int flags, float LL, float HL, float MOD, float minSTEP, float minSTEPbase, int fixedCount, int pixStep_pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
 {
-  MarginEXMarks* pmarg = new MarginEXMarks();
+  MarginEXMarks* pmarg = new MarginEXMarks(flags & DBF_NOTESINSIDE);
   pmarg->init(fixedCount, minSTEP, minSTEPbase, pixStep_pixSpacing, DB_ROUNDING(flags), miniPerMaxiLIMIT);
   MARG_OPTS_TEXT
 //  pmarg->setFont(this->font());
@@ -3216,7 +3336,7 @@ MEWScale* DrawBars::addScaleDrawGraphB(ATTACHED_TO atto, int flags, float LL, fl
 
 MEWScale* DrawBars::addScaleregDrawGraphB(ATTACHED_TO atto, int flags, float minSTEP, float minSTEPbase, int marksCount, int pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
 {
-  MarginEXMarks* pmarg = new MarginEXMarks();
+  MarginEXMarks* pmarg = new MarginEXMarks(flags & DBF_NOTESINSIDE);
   pmarg->init(marksCount, minSTEP, minSTEPbase, pixSpacing, DB_ROUNDING(flags), miniPerMaxiLIMIT);
   MARG_OPTS_TEXT
   pmarg->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(pDraw->bounds()));
@@ -3233,7 +3353,7 @@ MEWScale* DrawBars::addScaleregDrawGraphB(ATTACHED_TO atto, int flags, float min
 
 MEWScale* DrawBars::addScaleregDrawGraphB(ATTACHED_TO atto, int flags, float LL, float HL, float minSTEP, float minSTEPbase, int marksCount, int pixSpacing, int miniPerMaxiLIMIT, const char* postfix)
 {
-  MarginEXMarks* pmarg = new MarginEXMarks();
+  MarginEXMarks* pmarg = new MarginEXMarks(flags & DBF_NOTESINSIDE);
   pmarg->init(marksCount, minSTEP, minSTEPbase, pixSpacing, DB_ROUNDING(flags), miniPerMaxiLIMIT);
   MARG_OPTS_TEXT
   pmarg->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL)));
@@ -4184,70 +4304,6 @@ void MEWScaleTAPNM::tap()
   if ( ((MarginMarksBase*)m_pme)->bdContentUpdate() )
     remoteUpdate();
 }
-
-
-/*
-    {
-      int m=0;
-      int d2 = BAR_VERT[area.atto] ^ !area.mirrored? area.segm_pre : area.segm_pre + area.segm_main - 1;
-      
-      ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, d2) : QPoint(d2, l1);
-      if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, d2, l1, d2);
-      else if (area.atto == AT_RIGHT)   ua_marks[m].rect.setCoords(l1, d2, l2, d2);
-      else if (area.atto == AT_TOP)     ua_marks[m].rect.setCoords(d2, l2, d2, l1);
-      else if (area.atto == AT_BOTTOM)  ua_marks[m].rect.setCoords(d2, l1, d2, l2);
-      texts[m].uarea_pos = ua_marks[m].anchor;
-      texts[m].uarea_atto = area.atto;
-      if (boundsChanged)
-        assignText(&texts[m], redact(numfmt(isMOD? modcast(LL): LL)), m_fontReplaced, m_font);
-      m++;
-      
-      if (countByBounds > 0)
-      {
-        float odd1 = multiplier*odd;
-        float step0 = (LL - oddbase) - int((LL - oddbase)/odd1)*odd1;
-//        if (-1e-6f < step0 && step0 < 1e-6f)
-//          countByBounds -= 1;
-        if (step0 < 0)
-          step0 = LL - (odd1 + step0) + odd1;
-        else
-          step0 = LL - step0 + odd1;
-        
-        {
-          d2 = d2 + int((BAR_VERT[area.atto] ^ !area.mirrored? 1.0f : -1.0f)*(step0 - LL)/(HL - LL)*area.segm_main);
-        }
-        
-        float step1 = ((odd1*countByBounds)/(HL-LL)*area.segm_main)/countByBounds;
-        float d3 = BAR_VERT[area.atto] ^ !area.mirrored? step1 : -step1;
-        for (int i=0; i<countByBounds; i++)
-        {
-          int offs = d2 + (round == 0 ? qRound(i*d3) : round == 1? int(i*d3) : int(i*d3) + 1);
-          ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, offs) : QPoint(offs, l1);
-          if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, offs, l1, offs);
-          else if (area.atto == AT_RIGHT)   ua_marks[m].rect.setCoords(l1, offs, l2, offs);
-          else if (area.atto == AT_TOP)     ua_marks[m].rect.setCoords(offs, l2, offs, l1);
-          else if (area.atto == AT_BOTTOM)  ua_marks[m].rect.setCoords(offs, l1, offs, l2);
-          texts[m].uarea_pos = ua_marks[m].anchor;
-          texts[m].uarea_atto = area.atto;
-          if (boundsChanged)
-            assignText(&texts[m], redact(numfmt(isMOD? modcast(step0 + odd1*i): step0 + odd1*i)), m_fontReplaced, m_font);
-          m++;
-        }
-      }
-      
-      int d4 = BAR_VERT[area.atto] ^ !area.mirrored? area.segm_pre + area.segm_main - 1 : area.segm_pre;
-      ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, d4) : QPoint(d4, l1);
-      if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, d4, l1, d4);
-      else if (area.atto == AT_RIGHT)   ua_marks[m].rect.setCoords(l1, d4, l2, d4);
-      else if (area.atto == AT_TOP)     ua_marks[m].rect.setCoords(d4, l2, d4, l1);
-      else if (area.atto == AT_BOTTOM)  ua_marks[m].rect.setCoords(d4, l1, d4, l2);
-      texts[m].uarea_pos = ua_marks[m].anchor;
-      texts[m].uarea_atto = area.atto;
-      if (boundsChanged)
-        assignText(&texts[m], redact(numfmt(isMOD? modcast(HL): HL)), m_fontReplaced, m_font);
-      m++;
-    }
-*/
 
 
 /*

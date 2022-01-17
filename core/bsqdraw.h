@@ -41,7 +41,7 @@ class DrawQWidget: public QOpenGLWidget, protected QOpenGLFunctions, public Draw
   enum  SHEIFIELD  {  SF_DATA, SF_PALETTE, 
                       SF_DOMAIN, SF_GROUND=SF_DOMAIN, SF_PORTIONSIZE, 
                       SF_COUNTPORTIONS, SF_DIMM_A, SF_DIMM_B, SF_CHNL_SCALING_A, SF_CHNL_SCALING_B,
-                      SF_DATABOUNDS, SF_VIEW_TURN,
+                      SF_DATABOUNDS, SF_COLORRANGE, SF_VIEW_TURN,
                       _SF_COUNT
                    };
 protected:
@@ -92,6 +92,8 @@ public slots:
   void    slot_setDataTextureInterpolation(bool);
   void    slot_setDataPalette(const IPalette*);
   void    slot_setDataPaletteDiscretion(bool);
+  void    slot_setDataPaletteRangeStart(float);
+  void    slot_setDataPaletteRangeStop(float);
   void    slot_setData(const float*);
   void    slot_setData(QVector<float>);
   void    slot_fillData(float);
@@ -132,7 +134,6 @@ protected:
   virtual void keyPressEvent(QKeyEvent *event);
 private:
   void  store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y);
-  const char*   vardesc(SHEIFIELD);
 public:
   virtual  int    scrollValue() const;
   unsigned int    lmSize() const;

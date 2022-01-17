@@ -35,9 +35,8 @@ public:
     FshMainGenerator fmg(to, allocatedPortions, splitGraphs, imp, ovlscount, ovlsinfo);
     float opacity = graphopts.opacity > 1.0f? 1.0f : graphopts.opacity < 0.0f? 0.0f : graphopts.opacity;
     fmg.cfloatvar("specopc", 1.0f - opacity);
-    fmg.main_begin(coloropts.backcolor != 0xFFFFFFFF? FshMainGenerator::INIT_BYVALUE:
-                                                           FshMainGenerator::INIT_BYPALETTE, 
-                        coloropts.backcolor, orient, fsp);
+    fmg.main_begin( coloropts.backcolor != 0xFFFFFFFF? FshMainGenerator::INIT_BYVALUE : FshMainGenerator::INIT_BYPALETTE, 
+                    coloropts.backcolor, orient, fsp);
     
     static const char graph_locals[] = 
                                       "vec2  fbounds_noscaled = vec2(viewdimm_a, viewdimm_b);" SHNL
@@ -495,31 +494,26 @@ public:
                   "}" SHNL);
       }
       
-      float base = coloropts.cstart;
-      float interval = coloropts.cstop - coloropts.cstart;
-      fmg.cfloatvar("pcBase", base);
-      fmg.cfloatvar("pcInterval", interval);
-      
       if (allocatedPortions > 1)
       {
         fmg.cintvar("allocatedPortions", allocatedPortions);
-        if (coloropts.cpolicy == CP_SINGLE)                   fmg.push("float portionColor = pcBase + pcInterval*(float(i)/float(allocatedPortions-1));" SHNL);                   /// -1!
-        else if (coloropts.cpolicy == CP_OWNRANGE)            fmg.push("float portionColor = pcBase + pcInterval/float(allocatedPortions)*(i + 1.0 - VALCLR);" SHNL);             /// not -1!
-        else if (coloropts.cpolicy == CP_OWNRANGE_GROSS)      fmg.push("float portionColor = pcBase + pcInterval/float(allocatedPortions)*(i + 1.0 - sqrt(VALCLR));" SHNL);       /// not -1!
-        else if (coloropts.cpolicy == CP_OWNRANGE_SYMMETRIC)  fmg.push("float portionColor = pcBase + pcInterval/float(allocatedPortions)*(i + 0.5 - abs(VALCLR - 0.5) );" SHNL); /// not -1!
-        else if (coloropts.cpolicy == CP_RANGE)               fmg.push("float portionColor = (pcBase + pcInterval*(float(i)/float(allocatedPortions)))*VALCLR;" SHNL);            /// not -1!
-        else if (coloropts.cpolicy == CP_SUBPAINTED)          fmg.push("float portionColor = fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
-        else if (coloropts.cpolicy == CP_RANGESUBPAINTED)     fmg.push("float portionColor = pcBase + pcInterval*float(i)/float(allocatedPortions)*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
+        if (coloropts.cpolicy == CP_SINGLE)                   fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*(float(i)/float(allocatedPortions-1));" SHNL);                   /// -1!
+        else if (coloropts.cpolicy == CP_OWNRANGE)            fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 1.0 - VALCLR);" SHNL);             /// not -1!
+        else if (coloropts.cpolicy == CP_OWNRANGE_GROSS)      fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 1.0 - sqrt(VALCLR));" SHNL);       /// not -1!
+        else if (coloropts.cpolicy == CP_OWNRANGE_SYMMETRIC)  fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 0.5 - abs(VALCLR - 0.5) );" SHNL); /// not -1!
+        else if (coloropts.cpolicy == CP_RANGE)               fmg.push("float portionColor = (palrange[0] + (palrange[1] - palrange[0])*(float(i)/float(allocatedPortions)))*VALCLR;" SHNL);            /// not -1!
+        else if (coloropts.cpolicy == CP_SUBPAINTED)          fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
+        else if (coloropts.cpolicy == CP_RANGESUBPAINTED)     fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*float(i)/float(allocatedPortions)*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
       }
       else
       {
-        if (coloropts.cpolicy == CP_SINGLE)                   fmg.push("float portionColor = pcBase;" SHNL);
-        else if (coloropts.cpolicy == CP_OWNRANGE)            fmg.push("float portionColor = pcBase + pcInterval*VALCLR;" SHNL);
-        else if (coloropts.cpolicy == CP_OWNRANGE_GROSS)      fmg.push("float portionColor = pcBase + pcInterval*sqrt(VALCLR);" SHNL);
-        else if (coloropts.cpolicy == CP_OWNRANGE_SYMMETRIC)  fmg.push("float portionColor = pcBase + pcInterval*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL);
-        else if (coloropts.cpolicy == CP_RANGE)               fmg.push("float portionColor = pcBase + pcInterval*VALCLR;" SHNL);
-        else if (coloropts.cpolicy == CP_SUBPAINTED)          fmg.push("float portionColor = fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
-        else if (coloropts.cpolicy == CP_RANGESUBPAINTED)     fmg.push("float portionColor = pcBase + pcInterval*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
+        if (coloropts.cpolicy == CP_SINGLE)                   fmg.push("float portionColor = palrange[0];" SHNL);
+        else if (coloropts.cpolicy == CP_OWNRANGE)            fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*VALCLR;" SHNL);
+        else if (coloropts.cpolicy == CP_OWNRANGE_GROSS)      fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*sqrt(VALCLR);" SHNL);
+        else if (coloropts.cpolicy == CP_OWNRANGE_SYMMETRIC)  fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL);
+        else if (coloropts.cpolicy == CP_RANGE)               fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*VALCLR;" SHNL);
+        else if (coloropts.cpolicy == CP_SUBPAINTED)          fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
+        else if (coloropts.cpolicy == CP_RANGESUBPAINTED)     fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
       }
 
       fmg.push(   "vec3  colorGraph = texture(texPalette, vec2(portionColor, 0.0)).rgb;" SHNL );
@@ -545,7 +539,6 @@ DrawGraph_Sheigen::~DrawGraph_Sheigen()
 {
 }
 
-
 DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, unsigned int memForDeploy, const graphopts_t& graphopts, const coloropts_t& coloropts, SPLITPORTIONS splitGraphs):
   DrawQWidget(DATEX_1D, new DrawGraph_Sheigen(graphopts, coloropts), graphs, OR_LRBT, splitGraphs)
 {
@@ -553,6 +546,7 @@ DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, unsigned int mem
   m_matrixDimmB = 1;
   m_portionSize = samples;
   deployMemory(memForDeploy);
+  reXtractDynrange(coloropts);
 }
 
 
@@ -564,18 +558,24 @@ void DrawGraph::reConstructor(unsigned int samples)
   deployMemory();
 }
 
+void DrawGraph::reXtractDynrange(const coloropts_t& co)
+{
+  m_ppalrange[PRNG_START] = co.cstart;
+  m_ppalrange[PRNG_STOP] = co.cstop;
+}
+
 /// m_countPortions === graphs
-DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, coloropts_t copts, SPLITPORTIONS splitGraphs):
+DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, const coloropts_t& copts, SPLITPORTIONS splitGraphs):
   DrawQWidget(DATEX_1D, new DrawGraph_Sheigen(graphopts_t::goInterp(0.0f, DE_LINTERP), copts), graphs, OR_LRBT, splitGraphs)
 //  ,m_graphopts(graphopts_t::goInterp(0.0f, DE_LINTERP)), m_coloropts(copts)
-{ reConstructor(samples); }
-DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, coloropts_t copts, SPLITPORTIONS splitGraphs):
+{ reConstructor(samples); reXtractDynrange(copts); }
+DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, const coloropts_t& copts, SPLITPORTIONS splitGraphs):
   DrawQWidget(DATEX_1D, new DrawGraph_Sheigen(graphopts, copts), graphs, OR_LRBT, splitGraphs)
 //  ,m_graphopts(graphopts), m_coloropts(copts)
-{ reConstructor(samples); }
+{ reConstructor(samples); reXtractDynrange(copts); }
 
-const graphopts_t&DrawGraph::graphopts() const {  return ((DrawGraph_Sheigen*)m_pcsh)->graphopts;   }
-const coloropts_t&DrawGraph::coloropts() const {  return ((DrawGraph_Sheigen*)m_pcsh)->coloropts;   }
+const graphopts_t& DrawGraph::graphopts() const {  return ((DrawGraph_Sheigen*)m_pcsh)->graphopts;   }
+const coloropts_t& DrawGraph::coloropts() const {  return ((DrawGraph_Sheigen*)m_pcsh)->coloropts;   }
 
 void DrawGraph::setOpts(const graphopts_t& go)
 {
@@ -586,6 +586,7 @@ void DrawGraph::setOpts(const graphopts_t& go)
 void DrawGraph::setOpts(const coloropts_t& co)
 {
   ((DrawGraph_Sheigen*)m_pcsh)->coloropts = co;
+  reXtractDynrange(co);
   vmanUpInit();
 }
 
@@ -593,6 +594,7 @@ void DrawGraph::setOpts(const graphopts_t& go, const coloropts_t& co)
 {
   ((DrawGraph_Sheigen*)m_pcsh)->graphopts = go;
   ((DrawGraph_Sheigen*)m_pcsh)->coloropts = co;
+  reXtractDynrange(co);
   vmanUpInit();
 }
 

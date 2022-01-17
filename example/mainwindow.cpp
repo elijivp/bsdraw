@@ -1592,15 +1592,34 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BS_STOP
             BS_STOP
             BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-              BS_STRETCH
-              BSAUTO_BTN(QCheckBox, dsc, BSFieldSetup("Palette Discrete", &fntSTD, 0, PORTIONS < 2? BFS_DISABLED : 0, btnMinWidth));
-              BSADD(dsc)
-              QObject::connect(dsc, SIGNAL(toggled(bool)), this, SLOT(changePaletteDiscretion(bool)));
-              BS_STRETCH
-              BSAUTO_BTN(QCheckBox, itp, BSFieldSetup("Data interpolation", &fntSTD, 0, 0, btnMinWidth));
-              BSADD(itp)
-              QObject::connect(itp, SIGNAL(toggled(bool)), this, SLOT(changeDataTextureInterpolation(bool)));
-              BS_STRETCH
+              BS_START_LAYOUT_HMIN_VMIN(QVBoxLayout)
+                BS_STRETCH
+                BSAUTO_BTN(QCheckBox, dsc, BSFieldSetup("Palette Discrete", &fntSTD, 0, PORTIONS < 2? BFS_DISABLED : 0, btnMinWidth));
+                BSADD(dsc)
+                QObject::connect(dsc, SIGNAL(toggled(bool)), this, SLOT(changePaletteDiscretion(bool)));
+                BSAUTO_BTN(QCheckBox, itp, BSFieldSetup("Data interpolation", &fntSTD, 0, 0, btnMinWidth));
+                BSADD(itp)
+                QObject::connect(itp, SIGNAL(toggled(bool)), this, SLOT(changeDataTextureInterpolation(bool)));
+                BS_STRETCH
+              BS_STOP
+              BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
+                BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                  BSAUTO_LBL_ADD(BSFieldSetup(tr("Range Start:")));
+                  QSlider* slider = new QSlider(Qt::Horizontal);
+                  slider->setRange(0,100);
+                  slider->setValue(0);
+                  BSADD(slider);
+                  QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changePalrangeStart(int)));
+                BS_STOP
+                BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                  BSAUTO_LBL_ADD(BSFieldSetup(tr("Range Stop: ")));
+                  QSlider* slider = new QSlider(Qt::Horizontal);
+                  slider->setRange(0,100);
+                  slider->setValue(100);
+                  BSADD(slider);
+                  QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changePalrangeStop(int)));
+                BS_STOP
+              BS_STOP
             BS_STOP
             BS_STRETCH
           BS_STOP
@@ -2522,7 +2541,12 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               DrawBars* pDB = new DrawBars(draws[i]);
 //              pDB->setContentsMargins(10, 10, 10, 10);
 //              scs[scscount++] = pDB->addScaleregFixed(AT_TOP, 0, 200.0f, 1200.0f, 200.0f, 0, 11, 50, 4);
-              scs[scscount++] = pDB->addScaleregFixed(AT_BOTTOM, 0, 0.1f, 1.0f, 0.25f, 0, 11, 50, 4);
+              int count = 33;
+              int pixstep = 50;
+              scs[scscount++] = pDB->addScaleregFixed(AT_LEFT, 0, 0.1f, 1.0f, 0.025f, 0, count, pixstep, 4);
+              scs[scscount++] = pDB->addScaleregFixed(AT_TOP, 0, 0.1f, 1.0f, 0.025f, 0, count, pixstep, 4);
+              scs[scscount++] = pDB->addScaleregFixed(AT_BOTTOM, 0, 0.1f, 1.0f, 0.25f, 0, count, pixstep, 4);
+              scs[scscount++] = pDB->addScaleregFixed(AT_RIGHT, 0, 0.1f, 1.0f, 0.25f, 0, count, pixstep, 4);
 //              scs[scscount++] = pDB->addScaleFixed(AT_BOTTOM, DBMODE_STRETCHED, 0.0f, 1.0f, 11, 50, 4);
               
 //              pDB->addScaleregFixed(AT_TOP, 0, -1200.0f, 1200.0f, 250.0f, 0, 11, 50, 4);
@@ -2539,15 +2563,15 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             BS_STRETCH
             QDoubleSpinBox* qdsblow = new QDoubleSpinBox();
             qdsblow->setPrefix("Low  ");
-            qdsblow->setRange(-1e-5, 1e+5);
+            qdsblow->setRange(-10000, 10000);
             qdsblow->setValue(0);
             BSADD(qdsblow)
             for (int s=0; s<scscount; s++)
               QObject::connect(qdsblow, SIGNAL(valueChanged(double)), scs[s], SLOT(setBoundLow(double)));
             QDoubleSpinBox* qdsbhigh = new QDoubleSpinBox();
             qdsbhigh->setPrefix("High  ");
-            qdsbhigh->setRange(-1e-5, 1e+5);
-            qdsbhigh->setValue(100);
+            qdsbhigh->setRange(-10000, 10000);
+            qdsbhigh->setValue(17);
             BSADD(qdsbhigh)
             for (int s=0; s<scscount; s++)
               QObject::connect(qdsbhigh, SIGNAL(valueChanged(double)), scs[s], SLOT(setBoundHigh(double)));
@@ -3536,6 +3560,18 @@ void MainWindow::changeBans(bool banned)
       draws[i]->banAutoUpdate(DrawCore::RD_BYOVL_ACTIONS, banned);
     }
   }
+}
+
+void MainWindow::changePalrangeStart(int value)
+{
+  for (unsigned int i=0; i<drawscount; i++)
+    draws[i]->setDataPaletteRangeStart(value / 100.0f);
+}
+
+void MainWindow::changePalrangeStop(int value)
+{
+  for (unsigned int i=0; i<drawscount; i++)
+    draws[i]->setDataPaletteRangeStop(value / 100.0f);
 }
 
 void MainWindow::createOverlaySTD(int id)

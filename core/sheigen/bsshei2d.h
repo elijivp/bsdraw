@@ -52,6 +52,8 @@ public:
                   "ovMix = max(ovMix, value);"
                 );
       
+      fmg.push( "value = palrange[0] + (palrange[1] - palrange[0])*value;" );
+      
       if ( splitPortions == SL_NONE )
         fmg.push( "result = result + texture(texPalette, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );
       else

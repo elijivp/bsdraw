@@ -196,6 +196,7 @@ FshMainGenerator::FshMainGenerator(char *deststring, unsigned int allocatedPorti
                                           "uniform highp int        scaling_b;" SHNL
                                           "uniform highp int        countPortions;" SHNL
                                           "uniform highp sampler2D  texPalette;" SHNL
+                                          "uniform highp vec2       palrange;" SHNL
                                           "in highp vec2            coords;" SHNL
                                           "float getValue1D(in int portion, in float x){  return texture(texData, vec2(x, float(portion)/(float(countPortions)-1.0))).r; }" SHNL
                                           "float getValue2D(in int portion, in vec2  x){  return texture(texData, vec2(x.x, float(x.y + float(portion))/float(countPortions))).r; }" SHNL

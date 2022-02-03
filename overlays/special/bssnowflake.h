@@ -7,7 +7,7 @@
 
 #include "../bsimage.h"
 
-class OSnowflake: public DrawOverlaySimple, public OVLQImage, public OVLCoordsOff, public OVLDimmsOff
+class OSnowflake: public DrawOverlaySimple, public OVLQImage, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
 {
 public:
   OSnowflake(QImage* image, IMAGECONVERT icvt, unsigned int count, float sizemultiplier);
@@ -21,7 +21,8 @@ protected:
   float   m_click[4];
 protected:
   virtual int fshTrace(int overlay, bool rotated, char* to) const;
-  bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*);
+  virtual IOverlayReactor*  reactor() { return this; }
+  bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool*);
 };
 
 #endif // BSSNOWFLAKE_H

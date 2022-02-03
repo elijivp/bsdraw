@@ -40,7 +40,7 @@ int OTestPrecision::fshTrace(int overlay, bool rotated, char *to) const
 
 
 /*
-bool OTestPrecision::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void*, bool* doStop)
+bool OTestPrecision::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop)
 {
   if (m_blockstate != 0)
   {

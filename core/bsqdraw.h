@@ -94,6 +94,7 @@ public slots:
   void    slot_setDataPaletteDiscretion(bool);
   void    slot_setDataPaletteRangeStart(float);
   void    slot_setDataPaletteRangeStop(float);
+  void    slot_setDataPaletteRange(float, float);
   void    slot_setData(const float*);
   void    slot_setData(QVector<float>);
   void    slot_fillData(float);
@@ -113,6 +114,16 @@ public slots:
   void    slot_disableAutoUpdate(bool);
   void    slot_enableAutoUpdateByData(bool);
   void    slot_disableAutoUpdateByData(bool);
+  
+  //   additional slots for spinboxes
+  void    slot_setBoundLow_dbl(double);
+  void    slot_setBoundHigh_dbl(double);
+  void    slot_setContrast_dbl(double k, double b);
+  void    slot_setContrastK_dbl(double);
+  void    slot_setContrastKinv_dbl(double);
+  void    slot_setContrastB_dbl(double);
+  void    slot_setDataPaletteRangeStart_dbl(double);
+  void    slot_setDataPaletteRangeStop_dbl(double);
 protected:
   void    palettePrepare(const IPalette *ppal, bool discrete, int levels);
   void    initCollectAndCompileShader();
@@ -206,41 +217,41 @@ protected:
   };
 };
 
-class BSQClickerPoint: public QObject, public IProactive
+class BSQClickerPoint: public QObject, public DrawEventReactor
 {
   Q_OBJECT
   OVL_REACTION_MOUSE  emitter;
 public:
   BSQClickerPoint(OVL_REACTION_MOUSE em=ORM_LMPRESS, QObject* parent=nullptr);
-  virtual bool  overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const void*, bool* /*doStop*/);
+  virtual bool  reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const coordstriumv_t*, bool* /*doStop*/);
 signals:
   void  clicked(QPoint);
 };
 
-class BSQMousePoint: public QObject, public IProactive
+class BSQMousePoint: public QObject, public DrawEventReactor
 {
   Q_OBJECT
   OVL_REACTION_MOUSE  emitset[3];
 public:
   enum MOUSEBUTTON  { MSP_LEFTBUTTON, MSP_RIGHTBUTTON };
   BSQMousePoint(MOUSEBUTTON btn, QObject* parent=nullptr);
-  virtual bool  overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const void*, bool* /*doStop*/);
+  virtual bool  reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const coordstriumv_t*, bool* /*doStop*/);
 signals:
   void  active(QPoint);
   void  active(QPointF);
 };
 
-class BSQDoubleClicker: public QObject, public IProactive
+class BSQDoubleClicker: public QObject, public DrawEventReactor
 {
   Q_OBJECT
 public:
-  virtual bool  overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const void*, bool* /*doStop*/);
+  virtual bool  reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const coordstriumv_t*, bool* /*doStop*/);
 signals:
   void  doubleClicked();
   void  doubleClicked(QPoint);
 };
 
-class BSQProactiveSelectorBase: public QObject, public IProactive
+class BSQProactiveSelectorBase: public QObject, public DrawEventReactor
 {
 protected:
   OVL_REACTION_MOUSE    m_action;
@@ -260,7 +271,7 @@ class BSQProactiveSelector: public BSQProactiveSelectorBase
   Q_OBJECT
 public:
   BSQProactiveSelector(OVL_REACTION_MOUSE action=ORM_LMPRESS, OVL_REACTION_MOUSE drop=ORM_RMPRESS): BSQProactiveSelectorBase(action,drop) {}
-  virtual bool  overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const void*, bool* /*doStop*/);
+  virtual bool  reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const coordstriumv_t*, bool* /*doStop*/);
 signals:
   void  selectionChanged(int);
   void  selectionDropped();
@@ -271,7 +282,7 @@ class BSQCellSelector: public BSQProactiveSelectorBase
   Q_OBJECT
 public:
   BSQCellSelector(OVL_REACTION_MOUSE action=ORM_LMPRESS, OVL_REACTION_MOUSE drop=ORM_RMPRESS): BSQProactiveSelectorBase(action, drop) {}
-  virtual bool  overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const void*, bool* doStop);
+  virtual bool  reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const coordstriumv_t*, bool* doStop);
 signals:
   void  selectionChanged(int cellA, int cellB);
   void  selectionDropped();
@@ -282,7 +293,7 @@ class BSQSelectorA: public BSQProactiveSelectorBase
   Q_OBJECT
 public:
   BSQSelectorA(OVL_REACTION_MOUSE action=ORM_LMPRESS, OVL_REACTION_MOUSE drop=ORM_RMPRESS): BSQProactiveSelectorBase(action, drop) {}
-  virtual bool  overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const void*, bool* doStop);
+  virtual bool  reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const coordstriumv_t*, bool* doStop);
 signals:
   void  selectionChanged(int);
   void  selectionDropped();
@@ -293,7 +304,7 @@ class BSQSelectorB: public BSQProactiveSelectorBase
   Q_OBJECT
 public:
   BSQSelectorB(OVL_REACTION_MOUSE action=ORM_LMPRESS, OVL_REACTION_MOUSE drop=ORM_RMPRESS): BSQProactiveSelectorBase(action, drop) {}
-  virtual bool  overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const void*, bool* doStop);
+  virtual bool  reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const coordstriumv_t*, bool* doStop);
 signals:
   void  selectionChanged(int);
   void  selectionDropped();

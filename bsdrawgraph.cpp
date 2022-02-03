@@ -52,19 +52,19 @@ public:
                          graphopts.graphtype == GT_HISTOGRAM_CROSSMIN || 
                          graphopts.graphtype == GT_HISTOGRAM_MESH || 
                          graphopts.graphtype == GT_HISTOGRAM_SUM;
-      bool isLinterp = graphopts.graphtype == GT_LINTERP || graphopts.graphtype == GT_LINTERPSMOOTH;
+      bool isInterp = graphopts.graphtype == GT_LINTERP || graphopts.graphtype == GT_LINTERPSMOOTH;
       
       if (isHistogram)
         fmg.push("vec4 neib = vec4(0.0, 0.0, 0.0, 0.0);" SHNL);  /// min, max, max_allow
       
-      if (isHistogram || isLinterp)
+      if (isHistogram || isInterp)
         fmg.cfloatvar("specsmooth", graphopts.smooth < -0.5f? -0.5f : graphopts.smooth);
       
       bool deinterpSL = graphopts.descaling == DE_LINTERP_SCALINGLEFT || graphopts.descaling == DE_SINTERP || graphopts.descaling == DE_QINTERP;
       bool deinterpSC = graphopts.descaling == DE_LINTERP_SCALINGCENTER;
       
       unsigned int needDots = 1;
-      if ((deinterpSC == false && deinterpSL == false && isLinterp) || 
+      if ((deinterpSC == false && deinterpSL == false && isInterp) || 
           graphopts.descaling == DE_LINTERP_SCALINGLEFT || graphopts.descaling == DE_LINTERP_SCALINGCENTER ||
           graphopts.descaling == DE_SINTERP)
         needDots = 3;
@@ -242,7 +242,7 @@ public:
         
         fmg.push("float VALCLR = fy[1];" SHNL);
       }
-      else if (isLinterp)
+      else if (isInterp)
       {
         if (graphopts.smooth <= -0.99f)   /// special 8bit interp
         {
@@ -359,13 +359,12 @@ public:
         fmg.push( 
                   "vec3 fhit = vec3(0.0, step(1.0, fmix_self), 0.0);" SHNL
                   "float MIXWELL =  max(fhit.y, specopc*max(max(fmix_prev, fmix_next), fmix_self ));" SHNL
-                  "float VALCLR = fcoords_noscaled.y;" SHNL
                   "fhit.x = 1.0 - step(MIXWELL, 0.0);" SHNL
-                  "VALCLR = VALCLR/(fbounds_noscaled.y-1);" SHNL
+                  "float VALCLR = fcoords_noscaled.y / fbounds_noscaled.y;" SHNL
                  );
         if (graphopts.postrect == PR_VALUEAROUND || graphopts.postrect == PR_SUMMARY)
           fmg.push("vec2 fhit_rect = vec2(min(min(fy_ns[0], fy_ns[2]), fy_ns[1]-1)*iscaling.y, max(max(fy_ns[0], fy_ns[2]), fy_ns[1]+1)*iscaling.y + iscaling.y - 1);" SHNL);
-      }
+      } // interp
       else if (isHistogram)
       {
         //        fmg.push(                 
@@ -424,13 +423,13 @@ public:
                       "fhit = fhit*fneiprec;" SHNL
                       );
           
-        if (coloropts.cpolicy != CP_RANGE)
+        if (coloropts.cpolicy != CP_REPAINTED)
           fmg.push("float VALCLR = clamp(fcoords_noscaled.y/fy[1], 0.0, 1.0);" SHNL);
         else
           fmg.push("float VALCLR = fy[1];" SHNL);
-      }
+      } // histogram
       
-      if (isLinterp || isHistogram)
+      if (isInterp || isHistogram)
       {
         if (graphopts.postrect == PR_STANDARD)
           fmg.push("post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL);
@@ -496,27 +495,37 @@ public:
       
       if (allocatedPortions > 1)
       {
-        fmg.cintvar("allocatedPortions", allocatedPortions);
-        if (coloropts.cpolicy == CP_SINGLE)                   fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*(float(i)/float(allocatedPortions-1));" SHNL);                   /// -1!
-        else if (coloropts.cpolicy == CP_OWNRANGE)            fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 1.0 - VALCLR);" SHNL);             /// not -1!
-        else if (coloropts.cpolicy == CP_OWNRANGE_GROSS)      fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 1.0 - sqrt(VALCLR));" SHNL);       /// not -1!
-        else if (coloropts.cpolicy == CP_OWNRANGE_SYMMETRIC)  fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 0.5 - abs(VALCLR - 0.5) );" SHNL); /// not -1!
-        else if (coloropts.cpolicy == CP_RANGE)               fmg.push("float portionColor = (palrange[0] + (palrange[1] - palrange[0])*(float(i)/float(allocatedPortions)))*VALCLR;" SHNL);            /// not -1!
-        else if (coloropts.cpolicy == CP_SUBPAINTED)          fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
-        else if (coloropts.cpolicy == CP_RANGESUBPAINTED)     fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*float(i)/float(allocatedPortions)*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
+        fmg.cintvar("allocatedPortions", (int)allocatedPortions);
+        switch (coloropts.cpolicy)
+        {
+        case CP_MONO:                 fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i);" SHNL); break;
+//        case CP_PAINTED:              fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - i - VALCLR);" SHNL); break;
+//        case CP_PAINTED_GROSS:        fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - i - sqrt(VALCLR));" SHNL); break;
+//        case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - i - 0.5 - abs(VALCLR - 0.5) );" SHNL); break;
+        case CP_PAINTED:              fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - VALCLR);" SHNL); break;
+        case CP_PAINTED_GROSS:        fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - sqrt(VALCLR));" SHNL); break;
+        case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 0.5 - abs(VALCLR - 0.5));" SHNL); break;
+        case CP_REPAINTED:            fmg.push("float porc = (palrange[1] - (palrange[1] - palrange[0])*(float(allocatedPortions - 1 - i)/float(allocatedPortions)))*VALCLR;" SHNL); break;
+          
+        case CP_PALETTE:              fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
+        case CP_PALETTE_SPLIT:        fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])/float(allocatedPortions)*(i + fcoords_noscaled.y/fbounds_noscaled.y);" SHNL); break;
+        }
       }
       else
       {
-        if (coloropts.cpolicy == CP_SINGLE)                   fmg.push("float portionColor = palrange[0];" SHNL);
-        else if (coloropts.cpolicy == CP_OWNRANGE)            fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*VALCLR;" SHNL);
-        else if (coloropts.cpolicy == CP_OWNRANGE_GROSS)      fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*sqrt(VALCLR);" SHNL);
-        else if (coloropts.cpolicy == CP_OWNRANGE_SYMMETRIC)  fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL);
-        else if (coloropts.cpolicy == CP_RANGE)               fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*VALCLR;" SHNL);
-        else if (coloropts.cpolicy == CP_SUBPAINTED)          fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
-        else if (coloropts.cpolicy == CP_RANGESUBPAINTED)     fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL);
+        switch (coloropts.cpolicy)
+        {
+        case CP_MONO:                 fmg.push("float porc = palrange[1];" SHNL); break;
+        case CP_PAINTED:              fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*VALCLR;" SHNL); break;
+        case CP_PAINTED_GROSS:        fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*sqrt(VALCLR);" SHNL); break;
+        case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
+        case CP_REPAINTED:            fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - VALCLR);" SHNL); break;
+          
+        case CP_PALETTE: case CP_PALETTE_SPLIT:      fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
+        }
       }
 
-      fmg.push(   "vec3  colorGraph = texture(texPalette, vec2(portionColor, 0.0)).rgb;" SHNL );
+      fmg.push(   "vec3  colorGraph = texture(texPalette, vec2(porc, 0.0)).rgb;" SHNL );
       
       if (graphopts.graphtype == GT_HISTOGRAM_SUM)
         fmg.push(   "result = result + colorGraph*vec3(MIXWELL);" SHNL

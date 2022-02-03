@@ -152,16 +152,43 @@ enum  COORDINATION      { CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
                           CR_PIXEL=CR_ABSOLUTE_NOSCALED
                         };
 
-class AbstractDrawOverlay
+class DrawOverlay;
+class _DrawOverlay;
+class IDrawOverlayFriendly
+{
+protected:
+  friend class _DrawOverlay;
+  IDrawOverlayFriendly(){}  // no vdestructor, closed constructor
+  virtual void overlayUpdate(bool internal, bool noupdate)=0;
+  virtual void innerOverlayReplace(int ovlid, DrawOverlay* ovl, bool owner)=0;
+  virtual void innerOverlayRemove(int ovlid)=0;
+};
+
+class _DrawOverlay
 {
 public:
-  enum { MAXUNIFORMS = 10 };
+  enum { MAXUNIFORMS = 10, MAXDRAWERS = 50 };
 private:
   dmtype_t          m_uniforms[MAXUNIFORMS];
   unsigned int      m_uniformsCount;
+private:
+  struct  _ioverlay_repaintable_t
+  {
+    int                       idoverlay;
+    IDrawOverlayFriendly*     repaintable;
+    bool                      delowner;
+  }                 m_drawers[MAXDRAWERS];
+  unsigned int      m_drawersCount;
+  unsigned int      m_pinger_reinit;
+  unsigned int      m_pinger_update;
 public:
-  AbstractDrawOverlay(): m_uniformsCount(0) {}
-  virtual ~AbstractDrawOverlay(){}
+  _DrawOverlay(): m_uniformsCount(0), m_drawersCount(0), m_pinger_reinit(1), m_pinger_update(1) {}
+  virtual ~_DrawOverlay()
+  {
+    for (unsigned int i=0; i<m_drawersCount; i++)
+      m_drawers[i].repaintable->innerOverlayRemove(m_drawers[i].idoverlay);
+  }
+  friend class DrawOverlayUpdater;
 public:
   struct    uniforms_t
   {
@@ -176,20 +203,72 @@ protected:
     m_uniforms[m_uniformsCount].dataptr = value;
     m_uniformsCount++;
   }
-  virtual void overlayUpdateParameter(bool recreate=false) =0;
-  friend class DrawOverlayUpdater;
+protected:
+  void updateParameter(bool reinit, bool update)
+  {
+    if (reinit)   m_pinger_reinit++;
+    m_pinger_update++;
+    for (unsigned int i=0; i<m_drawersCount; i++)
+      m_drawers[i].repaintable->overlayUpdate(reinit, !update);
+  }
+  unsigned int    pingerReinit() const { return m_pinger_reinit; }
+  unsigned int    pingerUpdate() const { return m_pinger_update; }
+  void            increasePingerReinit() { m_pinger_reinit++; }
+  void            increasePingerUpdate() { m_pinger_update++; }
+public:
+  void  eject(DrawOverlay* ovl, bool owner)
+  {
+    for (unsigned int i=0; i<m_drawersCount; i++)
+      m_drawers[i].repaintable->innerOverlayReplace(m_drawers[i].idoverlay, ovl, owner); // this method calls assign for ovl
+    m_drawersCount = 0;
+  }
+  void  eject()
+  {
+    for (unsigned int i=0; i<m_drawersCount; i++)
+      m_drawers[i].repaintable->innerOverlayRemove(m_drawers[i].idoverlay);
+    m_drawersCount = 0;
+  }
+//protected:
+private:
+  friend class DrawCore;
+  bool  assign(int overlay, IDrawOverlayFriendly* idr, bool delowner)
+  {
+    if (m_drawersCount >= MAXDRAWERS) return false;
+    m_drawers[m_drawersCount].idoverlay = overlay;
+    m_drawers[m_drawersCount].repaintable = idr;
+    m_drawers[m_drawersCount].delowner = delowner;
+    m_drawersCount++;
+    return true;
+  }
+  bool  preDelete(IDrawOverlayFriendly* idr)
+  {
+    int  ownermask = 0;
+    bool move=false;
+    for (unsigned int i=0; i<m_drawersCount; i++)
+      if (m_drawers[i].repaintable == idr)
+      {
+        if (m_drawers[i].delowner == true)
+          ownermask |= 2;
+        move = true;
+      }
+      else 
+      {
+        if (m_drawers[i].delowner == true)
+          ownermask |= 1;
+        if (move)
+          m_drawers[i-1] = m_drawers[i];
+      }
+    if (move)
+      m_drawersCount -= 1;
+    return ownermask == 2;
+  }
+protected:    /// EXTERNAL interface
+  friend class DrawQWidget;
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const =0;
+  virtual int   fshColor(int overlay, char* to) const =0;
 };
 
-class DrawOverlay;
-class IDrawOverlayFriendly
-{
-protected:
-  friend class DrawOverlay;
-  IDrawOverlayFriendly(){}  // no vdestructor, closed constructor
-  virtual void overlayUpdate(int overlay, bool internal, bool noupdate, bool recreate)=0;
-  virtual void innerOverlayReplace(int ovlid, DrawOverlay* ovl, bool owner)=0;
-  virtual void innerOverlayRemove(int ovlid)=0;
-};
+
 
 class DataDecimator
 {
@@ -304,6 +383,22 @@ enum  OVL_REACTION_MOUSE {
 };
 enum  OVL_MODIFIER_KEYBOARD {  OMK_NONE=0, OMK_SHIFT=2, OMK_CONTROL=4, OMK_ALT=8 };
 
+struct coordstriumv_t
+{
+  float   fx_ovl, fy_ovl;   // coords [0..1)    (for overlay evals)
+  float   fx_pix, fy_pix;   // screen coords -margins *devicePixelRatio
+  float   fx_rel, fy_rel;   // coords [0..1]    (for strict calculations)
+};
+
+class IOverlayReactor
+{
+public:
+  virtual void  overlayReactionVisible(bool /*visible*/){}    // nothrow
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool* /*doStop*/){  return false; }   // return doUPDATE
+  virtual bool  overlayReactionKey(int /*key*/, int /*modifiersOMK*/, bool* /*doStop*/){  return false; }             // return doUPDATE
+  virtual ~IOverlayReactor(){}
+};
+
 struct ovlbasics_t
 {
   float   opacity;
@@ -311,118 +406,46 @@ struct ovlbasics_t
   float   slice;
 };
 
-class DrawOverlay: virtual public AbstractDrawOverlay
+class DrawOverlay: virtual public _DrawOverlay
 {
-public:
-  enum    { MAXDRAWERS = 50 };
 private:
-  struct  _ioverlay_repaintable_t
-  {
-    int                   idoverlay;
-    IDrawOverlayFriendly*     repaintable;
-    bool                  delowner;
-  } m_drawers[MAXDRAWERS];
-  unsigned int            m_drawersCount;
+  bool                    m_visible;
   ovlbasics_t             m_ots;
-  bool                    m_repaintban;
 protected:
-  DrawOverlay(): m_drawersCount(0), m_repaintban(false)
+  DrawOverlay(bool visible): m_visible(visible)
   {
     m_ots.opacity = 0.0f;
     m_ots.thickness = 0.0f;
     m_ots.slice = 1.0f;
   }
 public:
-  virtual ~DrawOverlay(){ for (unsigned int i=0; i<m_drawersCount; i++)  m_drawers[i].repaintable->innerOverlayRemove(m_drawers[i].idoverlay); }
-  void  eject(DrawOverlay* ovl, bool owner)
-  {
-    for (unsigned int i=0; i<m_drawersCount; i++)
-      m_drawers[i].repaintable->innerOverlayReplace(m_drawers[i].idoverlay, ovl, owner); // this method calls assign for ovl
-    m_drawersCount = 0;
-  }
-  void  eject()
-  {
-    for (unsigned int i=0; i<m_drawersCount; i++)
-      m_drawers[i].repaintable->innerOverlayRemove(m_drawers[i].idoverlay);
-    m_drawersCount = 0;
-  }
-private:
-  friend class DrawCore;
-  bool  assign(int overlay, IDrawOverlayFriendly* idr, bool delowner)
-  {
-    if (m_drawersCount >= MAXDRAWERS) return false;
-    m_drawers[m_drawersCount].idoverlay = overlay;
-    m_drawers[m_drawersCount].repaintable = idr;
-    m_drawers[m_drawersCount].delowner = delowner;
-    m_drawersCount++;
-    return true;
-  }
-  bool  preDelete(IDrawOverlayFriendly* idr)
-  {
-    int  ownermask = 0;
-    bool move=false;
-    for (unsigned int i=0; i<m_drawersCount; i++)
-      if (m_drawers[i].repaintable == idr)
-      {
-        if (m_drawers[i].delowner == true)
-          ownermask |= 2;
-        move = true;
-      }
-      else 
-      {
-        if (m_drawers[i].delowner == true)
-          ownermask |= 1;
-        if (move)
-          m_drawers[i-1] = m_drawers[i];
-      }
-    if (move)
-      m_drawersCount -= 1;
-    return ownermask == 2;
-  }
-public:
-  void  setOpacity(float opacity, bool update=true){ m_ots.opacity = opacity; if (update) updateParameter(false); }  /// 1.0f for invisible
+  void  setOpacity(float opacity, bool update=true){ m_ots.opacity = opacity; updateParameter(false, update); }  /// 1.0f for invisible
   float getOpacity() const { return m_ots.opacity; }
   bool  opaque() const {  return m_ots.opacity >= 1.0f; }
-  void  setThickness(float thickness, bool update=true){ m_ots.thickness = thickness; if (update) updateParameter(false); }
+  void  setThickness(float thickness, bool update=true){ m_ots.thickness = thickness; updateParameter(false, update); }
   float getThickness() const { return m_ots.thickness; }
-  void  setSlice(float value, bool update=true) { m_ots.slice = value; if (update) updateParameter(false); }
+  void  setSlice(float value, bool update=true) { m_ots.slice = value; updateParameter(false, update); }
   float getSlice() const { return m_ots.slice; }
 public:
-  void  setOTS(const ovlbasics_t& ob, bool update=true){ m_ots = ob; if (update) updateParameter(false); }
-  void  setOTS(float opacity, float thickness, float slice, bool update=true){ m_ots.opacity = opacity; m_ots.thickness = thickness; m_ots.slice = slice; if (update) updateParameter(false); }
+  void  setVisible(bool visible, bool update=true){ m_visible = visible;  updateParameter(false, update); }
+  bool  isVisible() const { return m_visible; }
 public:
-  void  setUpdateBan(bool updateban) { m_repaintban = updateban; }
+  void  setOTS(const ovlbasics_t& ob, bool update=true){ m_ots = ob; updateParameter(false, update); }
+  void  setOTS(float opacity, float thickness, float slice, bool update=true){ m_ots.opacity = opacity; m_ots.thickness = thickness; m_ots.slice = slice; updateParameter(false, update); }
 protected:
-  void updatePublic(){ for (unsigned int i=0; i<m_drawersCount; i++)  m_drawers[i].repaintable->overlayUpdate(m_drawers[i].idoverlay, true, false, false); }
-  void updateParameter(bool recreate){ for (unsigned int i=0; i<m_drawersCount; i++)  m_drawers[i].repaintable->overlayUpdate(m_drawers[i].idoverlay, false, m_repaintban, recreate); }
-  virtual void overlayUpdateParameter(bool recreate=false){ updateParameter(recreate); }
-  friend class DrawOverlayUpdater;
-protected:    /// EXTERNAL interface
-  friend class DrawQWidget;
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const =0;
-  virtual int   fshColor(int overlay, char* to) const =0;
-  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void*, bool* /*doStop*/){  return false; }
-  virtual bool  overlayReactionKey(int /*key*/, int /*modifiersOMK*/, bool* /*doStop*/){  return false; }
+  friend class DrawCore;
+  virtual IOverlayReactor*  reactor() { return nullptr; }
 };
 
 class DrawOverlayUpdater
 {
-  DrawOverlay*   pOvl;
+  _DrawOverlay* pOvl;
 public:
-  DrawOverlayUpdater(DrawOverlay* povl): pOvl(povl){}
-  void updatePublic(){  pOvl->updatePublic(); }
-  void updateParameter(bool recreate){ pOvl->updateParameter(recreate); }
+  DrawOverlayUpdater(_DrawOverlay* povl): pOvl(povl){}
+  void updateParameter(bool recreate, bool update){ pOvl->updateParameter(recreate, update); }
   void appendUniform(DTYPE type, const void* value){  pOvl->appendUniform(type, value); }
 };
 
-class DrawOverlayProactive
-{
-public:
-  virtual void  setVisible(bool){}
-  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void*, bool* /*doStop*/){  return false; }
-  virtual bool  overlayReactionKey(int /*key*/, int /*modifiersOMK*/, bool* /*doStop*/){  return false; }
-  virtual ~DrawOverlayProactive(){}
-};
 
 /////////////////////////////////////////////
 /////////////////////////////////////////////

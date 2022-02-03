@@ -16,7 +16,7 @@ FshColorGenerator::FshColorGenerator(int overlay, char* deststring, int ovlctr):
   loc_uniforms = nullptr;
 }
 
-FshColorGenerator::FshColorGenerator(const AbstractDrawOverlay::uniforms_t& ufms, int overlay, char* deststring, int ovlctr): m_overlay(overlay), m_writebase(deststring), m_to(deststring), m_offset(0), m_paramsctr(ovlctr)
+FshColorGenerator::FshColorGenerator(const _DrawOverlay::uniforms_t& ufms, int overlay, char* deststring, int ovlctr): m_overlay(overlay), m_writebase(deststring), m_to(deststring), m_offset(0), m_paramsctr(ovlctr)
 {
 #ifdef BSGLSLVER
   m_offset += msprintf(&m_to[m_offset],  "#version %d" SHNL, BSGLSLVER);

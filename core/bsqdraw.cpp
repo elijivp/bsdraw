@@ -294,7 +294,7 @@ void DrawQWidget::initCollectAndCompileShader()
       {
         fastpaced_settings(_tempvd, i+1);
         m_overlays[i].outloc = m_ShaderProgram.uniformLocation(_tempvd);                  /// ! cannot hide by upcount
-        AbstractDrawOverlay::uniforms_t  uf = m_overlays[i].povl->uniforms();
+        _DrawOverlay::uniforms_t  uf = m_overlays[i].povl->uniforms();
         for (unsigned int j=0; j<uf.count; j++)
         {
           fastpaced_opm(_tempvd, i+1, j);
@@ -308,7 +308,8 @@ void DrawQWidget::initCollectAndCompileShader()
           m_overlays[i].uf_arr[j].dataptr = uf.arr[j].dataptr;
           if (dtIsTexture(dtype))
           {
-            if (m_overlays[i].upcount > 0)
+            if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit() || 
+                m_overlays[i].ponger_update < m_overlays[i].povl->pingerUpdate())
             {
               m_overlays[i].uf_arr[j].tex_idx = HT_OVERLAYSSTART + texNewCount;
               glGenTextures(1, &texNew[texNewCount]);
@@ -318,7 +319,7 @@ void DrawQWidget::initCollectAndCompileShader()
               texNew[texNewCount++] = m_texAll[m_overlays[i].uf_arr[j].tex_idx];
           }
         }
-        m_overlays[i].upcount = 1001;
+        m_overlays[i].ponger_reinit = m_overlays[i].ponger_update = 0;
       }
       m_texOvlCount = HT_OVERLAYSSTART;
       for (unsigned int i=0; i<texNewCount; i++)
@@ -438,14 +439,7 @@ void DrawQWidget::paintGL()
   }
   
   {
-//    qDebug()<<"paintGL binded:"<<m_ShaderProgram.isLinked()<<m_ShaderProgram.programId();
-    
     int loc;
-    if (this->objectName() == "GAV")
-    {
-      loc = 333;
-    }
-    
     if ((loc = m_locations[SF_DATA]) != -1)
     {      
       glActiveTexture(GL_TEXTURE0 + HT_MATRIX);
@@ -618,12 +612,13 @@ void DrawQWidget::paintGL()
     {
       for (unsigned int i=0; i<m_overlaysCount; i++)
       {
-        if (m_overlays[i].upcount > 0)
+        if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit() || 
+            m_overlays[i].ponger_update < m_overlays[i].povl->pingerUpdate())
         {
-//          m_overlays[i].upcount = 0;
-//          continue;
           if ((loc = m_overlays[i].outloc) != -1)
-            m_ShaderProgram.setUniformValue(loc, QVector4D(m_overlays[i].povl->getOpacity(), m_overlays[i].povl->getThickness(), m_overlays[i].povl->getSlice(), 0.0f));
+            m_ShaderProgram.setUniformValue(loc, QVector4D(m_overlays[i].povl->isVisible()? m_overlays[i].povl->getOpacity() : 1.0f, 
+                                                           m_overlays[i].povl->getThickness(), 
+                                                           m_overlays[i].povl->getSlice(), 0.0f));
           
           for (unsigned int j=0; j<m_overlays[i].uf_count; j++)
           {
@@ -658,7 +653,7 @@ void DrawQWidget::paintGL()
               case DT_SAMP4:
               {
                 const dmtype_sampler_t* psampler = (const dmtype_sampler_t*)data;
-                if (m_overlays[i].upcount >= 1001)
+                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
                 {
                   glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
 //                  glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, GLsizei(psampler->count), 1, 0, GL_RGBA, GL_FLOAT, psampler->data);
@@ -673,7 +668,7 @@ void DrawQWidget::paintGL()
               }
               case DT_TEXTURE:
               {
-                if (m_overlays[i].upcount >= 1001)
+                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
                 {
                   glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
 //                  glBindTexture(GL_TEXTURE_2D, m_textures[ufm.tex_idx]);
@@ -716,7 +711,7 @@ void DrawQWidget::paintGL()
               }
               case DT_PALETTE: case DT__HC_PALETTE:
               {
-                if (m_overlays[i].upcount >= 1001)
+                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
                 {
                   glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
                   const dmtype_palette_t* cdp = (const dmtype_palette_t*)ufm.dataptr;
@@ -730,7 +725,8 @@ void DrawQWidget::paintGL()
               break;
             }
           } // for ov_ufs
-          m_overlays[i].upcount = 0;
+          m_overlays[i].ponger_reinit = m_overlays[i].povl->pingerReinit();
+          m_overlays[i].ponger_update = m_overlays[i].povl->pingerUpdate();
         } // if upcount
       } // for overlays
     }
@@ -955,18 +951,18 @@ static const bool isPress[] = { true, false, false, true, true, false, true };
 
 void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
 {
-  int singleDimmWidth = sizeHorz();
-  int singleDimmHeight = sizeVert();
-  int totalDimmWidth = singleDimmWidth * (m_matrixSwitchAB? m_splitterB : m_splitterA);
-  int totalDimmHeight = singleDimmHeight * (m_matrixSwitchAB? m_splitterA : m_splitterB);
+  unsigned int singleDimmWidth = sizeHorz();
+  unsigned int singleDimmHeight = sizeVert();
+  unsigned int totalDimmWidth = singleDimmWidth * (m_matrixSwitchAB? m_splitterB : m_splitterA);
+  unsigned int totalDimmHeight = singleDimmHeight * (m_matrixSwitchAB? m_splitterA : m_splitterB);
   
   x -= m_cttrLeft;    y -= m_cttrTop;
   x *=  c_dpr;        y *=  c_dpr;
 
   if (isPress[oreact] == false)
   {
-    if (x < 0)  x = 0; else if (x >= totalDimmWidth) x = totalDimmWidth - 1;
-    if (y < 0)  y = 0; else if (y >= totalDimmHeight) y = totalDimmHeight - 1;
+    if (x < 0)  x = 0; else if (x >= totalDimmWidth) x = int(totalDimmWidth) - 1;
+    if (y < 0)  y = 0; else if (y >= totalDimmHeight) y = int(totalDimmHeight) - 1;
   }
   else if (x >= totalDimmWidth || y >= totalDimmHeight)
     return;
@@ -982,38 +978,47 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
 //    fx = float((orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x) % singleDimmWidth) / singleDimmWidth;
 //    fy = float((!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y) % singleDimmHeight) / singleDimmHeight;
 //  }
-  float fx, fy;
+  coordstriumv_t ct;
+  ct.fx_pix = x;
+  ct.fy_pix = y;
   if (orientationTransposed(m_orient))
   {
-    fx = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y);
-    fy = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x);
-    fx = float(int(fx) % singleDimmHeight) / singleDimmHeight;
-    fy = float(int(fy) % singleDimmWidth) / singleDimmWidth;
+    ct.fx_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y);
+    ct.fy_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x);
+    ct.fx_rel= singleDimmHeight <=1 ? 0 : float(int(ct.fx_ovl) % singleDimmHeight) / (singleDimmHeight - 1);
+    ct.fy_rel= singleDimmWidth <= 1? 0 : float(int(ct.fy_ovl) % singleDimmWidth) / (singleDimmWidth - 1);
+    ct.fx_ovl = singleDimmHeight <=1 ? 0 : float(int(ct.fx_ovl) % singleDimmHeight) / singleDimmHeight;
+    ct.fy_ovl = singleDimmWidth <= 1? 0 : float(int(ct.fy_ovl) % singleDimmWidth) / singleDimmWidth;
+//    fx = float(int(fx) % singleDimmHeight) / singleDimmHeight;
+//    fy = float(int(fy) % singleDimmWidth) / singleDimmWidth;
   }
   else
   {
-    fx = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x);
-    fy = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y);
-    fx = float(int(fx) % singleDimmWidth) / singleDimmWidth;
-    fy = float(int(fy) % singleDimmHeight) / singleDimmHeight;
+    ct.fx_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x);
+    ct.fy_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y);
+    ct.fx_rel = singleDimmWidth <= 1? 0 : float(int(ct.fx_ovl) % singleDimmWidth) / (singleDimmWidth - 1);
+    ct.fy_rel = singleDimmHeight <= 1? 0 : float(int(ct.fy_ovl) % singleDimmHeight) / (singleDimmHeight - 1);
+    ct.fx_ovl = singleDimmWidth <= 1? 0 : float(int(ct.fx_ovl) % singleDimmWidth) / singleDimmWidth;
+    ct.fy_ovl = singleDimmHeight <= 1? 0 : float(int(ct.fy_ovl) % singleDimmHeight) / singleDimmHeight;
+//    fx = float(int(fx) % singleDimmWidth) / singleDimmWidth;
+//    fy = float(int(fy) % singleDimmHeight) / singleDimmHeight;
+    
   }
-  float dataptr[] = { fx, fy, float(x), float(y) };
-
-  //  qDebug()<<" x = "<<x<<"; y = "<<y;
   
   bool doStop = false, doUpdate = false;
-  if (m_proactive)  m_proactive->overlayReactionMouse(this, oreact, dataptr, &doStop);
+  if (m_proactive)  m_proactive->reactionMouse(this, oreact, &ct, &doStop);
   if (!doStop)
     for (int i=int(m_overlaysCount)-1; i>=0; i--)
-    {
-      if (m_overlays[i].povl->overlayReactionMouse(oreact, dataptr, &doStop))
+      if (m_overlays[i].prct)
       {
-        m_overlays[i].upcount++;
-        doUpdate = true;
+        if (m_overlays[i].prct->overlayReactionMouse(oreact, &ct, &doStop))
+        {
+          m_overlays[i].povl->increasePingerUpdate();
+          doUpdate = true;
+        }
+        if (doStop)
+          break;
       }
-      if (doStop)
-        break;
-    }
   if (doUpdate)
   {
     m_bitmaskPendingChanges |= PC_PARAMSOVL;
@@ -1064,18 +1069,19 @@ void DrawQWidget::keyPressEvent(QKeyEvent* event)
   int modifiers = int(event->modifiers()) >> 24;
   int key = event->key();
   bool doStop = false, doUpdate = false;
-  if (m_proactive)  m_proactive->overlayReactionKey(this, key, modifiers, &doStop);
+  if (m_proactive)  m_proactive->reactionKey(this, key, modifiers, &doStop);
   if (!doStop)
     for (int i=int(m_overlaysCount)-1; i>=0; i--)
-    {
-      if (m_overlays[i].povl->overlayReactionKey(key, modifiers, &doStop))
+      if (m_overlays[i].prct)
       {
-        m_overlays[i].upcount++;
-        doUpdate = true;
+        if (m_overlays[i].prct->overlayReactionKey(key, modifiers, &doStop))
+        {
+          m_overlays[i].povl->increasePingerUpdate();
+          doUpdate = true;
+        }
+        if (doStop)
+          break;
       }
-      if (doStop)
-        break;
-    }
   
   if (doUpdate)
   {
@@ -1109,10 +1115,10 @@ void DrawQWidget::connectScrollBar(QScrollBar *qsb, bool staticView, bool setOri
   QObject::connect(qsb, SIGNAL(valueChanged(int)), this, SLOT(scrollDataTo(int)));
 }
 
-void DrawQWidget::slot_setScalingA(int s){  setScalingLimitsA(s, s); }
-void DrawQWidget::slot_setScalingB(int s){  setScalingLimitsB(s, s); }
-void DrawQWidget::slot_setScalingH(int s){  setScalingLimitsHorz(s, s); }
-void DrawQWidget::slot_setScalingV(int s){  setScalingLimitsVert(s, s); }
+void DrawQWidget::slot_setScalingA(int s){  setScalingLimitsA((unsigned int)s, (unsigned int)s); }
+void DrawQWidget::slot_setScalingB(int s){  setScalingLimitsB((unsigned int)s, (unsigned int)s); }
+void DrawQWidget::slot_setScalingH(int s){  setScalingLimitsHorz((unsigned int)s, (unsigned int)s); }
+void DrawQWidget::slot_setScalingV(int s){  setScalingLimitsVert((unsigned int)s, (unsigned int)s); }
 
 void DrawQWidget::slot_setBounds(float low, float high){  setBounds(low, high); }
 void DrawQWidget::slot_setBoundLow(float value){  setBoundLow(value); }
@@ -1127,6 +1133,7 @@ void DrawQWidget::slot_setDataPalette(const IPalette* ppal){ setDataPalette(ppal
 void DrawQWidget::slot_setDataPaletteDiscretion(bool d){ setDataPaletteDiscretion(d); }
 void DrawQWidget::slot_setDataPaletteRangeStart(float v){ setDataPaletteRangeStart(v); }
 void DrawQWidget::slot_setDataPaletteRangeStop(float v){ setDataPaletteRangeStop(v); }
+void DrawQWidget::slot_setDataPaletteRange(float start, float stop){  setDataPaletteRange(start, stop);  }
 void DrawQWidget::slot_setData(const float* data){ setData(data); }
 void DrawQWidget::slot_setData(QVector<float> data){ setData(data.constData()); }
 void DrawQWidget::slot_fillData(float data){ fillData(data); }
@@ -1147,6 +1154,16 @@ void DrawQWidget::slot_disableAutoUpdate(bool disabled){  banAutoUpdate(disabled
 void DrawQWidget::slot_enableAutoUpdateByData(bool enabled){  banAutoUpdate(RD_BYDATA, !enabled); }
 void DrawQWidget::slot_disableAutoUpdateByData(bool disabled){  banAutoUpdate(RD_BYDATA, disabled); }
 
+
+////////////////////////////////////////////////////////////////////////
+void DrawQWidget::slot_setBoundLow_dbl(double value){  setBoundLow((float)value); }
+void DrawQWidget::slot_setBoundHigh_dbl(double value){ setBoundHigh((float)value);  }
+void DrawQWidget::slot_setContrast_dbl(double k, double b){ setContrast((float)k, (float)b);  }
+void DrawQWidget::slot_setContrastK_dbl(double k){ setContrastK((float)k);  }
+void DrawQWidget::slot_setContrastKinv_dbl(double k){ setContrastKinv((float)k); }
+void DrawQWidget::slot_setContrastB_dbl(double b){ setContrastB((float)b);  }
+void DrawQWidget::slot_setDataPaletteRangeStart_dbl(double s){  setDataPaletteRangeStart((float)s); }
+void DrawQWidget::slot_setDataPaletteRangeStop_dbl(double s){  setDataPaletteRangeStart((float)s); }
 ////////////////////////////////////////////////////////////////////////
 
 int   DrawQWidget::scrollValue() const
@@ -1415,11 +1432,11 @@ BSQClickerPoint::BSQClickerPoint(OVL_REACTION_MOUSE em, QObject* parent): QObjec
 {
 }
 
-bool BSQClickerPoint::overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
+bool BSQClickerPoint::reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool*)
 {
   if (oreact == emitter)
   {
-    emit clicked(QPoint(((const float*)dataptr)[2], ((const float*)dataptr)[3]));
+    emit clicked(QPoint(ct->fx_pix, ct->fy_pix));
     return true;
   }
   return false;
@@ -1439,19 +1456,19 @@ BSQMousePoint::BSQMousePoint(BSQMousePoint::MOUSEBUTTON btn, QObject* parent): Q
   }
 }
 
-bool BSQMousePoint::overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
+bool BSQMousePoint::reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool*)
 {
   if (oreact == emitset[0] || oreact == emitset[1] || oreact == emitset[2])
   {
-    emit active(QPoint(((const float*)dataptr)[2], ((const float*)dataptr)[3]));
-    emit active(QPointF(((const float*)dataptr)[0], ((const float*)dataptr)[1]));
+    emit active(QPoint(ct->fx_pix, ct->fy_pix));
+    emit active(QPointF(ct->fx_rel, ct->fy_rel));
     return true;
   }
   return false;
 }
 
 
-bool BSQDoubleClicker::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)
+bool BSQDoubleClicker::reactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop)
 {
   if (oreact == ORM_LMDOUBLE)
   {
@@ -1459,12 +1476,12 @@ bool BSQDoubleClicker::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUS
     emit doubleClicked();
 //    emit doubleClicked(pwdg->mapToGlobal(QPoint(((const float*)dataptr)[0], ((const float*)dataptr)[1])));
 //    emit doubleClicked(pwdg->mapToGlobal(QPoint(((const float*)dataptr)[2], ((const float*)dataptr)[3])));
-    emit doubleClicked(QPoint(((const float*)dataptr)[2], ((const float*)dataptr)[3]));
+    emit doubleClicked(QPoint(ct->fx_pix, ct->fy_pix));
   }
   return false;
 }
 
-bool BSQProactiveSelector::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)
+bool BSQProactiveSelector::reactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop)
 {
   if (oreact == m_action)
   {
@@ -1472,7 +1489,7 @@ bool BSQProactiveSelector::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_
 //    if (pwdg->splitterA() > 1 || pwdg->splitterB() > 1)  ???
     {
       unsigned int ssA = pwdg->sizeA()/pwdg->splitterA(), ssB = pwdg->sizeB()/pwdg->splitterB();
-      int x = ((const float*)dataptr)[2], y = ((const float*)dataptr)[3];
+      int x = ct->fx_pix, y = ct->fy_pix;
       int portion = 0;
       if (pwdg->isSplittedA())
         portion = pwdg->allocatedPortions() - 1 - y / ssB;
@@ -1485,7 +1502,7 @@ bool BSQProactiveSelector::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_
   return false;
 }
 
-bool BSQCellSelector::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)
+bool BSQCellSelector::reactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop)
 {
   if (oreact == m_action)
   {
@@ -1493,7 +1510,7 @@ bool BSQCellSelector::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE
     ORIENTATION orient = pwdg->orientation();
     {
       unsigned int ssA = pwdg->sizeA()/pwdg->sizeDataA(), ssB = pwdg->sizeB()/pwdg->sizeDataB();
-      int x = ((const float*)dataptr)[2], y = ((const float*)dataptr)[3];
+      int x = ct->fx_pix, y = ct->fy_pix;
       unsigned int cellA = (orientationTransposed(orient)? y : x) / ssA;
       unsigned int cellB = (orientationTransposed(orient)? x : y) / ssB;
       if (orientationMirroredHorz(orient))
@@ -1508,7 +1525,7 @@ bool BSQCellSelector::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE
 }
 
 
-bool BSQSelectorA::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)
+bool BSQSelectorA::reactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop)
 {
   if (oreact == m_action)
   {
@@ -1516,7 +1533,7 @@ bool BSQSelectorA::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE or
     ORIENTATION orient = pwdg->orientation();
     {
       unsigned int ssA = pwdg->sizeA()/pwdg->sizeDataA();
-      int x = ((const float*)dataptr)[2], y = ((const float*)dataptr)[3];
+      int x = ct->fx_pix, y = ct->fy_pix;
       unsigned int cellA = (orientationTransposed(orient)? y : x) / ssA;
       if (orientationMirroredHorz(orient))
         cellA = pwdg->sizeDataA() - 1 - cellA;
@@ -1527,7 +1544,7 @@ bool BSQSelectorA::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE or
   return false;
 }
 
-bool BSQSelectorB::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)
+bool BSQSelectorB::reactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop)
 {
   if (oreact == m_action)
   {
@@ -1535,7 +1552,7 @@ bool BSQSelectorB::overlayReactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE or
     ORIENTATION orient = pwdg->orientation();
     {
       unsigned int ssB = pwdg->sizeB()/pwdg->sizeDataB();
-      int x = ((const float*)dataptr)[2], y = ((const float*)dataptr)[3];
+      int x = ct->fx_pix, y = ct->fy_pix;
       unsigned int cellB = (orientationTransposed(orient)? x : y) / ssB;
       if (orientationMirroredVert(orient) == false)
         cellB = pwdg->sizeDataB() - 1 - cellB;

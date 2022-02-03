@@ -69,7 +69,7 @@ void _OLevelSet::lineShow(int idx, float offset, bool update)
       m_activecount++;
     }
     m_data[idx].offset = offset;
-    if (update) overlayUpdateParameter();
+    updateParameter(false, update);
   } 
 }
 
@@ -82,7 +82,7 @@ void _OLevelSet::lineShow(int idx, bool update)
       m_data[idx].activated = 1.0f;
       m_activecount++;
     }
-    if (update) overlayUpdateParameter();
+    updateParameter(false, update);
   } 
 }
 
@@ -94,7 +94,7 @@ void _OLevelSet::lineHide(int idx, bool update)
     {
       m_data[idx].activated = 0.0f;
       m_activecount--;
-      if (update) overlayUpdateParameter();
+      updateParameter(false, update);
     }
   }
 }
@@ -106,7 +106,7 @@ void _OLevelSet::clear(bool update)
     for (int i=0; i<dtarr.count; i++)
       m_data[i].activated = 0.0f;
     m_activecount = 0;
-    if (update) overlayUpdateParameter();
+    updateParameter(false, update);
   }
 }
 

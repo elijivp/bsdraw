@@ -235,7 +235,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
       gopts[i].dotsize = i == 0? 3 : 2;
       gopts[i].dotsmooth = i == 0? 0.5f : 0.1f;
-      draws[3*i + 2] = new DrawGraph(SAMPLES, PORTIONS, gopts[i], coloropts_t::copts(CP_RANGE, 1.0f, 0.5f, 0x00777777));
+      draws[3*i + 2] = new DrawGraph(SAMPLES, PORTIONS, gopts[i], coloropts_t::copts(CP_REPAINTED, 1.0f, 0.5f, 0x00777777));
       draws[3*i + 2]->ovlPushBack(new OTextColored(gnames[i], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, OO_INHERITED, 0x00000000, 0x77FFFFFF, 0x00000000));
     }
     
@@ -318,9 +318,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
       draws[i*drcount + 0] = new DrawIntensity(SAMPLES, MAXLINES, i == 1? 1 : PORTIONS);
       if (i == 0)
-        draws[i*drcount + 1] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(CP_SINGLE, 0.332f, 1.0f, 0x00111111));
+//        draws[i*drcount + 1] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(CP_MONO, 0.0f, 0.7f, 0x00111111));
+        draws[i*drcount + 1] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(CP_MONO, 0.0f, 1.0f, 0x00111111));
       else
-        draws[i*drcount + 1] = new DrawGraph(SAMPLES, 1, gopts, coloropts_t::copts(CP_RANGE, 0.0f, 1.0f, 0x00111111));
+        draws[i*drcount + 1] = new DrawGraph(SAMPLES, 1, gopts, coloropts_t::copts(CP_REPAINTED, 0.0f, 1.0f, 0x00111111));
       draws[i*drcount + 2] = new DrawRecorder(SAMPLES, MAXLINES, 1000, i == 1? 1 : PORTIONS);
     }
     
@@ -489,7 +490,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 2;
     PRECREATE(3, 3);
     BSGRAPHTYPE     gts[] = { GT_HISTOGRAM_CROSSMAX, GT_LINTERP, GT_DOTS };
-    BSCOLORPOLICY   dclr[] = { CP_SINGLE, CP_SINGLE, CP_RANGE };
+    BSCOLORPOLICY   dclr[] = { CP_MONO, CP_MONO, CP_REPAINTED };
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
       {
@@ -501,7 +502,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                                     PR_STANDARD
                            };
 //        gopts.smooth = 0.0f;
-        coloropts_t copts = {   dclr[c], 1.0f, 0.5f, c == 1? 0xFFFFFFFF : 0x00999999 };
+        coloropts_t copts = {   dclr[c], 0.0f, 1.0f, c == 1? 0xFFFFFFFF : 0x00999999 };
         draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gopts, copts);
       }
   
@@ -514,7 +515,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 2;
     PRECREATE(3, 3);
     BSGRAPHTYPE gts[] = { GT_HISTOGRAM, GT_LINTERP, GT_DOTS };
-    BSCOLORPOLICY   dclr[] = { CP_SINGLE, CP_SINGLE, CP_RANGE };
+    BSCOLORPOLICY   dclr[] = { CP_MONO, CP_MONO, CP_REPAINTED };
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
       {
@@ -525,7 +526,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                                     0.5f,
                                     PR_STANDARD
                               };
-        coloropts_t copts = {   dclr[c], 1.0f, 0.5f, c == 1? 0xFFFFFFFF : 0x00999999 };
+        coloropts_t copts = {   dclr[c], 0.0f, 1.0f, c == 1? 0xFFFFFFFF : 0x00999999 };
         draws[c*drcount + i] = new DrawGraphMoveEx(SAMPLES, 5, SAMPLES*2, PORTIONS, gopts, copts);
       }
 
@@ -596,7 +597,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 1;
     PRECREATE(2, 1);
     for (int i=0; i<drawscount; i++)
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.2f, DE_QINTERP), coloropts_t::copts(CP_SINGLE, 1.0f, 1.0f, 0x777777));
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.2f, DE_QINTERP), coloropts_t::copts(CP_MONO, 1.0f, 1.0f, 0x777777));
 //    sigtype = ST_MOVE;
 //    defaultPalette = ppalettes_adv[11];
   }
@@ -608,12 +609,12 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(4, 1);
 //    syncscaling = 4;
     
-//    DrawGraph::BSCOLORPOLICY cps[] = { CP_SINGLE, CP_OWNRANGE, CP_OWNRANGE_GROSS, CP_OWNRANGE_SYMMETRIC, CP_RANGE, CP_SUBPAINTED };
-//    const char* cpnames[] = { "CP_SINGLE", "CP_OWNRANGE", "CP_OWNRANGE_GROSS", "CP_OWNRANGE_SYMMETRIC", "CP_RANGE", "CP_SUBPAINTED" };
+//    DrawGraph::BSCOLORPOLICY cps[] = { CP_MONO, CP_PAINTED, CP_PAINTED_GROSS, CP_PAINTED_SYMMETRIC, CP_REPAINTED, CP_PALETTE };
+//    const char* cpnames[] = { "CP_MONO", "CP_PAINTED", "CP_PAINTED_GROSS", "CP_PAINTED_SYMMETRIC", "CP_REPAINTED", "CP_PALETTE" };
     
     for (unsigned int i=0; i<drawscount; i++)
     {
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.5f, DE_QINTERP), coloropts_t::copts(CP_SINGLE, 1.0f, 0.3f, i == 2? 0x00AAAAAA : 0xFFFFFFFF));
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.5f, DE_QINTERP), coloropts_t::copts(CP_MONO, 1.0f, 0.3f, i == 2? 0x00AAAAAA : 0xFFFFFFFF));
 //      draws[i]->setScalingLimitsHorz(7);
 //      draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.8f, 0.7f, 12, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
     }
@@ -630,7 +631,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(3, 1);
     for (unsigned int i=0; i<drawscount; i++)
     {
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(2, 1.0f, DE_NONE), coloropts_t::copts(CP_SINGLE, 1.0f, 0.3f, 0xFFFFFFFF));
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(2, 1.0f, DE_NONE), coloropts_t::copts(CP_MONO, 1.0f, 0.3f, 0xFFFFFFFF));
       draws[i]->ovlPushBack(new OGridRegular(OGridRegular::REGULAR_HORZ, CR_RELATIVE, 0.5f, 0.125f, linestyle_inverse_1(4,1,0)));
       draws[i]->ovlPushBack(new OGridRegular(OGridRegular::REGULAR_VERT, CR_RELATIVE, 0.5f, 0.125f, linestyle_inverse_1(4,1,0)));
     }
@@ -665,7 +666,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     graphopts_t  gopts = { GT_LINTERP, DE_LINTERP, 0.0f, 0, 0.0f, 0.6f, PR_STANDARD };
 //    graphopts_t  gopts = { GT_DOTS, DE_NONE, 0.0f, 0, 0.0f, 0.2f, PR_STANDARD };
-    draws[0] = new DrawGraph(SAMPLES, PORTIONS_MIN, gopts, coloropts_t::copts(CP_SINGLE, 0.332f, 1.0f));
+    draws[0] = new DrawGraph(SAMPLES, PORTIONS_MIN, gopts, coloropts_t::copts(CP_MONO, 0.332f, 1.0f));
     draws[0]->setScalingLimitsVert(1);
     
     draws[1] = new DrawRecorder(SAMPLES, 100, 100, PORTIONS_MIN);
@@ -675,7 +676,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     draws[2]->setDataTextureInterpolation(true);
     draws[2]->setScalingLimitsVert(10,10);
 
-    draws[3] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(CP_SINGLE, 0.332f, 1.0f), SL_VERT);
+    draws[3] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(CP_MONO, 0.332f, 1.0f), SL_VERT);
 //    draws[3]->ovlPushBack(new OFLine(OFLine::LT_VERT_BYBOTTOM, CR_RELATIVE, 0.5f, 0.0f, CR_ABSOLUTE, 0));
     
     draws[4] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS, OR_LRBT, SL_VERT2);
@@ -839,7 +840,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     sigtype = ST_RAND;
     defaultPalette = (const IPalette*)ppalettes_adv[69];
   }
-  else if (MW_TEST == FEATURE_COLOR_POLICY)
+  else if (MW_TEST == FEATURE_COLORS_DOTS || MW_TEST == FEATURE_COLORS_INTERP || MW_TEST == FEATURE_COLORS_HISTORGRAM)
   {
     SAMPLES = 180;
     MAXLINES = 70;
@@ -847,12 +848,15 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(7, 1);
 //    syncscaling = 4;
     
-    BSCOLORPOLICY cps[] = { CP_SINGLE, CP_OWNRANGE, CP_OWNRANGE_GROSS, CP_OWNRANGE_SYMMETRIC, CP_RANGE, CP_SUBPAINTED, CP_RANGESUBPAINTED };
-    const char* cpnames[] = { "CP_SINGLE", "CP_OWNRANGE", "CP_OWNRANGE_GROSS", "CP_OWNRANGE_SYMMETRIC", "CP_RANGE", "CP_SUBPAINTED", "CP_RANGESUBPAINTED" };
+    BSCOLORPOLICY cps[] = { CP_MONO, CP_PAINTED, CP_PAINTED_GROSS, CP_PAINTED_SYMMETRIC, CP_REPAINTED, CP_PALETTE, CP_PALETTE_SPLIT };
+    const char* cpnames[] = { "CP_MONO", "CP_PAINTED", "CP_PAINTED_GROSS", "CP_PAINTED_SYMMETRIC", "CP_REPAINTED", "CP_PALETTE", "CP_PALETTE_SPLIT" };
     
+    graphopts_t gopts = MW_TEST == FEATURE_COLORS_DOTS?   graphopts_t::goDots(3, 0.5f) : 
+                        MW_TEST == FEATURE_COLORS_INTERP? graphopts_t::goInterp(0.3f, DE_QINTERP) : 
+                                                          graphopts_t::goHistogramCrossMax(0.0f);
     for (unsigned int i=0; i<drawscount; i++)
     {
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.3f, DE_QINTERP), coloropts_t::copts(cps[i], 1.0f, 0.3f));
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(cps[i], 0.0f, 1.0f));
 //      draws[i]->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f));
       draws[i]->setScalingLimitsHorz(7);
       
@@ -962,7 +966,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     MAXLINES = 50;
     PORTIONS = 3;
 //    PRECREATE(1 + PORTIONS, 1);
-//    draws[0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.2f, DE_QINTERP), coloropts_t::copts(CP_SINGLE, 0.5f, 1.0f, 0x777777));
+//    draws[0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.2f, DE_QINTERP), coloropts_t::copts(CP_MONO, 0.5f, 1.0f, 0x777777));
 //    for (int i=0; i<PORTIONS; i++)
 //      draws[1 + i] = new DrawHint((DrawGraph*)draws[0], i, DH_LINE, OR_LRTB);
 //    sigtype = ST_MOVE;
@@ -970,7 +974,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(TD, PORTIONS);
     for (int i=0; i<PORTIONS; i++)
     {
-      draws[TD*i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.2f, DE_QINTERP), coloropts_t::copts(CP_SINGLE, 0.5f, 1.0f, 0x777777));
+      draws[TD*i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.2f, DE_QINTERP), coloropts_t::copts(CP_MONO, 0.0f, 1.0f, 0x777777));
       draws[TD*i]->setFixedHeight(600);
     }
     int flags[] = {
@@ -1016,8 +1020,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(12, 4);
     for (unsigned int i=0; i<drawscount; i++)
     {
-//      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(GT_LINTERPSMOOTH, 0.0, 0x00111111), CP_SINGLE, 1.0, -0.5);
-      draws[i] = new DrawGraphMove(SAMPLES, 1, PORTIONS, graphopts_t::goInterp2(DE_NONE), coloropts_t::copts(CP_SINGLE, 1.0, 0.5, 0x00111111));
+//      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(GT_LINTERPSMOOTH, 0.0, 0x00111111), CP_MONO, 1.0, -0.5);
+      draws[i] = new DrawGraphMove(SAMPLES, 1, PORTIONS, graphopts_t::goInterp2(DE_NONE), coloropts_t::copts(CP_MONO, 1.0, 0.5, 0x00111111));
     }
     
     sigtype = ST_10;
@@ -1156,7 +1160,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     for (int i=0; i < drawscount; i++)
     {
       draws[i] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
-//      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(0.0f, DE_NONE), coloropts_t::copts(CP_SUBPAINTED, 1.0f, 1.0f, 0x00000000));
+//      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(0.0f, DE_NONE), coloropts_t::copts(CP_PALETTE, 1.0f, 1.0f, 0x00000000));
       draws[i]->setScalingLimitsSynced(6);
       draws[i]->setClearByPalette();
       draws[i]->setDataPalette(pptr[i]);
@@ -1220,7 +1224,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
       {
-        draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gts[c*drcount + i], coloropts_t::copts(CP_SINGLE, 1.0f, 0.49f) );
+        draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gts[c*drcount + i], coloropts_t::copts(CP_MONO, 1.0f, 0.49f) );
         draws[c*drcount + i]->setScalingLimitsHorz(1);
         draws[c*drcount + i]->setScalingLimitsVert(1);
 //        draws[c*drcount + i]->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_CONTOUR, 0));
@@ -1240,7 +1244,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(1, 1);
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
-        draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP), coloropts_t::copts(CP_SINGLE, 1.0f, 0.49f));
+        draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP), coloropts_t::copts(CP_MONO, 1.0f, 0.49f));
     
     sp = SP_SLOWEST;
     sigtype = ST_MOVE;
@@ -1250,10 +1254,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     SAMPLES = 512;
     MAXLINES = 1;
     PORTIONS = 1;
-    PRECREATE(1, 1);
+    PRECREATE(3, 1);
+//    PRECREATE(1, 1);
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
-        draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP), coloropts_t::copts(CP_SINGLE, 1.0f, 0.49f));
+        draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP), coloropts_t::copts(CP_MONO, 1.0f, 0.49f));
     
     sp = SP_SLOWEST;
     sigtype = ST_MOVE;
@@ -1976,15 +1981,15 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 QObject::connect(qcb2, SIGNAL(currentIndexChanged(int)), this, SLOT(changePostmask(int)));
                 BSADD(qcb2);
                 BS_STRETCH
-                
+
                 BSAUTO_TEXT_ADD(QString::fromUtf8("Type: "))
                 QStringList dpmMain; dpmMain<<QString::fromUtf8("Contour")<<QString::fromUtf8("Line left")
                                            <<QString::fromUtf8("Line right")<<QString::fromUtf8("Line bottom")
                                               <<QString::fromUtf8("Line top")<<QString::fromUtf8("Lines left-bot")
                                                 <<QString::fromUtf8("Lines right-bot")
                                                   <<QString::fromUtf8("Lines left-top")<<QString::fromUtf8("Lines right-top")
-                                                    <<QString::fromUtf8("Pseudocircle")<<QString::fromUtf8("Dot")
-                                                      <<QString::fromUtf8("Dot left-bot")<<QString::fromUtf8("Dot contour")
+                                                    <<QString::fromUtf8("Circle smooth")<<QString::fromUtf8("Circle bordered")<<
+                                                      QString::fromUtf8("Dot")<<QString::fromUtf8("Dot left-bot")<<QString::fromUtf8("Dot contour")
                                                       <<QString::fromUtf8("/")<<QString::fromUtf8("\\")
                                                       <<QString::fromUtf8("Cross")<<QString::fromUtf8("Grid")
                                                         <<QString::fromUtf8("Fill")<<QString::fromUtf8("Squares");
@@ -2158,7 +2163,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BSFieldSetup(tr(">>"),    &fntSTD, SP_SLOW, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
               BSFieldSetup(tr(">>>"),  &fntSTD, SP_FAST, BFS_CHECKABLE, btnMinWidth, btnMinWidth), 
               BSFieldSetup(tr(">>>>"),    &fntSTD, SP_FASTEST, BFS_CHECKABLE, btnMinWidth, btnMinWidth), 
-              BSFieldSetup(tr("Stop"),    &fntSTD, SP_STOP, BFS_CHECKED, btnMinWidth, btnMinWidth),
+              BSFieldSetup(tr("OFF"),    &fntSTD, SP_STOP, BFS_CHECKED, btnMinWidth, btnMinWidth),
             };
             BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
               BS_CHEAT_VMIN
@@ -2183,7 +2188,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 BSFieldSetup(tr(">>"),    &fntSTD, SP_SLOW, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
                 BSFieldSetup(tr(">>>"),  &fntSTD, SP_FAST, BFS_CHECKABLE, btnMinWidth, btnMinWidth), 
                 BSFieldSetup(tr(">>>>"),    &fntSTD, SP_FASTEST, BFS_CHECKABLE, btnMinWidth, btnMinWidth), 
-                BSFieldSetup(tr("Stop"),    &fntSTD, SP_STOP, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
+                BSFieldSetup(tr("OFF"),    &fntSTD, SP_STOP, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
               };
               for (unsigned int i=0; i<sizeof(rtsbtns) / sizeof(BSFieldSetup); i++)
                 if (rtsbtns[i].mappedvalue == sp)
@@ -2316,9 +2321,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               {
                 bool contourMaxZone = false;
                 
-                int dbmode = DBMODE_STRETCHED;
-    //            int dbmode = DBMODE_STATIC;
-                
                 int otherFlags = /*DBF_ENUMERATE_FROMZERO | */DBF_ENUMERATE_SHOWLAST;
     //            int otherFlags = DBF_ONLY2NOTES;
     //            int otherFlags = DBF_NOTESINSIDE;
@@ -2328,28 +2330,28 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 {
                   ATTACHED_TO at = ATTACHED_TO(j);
                   pDB->addContour(at, 0, contourMaxZone);
-                  pDB->addScaleEnumerator(at, dbmode | otherFlags | dockerFlags, 64 + 1, 30);
+                  pDB->addEScaleRollingOwnbounds(at, otherFlags | dockerFlags, 64 + 1, 30);
                   pDB->addContour(at, 0, contourMaxZone);
-                  pDB->addScaleFixed(at, dbmode | otherFlags | dockerFlags | DBF_NOTESINSIDE, 0.0f, 1.0f, SAMPLES);
+                  pDB->addScaleRollingOwnbounds(at, otherFlags | dockerFlags | DBF_NOTESINSIDE, 0.0f, 1.0f, SAMPLES);
     //              pDB->addContour(at, 0, contourMaxZone);
                   
     //              pDB->addScaleDrawUniSide(at, dbmode | otherFlags | dockerFlags, 30);
                   
                   if (j == AT_LEFT)
-                    pDB->addScaleDrawGraphB(AT_LEFT, 0, 3, 32);
+                    pDB->addScaleNativeDrawbounds(AT_LEFT, 0, 0.1f, 0.0f, 3, 32);
                 }
               }
               else if (i == 1)
               {
                 ATTACHED_TO at1 = AT_LEFT, at2 = AT_RIGHT;
                 pDB->addSpace(at1, 60);
-                pDB->addPointerDrawGraphB(at1, DBF_SHARED, 0.0f, 10);
-                pDB->addPointerDrawGraphB(at1, DBF_SHARED, 0.5f, 10);
-                pDB->addPointerDrawGraphB(at1, DBF_SHARED, 1.0f, 10);
+                pDB->addPointerRelativeDrawbounds(at1, DBF_SHARED, 0.0f, 10);
+                pDB->addPointerRelativeDrawbounds(at1, DBF_SHARED, 0.5f, 10);
+                pDB->addPointerRelativeDrawbounds(at1, DBF_SHARED, 1.0f, 10);
                 pDB->addSpace(at2, 60);
-                pDB->addPointerFixed(at2, DBF_SHARED, 0.0f, 0.0f, 1.0f, 20);
-                pDB->addPointerFixed(at2, DBF_SHARED, 0.5f, 0.0f, 1.0f, 20);
-                pDB->addPointerFixed(at2, DBF_SHARED, 1.0f, 0.0f, 1.0f, 20);
+                pDB->addPointerRelativeOwnbounds(at2, DBF_SHARED, 0.0f, 0.0f, 1.0f, 20);
+                pDB->addPointerRelativeOwnbounds(at2, DBF_SHARED, 0.5f, 0.0f, 1.0f, 20);
+                pDB->addPointerRelativeOwnbounds(at2, DBF_SHARED, 1.0f, 0.0f, 1.0f, 20);
                 
                 pDB->addSpace(AT_TOP, 20);
                 pDB->addSpace(AT_TOP, 60);
@@ -2413,25 +2415,25 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 
               
               if (i == 0)
-                pDB->addScaleDrawUniSide(AT_TOP, DBF_ENUMERATE_FROMZERO | DBF_ENUMERATE_SHOWLAST, 20);
+                pDB->addEScalePixstepDrawbounds(AT_TOP, DBF_ENUMERATE_FROMZERO | DBF_ENUMERATE_SHOWLAST, 20);
               else if (i == 1)
-                pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED, 0.0, SAMPLES-1, SAMPLES);
+                pDB->addScalePixstepOwnbounds(AT_TOP, 0, 0.0, SAMPLES-1, SAMPLES);
               else if (i == 2)
-                pDB->addScaleTapNM(AT_TOP, DBMODE_STATIC, standard_tap_symbolate<-1>, 4, nullptr, SAMPLES, 20);
+                pDB->addScaleRollingTapNM(AT_TOP, 0, standard_tap_symbolate<-1>, 4, nullptr, SAMPLES, 20);
               else
-                pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED_POW2 | DBF_ONLY2NOTES | DBF_NOTESINSIDE, 0.0, 1.0, SAMPLES, 10);
+                pDB->addScaleSymmetricOwnbounds(AT_TOP, DBF_ONLY2NOTES | DBF_NOTESINSIDE, 0.0, 1.0, SAMPLES, 10);
               
 //              pDB->getDraw()->setPostMask(DPostmask::postmask(PO_EMPTY, PM_LINERIGHT, 0, 0.3f, 0.3f, 0.3f));
 //              MEPointer mpH = pDB->addPointerFixed(AT_BOTTOM, 0, 180);
-              MEWPointer* mpH = pDB->addPointerDrawUniSide(AT_BOTTOM, DBF_NOTESINSIDE, 0.0f);
+              MEWPointer* mpH = pDB->addEPointer01Auto(AT_BOTTOM, DBF_NOTESINSIDE | DBF_ENUMERATE_FROMZERO, 0.0f);
 //              MEPointer mpV = pDB->addPointerDrawUniSide(AT_RIGHT);
-              MEWPointer* mpV = pDB->addPointerDrawGraphB(AT_RIGHT, DBF_NOTESINSIDE, 0.0f);
+              MEWPointer* mpV = pDB->addPointerRelativeDrawbounds(AT_RIGHT, DBF_NOTESINSIDE, 0.0f);
 //              mpH.setPosition(0.7f);
-              int oapH = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpH->createProactive()));
+              int oapH = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpH->createReactor()));
               pDB->getDraw()->ovlPushBack(new OFLine(OFLine::LT_VERT_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_stroks(1.0f,0.0f,0.0f)), oapH);
               
 //              mpV.setPosition(0.7f);
-              int oapV = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpV->createProactive()));
+              int oapV = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpV->createReactor()));
               pDB->getDraw()->ovlPushBack(new OFLine(OFLine::LT_HORZ_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_stroks(1.0f,0.0f,0.0f)), oapV);
 //              pDB->getDraw()->ovlPushBack(new OFDouble(true, CR_RELATIVE, 0, CR_ABSOLUTE, 6, linestyle_stroks(1.0f,1.0f,0.0f)), oap);
 //              pDB->getDraw()->ovlPushBack(new OFDouble(false, CR_RELATIVE, 0, CR_ABSOLUTE, 6, linestyle_stroks(1.0f,1.0f,0.0f)), oap);
@@ -2440,11 +2442,12 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               if (i == drawscount - 1)
               {
 //                pDB->addContour(AT_LEFT, 40);
-                pDB->addScaleDrawGraphB(AT_LEFT, 0 /*| DBF_NOTESINSIDE/* | DBF_INTERVENT*/, 3, 32);
+                pDB->addScaleNativeDrawbounds(AT_LEFT, 0, 0.1f, 1.0f, 3, 32);
 //                pDB->addSpace(AT_LEFT, 10);
               }
               else
-                pDB->addScaleDrawGraphB(AT_LEFT, 0 /*| DBF_NOTESINSIDE*/, 21, 32);
+//                pDB->addScaleDrawGraphB(AT_LEFT, 0 /*| DBF_NOTESINSIDE*/, 21, 32);
+                pDB->addScaleNativeDrawbounds(AT_LEFT, 0, 0.1f, 1.0f, 21, 32);
               
 //              if (i < 3)
               {
@@ -2474,9 +2477,9 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //                pDB->addContour(AT_RIGHT, 0);
 //              }
               pDB->setContentsMargins(10, 10, 10, 10);
-              pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED, 0.0, SAMPLES-1, SAMPLES);
+              pDB->addScalePixstepOwnbounds(AT_TOP, 0, 0.0, SAMPLES-1, SAMPLES);
 //              MEWPointer* mpV = pDB->addPointerDrawGraphB(AT_LEFT, DBF_NOTESINSIDE | rounding[i], 0.0f);
-              pDB->addScaleDrawGraphB(AT_LEFT, rounding[i], 11, 18);
+              pDB->addScalePixstepDrawbounds(AT_LEFT, rounding[i], 11, 18);
               BSADD(pDB)
             }
           BS_STOP
@@ -2532,31 +2535,90 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         }
         else if (MW_TEST == DEBUG_MAINSCALE)
         {
-          MEWScaleNN* scs[32];
+          MEWScale* scs[32];
+          DrawBars* pdbs[32];
           int scscount=0;
+          int flags[] = { 0, 
+                          DBF_PRECISION_INCREASE,
+                          DBF_PRECISION_EXACT_0
+                        };
+          int eflags[] = {  0,
+                            DBF_DOCKTO_NEXTMARK, 
+                            DBF_DOCKTO_PREVMARK, 
+                        };
+          
           BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
             for (unsigned int i=0; i<drawscount; i++)
             {
 //              draws[i]->setOrientation(OR_RLBT);
-              DrawBars* pDB = new DrawBars(draws[i]);
+              pdbs[i] = new DrawBars(draws[i]);
 //              pDB->setContentsMargins(10, 10, 10, 10);
-//              scs[scscount++] = pDB->addScaleregFixed(AT_TOP, 0, 200.0f, 1200.0f, 200.0f, 0, 11, 50, 4);
+//              scs[scscount++] = pdbs[i]->addScaleregFixed(AT_TOP, 0, 200.0f, 1200.0f, 200.0f, 0, 11, 50, 4);
+//              int count = 12;
+//              int pixstep = 50;
+//              float ownboundLL = 0.0f;
+//              float ownboundHL = -4.0f;
+//              scs[scscount++] = pdbs[i]->addScaleNativeOwnbounds(AT_TOP, 0, ownboundLL, ownboundHL, 0.025f, 0, count, pixstep, 4);
+//              scs[scscount++] = pdbs[i]->addScalePixstepOwnbounds(AT_TOP, 0, ownboundLL, ownboundHL, count, pixstep, 4);
+//              scs[scscount++] = pdbs[i]->addScaleSymmetricOwnbounds(AT_TOP, 0, ownboundLL, ownboundHL, count, pixstep, 4);
+//              scs[scscount++] = pdbs[i]->addScaleRollingOwnbounds(AT_TOP, 0, ownboundLL, ownboundHL, count, pixstep, 4);
               int count = 33;
-              int pixstep = 50;
-              scs[scscount++] = pDB->addScaleregFixed(AT_LEFT, 0, 0.1f, 1.0f, 0.025f, 0, count, pixstep, 4);
-              scs[scscount++] = pDB->addScaleregFixed(AT_TOP, 0, 0.1f, 1.0f, 0.025f, 0, count, pixstep, 4);
-              scs[scscount++] = pDB->addScaleregFixed(AT_BOTTOM, 0, 0.1f, 1.0f, 0.25f, 0, count, pixstep, 4);
-              scs[scscount++] = pDB->addScaleregFixed(AT_RIGHT, 0, 0.1f, 1.0f, 0.25f, 0, count, pixstep, 4);
-//              scs[scscount++] = pDB->addScaleFixed(AT_BOTTOM, DBMODE_STRETCHED, 0.0f, 1.0f, 11, 50, 4);
+              int pixstep = 40;
+              float ownboundLL = 0.0f;
+              float ownboundHL = 14.0f;
               
-//              pDB->addScaleregFixed(AT_TOP, 0, -1200.0f, 1200.0f, 250.0f, 0, 11, 50, 4);
-//              pDB->addScaleregFixed(AT_BOTTOM, 0, 200.0f, 1200.0f, 200.0f, 0, 11, 50, 4);
-//              pDB->addScaleregFixed(AT_BOTTOM, 0, -1200.0f, 1200.0f, 250.0f, 0, 11, 50, 4);
+              ATTACHED_TO ats[] = { AT_LEFT, AT_TOP };
+//              ATTACHED_TO ats[] = { AT_TOP };
+              for (int a=0; a<sizeof(ats)/sizeof(ATTACHED_TO); a++)
+              {
+                scs[scscount++] = pdbs[i]->addScaleNativeOwnbounds(ats[a], flags[i], ownboundLL, ownboundHL, 0.025f, 0, count, pixstep, 4);
+                scs[scscount++] = pdbs[i]->addScalePixstepOwnbounds(ats[a], flags[i], ownboundLL, ownboundHL, count, pixstep, 4);
+                scs[scscount++] = pdbs[i]->addScaleSymmetricOwnbounds(ats[a], flags[i], ownboundLL, ownboundHL, count, pixstep, 4);
+//                scs[scscount++] = pdbs[i]->addScaleRollingOwnbounds(ats[a], flags[i], ownboundLL, ownboundHL, count, pixstep, 4);
+              }
               
-//              pDB->addScaleregFixed(AT_BOTTOM, 0, 33.0f, 10000.0f, 500.0f, 0, 3, 50, 4);
-//              pDB->addScaleregFixed(AT_BOTTOM, 0, 33.0f, 10000.0f, 50.0f, 0, 100, 50, 4);
+//              pdbs[i]->addEScalePixstepOwnbounds(AT_BOTTOM, eflags[i] | DBF_ENUMERATE_SHOWLAST, count, pixstep);
+//              pdbs[i]->addEScaleRollingOwnbounds(AT_BOTTOM, eflags[i] | DBF_ENUMERATE_SHOWLAST, count, pixstep);
               
-              BSADD(pDB)
+              MEWPointer* mpH = pdbs[i]->addPointerRelativeOwnbounds(AT_TOP, DBF_PRECISION_MAXIMIZE, -1.0f, ownboundLL, ownboundHL, 5);
+              OActiveCursorCarrier* ocarrier = new OActiveCursorCarrier(mpH->createReactor(), CR_RELATIVE, -1,-1);
+              OFLine* pOvl = new OFLine(OFLine::LT_VERT_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_white(5, 1, 0));
+              int oap = pdbs[i]->getDraw()->ovlPushBack(ocarrier);
+              pdbs[i]->getDraw()->ovlPushBack(pOvl, oap);
+              
+                
+//              if (i == 0)
+//              {
+//                for (unsigned int a=0; a<2; a++)
+//                  scs[scscount++] = pdbs[i]->addScaleNativeOwnbounds(ATTACHED_TO(a), 0, 0.1f, 1.0f, 0.025f, 0, count, pixstep, 4);
+////                  scs[scscount++] = pdbs[i]->addScaleNativeAuto(ATTACHED_TO(a), 0, 0.025f, 0, count, pixstep, 4);
+//              }
+//              else if (i == 1)
+//              {
+//                for (unsigned int a=0; a<2; a++)
+//                  scs[scscount++] = pdbs[i]->addScaleRollingOwnbounds(ATTACHED_TO(a), 0, 0.1f, 1.0f, count, pixstep, 4);
+////                  scs[scscount++] = pdbs[i]->addScaleRollingAuto(ATTACHED_TO(a), 0, count, pixstep, 4);
+//              }
+//              else if (i == 2)
+//              {
+//                for (unsigned int a=0; a<2; a++)
+//                  scs[scscount++] = pdbs[i]->addScaleSymmetricOwnbounds(ATTACHED_TO(a), 0, 0.1f, 1.0f, count, pixstep, 4);
+////                  scs[scscount++] = pdbs[i]->addScalePowstepAuto(ATTACHED_TO(a), 0, count, pixstep, 4);
+//              }
+                
+//              pdbs[i]->addPointerRelativeDrawbounds(AT_TOP, 0, 0.25f, 4, false);
+              pdbs[i]->addPointerRelativeDrawbounds(AT_BOTTOM, DBF_PRECISION_INCREASE, 0.25f, 4, true);
+              
+//              scs[scscount++] = pdbs[i]->addScaleFixed(AT_BOTTOM, DBMODE_STRETCHED, 0.0f, 1.0f, 11, 50, 4);
+              
+//              pdbs[i]->addScaleregFixed(AT_TOP, 0, -1200.0f, 1200.0f, 250.0f, 0, 11, 50, 4);
+//              pdbs[i]->addScaleregFixed(AT_BOTTOM, 0, 200.0f, 1200.0f, 200.0f, 0, 11, 50, 4);
+//              pdbs[i]->addScaleregFixed(AT_BOTTOM, 0, -1200.0f, 1200.0f, 250.0f, 0, 11, 50, 4);
+              
+//              pdbs[i]->addScaleregFixed(AT_BOTTOM, 0, 33.0f, 10000.0f, 500.0f, 0, 3, 50, 4);
+//              pdbs[i]->addScaleregFixed(AT_BOTTOM, 0, 33.0f, 10000.0f, 50.0f, 0, 100, 50, 4);
+              
+              BSADD(pdbs[i])
             }
           BS_STOP
           BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
@@ -2566,15 +2628,24 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             qdsblow->setRange(-10000, 10000);
             qdsblow->setValue(0);
             BSADD(qdsblow)
-            for (int s=0; s<scscount; s++)
-              QObject::connect(qdsblow, SIGNAL(valueChanged(double)), scs[s], SLOT(setBoundLow(double)));
             QDoubleSpinBox* qdsbhigh = new QDoubleSpinBox();
             qdsbhigh->setPrefix("High  ");
             qdsbhigh->setRange(-10000, 10000);
             qdsbhigh->setValue(17);
             BSADD(qdsbhigh)
+#if 1
             for (int s=0; s<scscount; s++)
+            {
+              QObject::connect(qdsblow, SIGNAL(valueChanged(double)), scs[s], SLOT(setBoundLow(double)));
               QObject::connect(qdsbhigh, SIGNAL(valueChanged(double)), scs[s], SLOT(setBoundHigh(double)));
+            }
+#else
+            for (unsigned int i=0; i<drawscount; i++)
+            {
+              QObject::connect(qdsblow, SIGNAL(valueChanged(double)), pdbs[i], SLOT(slot_setBoundLow_dbl(double)));
+              QObject::connect(qdsbhigh, SIGNAL(valueChanged(double)), pdbs[i], SLOT(slot_setBoundHigh_dbl(double)));
+            }
+#endif
             BS_STRETCH
           BS_STOP
 //          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
@@ -2712,7 +2783,7 @@ void MainWindow::changeMargins(int value)
 static float my_hiperb(float x, float mov){ return 1.0f/x - 0.25f + mov*0.5f; }
 static float my_sinxx(float x, float mov){ return qFastSin(x*(1+mov))/(x); }
 static float my_xx(float x, float mov){ return x*x/(100 + 1000*mov) - 0.5f; }
-static float my_tanhx(float x, float mov){ return tanh(x/(20*(mov+0.05f)))/5.0; }
+static float my_tanhx(float x, float mov){ return 0.5f*tanh(x/(24*mov+2.0f)); }
 
 inline void generateGaussian(float mu, float sigma, float* rnd1, float* rnd2)
 {
@@ -2875,12 +2946,13 @@ void MainWindow::generateData()
         for (int i = 0; i < DSAMPLES; ++i)
           testbuf[i] = randbuf[i]*0.3f;
         
+        float pcoeff = 1.0f - float(portion)/(PORTIONS + 10);
         for (int i = 0; i < mover_size; ++i)
         {
           int iip = base + i; if (iip >= DSAMPLES) iip = iip - DSAMPLES;
           int iim = base - i; if (iim < 0) iim = DSAMPLES + iim;
-          testbuf[iip] = mover[i];
-          testbuf[iim] = mover[i];
+          testbuf[iip] = pcoeff*mover[i];
+          testbuf[iim] = pcoeff*mover[i];
         }
         break;
       }

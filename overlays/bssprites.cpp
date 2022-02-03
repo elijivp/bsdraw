@@ -9,6 +9,7 @@
 #include <memory.h>
 
 OSprites::OSprites(QImage *image, IMAGECONVERT icvt, float sizemultiplier, unsigned int count, COLOR_SPRITE cr, CENTER_BY cb): 
+  DrawOverlay(true),
   OVLQImage(image, icvt, false), 
   m_sm(sizemultiplier), m_countmax(count), m_cb(cb), m_cr(cr), m_countactive(0)
 {
@@ -23,6 +24,7 @@ OSprites::OSprites(QImage *image, IMAGECONVERT icvt, float sizemultiplier, unsig
 }
 
 OSprites::OSprites(QImage* image, OVLQImage::IMAGECONVERT icvt, float sizemultiplier, unsigned int count, const IPalette* ipal, bool discrete, CENTER_BY cb):
+  DrawOverlay(true),
   OVLQImage(image, icvt, false), 
   m_sm(sizemultiplier), m_countmax(count), m_cb(cb), m_cr(-1), m_countactive(0)
 {
@@ -113,7 +115,7 @@ int OSprites::fshColor(int overlay, char* to) const
   return ocg.written();
 }
 
-bool OSprites::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
+bool OSprites::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool*)
 {
 //  if (oreact == ORM_LMPRESS)
 //  {
@@ -135,7 +137,7 @@ void OSprites::setPalette(const IPalette* ipal, bool discrete)
 {
   m_dm_palette.ppal = ipal;
   m_dm_palette.discrete = discrete;
-  DrawOverlay::overlayUpdateParameter(true); 
+  _DrawOverlay::updateParameter(true, true); 
 }
 
 void  OSprites::setKPDC(unsigned int idx, float x, float y){ ((kpdc_t*)m_kpdc.data)[idx].x = x; ((kpdc_t*)m_kpdc.data)[idx].y = y; }
@@ -154,8 +156,7 @@ void  OSprites::setKPDC(unsigned int idx, float x, float y, float zoom, float co
 
 void OSprites::updateKPDC()
 {
-  DrawOverlay::overlayUpdateParameter(true);
-//  updatePublic();
+  _DrawOverlay::updateParameter(true, true);
 }
 
 const kpdc_t& OSprites::at(int idx) const
@@ -170,7 +171,7 @@ void OSprites::setActiveCount(unsigned int count)
     if (count != m_countactive)
     {
       m_countactive = count;
-//      DrawOverlay::overlayUpdateParameter();
+//      _DrawOverlay::updateParameter(false, update);
     }
   }
 }

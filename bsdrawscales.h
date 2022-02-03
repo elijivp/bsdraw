@@ -17,15 +17,15 @@
 /// draw->setDataPalette(&paletteBkGrWh);
 /// ...
 /// DrawBars* dbar = new DrawBars(draw, DrawBars::CP_FROM_DRAWBACK);
-/// dbar->addScaleDrawUniSide(AT_TOP, 0, 21);
-/// dbar->addScaleDrawGraphB(AT_LEFT, 0 | DBF_NOTESINSIDE, 21, 20);
+/// dbar->addEScalePixstepDrawbounds(AT_TOP, 0, 21);
+/// dbar->addScalePixstepDrawbounds(AT_LEFT, 0 | DBF_NOTESINSIDE, 21, 20);
 /// ...
 /// draw->setData(some_float_data);
 /// 
 /// Created By: Elijah Vlasov
 
 #include <QWidget>
-//#include <QFrame>
+
 
 class DrawQWidget;
 class QScrollBar;
@@ -66,7 +66,7 @@ protected:
   virtual bool  updateArea(const uarea_t& uarea, int UPDATEFOR)=0;
   virtual void  draw(QPainter&)=0;
   virtual void  mouseEvent(MOUSEEVENT /*mev*/, int /*pos_segm*/, int /*pos_atto*/, int /*dimm_segm*/, int /*dimm_atto*/, bool* /*doUpdate*/, MEQWrapper* /*selfwrap*/=nullptr){}
-  virtual void  sizeHint(ATTACHED_TO atto, int* atto_size, int* mindly, int* minsegm_pre, int* minsegm_post) const =0;
+  virtual void  sizeHint(ATTACHED_TO atto, int* atto_size, int* minsegm_main, int* minsegm_pre, int* minsegm_post) const =0;
   virtual void  relatedInit(const DrawQWidget*) {  }
   virtual void  changeColor(const QColor&)=0;
   friend class DrawBars;
@@ -108,12 +108,8 @@ void  standard_tap_symbolate(int mark, int dimmarea, int reloffset, const void*,
 }
 
 typedef QWidget*  (*mtap_qwidget_fn)(int mark, int dimmarea, int reloffset, void*);
-//QWidget*  standard_tap_lablate(*mtap_qwidget_fn)(int mark, int dimmarea, int reloffset, const void*)
-//{
-//  const char* latins = "abcdefghijklmnopqrstuvwxyz";
-//  const int   latinslen = recycle < 0 || recycle > 26? 26 : recycle;
-//  reservedResult = latins[mark % int(latinslen + latinslen*(float(reloffset)/dimmarea))];
-//}
+
+
 
 class IToolUpdateReactor
 {
@@ -131,43 +127,52 @@ class MEWScaleNM;      // NM notes between marks
 class MEWScaleTAP;  class MEWScaleTAPNN;  class MEWScaleTAPNM;
 class MEWScale;
 
-enum   // DrawBarsFlags
+enum   // Draw Bars Flags
 {
-  /// 1. marks mode
-  DBMODE_DEFAULT=0,         // one of following 3
-  DBMODE_STRETCHED_POW2=1,
-  DBMODE_STRETCHED=2,
-  DBMODE_STATIC=3,
+  DBF_SHARED=           0x1,          // use space from previous MarginElement
+  DBF_ORIENT_IGNORE=    0x2,          // ignore Draw orientation
+  DBF_ORIENT_INVERT=    0x4,          // invert Draw orientation
+  DBF_INTERVENTBANNED=  0x8,          // deny use neighboor bars for MarginElement
   
-  /// 2. flags
-  DBF_ORIENT_IGNORE=    0x10,
-  DBF_ORIENT_INVERT=    0x20,
-  DBF_SHARED=           0x40,
-  DBF_INTERVENTBANNED=  0x80,
+  DBF_ONLY2NOTES =            0x10,     // scale with first and last labels
+  DBF_NOTESINSIDE =           0x20,     // first and last labels dont cross neighboor bars
+  DBF_ENUMERATE_FROMZERO =    0x40,     // enumerator scale starts from 0, not from 1
+  DBF_ENUMERATE_SHOWLAST =    0x80,     // forever show last enumerator and attach it to last mark
   
-  DBF_ONLY2NOTES=       0x100,
-  DBF_NOTESINSIDE=      0x200,
+  DBF_MINSIZE_BY_MINSPACING = 0x100,    // minimal size of Draw sets by minspacing*marks count
+  DBF_MINSIZE_BY_PIXSTEP =    0x100,    // same as previous
   
-  DBF_LABELAREA_FULLBAR=0x400,
+  DBF_LABELAREA_FULLBAR =     0x200,    // label use neighboor bars
   
-  DBF_ENUMERATE_FROMZERO=0x800,
-  DBF_ENUMERATE_SHOWLAST=0x1000,
+  DBF_MARKS_DONTROUND =       0x400,    // mark placement rounding algorithm: dont round marks
+  DBF_MARKS_DONTROUND1 =      0x800,    // mark placement rounding algorithm: dont round marks and add 1
   
-  DBF_MINSIZE_BY_PIXSTEP=0x2000,
-  
-  DBF_MARKS_DONTROUND=  0x4000,
-  DBF_MARKS_DONTROUND1= 0x8000,
-  
-  DBF_POSTFIX_TO_PREFIX=0x10000,
-  DBF_DOCKTO_PREVMARK=  0x20000,   // for NM
-  DBF_DOCKTO_NEXTMARK=  0x40000,   // for NM
-  
-  DBF_RETAP_ON_RESIZE=  0x80000,
+  DBF_POSTFIX_TO_PREFIX =     0x1000,   // 
+  DBF_DOCKTO_PREVMARK =       0x2000,   // for NM attach each label to previous mark
+  DBF_DOCKTO_NEXTMARK =       0x4000,   // for NM attach each label to next mark
+  DBF_POSTFIX_ONLYLAST =      0x8000,   // for NM attach each label to next mark
   
   
-  DBF_PRECISION_X0 =  0x200000,
-  DBF_PRECISION_X2 =  0x400000,
-  DBF_PRECISION_X4 =  0x800000
+  DBF_PRECISION_INCREASE =    0x10000,  // add 1 more digit to default precision algorithm
+  DBF_PRECISION_MAXIMIZE =    0x20000,  // add 2 more digits to default precision algorithm
+  DBF_PRECISION_DECREASE =    0x30000,  // remove 1 more digit from default precision algorithm
+  DBF_PRECISION_MINIMIZE =    0x40000,  // remove 2 more digits (if possible) from default precision algorithm
+  
+  _DBF_PRECISION_GROUP =      0xF0000,
+  DBF_PRECISION_EXACT_0 =     0x50000,
+  DBF_PRECISION_EXACT_1 =     0x60000,
+  DBF_PRECISION_EXACT_2 =     0x70000,
+  DBF_PRECISION_EXACT_3 =     0x80000,
+  DBF_PRECISION_EXACT_4 =     0x90000,
+  DBF_PRECISION_EXACT_5 =     0xA0000,
+  DBF_PRECISION_EXACT_6 =     0xB0000,
+  
+  DBF_RETAP_ON_RESIZE =       0x100000,
+  DBF_NO_RETAP_ON_SCROLL =    0x200000,
+  
+  DBF_NATIVE_DIV_10_5_2 =     0x100000, // default
+  DBF_NATIVE_DIV_15_3_2 =     0x200000,
+  DBF_NATIVE_DIV_10 =         0x300000
 };
 
 
@@ -212,6 +217,7 @@ public:
 public:
   MEQWrapper*         addMarginElement(ATTACHED_TO atto, MarginElement* pme, MEQWrapper* pwp, bool sharedWithPrev, bool interventBanned, int mirrorAlgo=0);   // Miralg = 0 - off, 1 - mirroring ignore, 2 - mirroring invert
 public:
+  /// 1. Fixed objects
   MEWLabel*           addLabel(ATTACHED_TO atto, int flags, QString text, Qt::Alignment  align=Qt::AlignCenter, Qt::Orientation orient=Qt::Horizontal/*, float orientAngleGrad=0.0f*/);
   MEWSpace*           addSpace(ATTACHED_TO atto, int space);
   MEWColoredSpace*    addSpace(ATTACHED_TO atto, int space, QColor color, bool maxzone=false);
@@ -219,37 +225,77 @@ public:
   MEWSpace*           addContour(ATTACHED_TO atto, int space=0, bool maxzone=false);
   MEWSpace*           addContour(ATTACHED_TO atto, int space, QColor color, bool maxzone);
   
-  MEWPointer*         addPointerFixed(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen=0, const char* postfix=nullptr);
-  MEWPointer*         addPointerFloating(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen=0, const char* postfix=nullptr);
-  MEWPointer*         addPointerFixedMod(ATTACHED_TO atto, int flags, float pos, float LL, float HL, float MOD, int marklen=0, const char* postfix=nullptr);
-  MEWPointer*         addPointerFloatingMod(ATTACHED_TO atto, int flags, float pos, float LL, float HL, float MOD, int marklen=0, const char* postfix=nullptr);
-  MEWPointer*         addPointerDrawUniSide(ATTACHED_TO atto, int flags, float pos, int marklen=0, bool floating=false, const char* postfix=nullptr);
-  MEWPointer*         addPointerDrawGraphB(ATTACHED_TO atto, int flags, float pos, int marklen=0, bool floating=false, const char* postfix=nullptr);
   
-  MEWScale*           addScaleEmpty(ATTACHED_TO atto, int flags, int fixedCount=11, int pixStep_pixSpacing=30, int miniPerMaxiLIMIT=9);
-  MEWScaleNN*         addScaleFixed(ATTACHED_TO atto, int flags, float LL, float HL, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
-  MEWScaleNN*         addScaleFixedMod(ATTACHED_TO atto, int flags, float LL, float HL, float MOD, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
-  MEWScaleNM*         addScaleEnumerator(ATTACHED_TO atto, int flags, int marksCount, int pixStep_pixSpacing, unsigned int step=1, const char* postfix=nullptr);
+  /// 2. Pointers
+  /// Mark with label. Label is lineary attached to mark position: LL + p*(HL-LL)
+  /// initial position sets in constructor and can be changed through setPosition() method
+  /// position value can be relative in range 0..1, or absolute in LL..HL range.
+
+  /// Naming:       addPointer_T_S
+  /// where    T - Marks placement algorithm
+  ///          S - Labels source
+  MEWPointer*         addPointerRelativeOwnbounds(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen=0, float MOD=0.0f, const char* postfix=nullptr);
+  MEWPointer*         addPointerAbsoluteOwnbounds(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen=0, float MOD=0.0f, const char* postfix=nullptr);
+  MEWPointer*         addPointerRelativeDrawbounds(ATTACHED_TO atto, int flags, float pos, int marklen=0, float MOD=0.0f, const char* postfix=nullptr);
+  MEWPointer*         addPointerAbsoluteDrawbounds(ATTACHED_TO atto, int flags, float pos, int marklen=0, float MOD=0.0f, const char* postfix=nullptr);
+  MEWPointer*         addEPointer01Auto(ATTACHED_TO atto, int flags, float pos, int marklen=0, const char* postfix=nullptr);
   
-  MEWScaleNN*         addScaleregFixed(ATTACHED_TO atto, int flags, float LL, float HL, float minSTEP, float minSTEPbase=0, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
-  MEWScaleNN*         addScaleregFixedMod(ATTACHED_TO atto, int flags, float LL, float HL, float MOD, float minSTEP, float minSTEPbase=0, int fixedCount=11, int pixStep_pixSpacing=50, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
+  /// 3. Scales
+  /// Example:      I i i i I i i i I i i i I
+  ///     I - maxi mark, i - mini mark
+  ///     maxi mark count is limited by marksLimit value. true count depends on algorithm.
+  ///     mini mark count is regulated by miniPerMaxi value
+  /// Example 2:    I i i i I i i i I i i i I
+  ///              0.2     0.4     0.6     0.8
+  /// Example 3:    I i i i I i i i I i i i I
+  ///                   0       1       2
+  ///     labels can be placed under maxi marks (example 2): N labels for N marks, NN
+  ///       or between maxi marks (example 3): N labels for M marks, NM
+  /// 
   
-  MEWScaleTAPNN*      addScaleTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30, const char* postfix=nullptr);
-  MEWScaleTAPNM*      addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30, const char* postfix=nullptr);
-  MEWScaleTAPNM*      addScaleTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param=nullptr, int marksCount=11, int pixStep_pixSpacing=30);
+  /// Naming:      addScale_M_S
+  /// where    M - Marks placement algorithm
+  ///          S - Labels source
   
-  MEWScaleNM*         addScaleWidgetsNM(ATTACHED_TO atto, int flags, int maxperpendiculardimm, int marksNwidgetsCount, QWidget* wdgs[], int pixStep_pixSpacing=30);
+                      ///   Unmarked scales
+  MEWScale*           addScalePixstepEmpty(ATTACHED_TO atto, int flags, int marksLimit=11, int minSpacing=30, int miniPerMaxi=9);
+  MEWScale*           addScaleSymmetricEmpty(ATTACHED_TO atto, int flags, int marksLimit=11, int minSpacing=30, int miniPerMaxi=9);
+  MEWScale*           addScaleRollingEmpty(ATTACHED_TO atto, int flags, int marksLimit=11, int pixStep=30, int miniPerMaxi=9);
+
+                      ///   Marked scales
+  MEWScaleNN*         addScaleNativeOwnbounds(ATTACHED_TO atto, int flags, float LL, float HL, float minSTEP, float minSTEPbase=0, int marksLimit=11, int minSpacing=50, int miniPerMaxi=9, float MOD=0.0f, const char* postfix=nullptr);
+  MEWScaleNN*         addScalePixstepOwnbounds(ATTACHED_TO atto, int flags, float LL, float HL, int marksLimit=11, int minSpacing=50, int miniPerMaxi=9, float MOD=0.0f, const char* postfix=nullptr);
+  MEWScaleNN*         addScaleSymmetricOwnbounds(ATTACHED_TO atto, int flags, float LL, float HL, int marksLimit=11, int minSpacing=50, int miniPerMaxi=9, float MOD=0.0f, const char* postfix=nullptr);
+  MEWScaleNN*         addScaleRollingOwnbounds(ATTACHED_TO atto, int flags, float LL, float HL, int marksLimit=11, int pixStep=50, int miniPerMaxi=9, float MOD=0.0f, const char* postfix=nullptr);
+  MEWScale*           addScaleNativeDrawbounds(ATTACHED_TO atto, int flags, float minSTEP, float minSTEPbase=0, int marksLimit=11, int minSpacing=30, int miniPerMaxi=9, float MOD=0.0f, const char* postfix=nullptr);
+  MEWScale*           addScalePixstepDrawbounds(ATTACHED_TO atto, int flags, int marksLimit=11, int minSpacing=30, int miniPerMaxi=9, float MOD=0.0f, const char* postfix=nullptr);
+  MEWScale*           addScaleSymmetricDrawbounds(ATTACHED_TO atto, int flags, int marksLimit=11, int minSpacing=30, int miniPerMaxi=9, float MOD=0.0f, const char* postfix=nullptr);
+  MEWScale*           addScaleRollingDrawbounds(ATTACHED_TO atto, int flags, int marksLimit=11, int pixStep=30, int miniPerMaxi=9, float MOD=0.0f, const char* postfix=nullptr);
   
-  MEWScale*           addScaleDrawUniSide(ATTACHED_TO atto, int flags, int pixSpacing, unsigned int step=1, const char* postfix=nullptr);
-  MEWScale*           addScaleDrawUniSide(ATTACHED_TO atto, int flags, float LL, float HL, int pixSpacing, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
-  MEWScale*           addScaleDrawGraphB(ATTACHED_TO atto, int flags, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
-  MEWScale*           addScaleDrawGraphB(ATTACHED_TO atto, int flags, float LL, float HL, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
-  MEWScale*           addScaleregDrawGraphB(ATTACHED_TO atto, int flags, float minSTEP, float minSTEPbase, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
-  MEWScale*           addScaleregDrawGraphB(ATTACHED_TO atto, int flags, float LL, float HL, float minSTEP, float minSTEPbase, int marksCount=11, int pixSpacing=30, int miniPerMaxiLIMIT=9, const char* postfix=nullptr);
+                      ///   Enumerators 
+//  MEWScaleNM*         addEScaleNativeOwnbounds(ATTACHED_TO atto, int flags, int marksLimit, int minSpacing, unsigned int step=1, const char* postfix=nullptr);
+  MEWScaleNM*         addEScalePixstepOwnbounds(ATTACHED_TO atto, int flags, int marksLimit, int minSpacing, unsigned int step=1, const char* postfix=nullptr);
+  MEWScaleNM*         addEScaleRollingOwnbounds(ATTACHED_TO atto, int flags, int marksLimit, int minSpacing, unsigned int step=1, const char* postfix=nullptr);
+  MEWScale*           addEScalePixstepDrawbounds(ATTACHED_TO atto, int flags, int minSpacing, unsigned int step=1, const char* postfix=nullptr);
   
-  MEWScaleTAP*        addScaleDrawRecorderB(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, const void* param=nullptr, int miniPerMaxiLIMIT=0);
-  MEWScaleTAP*        addScaleDrawRecorderNM(ATTACHED_TO atto, int flags, int marksCount, int pixStep, mtap_qstring_fn mtfn, int maxtextlen, const void* param=nullptr, int miniPerMaxiLIMIT=0);
+                      ///   Tappers
+                        ///   Tap = call external function for get text
+  MEWScaleTAPNN*      addScalePixstepTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int minSpacing=30, const char* postfix=nullptr);
+  MEWScaleTAPNN*      addScaleSymmetricTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int minSpacing=30, const char* postfix=nullptr);
+  MEWScaleTAPNN*      addScaleRollingTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int pixStep=30, const char* postfix=nullptr);
   
+  MEWScaleTAPNM*      addScalePixstepTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int minSpacing=30, const char* postfix=nullptr);
+  MEWScaleTAPNM*      addScaleSymmetricTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int minSpacing=30, const char* postfix=nullptr);
+  MEWScaleTAPNM*      addScaleRollingTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int pixStep=30, const char* postfix=nullptr);
+
+                        ///   Tap = call external function for get QWidget object
+  MEWScaleTAPNM*      addWScalePixstepTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param=nullptr, int marksLimit=11, int minSpacing=30);
+  MEWScaleTAPNM*      addWScaleSymmetricTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param=nullptr, int marksLimit=11, int minSpacing=30);
+  MEWScaleTAPNM*      addWScaleRollingTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param=nullptr, int marksLimit=11, int pixStep=30);
+  
+  MEWScaleNM*         addWScalePixstepSetNM(ATTACHED_TO atto, int flags, int maxperpendiculardimm, int marksNwidgetsCount, QWidget* wdgs[], int minSpacing=30);
+  MEWScaleNM*         addWScaleSymmetricSetNM(ATTACHED_TO atto, int flags, int maxperpendiculardimm, int marksNwidgetsCount, QWidget* wdgs[], int minSpacing=30);
+  MEWScaleNM*         addWScaleRollingSetNM(ATTACHED_TO atto, int flags, int maxperpendiculardimm, int marksNwidgetsCount, QWidget* wdgs[], int pixStep=30);
   
 public:
   void                retrieveMElement(MEQWrapper*, bool replaceWithEqSpace);
@@ -260,6 +306,7 @@ public:
   void                removeAllMElements(bool squeeze=false);
   void                mouseEvent(MarginElement::MOUSEEVENT mev, int x, int y);
 protected:
+  void                rollbackGeometry();
   void                elemSizeHintChanged(MarginElement* me);
   friend class        MEQWrapper;
 protected:
@@ -290,6 +337,9 @@ public slots:
   void    slot_setDataTextureInterpolation(bool);
   void    slot_setDataPalette(const class IPalette*);
   void    slot_setDataPaletteDiscretion(bool);
+  void    slot_setDataPaletteRangeStart(float);
+  void    slot_setDataPaletteRangeStop(float);
+  void    slot_setDataPaletteRange(float, float);
   void    slot_setData(const float*);
   void    slot_setData(const QVector<float>&);
   void    slot_fillData(float);
@@ -307,6 +357,16 @@ public slots:
   void    slot_disableAutoUpdate(bool);
   void    slot_enableAutoUpdateByData(bool);
   void    slot_disableAutoUpdateByData(bool);
+  
+  //   additional slots for spinboxes
+  void    slot_setBoundLow_dbl(double);
+  void    slot_setBoundHigh_dbl(double);
+  void    slot_setContrast_dbl(double k, double b);
+  void    slot_setContrastK_dbl(double);
+  void    slot_setContrastKinv_dbl(double);
+  void    slot_setContrastB_dbl(double);
+  void    slot_setDataPaletteRangeStart_dbl(double);
+  void    slot_setDataPaletteRangeStop_dbl(double);
 public slots:
 //  void    slot_setBackgroundColor(const QColor& color);
   void    slot_setForegroundColor(const QColor& color);
@@ -360,7 +420,7 @@ public slots:
 };
 
 
-class DrawOverlayProactive;
+class IOverlayReactor;
 class MEWPointer: public MEQWrapper
 {
   Q_OBJECT
@@ -369,16 +429,19 @@ public:
   typedef float (*proconvert_fn)(float x, float y);
   typedef float (*proconvert_bi_fn)(float x, float y, float* ptrbi01);
 public:
-  DrawOverlayProactive*    createProactive();
-//  DrawOverlayProactive*    createProactive(float start_x, float start_y);
-//  DrawOverlayProactive*    createProactive(proconvert_fn);
-//  DrawOverlayProactive*    createProactive(proconvert_bi_fn);
-  
+  IOverlayReactor*    createReactor();
 //  void  setPrefix(const char* str);
 //  void  setPostfix(const char* str);
 public slots:
   void  setPosition(float pos01);
   void  setPositionBifunc(float pos01, float posText);
+public slots:
+  void  setBounds(float LL, float HL);
+  void  setBoundLow(float LL);
+  void  setBoundHigh(float HL);
+  void  setBounds(double LL, double HL);
+  void  setBoundLow(double LL);
+  void  setBoundHigh(double HL);
 };
 
 class MEWScale: public MEQWrapper
@@ -416,13 +479,13 @@ class MEWScaleNM: public MEWScale
   friend class DrawBars;
 };
 
-class MEWScaleTAP: public MEWScale
-{
-  Q_OBJECT
-  friend class DrawBars;
-public slots:
-  void  tap();
-};
+//class MEWScaleTAP: public MEWScale
+//{
+//  Q_OBJECT
+//  friend class DrawBars;
+//public slots:
+//  void  tap();
+//};
 
 class MEWScaleTAPNN: public MEWScaleNN
 {

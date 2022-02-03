@@ -53,7 +53,7 @@ class FshTraceGenerator
 public:
   enum  OCG_INCLUDE_BITS  {  OINC_NONE=0, OINC_GETVALUE=1, OINC_RANDOM=2, OINC_DATABOUNDS=4 /*, OINC_PORTIONS=4*/ };
 public:
-  FshTraceGenerator(const AbstractDrawOverlay::uniforms_t& ufms, int overlay, bool rotated, char* deststring, int ocg_include_bits = 0);
+  FshTraceGenerator(const _DrawOverlay::uniforms_t& ufms, int overlay, bool rotated, char* deststring, int ocg_include_bits = 0);
   int  written() const { return m_offset; }
 private:
   void  _gtb(OVL_ORIENTATION orient);

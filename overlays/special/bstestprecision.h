@@ -13,7 +13,7 @@ public:
   OTestPrecision();
 protected:
   virtual int fshTrace(int overlay, bool rotated, char* to) const;
-//  virtual bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void*, bool* doStop);
+//  virtual bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop);
 };
 
 #endif // BSTESTPRECISION_H

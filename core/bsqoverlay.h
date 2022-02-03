@@ -14,8 +14,6 @@ class MQOverlay: public QObject
   Q_OBJECT
 protected:  
   DrawOverlay*     m_povl;
-  bool          c_visible;
-  float         c_opacity;    // cached opacity for roll back visible state
   bool          m_owner;
 public:
   MQOverlay(DrawOverlay* ovl, bool owner=false, QObject* parent=nullptr);
@@ -25,7 +23,7 @@ public:
   DrawOverlay* operator*() { return m_povl; }
   const DrawOverlay* operator*() const { return m_povl; }
 public slots:
-  void      setOpacity(float opacity); /// 0 for invisible
+  void      setOpacity(float opacity);
   void      setThickness(float thickness){  m_povl->setThickness(thickness); }
   void      setSlice(float slice){  m_povl->setSlice(slice); }
   
@@ -44,7 +42,7 @@ public:
   bool      opaque() const {  return m_povl->opaque(); }
   float     getThickness() const { return m_povl->getThickness(); }
   float     getSlice() const { return m_povl->getSlice(); }
-  bool      isVisible() const { return m_povl->getOpacity() != 1.0f; }
+  bool      isVisible() const { return m_povl->isVisible(); }
 };
 
 class MQOverlayLined: public MQOverlay
@@ -76,24 +74,24 @@ public:
 
 /****/
 
-class OQRemitPress_Release: public QObject, public DrawOverlayProactive
+class OQRemitPress_Release: public QObject, public IOverlayReactor
 {
   Q_OBJECT
   bool    m_horz;
 public:
   OQRemitPress_Release(bool isHorz): m_horz(isHorz){}
-  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE orm, const void* data, bool* /*doStop*/);
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* doStop);
 signals:
   void  mouseAction(bool activePhase, float center);
 };
 
-class OQRemitPressMove_Release: public QObject, public DrawOverlayProactive
+class OQRemitPressMove_Release: public QObject, public IOverlayReactor
 {
   Q_OBJECT
   bool    m_horz;
 public:
   OQRemitPressMove_Release(bool isHorz): m_horz(isHorz){}
-  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE orm, const void* data, bool* /*doStop*/);
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* doStop);
 signals:
   void  mouseAction(bool activePhase, float center);
 };
@@ -103,7 +101,7 @@ signals:
 //{
 //  Q_OBJECT
 //public:
-//  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void*, bool* /*doStop*/);
+//  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t* ct, bool* /*doStop*/);
 //signals:
 //  void  doubleClicked();
 //  void  doubleClicked(QPoint);

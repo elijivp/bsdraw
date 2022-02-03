@@ -177,5 +177,5 @@ void  OMarkFigures::updateFigure(unsigned int idx, float x, float y, float color
 
 void OMarkFigures::updateFinished()
 {
-  DrawOverlay::overlayUpdateParameter();
+  _DrawOverlay::updateParameter(false, true);
 }

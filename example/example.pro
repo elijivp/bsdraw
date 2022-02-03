@@ -217,7 +217,8 @@ HEADERS  += \
     ../palettes/advanced/idl_nature.h \
     ../palettes/QPaletteExtractor.h \
     ../palettes/bspalettes_spec.h \
-    ../specdraws/bsdrawhint.h
+    ../specdraws/bsdrawhint.h \
+    ../core/bsgraphopts.h
 
 RESOURCES += \
     ../palettes/QPaletteBox.qrc

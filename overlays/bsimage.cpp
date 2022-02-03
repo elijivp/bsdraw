@@ -93,13 +93,13 @@ bool OVLQImage::isAlphaBanned() const
 
 void DrawOverlaySimpleImage::reUpdate()
 {
-  updatePublic();
+  updateParameter(true, true);
 }
 
 bool  DrawOverlaySimpleImage::setImage(QImage* image, OVLQImage::IMAGECONVERT icvt, bool autorotated, bool detach)
 {
   bool result = assignImage(image, icvt, autorotated, detach);
-  updatePublic();
+  updateParameter(true, true);
   return result;
 }
 

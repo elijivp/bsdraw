@@ -19,13 +19,13 @@ OBlocker::OBlocker(float r, float g, float b): m_blockstate(1)
 void    OBlocker::setLocked(bool locked)
 {
   m_blockstate = locked? 1 : 0;
-  updateParameter(false);
+  updateParameter(false, true);
 }
 
 void    OBlocker::setUnlocked(bool unlocked)
 {
   m_blockstate = unlocked? 0 : 1;
-  updateParameter(false);
+  updateParameter(false, true);
 }
 
 int OBlocker::fshTrace(int overlay, bool rotated, char *to) const
@@ -42,7 +42,7 @@ int OBlocker::fshTrace(int overlay, bool rotated, char *to) const
   return ocg.written();
 }
 
-bool OBlocker::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void*, bool* doStop)
+bool OBlocker::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t*, bool* doStop)
 {
   if (m_blockstate != 0)
   {
@@ -114,7 +114,7 @@ int OBlockerDots::fshTrace(int overlay, bool rotated, char *to) const
   return ocg.written();
 }
 
-bool OBlockerDots::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void*, bool* doStop)
+bool OBlockerDots::overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool*)
 {
 //  if (m_blockstate != 0)
 //  {

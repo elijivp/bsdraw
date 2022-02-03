@@ -76,7 +76,7 @@ MainWindow::MainWindow(QWidget *parent)
   }
   {
     /// 4 row 1 column
-    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/8, COUNT_PORTIONS, graphopts_t::goHistogramCrossMax(), coloropts_t::copts(CP_OWNRANGE_SYMMETRIC, 1.0f, 0.2f));
+    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/8, COUNT_PORTIONS, graphopts_t::goHistogramCrossMax(), coloropts_t::copts(CP_PAINTED_SYMMETRIC, 1.0f, 0.2f));
     pDraw->setScalingLimitsHorz(8);
     pDraw->setScalingLimitsVert(8);
 //    pDraw->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINETOP, 1, 1.0f,1.0f,1.0f));
@@ -95,14 +95,14 @@ MainWindow::MainWindow(QWidget *parent)
   pMainLayout->addLayout(pLayout);
   {
     /// 1 row 2 column
-    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/2, COUNT_PORTIONS, graphopts_t::goInterp(0.0f, DE_CENTER), coloropts_t::copts(CP_SINGLE, 0.9f, 0.1f));
+    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/2, COUNT_PORTIONS, graphopts_t::goInterp(0.0f, DE_CENTER), coloropts_t::copts(CP_MONO, 0.9f, 0.1f));
     pDraw->setDataPalette(&palette_gnu_latte);
     pDraw->setData(arr_random);
     pLayout->addWidget(pDraw);
   }
   {
     /// 2 row 2 column
-    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goDots(), coloropts_t::copts(CP_RANGE, 1.0f, 0.5f));
+    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goDots(), coloropts_t::copts(CP_REPAINTED, 1.0f, 0.5f));
 //    pDraw->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINERIGHTBOTTOM, 0, 0.6f,0.6f,0.6f));
     pDraw->setPostMask(DPostmask::postmask(PO_EMPTY, PM_DOT, 0, 0.6f,0.6f,0.6f));
     pDraw->setScalingLimitsSynced(4);
@@ -144,15 +144,15 @@ MainWindow::MainWindow(QWidget *parent)
   }
   {
     /// 2 row 3 column
-    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goDots(0, 0.0f, DE_CENTER), coloropts_t::copts(CP_RANGE));
+    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goDots(0, 0.0f, DE_CENTER), coloropts_t::copts(CP_REPAINTED));
     pDraw->setDataPalette(&palette_gnu_latte);
     pDraw->setData(arr_random);
     pLayout->addWidget(pDraw);
   }
   {
     /// 3 row 3 column
-//    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goHistogramCrossMax(0.0f, DE_CENTER), DrawGraph::CP_SINGLE, 0.5f, 1.0f);
-    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goHistogramCrossMax(PR_SUMMARY, DE_NONE), coloropts_t::copts(CP_SINGLE, 0.5f, 1.0f));
+//    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goHistogramCrossMax(0.0f, DE_CENTER), DrawGraph::CP_MONO, 0.5f, 1.0f);
+    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goHistogramCrossMax(PR_SUMMARY, DE_NONE), coloropts_t::copts(CP_MONO, 0.5f, 1.0f));
     pDraw->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINELEFTBOTTOM, 0, 0.0f));
     pDraw->setScalingLimitsVert(5);
     pDraw->setDataPalette(&palette_gnu_latte);

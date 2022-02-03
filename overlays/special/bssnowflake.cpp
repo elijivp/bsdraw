@@ -34,7 +34,7 @@ OSnowflake::~OSnowflake()
 void OSnowflake::update()
 {
   m_counter++;
-  updateParameter(false);
+  updateParameter(false, true);
 }
 
 int OSnowflake::fshTrace(int overlay, bool rotated, char *to) const
@@ -77,12 +77,12 @@ int OSnowflake::fshTrace(int overlay, bool rotated, char *to) const
   return ocg.written();
 }
 
-bool OSnowflake::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*)
+bool OSnowflake::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool*)
 {
   if (oreact == ORM_LMPRESS)
   {
-    m_click[0] = ((const float*)dataptr)[0];
-    m_click[1] = ((const float*)dataptr)[1];
+    m_click[0] = ct->fx_ovl;
+    m_click[1] = ct->fy_ovl;
     m_click[2] = float(m_counter);
     m_click[3] = 1.0f;
     return true;

@@ -400,26 +400,32 @@ void FshMainGenerator::main_end(const DPostmask &fsp)
     {
       m_offset += msprintf(&m_to[m_offset],   "loc_f4_sets = ovl_exsettings%D;" SHNL
                                               "loc_i2_pos = ivec2(0,0);" SHNL
-                                              "if (step(1.0, loc_f4_sets[0]) != 1)" SHNL
+                                              "bool ovl_visible%d = ovl_visible%d && step(1.0, loc_f4_sets[0]) != 1;" SHNL
+                                              "if  (ovl_visible%d)" SHNL
                                               "{" SHNL
                                                 "ovTrace = overlayTrace%d(icell, ocoords, loc_f4_sets[1], ovl_position%d, vec3(post_mask[0], post_mask[3], ppb_in), loc_i2_pos);" SHNL
                                                 "if (sign(ovTrace[3]) != 0.0 && step(ovMix, loc_f4_sets[2]) == 1.0)" SHNL
                                                   "result = mix(result, overlayColor%d(ovTrace, result), 1.0 - loc_f4_sets[0]);" SHNL
                                               "}" SHNL
                                               "ivec2 ovl_position%d = loc_i2_pos;" SHNL,
-                                              i+1, i+1, m_ovls[i].link + 1, i+1, i+1);
+                                              i+1, 
+                                              i+1, m_ovls[i].link + 1, i+1, // ovl_visible x3
+                                              i+1, m_ovls[i].link + 1, i+1, i+1);
     }
     else
     {
       m_offset += msprintf(&m_to[m_offset],   "loc_f4_sets = ovl_exsettings%D;" SHNL
                                               "loc_i2_pos = ivec2(0,0);" SHNL
-                                              "if (step(1.0, loc_f4_sets[0]) != 1)" SHNL
+                                              "bool ovl_visible%d = step(1.0, loc_f4_sets[0]) != 1;" SHNL
+                                              "if  (ovl_visible%d)" SHNL
                                               "{" SHNL
                                                  "ovTrace = overlayTrace%d(icell, ocoords, loc_f4_sets[1], ivec2(0,0), vec3(post_mask[0], post_mask[3], ppb_in), loc_i2_pos);" SHNL
                                                  "if (sign(ovTrace[3]) != 0.0 && step(ovMix, loc_f4_sets[2]) == 1.0) result = mix(result, overlayColor%d(ovTrace, result), 1.0 - loc_f4_sets[0]);" SHNL
                                               "}" SHNL
                                               "ivec2 ovl_position%d = loc_i2_pos;" SHNL,
-                                              i+1, i+1, i+1, i+1);
+                                              i+1, 
+                                              i+1, i+1, // ovl_visible x2
+                                              i+1, i+1, i+1);
     }
   
   static const char fsh_end[] =   "gl_FragColor = vec4(result, 0.0);" SHNL "}" SHNL;

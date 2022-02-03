@@ -45,18 +45,21 @@ inline  void  _bsdraw_update_bnd(const float k, const float b, bounds_t* bnd)
 class DrawOverlayEmpty: public DrawOverlay
 {
 public:
+  DrawOverlayEmpty(): DrawOverlay(true){}
   virtual int  fshTrace(int, bool, char*) const;
   virtual int  fshColor(int, char*) const;
 };
 
 //#########################
-class IProactive
+
+class DrawEventReactor
 {
 public:
-  virtual bool  overlayReactionMouse(class DrawQWidget*, OVL_REACTION_MOUSE, const void*, bool* /*doStop*/){  return false; }
-  virtual bool  overlayReactionKey(class DrawQWidget*, int /*key*/, int /*modifiersOMK*/, bool* /*doStop*/){  return false; }
-  virtual ~IProactive(){}
+  virtual bool  reactionMouse(class DrawQWidget*, OVL_REACTION_MOUSE, const coordstriumv_t*, bool* /*doStop*/){  return false; }
+  virtual bool  reactionKey(class DrawQWidget*, int /*key*/, int /*modifiersOMK*/, bool* /*doStop*/){  return false; }
+  virtual ~DrawEventReactor(){}
 };
+
 //#########################
 
 struct dcsizecd_t        /// drawcore size components (for 1) direction
@@ -108,7 +111,7 @@ protected:
   unsigned int          m_splitterB;
 protected:
   const IPalette*       m_ppal;
-  bool                  m_ppaldiscretise;
+  bool                  m_ppaldiscretise;       // inited by true if portions > 1
   float                 m_clearcolor[3];
   float                 m_ppalrange[2];
   enum                  { PRNG_START, PRNG_STOP };
@@ -168,20 +171,21 @@ protected:
   
   struct overlays_t
   {
-    DrawOverlay*           povl;
-    int                 upcount;
-    int                 outloc;
-    unsigned int        uf_count;
-    uniform_located_t*  uf_arr;
-    msstruct_t          olinks;
-    void                _reinit(DrawOverlay* p, unsigned int ufcount){ povl = p; upcount = 1; outloc = -1;  if (uf_count) delete []uf_arr;  uf_count = ufcount; if(uf_count) uf_arr = new uniform_located_t[ufcount]; olinks.type = msstruct_t::MS_SELF; }
+    DrawOverlay*          povl;
+    IOverlayReactor*      prct;
+    unsigned int          ponger_reinit;
+    unsigned int          ponger_update;
+    int                   outloc;
+    unsigned int          uf_count;
+    uniform_located_t*    uf_arr;
+    msstruct_t            olinks;
+    void                _reinit(DrawOverlay* p, unsigned int ufcount){ povl = p; prct = povl->reactor(); ponger_reinit = ponger_update = 0; outloc = -1;  if (uf_count) delete []uf_arr;  uf_count = ufcount; if(uf_count) uf_arr = new uniform_located_t[ufcount]; olinks.type = msstruct_t::MS_SELF; }
     void                _setdriven(int driverid){ olinks.type = msstruct_t::MS_DRIVEN;  olinks.details.drivenid = driverid; }
-    overlays_t(): povl(nullptr), uf_count(0){}
+    overlays_t(): povl(nullptr), prct(nullptr), uf_count(0){}
     ~overlays_t() { if (uf_count) delete[]uf_arr; }
-    
   }                     m_overlays[OVLLIMIT];
   unsigned int          m_overlaysCount;
-  IProactive*           m_proactive;
+  DrawEventReactor*           m_proactive;
   bool                  m_proactiveOwner;
   DrawOverlayEmpty      m_overlaySingleEmpty;
 public:
@@ -194,13 +198,15 @@ public:
                                                         m_scalingA(1), m_scalingB(1),
                                                         m_scalingAMin(1), m_scalingAMax(0),
                                                         m_scalingBMin(1), m_scalingBMax(0), m_scalingIsSynced(false),
-                                                        m_ppal(nullptr), m_ppaldiscretise(false), m_doclearbackground(true), m_clearsource(CS_WIDGET), 
+                                                        m_ppal(nullptr), m_doclearbackground(true), m_clearsource(CS_WIDGET), 
                                                         m_groundType(GND_NONE), m_groundData(nullptr), m_groundDataFastFree(true),
                                                         m_groundMipMapping(false), m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
                                                         m_postMask(DPostmask::empty()),
                                                         m_overlaysCount(0), m_proactive(nullptr), m_proactiveOwner(true)
   {
     _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);
+    
+    m_ppaldiscretise = m_allocatedPortions > 1;
     
     m_impulsedata.type = impulsedata_t::IR_OFF;
     m_impulsedata.count = 0;
@@ -594,10 +600,10 @@ public:
   bool  mirroredHorz() const { return orientationMirroredHorz(m_orient); }
   bool  mirroredVert() const { return orientationMirroredVert(m_orient); }
 public:
-  IProactive*  setProactive(IProactive* op, bool owner=true)
+  DrawEventReactor*  setProactive(DrawEventReactor* op, bool owner=true)
   {
     m_proactiveOwner = owner;
-    IProactive* result = m_proactive; m_proactive = op; return result;
+    DrawEventReactor* result = m_proactive; m_proactive = op; return result;
   }
 public:
   /// 3. Overlays
@@ -721,13 +727,11 @@ public:
   }
   DPostmask    postMask() const { return m_postMask; }
 protected:
-  virtual void            overlayUpdate(int ovl, bool internal, bool noupdate, bool recreate)
+  virtual void            overlayUpdate(bool reinit, bool pendonly)
   {
-    m_overlays[ovl].upcount += recreate? 1001 : 1;
-    m_bitmaskPendingChanges |= (internal? PC_INIT : PC_PARAMSOVL);
-    if (internal == true || (!internal && noupdate == false))
-      if (!autoUpdateBanned(RD_BYOVL_ACTIONS))
-        callWidgetUpdate();
+    m_bitmaskPendingChanges |= reinit? PC_INIT : PC_PARAMSOVL;
+    if (pendonly) return;
+    if (!autoUpdateBanned(RD_BYOVL_ACTIONS))  callWidgetUpdate();
   }
   virtual void            innerOverlayReplace(int ovlid, DrawOverlay* novl, bool owner)
   {
@@ -736,7 +740,6 @@ protected:
     {
       novl->assign(ovlid, this, owner);
     }
-    m_overlays[ovlid].upcount = 1001;
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
   }

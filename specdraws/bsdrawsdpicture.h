@@ -49,7 +49,7 @@ class BSQMarkerSelector: public BSQProactiveSelectorBase
 public:
   BSQMarkerSelector(bool emitEmptyMarker, OVL_REACTION_MOUSE action=ORM_LMPRESS, OVL_REACTION_MOUSE drop=ORM_RMPRESS): 
     BSQProactiveSelectorBase(action, drop), m_emitEmptyMarker(emitEmptyMarker) {}
-  virtual bool  overlayReactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const void*, bool* /*doStop*/);
+  virtual bool  reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const coordstriumv_t*, bool* /*doStop*/);
 signals:
   void  markerClicked(int);
   void  markerDropped();

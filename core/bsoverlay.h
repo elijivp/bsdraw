@@ -18,7 +18,7 @@ class DrawOverlaySimple: public DrawOverlay
 {
   int   m_inversive;
 public:
-  DrawOverlaySimple(int inversive_algo=0): m_inversive(inversive_algo){}
+  DrawOverlaySimple(int inversive_algo=0, bool visible=true): DrawOverlay(visible), m_inversive(inversive_algo){}
 protected:
   virtual int fshColor(int overlay, char *to) const;
 };
@@ -29,18 +29,18 @@ protected:
   linestyle_t       m_linestyle;
 //  linestyle_t       m_linestyle_outside;
 public:
-  void              setLineStyle(const linestyle_t& linestyle){  m_linestyle = linestyle; updatePublic(); }
+  void              setLineStyle(const linestyle_t& linestyle, bool update=true){  m_linestyle = linestyle; updateParameter(true, update); }
   linestyle_t       getLineStyle() const {  return m_linestyle;  }
 public:
-  _DrawOverlayLined(): m_linestyle(linestyle_solid(1,1,1)){}
-  _DrawOverlayLined(const linestyle_t& linestyle): m_linestyle(linestyle){}
+  _DrawOverlayLined(bool visible): DrawOverlay(visible), m_linestyle(linestyle_solid(1,1,1)){}
+  _DrawOverlayLined(bool visible, const linestyle_t& linestyle): DrawOverlay(visible), m_linestyle(linestyle){}
 };
 
 class DrawOverlayTraced: public _DrawOverlayLined
 {
 public:
-  DrawOverlayTraced(): _DrawOverlayLined(){}
-  DrawOverlayTraced(const linestyle_t& linestyle): _DrawOverlayLined(linestyle){}
+  DrawOverlayTraced(bool visible=true): _DrawOverlayLined(visible){}
+  DrawOverlayTraced(const linestyle_t& linestyle, bool visible=true): _DrawOverlayLined(visible, linestyle){}
 protected:
   virtual int fshColor(int overlay, char *to) const;
 };
@@ -50,7 +50,8 @@ class DrawOverlayHard: public _DrawOverlayLined
 private:
   dmtype_palette_t    m_dm_palette;
 public:
-  DrawOverlayHard(const IPalette* ipal, bool discrete, const linestyle_t& linestyle=linestyle_solid(1,1,1)): _DrawOverlayLined(linestyle)
+  DrawOverlayHard(const IPalette* ipal, bool discrete, const linestyle_t& linestyle=linestyle_solid(1,1,1), bool visible=true): 
+    _DrawOverlayLined(visible, linestyle)
   {
     m_dm_palette.ppal = ipal;
     m_dm_palette.discrete = discrete;
@@ -60,7 +61,7 @@ public:
   {
     m_dm_palette.ppal = ipal;
     m_dm_palette.discrete = discrete;
-    DrawOverlay::overlayUpdateParameter(true); 
+    _DrawOverlay::updateParameter(true, true); 
   }
 protected:
   virtual int fshColor(int overlay, char *to) const;
@@ -123,18 +124,18 @@ public:
   typedef   OVLCoordsStatic   coords_type_t;
 };
 
-class OVLCoordsDynamic: public OVLCoordsStatic, virtual protected AbstractDrawOverlay
+class OVLCoordsDynamic: public OVLCoordsStatic, virtual protected _DrawOverlay
 {
 public:
   OVLCoordsDynamic(COORDINATION cn, float x, float y): OVLCoordsStatic(cn, x, y) {  appendUniform(DT_2F, (const void*)&m_coords); }
   OVLCoordsDynamic(OVLCoordsStatic* cpy, float x, float y): OVLCoordsStatic(cpy, x, y) { appendUniform(DT_2F, (const void*)&m_coords); }
-  void          setCoordinates(float x, float y, bool update=true){ m_coords.x = x; m_coords.y = y; if (update) overlayUpdateParameter(); }
-  void          setCoordX(float x, bool update=true){ m_coords.x = x; if (update) overlayUpdateParameter(); }
-  void          setCoordY(float y, bool update=true){ m_coords.y = y; if (update) overlayUpdateParameter(); }
+  void          setCoordinates(float x, float y, bool update=true){ m_coords.x = x; m_coords.y = y; updateParameter(false, update); }
+  void          setCoordX(float x, bool update=true){ m_coords.x = x; updateParameter(false, update); }
+  void          setCoordY(float y, bool update=true){ m_coords.y = y; updateParameter(false, update); }
 public:
-  void          moveCoordinates(float dx, float dy, bool update=true){ m_coords.x += dx; m_coords.y += dy; if (update) overlayUpdateParameter(); }
-  float         moveCoordX(float dx, bool update=true){ m_coords.x += dx; if (update) overlayUpdateParameter(); return m_coords.x; }
-  float         moveCoordY(float dy, bool update=true){ m_coords.y += dy; if (update) overlayUpdateParameter(); return m_coords.y; }
+  void          moveCoordinates(float dx, float dy, bool update=true){ m_coords.x += dx; m_coords.y += dy; updateParameter(false, update); }
+  float         moveCoordX(float dx, bool update=true){ m_coords.x += dx; updateParameter(false, update); return m_coords.x; }
+  float         moveCoordY(float dy, bool update=true){ m_coords.y += dy; updateParameter(false, update); return m_coords.y; }
 public:
   typedef   OVLCoordsDynamic  coords_type_t;
 };
@@ -160,10 +161,10 @@ public:
   typedef OVLDimms1Static   dimms_type_t;
 };
 
-class OVLDimms1Dynamic: public OVLDimms1Static, virtual protected AbstractDrawOverlay
+class OVLDimms1Dynamic: public OVLDimms1Static, virtual protected _DrawOverlay
 {
 public:
-  void          setSide(float side, bool update=true) { m_side = side; if (update) overlayUpdateParameter(); }
+  void          setSide(float side, bool update=true) { m_side = side; updateParameter(false, update); }
   OVLDimms1Dynamic(COORDINATION cn, float aside): OVLDimms1Static(cn, aside) { appendUniform(DT_1F, (const void*)&m_side); }
   typedef OVLDimms1Dynamic  dimms_type_t;
 };
@@ -184,11 +185,11 @@ public:
   typedef OVLDimms2Static   dimms_type_t;
 };
 
-class OVLDimms2Dynamic: public OVLDimms2Static, virtual protected AbstractDrawOverlay
+class OVLDimms2Dynamic: public OVLDimms2Static, virtual protected _DrawOverlay
 {
 public:
   OVLDimms2Dynamic(COORDINATION cn, float width, float height): OVLDimms2Static(cn, width, height){ appendUniform(DT_2F, (const void*)&m_sides); }
-  void          setDimms(float width, float height, bool update=true){ m_sides.w = width; m_sides.h = height; if (update) overlayUpdateParameter(false); }
+  void          setDimms(float width, float height, bool update=true){ m_sides.w = width; m_sides.h = height; updateParameter(false, update); }
   typedef OVLDimms2Dynamic   dimms_type_t;
 };
 
@@ -211,7 +212,7 @@ public:
   }
   typedef OVLDimmsStatic     dimms_type_t;
 };
-class OVLDimmsDynamic: virtual protected AbstractDrawOverlay
+class OVLDimmsDynamic: virtual protected _DrawOverlay
 {
 protected:
   COORDINATION  m_cn;
@@ -233,7 +234,7 @@ public:
 
 /////////
 
-class OVLCoordsDimmsLinked: virtual protected AbstractDrawOverlay
+class OVLCoordsDimmsLinked: virtual protected _DrawOverlay
 {
 protected:
   COORDINATION  m_cn;

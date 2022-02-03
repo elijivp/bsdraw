@@ -7,7 +7,7 @@
 
 #include "../../core/bsoverlay.h"
 
-class OBlocker: public DrawOverlaySimple, public OVLCoordsOff, public OVLDimmsOff
+class OBlocker: public DrawOverlaySimple, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
 {
   int     m_blockstate;
   float   m_clr[3];
@@ -19,10 +19,11 @@ public:
   bool    isLocked() const {  return m_blockstate; }
 protected:
   virtual int fshTrace(int overlay, bool rotated, char* to) const;
-  virtual bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void*, bool* doStop);
+  virtual IOverlayReactor*  reactor() { return this; }
+  virtual bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop);
 };
 
-class OBlockerDots: public DrawOverlaySimple, public OVLCoordsOff, public OVLDimmsOff
+class OBlockerDots: public DrawOverlaySimple, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
 {
   int     m_mod[2];
   float   m_mixdot, m_mixback;
@@ -33,7 +34,8 @@ public:
   void    setUnlocked(bool unlocked);
 protected:
   virtual int fshTrace(int overlay, bool rotated, char* to) const;
-  virtual bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void*, bool* doStop);
+  virtual IOverlayReactor*  reactor() { return this; }
+  virtual bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop);
 };
 
 

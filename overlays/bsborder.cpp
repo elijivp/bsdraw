@@ -7,24 +7,6 @@
 #include "../core/sheigen/bsshgentrace.h"
 
 
-//class AbstractBorder: virtual public DrawOverlay
-//{
-//  bool    m_banclicks;
-//public:
-//  AbstractBorder(bool banclicks): m_banclicks(banclicks){}
-//protected:
-//  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void *dataptr, bool* doStop);
-//  virtual bool  clickBanned(float x, float y) const =0;
-//};
-
-
-//bool  AbstractBorder::overlayReactionMouse(OVL_REACTION_MOUSE, const void *dataptr, bool* doStop)
-//{
-//  if (m_banclicks)
-//    *doStop = clickBanned(((const float*)dataptr)[0], ((const float*)dataptr)[1]);
-//  return m_banclicks;
-//}
-
 OBorder::OBorder(const linestyle_t &kls, int lineset): DrawOverlayTraced(kls), OVLDimmsOff(), m_lineset(lineset)
 {
 }
@@ -59,10 +41,10 @@ _OSelected::_OSelected(unsigned int widthpixels, int default_selection, const li
   appendUniform(DT_1I, &m_selected);
 }
 
-void _OSelected::setSelection(int select)
+void _OSelected::setSelection(int select, bool update)
 {
   m_selected = select;
-  overlayUpdateParameter();
+  updateParameter(false, update);
 }
 
 
@@ -204,15 +186,15 @@ int OToons::fshTrace(int overlay, bool rotated, char *to) const
 //  return false;
 //}
 
-bool OToons::overlayReactionMouse(OVL_REACTION_MOUSE, const void*, bool*)
-{
-//  if (m_banclicks)
-//  {
-//    float x = ((float*)dataptr)[0] - 0.5f;
-//    float y = ((float*)dataptr)[1] - 0.5f;
-//    *doStop = x*x + y*y > m_radius2;
-//  }
-  return m_banclicks;
-}
+//bool OToons::overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool*)
+//{
+////  if (m_banclicks)
+////  {
+////    float x = ((float*)dataptr)[0] - 0.5f;
+////    float y = ((float*)dataptr)[1] - 0.5f;
+////    *doStop = x*x + y*y > m_radius2;
+////  }
+//  return m_banclicks;
+//}
 
 

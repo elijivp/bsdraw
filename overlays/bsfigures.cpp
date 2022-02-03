@@ -69,7 +69,7 @@ int   OFCircle::fshTrace(int overlay, bool rotated, char* to) const
 //void  OFCircle::updateRadius(float radius)
 //{
 //  OVLDimms1Static::Dimms(radius,radius,radius,radius);
-//  overlayUpdateParameter();
+//  updateParameter(false, update);
 //}
 
 
@@ -109,7 +109,7 @@ int OFSquare::fshTrace(int overlay, bool rotated, char *to) const
 //void  OFSquare::updateSide(float aside)
 //{
 //  OVLDimms1Static::laterInitDimms(aside,aside,aside,aside);
-//  overlayUpdateParameter();
+//  updateParameter(false, update);
 //}
 
 
@@ -149,7 +149,7 @@ int OFSquareCC::fshTrace(int overlay, bool rotated, char *to) const
 //void  OFSquareCC::updateHalfside(float aside)
 //{
 //  OVLDimms1Static::laterInitDimms(aside,aside,aside,aside);
-//  overlayUpdateParameter();
+//  updateParameter(false, update);
 //}
 
 /////////////////////////////////////////////
@@ -188,7 +188,7 @@ int OFTriangle::fshTrace(int overlay, bool rotated, char *to) const
 //void OFTriangle::updateSide(float side)
 //{
 //  OVLDimms1Static::laterInitDimms(side,side,side,side);
-//  overlayUpdateParameter();
+//  updateParameter(false, update);
 //}
 
 

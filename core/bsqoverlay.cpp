@@ -3,12 +3,9 @@
 /// Created By: Elijah Vlasov
 #include "bsqoverlay.h"
 
-#if 1
 
 MQOverlay::MQOverlay(DrawOverlay* ovl, bool owner, QObject* parent): QObject(parent), m_povl(ovl), m_owner(owner)
 {
-  c_opacity = m_povl->getOpacity();
-  c_visible = c_opacity < 1.0f;
 }
 
 MQOverlay::~MQOverlay()
@@ -19,21 +16,12 @@ MQOverlay::~MQOverlay()
 
 void MQOverlay::setOpacity(float opacity)
 {
-  if (c_opacity != opacity)
-  {
-    c_opacity = opacity;
-    c_visible = c_opacity < 1.0f;
-    m_povl->setOpacity(opacity);
-  }
+  m_povl->setOpacity(opacity);
 }
 
 void MQOverlay::setVisible(bool v)
 {
-  if (v != c_visible)
-  {
-    m_povl->setOpacity(v? c_opacity : 1.0f);
-    c_visible = v;
-  }
+  m_povl->setVisible(v);
 }
 
 void MQOverlay::show()
@@ -63,81 +51,9 @@ void MQOverlay::remove()
 }
 
 
-#else
-void MQOverlay::_vischecker()
-{
-  float unfortunchanged_opacity = m_povl->getOpacity();
-  if (unfortunchanged_opacity != 1.0f)
-    c_opacity = unfortunchanged_opacity;
-  else
-  {
-    if (c_opacity == 1.0f)
-      c_opacity = 0.0f;
-    m_povl->setOpacity(c_opacity);
-  }
-}
-
-MQOverlay::MQOverlay(DrawOverlay* ovl, bool owner, QObject* parent): QObject(parent), m_povl(ovl), m_owner(owner)
-{
-  c_opacity = m_povl->getOpacity();
-  
-}
-
-MQOverlay::~MQOverlay()
-{
-  if (m_owner)
-    delete m_povl;
-}
-
-void MQOverlay::setOpacity(float opacity)
-{
-  m_povl->setOpacity(c_opacity = opacity);
-}
-
-void MQOverlay::setVisible(bool v)
-{
-  if (v)
-    _vischecker();
-  else
-    m_povl->setOpacity(1.0f);
-}
-
-void MQOverlay::show()
-{
-  _vischecker();
-}
-
-void MQOverlay::hide()
-{
-  m_povl->setOpacity(1.0f);
-}
-
-DrawOverlay* MQOverlay::replace(DrawOverlay* ovl)
-{
-  DrawOverlay* tmp = m_povl;
-  m_povl->eject(ovl, false);
-  m_povl = ovl;
-  return tmp;
-}
-
-void MQOverlay::remove()
-{
-  m_povl->eject();
-  if (m_owner)
-    delete m_povl;
-  m_povl = nullptr;
-}
-#endif
-
 MQOverlayLined::MQOverlayLined(DrawOverlay* ovl, bool owner, QObject* parent): MQOverlay(ovl, owner, parent)
 {
 }
-
-//void MQOverlayLined::setLineColor(unsigned int clr)
-//{
-//}
-
-
 
 
 
@@ -160,7 +76,7 @@ MQOverlayLined::MQOverlayLined(DrawOverlay* ovl, bool owner, QObject* parent): M
 
 
 
-//bool OQClicker::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)
+//bool OQClicker::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop)
 //{
 //  if (oreact == ORM_LMDOUBLE)
 //  {
@@ -171,9 +87,9 @@ MQOverlayLined::MQOverlayLined(DrawOverlay* ovl, bool owner, QObject* parent): M
 //  return false;
 //}
 
-bool  OQRemitPress_Release::overlayReactionMouse(OVL_REACTION_MOUSE orm, const void* data, bool* /*doStop*/)
+bool  OQRemitPress_Release::overlayReactionMouse(OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* /*doStop*/)
 {
-  float v = m_horz? ((const float*)data)[0] : ((const float*)data)[1];
+  float v = m_horz? ct->fx_rel : ct->fy_rel;
   if (orm == ORM_LMPRESS)
     emit mouseAction(true, v);
   else if (orm == ORM_LMRELEASE)
@@ -181,9 +97,9 @@ bool  OQRemitPress_Release::overlayReactionMouse(OVL_REACTION_MOUSE orm, const v
   return false;
 }
 
-bool  OQRemitPressMove_Release::overlayReactionMouse(OVL_REACTION_MOUSE orm, const void* data, bool* /*doStop*/)
+bool  OQRemitPressMove_Release::overlayReactionMouse(OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* /*doStop*/)
 {
-  float v = m_horz? ((const float*)data)[0] : ((const float*)data)[1];
+  float v = m_horz? ct->fx_rel : ct->fy_rel;
   if (orm == ORM_LMPRESS || orm == ORM_LMMOVE)
     emit mouseAction(true, v);
   else if (orm == ORM_LMRELEASE)

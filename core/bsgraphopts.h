@@ -100,14 +100,14 @@ inline graphopts_t operator+(const graphopts_t& go, float opacity){ graphopts_t 
 
 enum BSCOLORPOLICY          // IPalette split onto graphs
 { 
-  CP_SINGLE,              // Once color, which is cstart + #portion*interval[cstart...cstop]
-  CP_OWNRANGE,            // color, gradiented in palette, according with portions
-  CP_OWNRANGE_GROSS,      // color, gradiented in palette, according with portions, nonlinear gradient
-  CP_OWNRANGE_SYMMETRIC,  // color, gradiented in palette, according with portions, centre symmetrion
-  CP_RANGE,               // color, gradiented in palette, ignoring portions
-//    CP_RANGE_GROSS,         // color, gradiented in palette, ignoring portions, nonlinear gradient
-  CP_SUBPAINTED,           // portions ignored. value point direct onto palette
-  CP_RANGESUBPAINTED       // portions ignored. value point direct onto palette + cstart
+  CP_MONO,                // Once color, which is cstart + #portion*interval[cstart...cstop]
+  CP_PAINTED,            // color, gradiented in palette, according with portions
+  CP_PAINTED_GROSS,      // color, gradiented in palette, according with portions, nonlinear gradient
+  CP_PAINTED_SYMMETRIC,  // color, gradiented in palette, according with portions, centre symmetrion
+  CP_REPAINTED,               // color, gradiented in palette, ignoring portions
+//    CP_REPAINTED_GROSS,         // color, gradiented in palette, ignoring portions, nonlinear gradient
+  CP_PALETTE,           // portions ignored. value point direct onto palette
+  CP_PALETTE_SPLIT       // portions ignored. value point direct onto palette + cstart
 };
 
 struct  coloropts_t
@@ -117,8 +117,8 @@ struct  coloropts_t
   float           cstop;
   unsigned int    backcolor;                /// color to use instead of palette color. 0xFFFFFFFF - not use
   
-  static coloropts_t copts(){  coloropts_t copts = { CP_SINGLE, 1.0f, 0.5f, 0xFFFFFFFF }; return copts; }
-  static coloropts_t copts(unsigned int backColor){  coloropts_t copts = { CP_SINGLE, 1.0f, 0.5f, backColor }; return copts; }
+  static coloropts_t copts(){  coloropts_t copts = { CP_MONO, 0.0f, 1.0f, 0xFFFFFFFF }; return copts; }
+  static coloropts_t copts(unsigned int backColor){  coloropts_t copts = { CP_MONO, 0.0f, 1.0f, backColor }; return copts; }
   static coloropts_t copts(BSCOLORPOLICY policy, float colorize_start, float colorize_stop, unsigned int backColor=0xFFFFFFFF)
   { coloropts_t copts = { policy, colorize_start, colorize_stop, backColor}; return copts; }
 };

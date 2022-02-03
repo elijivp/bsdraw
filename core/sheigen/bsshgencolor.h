@@ -20,7 +20,7 @@ private:
   int                                 m_paramsctr;
 public:
   FshColorGenerator(int overlay, char *deststring, int ovlctr=0);
-  FshColorGenerator(const AbstractDrawOverlay::uniforms_t& ufms, int overlay, char *deststring, int ovlctr=0);
+  FshColorGenerator(const _DrawOverlay::uniforms_t& ufms, int overlay, char *deststring, int ovlctr=0);
   unsigned int  written() const { return m_offset; }
 public:
   enum  CGV { CGV_COLORED, CGV_TRACED, CGV_TEXTURED, CGV_EMPTY };

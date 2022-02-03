@@ -27,7 +27,7 @@ protected:
   unsigned int  m_width;
 public:
   _OSelected(unsigned int widthpixels, int default_selection=0, const linestyle_t& kls=linestyle_solid(1,1,1));
-  void  setSelection(int select);
+  void  setSelection(int select, bool update=true);
   int selection() const { return m_selected; }  
 };
 
@@ -75,7 +75,7 @@ public:
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 //  virtual bool  clickBanned(float x, float y) const;
-  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void *dataptr, bool* doStop);
+//  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool* doStop);
 };
 
 #endif // BSBORDER_H

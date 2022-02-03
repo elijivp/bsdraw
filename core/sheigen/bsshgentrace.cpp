@@ -10,7 +10,7 @@
 #include "bsshgenparams.h"
 
 
-FshTraceGenerator::FshTraceGenerator(const AbstractDrawOverlay::uniforms_t &ufms, int overlay, bool rotated, char *deststring, int ocg_include_bits): 
+FshTraceGenerator::FshTraceGenerator(const _DrawOverlay::uniforms_t &ufms, int overlay, bool rotated, char *deststring, int ocg_include_bits): 
   m_overlay(overlay), m_rotated(rotated),
   m_writebase(deststring), m_to(deststring), m_offset(0), 
   m_pixingsctr(0), m_relingsctr(0), m_maths(0), m_paramsctr(0), m_prmmemoryiter(0)

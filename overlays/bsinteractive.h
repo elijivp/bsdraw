@@ -2,7 +2,7 @@
 #define INTERACTIVE_H
 
 /// Overlays:   invisible reactions for user events (mouse clicks, kbd keys). Use as root overlays
-///   OActivePoint. Effect: invisible source of coords, dynamic, movable
+///   OActivePointer. Effect: invisible source of coords, dynamic, movable
 ///   OActiveCursor. Effect: mouse clicks reaction
 ///   OActiveCursorCarrier. Effect: mouse clicks reaction with attached client
 ///   OActiveCursorCarrier2. Effect: mouse clicks reaction with attached 2 clients
@@ -11,46 +11,79 @@
 
 #include "../core/bsoverlay.h"
 
-class OActivePoint: public DrawOverlaySimple, public OVLCoordsDynamic, public OVLDimmsOff
+class _OActiveBase: public DrawOverlaySimple, public OVLCoordsDynamic, public OVLDimmsOff, public IOverlayReactor
+{
+  bool  m_linked;
+public:
+  _OActiveBase(bool linkToScaledCenter=false);
+  _OActiveBase(COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter=false);
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual IOverlayReactor*  reactor() { return this; }
+};
+
+
+////
+
+class OActivePointer: public DrawOverlaySimple, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
-  OActivePoint(COORDINATION cn, float center_x, float center_y);
+  OActivePointer(COORDINATION cn, float center_x, float center_y);
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
   float   m_seed[2];
 };
 
-class OActiveCursor: public DrawOverlaySimple, public OVLCoordsDynamic, public OVLDimmsOff
+////
+
+class OActiveCursor: public _OActiveBase
 {
 public:
   OActiveCursor(bool linkToScaledCenter=false);
   OActiveCursor(COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter=false);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
-  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void *dataptr, bool*);
-  bool  m_linked;
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool*);
 };
 
-class OActiveCursorCarrier: public OActiveCursor
+class OActiveCursorR: public _OActiveBase
 {
 public:
-  OActiveCursorCarrier(DrawOverlayProactive* iop, bool linkToScaledCenter=false);
-  OActiveCursorCarrier(DrawOverlayProactive* iop, COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter=false);
+  OActiveCursorR(bool linkToScaledCenter=false);
+  OActiveCursorR(COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter=false);
 protected:
-  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void *dataptr, bool*);
-  DrawOverlayProactive*  m_iop;
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool*);
 };
 
-class OActiveCursorCarrier2: public OActiveCursor
+typedef OActiveCursor OActiveCursorL;
+
+
+////
+
+
+class OActiveCursorCarrierL: public OActiveCursorL
 {
 public:
-  OActiveCursorCarrier2(DrawOverlayProactive* iop, DrawOverlayProactive* iop2, bool linkToScaledCenter=false);
-  OActiveCursorCarrier2(DrawOverlayProactive* iop, DrawOverlayProactive* iop2, COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter=false);
+  OActiveCursorCarrierL(IOverlayReactor* iop, bool linkToScaledCenter=false);
+  OActiveCursorCarrierL(IOverlayReactor* iop, COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter=false);
 protected:
-  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const void *dataptr, bool*);
-  DrawOverlayProactive*  m_iop;
-  DrawOverlayProactive*  m_iop2;
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool*);
+  IOverlayReactor*  m_iop;
 };
+
+class OActiveCursorCarrierL2: public OActiveCursorL
+{
+public:
+  OActiveCursorCarrierL2(IOverlayReactor* iop, IOverlayReactor* iop2, bool linkToScaledCenter=false);
+  OActiveCursorCarrierL2(IOverlayReactor* iop, IOverlayReactor* iop2, COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter=false);
+protected:
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool*);
+  IOverlayReactor*  m_iop;
+  IOverlayReactor*  m_iop2;
+};
+
+
+typedef OActiveCursorCarrierL OActiveCursorCarrier;
+typedef OActiveCursorCarrierL2 OActiveCursorCarrier2;
 
 //////////////////////////////////
 

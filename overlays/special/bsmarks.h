@@ -28,7 +28,7 @@ public:
   void  updateMarkColor(unsigned int mark, float tcolor){ if (mark < m_maxmarks)  m_marks[mark].tcolor = tcolor; }
   void  updateMarkPos(unsigned int mark, float pos){ if (mark < m_maxmarks)  m_marks[mark].pos = pos; }
   void  updateMark(unsigned int mark, float tcolor, float pos){ if (mark < m_maxmarks){   m_marks[mark].tcolor = tcolor; m_marks[mark].pos = pos; } }
-  void  updateFinished(){ DrawOverlay::overlayUpdateParameter(); }
+  void  updateFinished(){ _DrawOverlay::updateParameter(false, true); }
   unsigned int countMarks() const { return m_maxmarks; }
 };
 

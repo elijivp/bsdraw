@@ -62,13 +62,13 @@ void  OITextStatic::setText(const char* text, unsigned int fontSize)
   QFont f1(QApplication::font());
   f1.setPointSize(fontSize);
   innerSetText(otextopts_t(text, 0), f1);
-  m_ovllink.updatePublic();
+  m_ovllink.updateParameter(true, true);
 }
 
 void  OITextStatic::setText(const char* text, const QFont& font)
 {
   innerSetText(otextopts_t(text, 0), font);
-  m_ovllink.updatePublic();
+  m_ovllink.updateParameter(true, true);
 }
 
 void  OITextStatic::innerSetText(const otextopts_t& ot, const QFont &font)

@@ -140,12 +140,12 @@ unsigned int DrawSDPicture::colorBack() const
 
 
 
-bool BSQMarkerSelector::overlayReactionMouse(DrawQWidget* qwdg, OVL_REACTION_MOUSE oreact, const void* dataptr, bool* doStop)
+bool BSQMarkerSelector::reactionMouse(DrawQWidget* qwdg, OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop)
 {
   if (oreact == m_action)
   {
     *doStop = true;
-    int x = ((const float*)dataptr)[2], y = ((const float*)dataptr)[3];
+    int x = ct->fx_pix, y = ct->fy_pix;
     const int* dst = (const int*)((DrawSDPicture*)qwdg)->getImage()->scanLine(y);
     int marker = ((dst[x]>>16 & 0x3) << 4) | ((dst[x]>>8 & 0x3) << 2) | ((dst[x]& 0x3 << 0));
     if (m_emitEmptyMarker || (marker > 0 && marker <= SDPSIZE_MARKER))

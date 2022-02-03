@@ -14,7 +14,7 @@ struct kpdc_t
   float   color;
 };
 
-class OSprites: public DrawOverlay, public OVLQImage, public OVLCoordsOff, public OVLDimmsOff
+class OSprites: public DrawOverlay, public OVLQImage, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
 {
 public:
   enum  CENTER_BY { CB_LEFTTOP, CB_CENTER };
@@ -47,7 +47,8 @@ protected:
 protected:
   virtual int fshTrace(int overlay, bool rotated, char* to) const;
   virtual int fshColor(int overlay, char *to) const;
-  bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const void* dataptr, bool*);
+  virtual IOverlayReactor*  reactor() { return this; }
+  bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool*);
 public:
   void  setPalette(const IPalette* ipal, bool discrete);
 };

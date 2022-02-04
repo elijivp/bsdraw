@@ -114,6 +114,40 @@ public:
                unsigned int clr10, float brd10, unsigned int clr11)
     { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); 
       PCD_CAST(clr6, brd6); PCD_CAST(clr7, brd7); PCD_CAST(clr8, brd8); PCD_CAST(clr9, brd9); PCD_CAST(clr10, brd10); PCD_LAST(clr11); }
+  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
+               unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6, float brd6, 
+               unsigned int clr7, float brd7, unsigned int clr8, float brd8, unsigned int clr9, float brd9,
+               unsigned int clr10, float brd10, unsigned int clr11, float brd11, unsigned int clr12)
+    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); 
+      PCD_CAST(clr6, brd6); PCD_CAST(clr7, brd7); PCD_CAST(clr8, brd8); PCD_CAST(clr9, brd9); PCD_CAST(clr10, brd10); PCD_CAST(clr11, brd11); PCD_LAST(clr12); }
+  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
+               unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6, float brd6, 
+               unsigned int clr7, float brd7, unsigned int clr8, float brd8, unsigned int clr9, float brd9,
+               unsigned int clr10, float brd10, unsigned int clr11, float brd11, 
+               unsigned int clr12, float brd12, unsigned int clr13
+               )
+    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); 
+      PCD_CAST(clr6, brd6); PCD_CAST(clr7, brd7); PCD_CAST(clr8, brd8); PCD_CAST(clr9, brd9); PCD_CAST(clr10, brd10); PCD_CAST(clr11, brd11); 
+      PCD_CAST(clr12, brd12);  PCD_LAST(clr13); }
+  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
+               unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6, float brd6, 
+               unsigned int clr7, float brd7, unsigned int clr8, float brd8, unsigned int clr9, float brd9,
+               unsigned int clr10, float brd10, unsigned int clr11, float brd11, 
+               unsigned int clr12, float brd12, unsigned int clr13, float brd13, unsigned int clr14
+               )
+    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); 
+      PCD_CAST(clr6, brd6); PCD_CAST(clr7, brd7); PCD_CAST(clr8, brd8); PCD_CAST(clr9, brd9); PCD_CAST(clr10, brd10); PCD_CAST(clr11, brd11); 
+      PCD_CAST(clr12, brd12);  PCD_CAST(clr13, brd13);  PCD_LAST(clr14); }
+  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
+               unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6, float brd6, 
+               unsigned int clr7, float brd7, unsigned int clr8, float brd8, unsigned int clr9, float brd9,
+               unsigned int clr10, float brd10, unsigned int clr11, float brd11, 
+               unsigned int clr12, float brd12, unsigned int clr13, float brd13, 
+               unsigned int clr14, float brd14, unsigned int clr15
+               )
+    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); 
+      PCD_CAST(clr6, brd6); PCD_CAST(clr7, brd7); PCD_CAST(clr8, brd8); PCD_CAST(clr9, brd9); PCD_CAST(clr10, brd10); PCD_CAST(clr11, brd11); 
+      PCD_CAST(clr12, brd12);  PCD_CAST(clr13, brd13);  PCD_CAST(clr14, brd14);  PCD_LAST(clr15); }
 };
 
 /* QT_VERSION >= x050000 usage:

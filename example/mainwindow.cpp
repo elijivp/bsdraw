@@ -211,7 +211,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       for (int j=0; j<SAMPLES; j++)
       {
         ddm.start();
-        for (int r=0; r<MAXLINES/2; r++)
+        for (unsigned int r=0; r<MAXLINES/2; r++)
           ddm.includePixel(int(MAXLINES/2 + sin(j/(2.0*M_PI*8))*MAXLINES/4 - MAXLINES/4 + r), j);
         ddm.finish();
       }
@@ -233,9 +233,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     for (unsigned int i=0; i<sizeof(gopts)/sizeof(graphopts_t) - 1; i++)
     {
-      gopts[i].dotsize = i == 0? 3 : 2;
-      gopts[i].dotsmooth = i == 0? 0.5f : 0.1f;
-      draws[3*i + 2] = new DrawGraph(SAMPLES, PORTIONS, gopts[i], coloropts_t::copts(CP_REPAINTED, 1.0f, 0.5f, 0x00777777));
+      gopts[i].dotsize = i == 2? 0 : i == 1? 4 : 2;
+//      gopts[i].dotsmooth = i == 0? 0.5f : 0.1f;
+      gopts[i].dotsmooth = i == 0? 0.1f : 1.0f;
+      draws[3*i + 2] = new DrawGraph(SAMPLES, PORTIONS, gopts[i], coloropts_t::copts(CP_REPAINTED, 0.0f, 1.0f/*, 0x00777777*/));
       draws[3*i + 2]->ovlPushBack(new OTextColored(gnames[i], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, OO_INHERITED, 0x00000000, 0x77FFFFFF, 0x00000000));
     }
     
@@ -246,7 +247,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   }
   else if (MW_TEST == DEMO_2_scaling)  /// Demo 2
   {
-    SAMPLES = 50;
+    SAMPLES = 70;
     MAXLINES = 50;
     PORTIONS = 2;
     syncscaling = 4;
@@ -290,7 +291,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         draws[3*i + 2]->setPostMask(DPostmask::postmask(PO_ALL, PM_LINELEFT, 1, 0.0f,0.0f,0.0f));
     }
     
-    sigtype = ST_GEN_NORM;
+    sigtype = ST_SINXX;
   }  
   else if (MW_TEST == DEMO_3_overlays) /// std
   {
@@ -470,8 +471,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     };
     for (unsigned int i=0; i<drawscount; i++)
     {
-//      draws[i] = new DrawPolar(SAMPLES, MAXLINES, PORTIONS, 0x00000000, SL_HORZ2);
-      draws[i] = new DrawPolar(SAMPLES, MAXLINES, PORTIONS, 0, 0.0f, 0x00000000, SL_NONE);
+//      draws[i] = new DrawPolar(SAMPLES, MAXLINES, PORTIONS, 0x00000000, SP_ROWS_LR_2);
+      draws[i] = new DrawPolar(SAMPLES, MAXLINES, PORTIONS, 0, 0.0f, 0x00000000, SP_NONE);
       draws[i]->setImpulse(imp[1]);
 //      draws[i]->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINELEFT, 0, 0x00333333, 0.35f));
 //      draws[i]->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINELEFTBOTTOM, 0, 0x00333333, 0.2f));
@@ -676,11 +677,12 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     draws[2]->setDataTextureInterpolation(true);
     draws[2]->setScalingLimitsVert(10,10);
 
-    draws[3] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(CP_MONO, 0.332f, 1.0f), SL_VERT);
+    draws[3] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(CP_MONO, 0.332f, 1.0f), SP_COLUMN_TB);
 //    draws[3]->ovlPushBack(new OFLine(OFLine::LT_VERT_BYBOTTOM, CR_RELATIVE, 0.5f, 0.0f, CR_ABSOLUTE, 0));
     
-    draws[4] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS, OR_LRBT, SL_VERT2);
+    draws[4] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS, OR_LRBT, SP_COLUMNS_TB_2);
     draws[4]->ovlPushBack(new OBorder(linestyle_solid(1.0f, 1.0f, 1.0f)));
+//    draws[4] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(CP_MONO, 0.332f, 1.0f), SP_COLUMN_BT);
 //    setMinimumWidth(1200); ??? 
 
 //    sigtype = ST_RAMP;
@@ -857,6 +859,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     for (unsigned int i=0; i<drawscount; i++)
     {
       draws[i] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(cps[i], 0.0f, 1.0f));
+      if (MW_TEST == FEATURE_COLORS_HISTORGRAM)
+        draws[i]->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINELEFT, 0, 0.3f,0.3f,0.3f));
 //      draws[i]->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f));
       draws[i]->setScalingLimitsHorz(7);
       
@@ -1056,6 +1060,50 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     }
 //    draws[2]->setPostMask(DPostmask::postmask(PO_ALL, PM_DOTCONTOUR, 0, 0.0f, 0.0f));
     sigtype = ST_10;
+  }
+  else if (MW_TEST == DEBUG_PALETTE)
+  {
+    const int FIXEDCOUNT=300;
+    SAMPLES = FIXEDCOUNT;
+    MAXLINES = 1;
+    PORTIONS = 1;
+    PRECREATE(1, 1);
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+      draws[i] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
+      draws[i]->setScalingLimitsA(4);
+//      draws[i]->setScalingDefaultA(4);
+    }
+    
+//    static PaletteIMPACT<30> pimp(0xFF0000, 0x00FF00, 0x0000FF);
+//    static PaletteIMPACT<30>  pimp(0x00373737, 0x00FF8867, 0x00FFFF00, 0x000000FF, 
+//                                            0x00006622, 0x0000FFFF, 0x000000FF);
+    
+//    static PaletteONFLY  pimp(0x0000FF, 0x00A5FF, 0x00FFFF, 0x008000, 0xFF0000, 0x82004b, 0xee82ee );
+//    static PaletteONFLY  pimp(0x0000FF, 0x00A5FF, 0x00FFFF, 0x008000, 0xFF0000, 0x82004b, 0xee82ee );
+    static PaletteONFLY  pimp(0x00444444, 0x00003200, 0x0000ff00, 0x0000ffff);
+    defaultPalette = &pimp;
+    sigtype = ST_CUSTOM;
+    
+    float data[FIXEDCOUNT];
+//    const int LIMIT = 40;
+//    for (int i=0; i<LIMIT; i++)
+//    {
+//      data[i] = i/float(LIMIT);
+//    }
+//    for (int i=LIMIT; i<FIXEDCOUNT; i++)
+//    {
+////      data[i] = (i % 3)*pimp.multiplier();
+////      qDebug()<<data[i];
+//      data[i] = pimp(i % 7);
+//    }
+    for (int i=0; i<FIXEDCOUNT; i++)
+      data[i] = pimp(i % 4);
+    
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+      draws[i]->setData(data);
+    }
   }
   else if (MW_TEST == DEBUG_PALETTE2D)
   {
@@ -2085,6 +2133,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             BS_STOP
             BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
               BSAUTO_BTN_ADDMAPPED(BSFieldSetup(tr("Special Debug Button"), &fntSTD, BTF_DEBUG, 0, btnMinWidth), featsMapper, 0, Qt::AlignCenter);
+              BSAUTO_BTN_ADDMAPPED(BSFieldSetup(tr("updateGeometry"), &fntSTD, BTF_UPDATEGEOMETRY, 0, btnMinWidth), featsMapper, 0, Qt::AlignCenter);
             BS_STOP
                 
 //              BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
@@ -2163,7 +2212,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BSFieldSetup(tr(">>"),    &fntSTD, SP_SLOW, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
               BSFieldSetup(tr(">>>"),  &fntSTD, SP_FAST, BFS_CHECKABLE, btnMinWidth, btnMinWidth), 
               BSFieldSetup(tr(">>>>"),    &fntSTD, SP_FASTEST, BFS_CHECKABLE, btnMinWidth, btnMinWidth), 
-              BSFieldSetup(tr("OFF"),    &fntSTD, SP_STOP, BFS_CHECKED, btnMinWidth, btnMinWidth),
+              BSFieldSetup(tr("STOP"),    &fntSTD, SP_STOP, BFS_CHECKED, btnMinWidth, btnMinWidth),
             };
             BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
               BS_CHEAT_VMIN
@@ -2188,7 +2237,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 BSFieldSetup(tr(">>"),    &fntSTD, SP_SLOW, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
                 BSFieldSetup(tr(">>>"),  &fntSTD, SP_FAST, BFS_CHECKABLE, btnMinWidth, btnMinWidth), 
                 BSFieldSetup(tr(">>>>"),    &fntSTD, SP_FASTEST, BFS_CHECKABLE, btnMinWidth, btnMinWidth), 
-                BSFieldSetup(tr("OFF"),    &fntSTD, SP_STOP, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
+                BSFieldSetup(tr("STOP"),    &fntSTD, SP_STOP, BFS_CHECKABLE, btnMinWidth, btnMinWidth),
               };
               for (unsigned int i=0; i<sizeof(rtsbtns) / sizeof(BSFieldSetup); i++)
                 if (rtsbtns[i].mappedvalue == sp)
@@ -2421,7 +2470,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               else if (i == 2)
                 pDB->addScaleRollingTapNM(AT_TOP, 0, standard_tap_symbolate<-1>, 4, nullptr, SAMPLES, 20);
               else
-                pDB->addScaleSymmetricOwnbounds(AT_TOP, DBF_ONLY2NOTES | DBF_NOTESINSIDE, 0.0, 1.0, SAMPLES, 10);
+                pDB->addScaleSymmetricOwnbounds(AT_TOP, DBF_NOTE_BORDERS_ONLY | DBF_NOTESINSIDE, 0.0, 1.0, SAMPLES, 10);
               
 //              pDB->getDraw()->setPostMask(DPostmask::postmask(PO_EMPTY, PM_LINERIGHT, 0, 0.3f, 0.3f, 0.3f));
 //              MEPointer mpH = pDB->addPointerFixed(AT_BOTTOM, 0, 180);
@@ -2665,7 +2714,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
                   
                 if (MW_TEST == DEMO_4_portions)
-                  BSAUTO_TEXT_ADD(i == 0? "One palette, three portions" : "One palette, one portion", 0, Qt::AlignHCenter)
+                  BSAUTO_TEXT_ADD(i == 0? "Three portions, meshing colors" : "One portion", 0, Qt::AlignHCenter)
                 else if (MW_TEST == DRAW_HISTOGRAMS)
                   BSAUTO_TEXT_ADD(QString::number(PORTIONS) + 
                                   QString(" portions with different colors. See tab Addit. section Postmask for more settings"), 
@@ -2888,8 +2937,11 @@ void MainWindow::generateData()
       draws[i]->setData(testbuf2D);
     }
   }
+  else if (sigtype == ST_CUSTOM)
+    ;
   else
   {
+    
     float (*manual_fn)(float, float) = nullptr;
     
     #pragma omp parallel
@@ -3563,6 +3615,10 @@ void  MainWindow::changeFeatures(int id)
       {
         draws[i]->setMinimumWidth(800);
       }
+    }
+    else if (id == BTF_UPDATEGEOMETRY)
+    {
+      draws[i]->updateGeometry();
     }
   }
   if (id == BTF_DESTROYGRAPH)

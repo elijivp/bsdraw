@@ -45,7 +45,8 @@ private:
   QTimer*               speedDataTimer, *speedUpdateTimer;
   
   enum    BTN_FEATS     { BTF_CLEAR, BTF_INVHORZ, BTF_INVVERT, BTF_HIDEOTHERS, 
-                          BTF_BANUPDATEDATA, BTF_BANUPDATESETS, BTF_BANUPDATEOVERLAYS, BTF_DESTROYGRAPH, BTF_DEBUG  };
+                          BTF_BANUPDATEDATA, BTF_BANUPDATESETS, BTF_BANUPDATEOVERLAYS, BTF_DESTROYGRAPH, 
+                          BTF_DEBUG, BTF_UPDATEGEOMETRY };
   enum    BTN_OVLFEATS  { BTO_VISIBLE, BTO_COLOR, BTO_NOINV, 
                           BTO_INV1, BTO_INV2, BTO_INV3, BTO_INV4, BTO_INV5 };
   
@@ -62,7 +63,9 @@ private:
   enum    BTN_SIGTYPE   { ST_RAND, ST_SIN, ST_MANYSIN, ST_SINXX, ST_XX, ST_TANHX, 
                           ST_RAMP, ST_MOVE, ST_ZERO, ST_ONE, ST_ZOZ, ST_ZOO, ST_OOZ, 
                           ST_PEAK, ST_PEAK2, ST_PEAK3, ST_STEP, ST_OZOZO, ST_GEN_NORM,
-                          ST_HIPERB, ST_10, ST_100, ST_1000, ST_10000 };
+                          ST_HIPERB, ST_10, ST_100, ST_1000, ST_10000, 
+                          ST_CUSTOM
+                        };
   int     sigtype;
   float   sig_k, sig_b;
 private:

@@ -48,7 +48,7 @@ FshTraceGenerator::FshTraceGenerator(const _DrawOverlay::uniforms_t &ufms, int o
 
 void FshTraceGenerator::_gtb(OVL_ORIENTATION orient)
 { 
-  m_offset += msprintf(&m_to[m_offset], "vec4 overlayTrace%d(in ivec2 icell, in vec4 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition){" SHNL, 
+  m_offset += msprintf(&m_to[m_offset], "vec4 overlayTrace%d(in ivec2 ispcell, in vec4 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition){" SHNL, 
                        m_overlay);
   
   bool rtn = orient == OO_LRBT || orient == OO_RLBT || orient == OO_LRTB || orient == OO_RLTB;

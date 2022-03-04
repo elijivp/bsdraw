@@ -57,19 +57,19 @@ public:
              "lenarcscal[2] = step(lenarcscal[0], 1.0);"
              );
     
-    fmg.push( splitPortions == SL_NONE? "for (int i=0; i<countPortions; i++)" : "int i=icell[0];" );
+    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<countPortions; i++)" : "int i = explicitPortion;" );
     fmg.push( "{" );
     {
       fmg.value2D("float value", "datacoords");
       fmg.push("value = palrange[0] + (palrange[1] - palrange[0])*value;");
       fmg.push("ovMix = max(ovMix, value);");
       
-      if ( splitPortions == SL_NONE )
+      if ( splitPortions == SP_NONE )
         fmg.push( "result = mix(result, result + texture(texPalette, vec2(value, float(i)/(allocatedPortions-1) )).rgb, lenarcscal[2]);"
 //                  "result = mix(result, vec3(0), step(float(immod.x), 3.0)*step(3.0, float(immod.x)));"
                   );
       else
-        fmg.push( "result = mix(result, texture(texPalette, vec2(value, 0.0)).rgb, (1.0 - step(countPortions, float(icell[0])))*lenarcscal[2]  );" );
+        fmg.push( "result = mix(result, texture(texPalette, vec2(value, 0.0)).rgb, (1.0 - step(countPortions, float(explicitPortion)))*lenarcscal[2]  );" );
 
 //      fmg.push("post_mask[0] = mix(post_mask[0], 1.0, (1.0 - step(value, post_mask[1]))*lenarcscal[2] );" );
       fmg.push("post_mask[0] = mix(post_mask[0], 1.0, (1.0 - step(value, post_mask[1]))*lenarcscal[2] );"

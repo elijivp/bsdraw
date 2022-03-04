@@ -97,7 +97,7 @@ PaletteItem::~PaletteItem(){}
 //  {
 //    return new PaletteItem(imageDimms, inverted? palImagesInverted : palImages, palNames);
 //  }
-//  const IPalette*   getPalette(int idx, bool inverted) const { return inverted? PPALS_INV[idx] : PPALS[idx]; }
+//  const IPalette*   paletteData(int idx, bool inverted) const { return inverted? PPALS_INV[idx] : PPALS[idx]; }
 //};
 
 //static PaletteSet<ppalettenames_adv, ppalettes_adv, ppalettes_adv_inv>   pset_adv;
@@ -151,7 +151,7 @@ public:
   {
     return new PaletteItem(imageDimms, inverted? palImagesInverted : palImages, palNames);
   }
-  const IPalette*   getPalette(int idx, bool inverted) const { return inverted? PPALS_INV[idx] : PPALS[idx]; }
+  const IPalette*   paletteData(int idx, bool inverted) const { return inverted? PPALS_INV[idx] : PPALS[idx]; }
 };
 
 static PaletteSet<sizeof(ppalettenames_adv)/sizeof(const char*)>   pset_adv( ":/advanced/",
@@ -169,10 +169,13 @@ public:
   virtual unsigned int count() const=0;
   virtual void init()=0;
   virtual PaletteItem* createPaletteItem(bool inverted)=0;
-  virtual const IPalette* getPalette(int idx, bool inverted) const=0;
+  virtual const IPalette* paletteData(int idx, bool inverted) const=0;
+  virtual ~QPaletteBoxPrivate();
 public:
   bool  bInverted;
 };
+QPaletteBoxPrivate::~QPaletteBoxPrivate(){}
+
 
 template <class T>
 class QPaletteBoxPrivateDetailed: public QPaletteBoxPrivate
@@ -185,7 +188,7 @@ public:
   unsigned int count() const { return pset.count(); }
   void init(){ return pset.init(); }
   PaletteItem* createPaletteItem(bool inverted){ return pset.createPaletteItem(inverted); }
-  virtual const IPalette* getPalette(int idx, bool inverted) const { return pset.getPalette(idx, inverted); }
+  virtual const IPalette* paletteData(int idx, bool inverted) const { return pset.paletteData(idx, inverted); }
 };
 
 
@@ -236,7 +239,7 @@ bool QPaletteBox::isInverted() const
 const IPalette* QPaletteBox::currentPalette() const
 {
   const Q_D(QPaletteBox);
-  return d->getPalette(currentIndex(), d->bInverted);
+  return d->paletteData(currentIndex(), d->bInverted);
 }
   
 //QSize QPaletteBox::sizeHint() const
@@ -266,5 +269,5 @@ QPaletteBoxSg::QPaletteBoxSg(PALETTE_SET ps, QWidget* parent): QPaletteBox(ps, p
 void QPaletteBoxSg::_redirChanged(int idx)
 {
   Q_D(QPaletteBox);
-  emit currentChanged(d->getPalette(idx, d->bInverted));
+  emit currentChanged(d->paletteData(idx, d->bInverted));
 }

@@ -206,7 +206,7 @@ FshMainGenerator::FshMainGenerator(char *deststring, unsigned int allocatedPorti
   for (unsigned int i=0; i<m_ovlscount; i++)
   {
     m_offset += msprintf(&m_to[m_offset], "uniform highp vec4 ovl_exsettings%D;" SHNL
-                                          "vec4 overlayTrace%d(in ivec2 icell, in vec4 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 shapeself);" SHNL
+                                          "vec4 overlayTrace%d(in ivec2 ispcell, in vec4 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 shapeself);" SHNL
                                           "vec3 overlayColor%d(in vec4 trace_on_pix, in vec3 color);" SHNL,
                         i+1, i+1, i+1);
   }
@@ -243,44 +243,40 @@ void FshMainGenerator::_main_begin(int initback, unsigned int backcolor, ORIENTA
                          , rotaters[orient]);
   }
   
+  if (m_splitPortions != 0)
   {
+    int spRotator = (m_splitPortions >> 16)&0xFF;
     int spDirection = (m_splitPortions >> 8)&0xFF;
     int spDivider = m_splitPortions&0xFF;
-    if (spDivider == 0)
+    if (spDivider == 1)
     {
-      static const char fsh_portion_summary[] = "ivec2 icell = ivec2(0,0);" SHNL
-                                                "vec4  ocoords = vec4(coords.xy*0.5 + vec2(0.5,0.5), relcoords);" SHNL;
-      memcpy(&m_to[m_offset], fsh_portion_summary, sizeof(fsh_portion_summary) - 1);  m_offset += sizeof(fsh_portion_summary) - 1;
+      m_offset += msprintf(&m_to[m_offset],   "int explicitPortion = int(relcoords.%1*%d);" SHNL
+                                              "relcoords.%1 = relcoords.%1*%d - explicitPortion;" SHNL,
+                                              spDirection == 0? "y" : "x",
+                                              m_allocatedPortions, m_allocatedPortions
+                          );
+      if (spRotator)
+        m_offset += msprintf(&m_to[m_offset],   "explicitPortion = %d - 1 - explicitPortion;" SHNL, m_allocatedPortions);
+      m_offset += msprintf(&m_to[m_offset],   "ivec2 ispcell = ivec2(explicitPortion, 0);" SHNL);
     }
     else
     {
-      if (spDivider == 1)
-      {
-        m_offset += msprintf(&m_to[m_offset],   "ivec2 icell = ivec2(relcoords.%1 * %d, %d);" SHNL
-                                                "relcoords.%1 = (relcoords.%1*icell[1] - icell[0]);" SHNL
-                                                "relcoords = mix(relcoords, vec2(-1.0), step(countPortions, float(icell[0])));" SHNL
-                                                "vec4  ocoords = vec4(coords.xy*0.5 + vec2(0.5,0.5), relcoords);" SHNL,
-                             spDirection == 0? "y" : "x",
-                             m_allocatedPortions, m_allocatedPortions
-                             );
-      }
-      else
-      {
-        m_offset += msprintf(&m_to[m_offset],   "int spDivider = %d;" SHNL
-                                                "ivec2 icell = ivec2(0, %d);" SHNL, spDivider, m_allocatedPortions);
-        
-        m_offset += msprintf(&m_to[m_offset],   "vec2  spdvs = vec2(1.0/spDivider, 1.0/int(icell[1]/float(spDivider) + 0.99) );" SHNL
-                                                "ivec2 ispcell = ivec2(relcoords.x/spdvs[%1], relcoords.y/spdvs[%2]);" SHNL
-                                                "icell[0] = ispcell[%1]+ispcell[%2]*spDivider;" SHNL
-                                                "relcoords.x = relcoords.x / spdvs[%1] - ispcell.x;" SHNL
-                                                "relcoords.y = relcoords.y / spdvs[%2] - ispcell.y;" SHNL
-                                                "relcoords = mix(relcoords, vec2(-1.0), step(countPortions, float(icell[0])));" SHNL
-                                                "vec4  ocoords = vec4(coords.xy*0.5 + vec2(0.5,0.5), relcoords);" SHNL,
-                             spDirection == 0? "0" : "1", 
-                             spDirection == 0? "1" : "0");
-      }
+      m_offset += msprintf(&m_to[m_offset],   "int spDivider = %d;" SHNL, spDivider );        
+      m_offset += msprintf(&m_to[m_offset],   "vec2  spdvs = vec2(1.0/spDivider, 1.0/int(%d/float(spDivider) + 0.99) );" SHNL
+                                              "ivec2 ispcell = ivec2(relcoords.x/spdvs[%1], relcoords.y/spdvs[%2]);" SHNL
+                                              "int explicitPortion = ispcell[%1]+ispcell[%2]*spDivider;" SHNL
+                                              "relcoords.x = relcoords.x / spdvs[%1] - ispcell.x;" SHNL
+                                              "relcoords.y = relcoords.y / spdvs[%2] - ispcell.y;" SHNL,
+                                              m_allocatedPortions,
+                                              spDirection == 0? "0" : "1", 
+                                              spDirection == 0? "1" : "0"
+                          );
     }
+    m_offset += msprintf(&m_to[m_offset],   "relcoords = mix(relcoords, vec2(-1.0), step(countPortions, float(explicitPortion)));" SHNL);
   }
+  
+  m_offset += msprintf(&m_to[m_offset],   "vec4  ocoords = vec4(coords.xy*0.5 + vec2(0.5,0.5), relcoords);" SHNL);
+  
   
   if (initback == INITBACK_BYZERO || initback == INIT_BYZERO)
     m_offset += msprintf(&m_to[m_offset],   "vec3  backcolor = vec3(0.0, 0.0, 0.0);" SHNL);
@@ -395,6 +391,7 @@ void FshMainGenerator::main_end(const DPostmask &fsp)
   
   static const char fsh_decltrace[] = "vec4 ovTrace;" SHNL;
   memcpy(&m_to[m_offset], fsh_decltrace, sizeof(fsh_decltrace) - 1);  m_offset += sizeof(fsh_decltrace) - 1;
+    
   for (unsigned int i=0; i<m_ovlscount; i++)
     if (m_ovls[i].link >= 0)
     {
@@ -403,14 +400,15 @@ void FshMainGenerator::main_end(const DPostmask &fsp)
                                               "bool ovl_visible%d = ovl_visible%d && step(1.0, loc_f4_sets[0]) != 1;" SHNL
                                               "if  (ovl_visible%d)" SHNL
                                               "{" SHNL
-                                                "ovTrace = overlayTrace%d(icell, ocoords, loc_f4_sets[1], ovl_position%d, vec3(post_mask[0], post_mask[3], ppb_in), loc_i2_pos);" SHNL
+                                                "ovTrace = overlayTrace%d(%s, ocoords, loc_f4_sets[1], ovl_position%d, vec3(post_mask[0], post_mask[3], ppb_in), loc_i2_pos);" SHNL
                                                 "if (sign(ovTrace[3]) != 0.0 && step(ovMix, loc_f4_sets[2]) == 1.0)" SHNL
                                                   "result = mix(result, overlayColor%d(ovTrace, result), 1.0 - loc_f4_sets[0]);" SHNL
                                               "}" SHNL
                                               "ivec2 ovl_position%d = loc_i2_pos;" SHNL,
                                               i+1, 
                                               i+1, m_ovls[i].link + 1, i+1, // ovl_visible x3
-                                              i+1, m_ovls[i].link + 1, i+1, i+1);
+                                              i+1, m_splitPortions == 0? "ivec2(0,0)" : "ispcell",
+                                              m_ovls[i].link + 1, i+1, i+1);
     }
     else
     {
@@ -419,13 +417,14 @@ void FshMainGenerator::main_end(const DPostmask &fsp)
                                               "bool ovl_visible%d = step(1.0, loc_f4_sets[0]) != 1;" SHNL
                                               "if  (ovl_visible%d)" SHNL
                                               "{" SHNL
-                                                 "ovTrace = overlayTrace%d(icell, ocoords, loc_f4_sets[1], ivec2(0,0), vec3(post_mask[0], post_mask[3], ppb_in), loc_i2_pos);" SHNL
+                                                 "ovTrace = overlayTrace%d(%s, ocoords, loc_f4_sets[1], ivec2(0,0), vec3(post_mask[0], post_mask[3], ppb_in), loc_i2_pos);" SHNL
                                                  "if (sign(ovTrace[3]) != 0.0 && step(ovMix, loc_f4_sets[2]) == 1.0) result = mix(result, overlayColor%d(ovTrace, result), 1.0 - loc_f4_sets[0]);" SHNL
                                               "}" SHNL
                                               "ivec2 ovl_position%d = loc_i2_pos;" SHNL,
                                               i+1, 
                                               i+1, i+1, // ovl_visible x2
-                                              i+1, i+1, i+1);
+                                              i+1, m_splitPortions == 0? "ivec2(0,0)" : "ispcell",
+                                              i+1, i+1);
     }
   
   static const char fsh_end[] =   "gl_FragColor = vec4(result, 0.0);" SHNL "}" SHNL;

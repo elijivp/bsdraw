@@ -27,7 +27,7 @@ protected:
   unsigned int            m_resizelim;
 public:
   enum  { FILL_OUTSIDE, FILL_INSIDE, FILL_DEFAULT=FILL_OUTSIDE };
-  DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory=1000, unsigned int portions=1, ORIENTATION orient=OR_LRTB, SPLITPORTIONS splitPortions=SL_NONE, unsigned int resizeLimit=2160);
+  DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory=1000, unsigned int portions=1, ORIENTATION orient=OR_LRTB, SPLITPORTIONS splitPortions=SP_NONE, unsigned int resizeLimit=2160);
           void            setFillDirection(int fd);
 public:
   virtual void            setData(const float*);
@@ -62,7 +62,7 @@ class DrawRecorderPaged: public DrawRecorder
   unsigned int            m_pagehole;
 public:
   DrawRecorderPaged(unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory=1000, unsigned int portions=1, 
-                  unsigned int pages=1, ORIENTATION orient=OR_LRTB, SPLITPORTIONS splitPortions=SL_NONE, unsigned int resizeLimit=2160);
+                  unsigned int pages=1, ORIENTATION orient=OR_LRTB, SPLITPORTIONS splitPortions=SP_NONE, unsigned int resizeLimit=2160);
   ~DrawRecorderPaged();
 
   unsigned int  currentPage() const { return m_pagehole; }

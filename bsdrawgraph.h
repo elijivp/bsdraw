@@ -24,12 +24,12 @@
 class DrawGraph: public DrawQWidget
 {
 protected:
-  DrawGraph(unsigned int samples, unsigned int graphs, unsigned int memForDeploy, const graphopts_t& graphopts, const coloropts_t& coloropts, SPLITPORTIONS splitGraphs=SL_NONE);
+  DrawGraph(unsigned int samples, unsigned int graphs, unsigned int memForDeploy, const graphopts_t& graphopts, const coloropts_t& coloropts, SPLITPORTIONS splitGraphs=SP_NONE);
   void  reConstructor(unsigned int samples);
   void  reXtractDynrange(const coloropts_t& co);
 public:
-  DrawGraph(unsigned int samples, unsigned int graphs=1, const coloropts_t& copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SL_NONE);
-  DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, const coloropts_t& copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SL_NONE);
+  DrawGraph(unsigned int samples, unsigned int graphs=1, const coloropts_t& copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SP_NONE);
+  DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, const coloropts_t& copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SP_NONE);
   const graphopts_t&        graphopts() const;
   const coloropts_t&        coloropts() const;
   
@@ -47,8 +47,8 @@ class DrawGraphMove: public DrawGraph
 private:
   unsigned int          m_stepSamples;
 public:
-  DrawGraphMove(unsigned int samples, unsigned int stepsamples, unsigned int graphs=1, coloropts_t copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SL_NONE);
-  DrawGraphMove(unsigned int samples, unsigned int stepsamples, unsigned int graphs, const graphopts_t& graphopts, coloropts_t copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SL_NONE);
+  DrawGraphMove(unsigned int samples, unsigned int stepsamples, unsigned int graphs=1, coloropts_t copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SP_NONE);
+  DrawGraphMove(unsigned int samples, unsigned int stepsamples, unsigned int graphs, const graphopts_t& graphopts, coloropts_t copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SP_NONE);
 public:
   virtual void  setData(const float* data);
   virtual void  setData(const float* data, DataDecimator* dcim);
@@ -64,8 +64,8 @@ private:
   
   bool                  m_resizeExpanding;
 public:
-  DrawGraphMoveEx(unsigned int samples, unsigned int stepsamples, unsigned int extmemory=0, unsigned int graphs=1, coloropts_t copts=coloropts_t::copts(), bool resizeExpanding=true, SPLITPORTIONS splitGraphs=SL_NONE);
-  DrawGraphMoveEx(unsigned int samples, unsigned int stepsamples, unsigned int extmemory, unsigned int graphs, const graphopts_t& graphopts, coloropts_t copts=coloropts_t::copts(), bool resizeExpanding=true, SPLITPORTIONS splitGraphs=SL_NONE);
+  DrawGraphMoveEx(unsigned int samples, unsigned int stepsamples, unsigned int extmemory=0, unsigned int graphs=1, coloropts_t copts=coloropts_t::copts(), bool resizeExpanding=true, SPLITPORTIONS splitGraphs=SP_NONE);
+  DrawGraphMoveEx(unsigned int samples, unsigned int stepsamples, unsigned int extmemory, unsigned int graphs, const graphopts_t& graphopts, coloropts_t copts=coloropts_t::copts(), bool resizeExpanding=true, SPLITPORTIONS splitGraphs=SP_NONE);
   
 //  void  rescaleA(int v);
   

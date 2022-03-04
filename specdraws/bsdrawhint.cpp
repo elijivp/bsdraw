@@ -25,7 +25,7 @@ public:
 class SheiGeneratorHint_Graph: public ISheiGeneratorHint_Base
 {
 private:
-  int     m_portion, m_allocatedPortions;
+  unsigned int     m_portion, m_allocatedPortions;
   BSCOLORPOLICY m_cpolicy;
 private:
   int     m_automargin;
@@ -35,7 +35,7 @@ public:
   int     m_mindimmA, m_mindimmB;
   unsigned int  m_bckclr;
 public:
-  SheiGeneratorHint_Graph(int flags, int portion, int allocatedPortions, BSCOLORPOLICY cp, unsigned int backgroundColor): 
+  SheiGeneratorHint_Graph(int flags, unsigned int portion, unsigned int allocatedPortions, BSCOLORPOLICY cp, unsigned int backgroundColor): 
     m_portion(portion), m_allocatedPortions(allocatedPortions),
     m_cpolicy(cp), m_bckclr(backgroundColor)
   {
@@ -75,33 +75,62 @@ public:
             );
     }
     
-    fmg.cintvar("i", m_portion);
+    fmg.cintvar("i", (int)m_portion);
+    
+//    if (m_allocatedPortions > 1)
+//    {
+//      fmg.cintvar("allocatedPortions", (int)m_allocatedPortions);
+//      switch (m_cpolicy)
+//      {
+//      case CP_MONO:               fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(i);" SHNL); break;
+//      case CP_PAINTED:             fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 1.0 - VALCLR);" SHNL); break;
+//      case CP_PAINTED_GROSS:       fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 1.0 - sqrt(VALCLR));" SHNL); break;
+//      case CP_PAINTED_SYMMETRIC:   fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 0.5 - abs(VALCLR - 0.5) );" SHNL); break;
+//      case CP_REPAINTED:                fmg.push("float portionColor = (palrange[1] - (palrange[1] - palrange[0])*(float(i)/float(allocatedPortions)))*VALCLR;" SHNL); break;
+//      case CP_PALETTE:           fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
+//      case CP_PALETTE_SPLIT:      fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*float(i)/float(allocatedPortions)*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
+//      }
+//    }
+//    else
+//    {
+//      switch (m_cpolicy)
+//      {
+//      case CP_MONO:               fmg.push("float portionColor = palrange[1];" SHNL); break;
+//      case CP_PAINTED:             fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*VALCLR;" SHNL); break;
+//      case CP_PAINTED_GROSS:       fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*sqrt(VALCLR);" SHNL); break;
+//      case CP_PAINTED_SYMMETRIC:   fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
+//      case CP_REPAINTED:                fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*(1.0 - VALCLR);" SHNL); break;
+//      case CP_PALETTE:           fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
+//      case CP_PALETTE_SPLIT:      fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
+//      }
+//    }
     
     if (m_allocatedPortions > 1)
     {
       fmg.cintvar("allocatedPortions", (int)m_allocatedPortions);
       switch (m_cpolicy)
       {
-      case CP_MONO:               fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(i);" SHNL); break;
-      case CP_PAINTED:             fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 1.0 - VALCLR);" SHNL); break;
-      case CP_PAINTED_GROSS:       fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 1.0 - sqrt(VALCLR));" SHNL); break;
-      case CP_PAINTED_SYMMETRIC:   fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 0.5 - abs(VALCLR - 0.5) );" SHNL); break;
-      case CP_REPAINTED:                fmg.push("float portionColor = (palrange[1] - (palrange[1] - palrange[0])*(float(i)/float(allocatedPortions)))*VALCLR;" SHNL); break;
-      case CP_PALETTE:           fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
-      case CP_PALETTE_SPLIT:      fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*float(i)/float(allocatedPortions)*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
+      case CP_MONO:                 fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i);" SHNL); break;
+      case CP_PAINTED:              fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - VALCLR);" SHNL); break;
+      case CP_PAINTED_GROSS:        fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - sqrt(VALCLR));" SHNL); break;
+      case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 0.5 - abs(VALCLR - 0.5));" SHNL); break;
+      case CP_REPAINTED:            fmg.push("float porc = (palrange[1] - (palrange[1] - palrange[0])*(float(allocatedPortions - 1 - i)/float(allocatedPortions)))*VALCLR;" SHNL); break;
+        
+      case CP_PALETTE:              fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
+      case CP_PALETTE_SPLIT:        fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])/float(allocatedPortions)*(i + fcoords_noscaled.y/fbounds_noscaled.y);" SHNL); break;
       }
     }
     else
     {
       switch (m_cpolicy)
       {
-      case CP_MONO:               fmg.push("float portionColor = palrange[1];" SHNL); break;
-      case CP_PAINTED:             fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*VALCLR;" SHNL); break;
-      case CP_PAINTED_GROSS:       fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*sqrt(VALCLR);" SHNL); break;
-      case CP_PAINTED_SYMMETRIC:   fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
-      case CP_REPAINTED:                fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*(1.0 - VALCLR);" SHNL); break;
-      case CP_PALETTE:           fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
-      case CP_PALETTE_SPLIT:      fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
+      case CP_MONO:                 fmg.push("float porc = palrange[1];" SHNL); break;
+      case CP_PAINTED:              fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - VALCLR);" SHNL); break;
+      case CP_PAINTED_GROSS:        fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*sqrt(1.0 - VALCLR);" SHNL); break;
+      case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
+      case CP_REPAINTED:            fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - VALCLR);" SHNL); break;
+        
+      case CP_PALETTE: case CP_PALETTE_SPLIT:      fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
       }
     }
     
@@ -166,7 +195,7 @@ public:
     fmg.push(   
                 "mixwell = mixwell*step(distwell, 7.0)*(1.0-distwell/1.5);" SHNL
                 "mixwell = max(0.0, mixwell);" SHNL
-                "vec3  colorGraph = texture(texPalette, vec2(portionColor, 0.0)).rgb;" SHNL
+                "vec3  colorGraph = texture(texPalette, vec2(porc, 0.0)).rgb;" SHNL
                 "result = mix(result, colorGraph, mixwell);" SHNL
     );
     
@@ -214,7 +243,7 @@ SheiGeneratorHint_Intensity::~SheiGeneratorHint_Intensity(){}
 
 DrawHint::DrawHint(const DrawGraph* pdg, int portion, int flags, ORIENTATION orient, unsigned int backgroundColor):
   DrawQWidget(DATEX_2D, 
-              new SheiGeneratorHint_Graph(flags, portion, pdg->allocatedPortions(), pdg->coloropts().cpolicy, 
+              new SheiGeneratorHint_Graph(flags, (unsigned int)portion, pdg->allocatedPortions(), pdg->coloropts().cpolicy, 
                                            backgroundColor == 0xFFFFFFFF? pdg->coloropts().backcolor : backgroundColor)
               , 1, orient)
 {

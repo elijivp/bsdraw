@@ -64,7 +64,7 @@ int OBorderSelected::fshTrace(int overlay, bool rotated, char *to) const
                 "result += (1.0 - step(float(border), float(icoords[i])))*insider(icoords[1-i], ivec2(0, ibounds[1-i]));"
                 "result += step(float(ibounds[i] - border), float(icoords[i]))*insider(icoords[1-i], ivec2(0, ibounds[1-i]));"
               "}"
-              "result[0] = result[0]*step(float(selected), float(icell[0]))*step(float(icell[0]), float(selected));"
+              "result[0] = result[0]*step(float(selected), float(ispcell[0]))*step(float(ispcell[0]), float(selected));"
           );
   }  
   ocg.goto_func_end(true);

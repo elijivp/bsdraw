@@ -74,7 +74,7 @@ public:
       if (needDots == 1)
       {
         fmg.push( "vec3  fx = vec3(relcoords.x, relcoords.x, relcoords.x);" SHNL );
-        fmg.push( splitGraphs == SL_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = icell[0];" SHNL );
+        fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = explicitPortion;" SHNL );
         fmg.push(
                   "{" SHNL
                     "vec3   fy = vec3(getValue1D(i, fx[0]));" SHNL
@@ -89,7 +89,7 @@ public:
                     "relcoords.x, "
                     "float(min(relcoords.x*ibounds_noscaled.x, ibounds_noscaled.x-1)  + 1)/ibounds_noscaled.x);" SHNL
                   );
-        fmg.push( splitGraphs == SL_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = icell[0];" SHNL );
+        fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = explicitPortion;" SHNL );
         fmg.push(
                   "{" SHNL
                     "vec3  fy = vec3(getValue1D(i, fx[0]), getValue1D(i, fx[1]), getValue1D(i, fx[2]));" SHNL
@@ -104,7 +104,7 @@ public:
                     "float(min(relcoords.x*ibounds_noscaled.x, ibounds_noscaled.x-1)  + 1)/ibounds_noscaled.x, " SHNL
                     "float(min(relcoords.x*ibounds_noscaled.x, ibounds_noscaled.x-2)  + 2)/ibounds_noscaled.x);" SHNL
                   );
-        fmg.push( splitGraphs == SL_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = icell[0];" SHNL );
+        fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = explicitPortion;" SHNL );
         fmg.push(
                   "{" SHNL
                     "vec4  fy = vec4(getValue1D(i, fx[0]), getValue1D(i, fx[1]), getValue1D(i, fx[2]), getValue1D(i, fx[3]));" SHNL
@@ -499,9 +499,6 @@ public:
         switch (coloropts.cpolicy)
         {
         case CP_MONO:                 fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i);" SHNL); break;
-//        case CP_PAINTED:              fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - i - VALCLR);" SHNL); break;
-//        case CP_PAINTED_GROSS:        fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - i - sqrt(VALCLR));" SHNL); break;
-//        case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - i - 0.5 - abs(VALCLR - 0.5) );" SHNL); break;
         case CP_PAINTED:              fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - VALCLR);" SHNL); break;
         case CP_PAINTED_GROSS:        fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - sqrt(VALCLR));" SHNL); break;
         case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 0.5 - abs(VALCLR - 0.5));" SHNL); break;
@@ -516,8 +513,8 @@ public:
         switch (coloropts.cpolicy)
         {
         case CP_MONO:                 fmg.push("float porc = palrange[1];" SHNL); break;
-        case CP_PAINTED:              fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*VALCLR;" SHNL); break;
-        case CP_PAINTED_GROSS:        fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*sqrt(VALCLR);" SHNL); break;
+        case CP_PAINTED:              fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - VALCLR);" SHNL); break;
+        case CP_PAINTED_GROSS:        fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*sqrt(1.0 - VALCLR);" SHNL); break;
         case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
         case CP_REPAINTED:            fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - VALCLR);" SHNL); break;
           

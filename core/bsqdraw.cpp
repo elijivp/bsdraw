@@ -22,7 +22,7 @@ extern int msprintf(char* to, const char* format, ...);
 
 int DrawOverlayEmpty::fshTrace(int overlay, bool /*rotated*/, char* to) const
 {
-  return msprintf(to, "vec4 overlayTrace%d(in ivec2 icell, in vec4 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition){ return vec4(0.0,0.0,0.0,0.0); }\n", overlay);
+  return msprintf(to, "vec4 overlayTrace%d(in ivec2 ispcell, in vec4 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition){ return vec4(0.0,0.0,0.0,0.0); }\n", overlay);
 }
 
 int DrawOverlayEmpty::fshColor(int overlay, char* to) const
@@ -62,7 +62,7 @@ DrawQWidget::DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int
   for (int i=0; i<_SF_COUNT; i++)
     m_locations[i] = -1;
   
-  m_portionMeshType = splitPortions == SL_NONE? m_pcsh->portionMeshType() : ISheiGenerator::PMT_FORCE1D;  // ntf: strange, non-intuitive
+  m_portionMeshType = splitPortions == SP_NONE? m_pcsh->portionMeshType() : ISheiGenerator::PMT_FORCE1D;  // ntf: strange, non-intuitive
   
   setFocusPolicy(Qt::ClickFocus);
   
@@ -152,7 +152,7 @@ void DrawQWidget::palettePrepare(const IPalette* ppal, bool discrete, int levels
   unsigned int  palSize;
   unsigned int  palFormat;
   
-  ppal->getPalette(&palArr, &palSize, &palFormat);
+  ppal->paletteData(&palArr, &palSize, &palFormat);
   
   if (palFormat == IPalette::FMT_UNKNOWN)
     return;
@@ -922,6 +922,9 @@ void DrawQWidget::innerRescale()
 
 void DrawQWidget::innerUpdateGeometry()
 {
+//  int sizeA = m_scalingA * m_matrixDimmA * m_splitterA * c_dpr_inv;       if (sizeA < 1)  sizeA = 1;
+//  int sizeB = m_scalingB * (m_datex == DATEX_1D? 1 : m_matrixDimmB) * m_splitterB * c_dpr_inv;      if (sizeB < 1)  sizeB = 1;
+//  this->resize(sizeA, sizeB);
   this->updateGeometry();
 }
 

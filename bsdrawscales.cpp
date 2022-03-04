@@ -446,7 +446,9 @@ enum  RELATED_FLAG {
   RF_SETBOUNDS=1,
   RF_SETENUMERATE=2,
   RF_SETTAPS=3,
-  RF_SETTAPWDG=4
+  RF_SETTAPWDG=4,
+  
+  RF_UPDATETAP_PARAM
 };
 
 union relatedopts_t
@@ -511,12 +513,15 @@ public:
         bdContentUpdateBounds(ll, hl, rdata.rel_fixed.MOD);
       }
     }
-    else if (rtexttype == RF_SETTAPS)
+    else if (rtexttype == RF_SETTAPS || rtexttype == RF_UPDATETAP_PARAM)
     {
       docall = true;
-      c_rdata = rdata;
-      QString sstr(rdata.rel_tap_qstring.slen, Qt::Uninitialized);
-      bdContentUpdateTaps(sstr, rdata.rel_tap_qstring.tapfn, rdata.rel_tap_qstring.param, c_reloffset, tapctt);
+      if (rtexttype == RF_SETTAPS)
+        c_rdata = rdata;
+      else
+        c_rdata.rel_tap_qstring.param = rdata.rel_tap_qstring.param;
+      QString sstr(c_rdata.rel_tap_qstring.slen, Qt::Uninitialized);
+      bdContentUpdateTaps(sstr, c_rdata.rel_tap_qstring.tapfn, c_rdata.rel_tap_qstring.param, c_reloffset, tapctt);
     }
     else if (rtexttype == RF_SETENUMERATE)
     {
@@ -1751,13 +1756,13 @@ protected:
 };
 MarginINMarksTextToMark::~MarginINMarksTextToMark(){}
 
-class MarginINMarksMinimax: public MarginINMarks
+class MarginINMarks2only: public MarginINMarks
 {
   texts_t*                texts;
   bool                    textInnerPlaced;
 public:
-  MarginINMarksMinimax(bool innerTextPlacement): textInnerPlaced(innerTextPlacement){}
-  ~MarginINMarksMinimax();
+  MarginINMarks2only(bool innerTextPlacement): textInnerPlaced(innerTextPlacement){}
+  ~MarginINMarks2only();
   virtual int setMarksCount(int marksLimit)
   {
     marksLimit = MarginINMarks::setMarksCount(marksLimit);
@@ -1870,7 +1875,7 @@ protected:
     }
   }
 };
-MarginINMarksMinimax::~MarginINMarksMinimax(){}
+MarginINMarks2only::~MarginINMarks2only(){}
 
 /******************************************************************************************************************/
 /******************************************************************************************************************/
@@ -2035,8 +2040,8 @@ protected:
     QFontMetrics fm(m_font);
     int maxsymbols = cachedRTexttype() == RF_SETTAPS? cachedRdata().rel_tap_qstring.slen : max_symbols();
     QSize meansize(SPACING_AFTERWIDTH + fm.averageCharWidth()*maxsymbols, SPACING_AFTERHEIGHT + fm.height());
-    int d_atto_size = BAR_VERT[atto]? meansize.width()+2 : meansize.height()+2;
-//    int d_half_dly = BAR_VERT[atto]? meansize.height()/2 : meansize.width()/2;
+    int d_atto_size = BAR_VERT[atto]? meansize.width() : meansize.height();
+//    int d_half_dly = BAR_VERT[atto]? meansize.height()/4 : meansize.width()/4;  // ? /4 ?
     int d_half_dly = 0;
     *atto_size = qMax(*atto_size, d_atto_size);
     *minsegm_pre += d_half_dly;
@@ -2428,9 +2433,11 @@ private:
       const int countMaxiInside = countMaxiTotal - 2;
       float countReglineF = (HL - LL)/odd;
       int divs0[] = { 1000, 10, 5, 2 }; // fixed len 4
-      int divs1[] = { 1500, 15, 3, 2 };
-      int divs2[] = { 1000000, 1000, 100, 10 };
+      int divs1[] = { 1500, 15, 5, 3 };
+      int divs2[] = { 100000, 1000, 100, 10 };
       int* divs = divalgo == 2? divs2 : divalgo == 1? divs1 : divs0;
+//      if (divalgo == 1)
+//        qDebug()<<"15 3 2";
       for (int d=0; d<4; d++)
       {
         while (countReglineF/divs[d] > countMaxiInside)
@@ -3286,7 +3293,7 @@ MEWPointer* DrawBars::addEPointer01Auto(ATTACHED_TO atto, int flags, float pos, 
 }
 
 #define DB_ROUNDING(flags)  (flags & DBF_MARKS_DONTROUND? 1 : flags & DBF_MARKS_DONTROUND1? 2 : 0)
-#define DB_NATIVE(flags)  ((flags & 0xF00000) == DBF_NATIVE_DIV_10 ? 2: (flags & 0xF00000) == DBF_NATIVE_DIV_15_3_2 ? 1: 0)
+#define DB_NATIVE(flags)  ((flags & 0xF00000) == DBF_NATIVE_DIV_10 ? 2: (flags & 0xF00000) == DBF_NATIVE_DIV_15_5_3 ? 1: 0)
 
 MEWScale* DrawBars::addScalePixstepEmpty(ATTACHED_TO atto, int flags, int marksLimit, int minSpacing, int miniPerMaxi)
 {
@@ -3348,8 +3355,8 @@ MEWScaleNN*   DrawBars::addScaleNativeOwnbounds(ATTACHED_TO atto, int flags, flo
 MEWScaleNN* DrawBars::addScalePixstepOwnbounds(ATTACHED_TO atto, int flags, float LL, float HL, int marksLimit, int minSpacing, int miniPerMaxi, float MOD, const char* postfix)
 {
   MarginINMarks* pmarg;
-  if (flags & DBF_ONLY2NOTES)
-    pmarg = new MarginINMarksMinimax(flags & DBF_NOTESINSIDE);
+  if (flags & DBF_NOTE_BORDERS_ONLY)
+    pmarg = new MarginINMarks2only(flags & DBF_NOTESINSIDE);
   else
     pmarg = new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
 
@@ -3369,8 +3376,8 @@ MEWScaleNN* DrawBars::addScalePixstepOwnbounds(ATTACHED_TO atto, int flags, floa
 MEWScaleNN* DrawBars::addScaleSymmetricOwnbounds(ATTACHED_TO atto, int flags, float LL, float HL, int marksLimit, int minSpacing, int miniPerMaxi, float MOD, const char* postfix)
 {
   MarginINMarks* pmarg;
-  if (flags & DBF_ONLY2NOTES)
-    pmarg = new MarginINMarksMinimax(flags & DBF_NOTESINSIDE);
+  if (flags & DBF_NOTE_BORDERS_ONLY)
+    pmarg = new MarginINMarks2only(flags & DBF_NOTESINSIDE);
   else
     pmarg = new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
 
@@ -3391,8 +3398,8 @@ MEWScaleNN* DrawBars::addScaleSymmetricOwnbounds(ATTACHED_TO atto, int flags, fl
 MEWScaleNN* DrawBars::addScaleRollingOwnbounds(ATTACHED_TO atto, int flags, float LL, float HL, int marksLimit, int pixStep, int miniPerMaxi, float MOD, const char* postfix)
 {
   MarginINMarks* pmarg;
-  if (flags & DBF_ONLY2NOTES)
-    pmarg = new MarginINMarksMinimax(flags & DBF_NOTESINSIDE);
+  if (flags & DBF_NOTE_BORDERS_ONLY)
+    pmarg = new MarginINMarks2only(flags & DBF_NOTESINSIDE);
   else
     pmarg = new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
 
@@ -3429,7 +3436,7 @@ MEWScale* DrawBars::addScaleNativeDrawbounds(ATTACHED_TO atto, int flags, float 
 
 MEWScale* DrawBars::addScalePixstepDrawbounds(ATTACHED_TO atto, int flags, int marksLimit, int minSpacing, int miniPerMaxi, float MOD, const char* postfix)
 {
-  MarginINMarks* pmarg = flags & DBF_ONLY2NOTES? (MarginINMarks*)new MarginINMarksMinimax(flags & DBF_NOTESINSIDE) : 
+  MarginINMarks* pmarg = flags & DBF_NOTE_BORDERS_ONLY? (MarginINMarks*)new MarginINMarks2only(flags & DBF_NOTESINSIDE) : 
                                                   (MarginINMarks*)new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
   pmarg->init(DBMODE_STRETCHED, marksLimit, minSpacing, DB_ROUNDING(flags), miniPerMaxi);
   MARG_OPTS_TEXT
@@ -3447,7 +3454,7 @@ MEWScale* DrawBars::addScalePixstepDrawbounds(ATTACHED_TO atto, int flags, int m
 
 MEWScale* DrawBars::addScaleSymmetricDrawbounds(ATTACHED_TO atto, int flags, int marksLimit, int minSpacing, int miniPerMaxi, float MOD, const char* postfix)
 {
-  MarginINMarks* pmarg = flags & DBF_ONLY2NOTES? (MarginINMarks*)new MarginINMarksMinimax(flags & DBF_NOTESINSIDE) : 
+  MarginINMarks* pmarg = flags & DBF_NOTE_BORDERS_ONLY? (MarginINMarks*)new MarginINMarks2only(flags & DBF_NOTESINSIDE) : 
                                                   (MarginINMarks*)new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
   pmarg->init(DBMODE_STRETCHED_POW2, marksLimit, minSpacing, DB_ROUNDING(flags), miniPerMaxi);
   MARG_OPTS_TEXT
@@ -3465,8 +3472,8 @@ MEWScale* DrawBars::addScaleSymmetricDrawbounds(ATTACHED_TO atto, int flags, int
 
 MEWScale* DrawBars::addScaleRollingDrawbounds(ATTACHED_TO atto, int flags, int marksLimit, int pixStep, int miniPerMaxi, float MOD, const char* postfix)
 {
-  MarginINMarks* pmarg = flags & DBF_ONLY2NOTES? (MarginINMarks*)new MarginINMarksMinimax(flags & DBF_NOTESINSIDE) : 
-                                                  (MarginINMarks*)new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
+  MarginINMarks* pmarg = flags & DBF_NOTE_BORDERS_ONLY? (MarginINMarks*)new MarginINMarks2only(flags & DBF_NOTESINSIDE) : 
+                                                        (MarginINMarks*)new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
   pmarg->init(DBMODE_STATIC, marksLimit, pixStep, DB_ROUNDING(flags), miniPerMaxi);
   MARG_OPTS_TEXT
   pmarg->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(pDraw->bounds(), MOD));
@@ -3559,7 +3566,8 @@ MEWScale* DrawBars::addEScalePixstepDrawbounds(ATTACHED_TO atto, int flags, int 
 
 MEWScaleTAPNN* DrawBars::addScalePixstepTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int minSpacing, const char* postfix)
 {
-  MarginINMarks* pmarg = new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
+  MarginINMarks* pmarg = flags & DBF_NOTE_BORDERS_ONLY? (MarginINMarks*)new MarginINMarks2only(flags & DBF_NOTESINSIDE) : 
+                                                        (MarginINMarks*)new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
   pmarg->init(DBMODE_STRETCHED, marksLimit, minSpacing, DB_ROUNDING(flags), 0);
   MARG_OPTS_TEXT
   
@@ -3576,7 +3584,8 @@ MEWScaleTAPNN* DrawBars::addScalePixstepTapNN(ATTACHED_TO atto, int flags, mtap_
 
 MEWScaleTAPNN* DrawBars::addScaleSymmetricTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int minSpacing, const char* postfix)
 {
-  MarginINMarks* pmarg = new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
+  MarginINMarks* pmarg = flags & DBF_NOTE_BORDERS_ONLY? (MarginINMarks*)new MarginINMarks2only(flags & DBF_NOTESINSIDE) : 
+                                                        (MarginINMarks*)new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
   pmarg->init(DBMODE_STRETCHED_POW2, marksLimit, minSpacing, DB_ROUNDING(flags), 0);
   MARG_OPTS_TEXT
   
@@ -3593,7 +3602,8 @@ MEWScaleTAPNN* DrawBars::addScaleSymmetricTapNN(ATTACHED_TO atto, int flags, mta
 
 MEWScaleTAPNN* DrawBars::addScaleRollingTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int pixStep, const char* postfix)
 {
-  MarginINMarks* pmarg = new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
+  MarginINMarks* pmarg = flags & DBF_NOTE_BORDERS_ONLY? (MarginINMarks*)new MarginINMarks2only(flags & DBF_NOTESINSIDE) : 
+                                                        (MarginINMarks*)new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
   pmarg->init(DBMODE_STATIC, marksLimit, pixStep, DB_ROUNDING(flags), 0);
   MARG_OPTS_TEXT
   
@@ -4599,6 +4609,12 @@ void MEWPointer::setBoundHigh(double HL){  setBoundHigh(float(HL)); }
 
 //void MEWScale::setPrefix(const char* str){ ((MarginMarksComplicated*)m_pme)->setPrefix(str); remoteUpdate(); }
 //void MEWScale::setPostfix(const char* str){ ((MarginMarksComplicated*)m_pme)->setPostfix(str); remoteUpdate(); }
+
+void MEWScale::updateTapParam(const void* param)
+{
+  if ( ((MarginMarksBase*)m_pme)->bdContentUpdate(RF_UPDATETAP_PARAM, relatedopts_t(nullptr, param, 0) ) )
+    remoteUpdate();
+}
 
 void MEWScale::setFont(const QFont& m_font)
 {

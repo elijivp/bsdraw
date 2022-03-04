@@ -66,7 +66,7 @@ protected:
   unsigned int            m_texOvlCount;
   enum  { HT_MATRIX=0, HT_PAL, HT_GND, HT_OVERLAYSSTART };
 public:
-  DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions=SL_NONE);
+  DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions=SP_NONE);
   ~DrawQWidget();
   
   void  compileShaderNow();

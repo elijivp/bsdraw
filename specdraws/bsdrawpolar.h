@@ -28,7 +28,7 @@ protected:
 protected:
   void  reConstructor(unsigned int samplesHorz, unsigned int samplesVert);
 public:
-  DrawPolar(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, unsigned int backgroundColor=0x00000000, SPLITPORTIONS splitGraphs=SL_NONE);
+  DrawPolar(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, unsigned int backgroundColor=0x00000000, SPLITPORTIONS splitGraphs=SP_NONE);
   DrawPolar(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, float turn, float deltaScale01, unsigned int backgroundColor, SPLITPORTIONS splitGraphs);
   ~DrawPolar();
 public:

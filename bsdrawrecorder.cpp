@@ -159,8 +159,8 @@ void DrawRecorder::scrollDataTo(int pp)
 
 void DrawRecorder::scrollDataToAbs(int v)
 {
-  if (v > m_matrixLmSize - m_matrixDimmB*m_scalingB)
-    v = m_matrixLmSize - m_matrixDimmB*m_scalingB;
+  if (v > (int)m_matrixLmSize - int(m_matrixDimmB*m_scalingB))
+    v = (int)m_matrixLmSize - int(m_matrixDimmB*m_scalingB);
   m_stopped = v;
   fillMatrix();
   DrawQWidget::vmanUpData();
@@ -183,7 +183,7 @@ DrawRecorderPaged::DrawRecorderPaged(unsigned int samplesHorz, unsigned int line
 
 DrawRecorderPaged::~DrawRecorderPaged()
 {
-  for (int i=0; i<m_pagescount; i++)
+  for (unsigned int i=0; i<m_pagescount; i++)
     if (i != m_pagehole)
       m_memory.extendeddataarr_release(m_pages[i]);
   delete []m_pages;

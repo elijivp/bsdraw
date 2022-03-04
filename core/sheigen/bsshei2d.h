@@ -31,7 +31,7 @@ public:
 
     fmg.main_begin(FshMainGenerator::INITBACK_BYPALETTE, 0, orient, fsp); //FshMainGenerator::INITBACK_BYZERO
     fmg.cintvar("allocatedPortions", (int)allocatedPortions);
-    fmg.push( splitPortions == SL_NONE? "for (int i=0; i<countPortions; i++)" : "int i=icell[0];" );
+    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<countPortions; i++)" : "int i = explicitPortion;" );
     fmg.push( "{" );
     {
       if (dsup == DS_NONE)
@@ -54,10 +54,10 @@ public:
       
       fmg.push( "value = palrange[0] + (palrange[1] - palrange[0])*value;" );
       
-      if ( splitPortions == SL_NONE )
+      if ( splitPortions == SP_NONE )
         fmg.push( "result = result + texture(texPalette, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );
       else
-        fmg.push( "result.rgb = mix(texture(texPalette, vec2(value, 0.0)).rgb, result.rgb, step(countPortions, float(icell[0])));" );
+        fmg.push( "result.rgb = mix(texture(texPalette, vec2(value, 0.0)).rgb, result.rgb, step(countPortions, float(explicitPortion)));" );
       
       fmg.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" );
     }

@@ -20,7 +20,7 @@
 class DrawIntensity: public DrawQWidget
 {
 public:
-  DrawIntensity(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions=1, ORIENTATION orient=OR_LRBT, SPLITPORTIONS splitPortions=SL_NONE);
+  DrawIntensity(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions=1, ORIENTATION orient=OR_LRBT, SPLITPORTIONS splitPortions=SP_NONE);
 protected:
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
 };
@@ -32,7 +32,7 @@ class DrawIntensePoints: public DrawIntensity
 public:
   enum { DCIP_NONE=0, DCIP_CLEAR2BUF };
 public:
-  DrawIntensePoints(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions=1, ORIENTATION orient=OR_LRBT, SPLITPORTIONS splitPortions=SL_NONE, int dcip = DCIP_NONE);
+  DrawIntensePoints(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions=1, ORIENTATION orient=OR_LRBT, SPLITPORTIONS splitPortions=SP_NONE, int dcip = DCIP_NONE);
 public:
   /// standard method 'setData' still working
   /// Additional methods for data:

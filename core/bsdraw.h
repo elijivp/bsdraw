@@ -198,7 +198,7 @@ public:
                                                         m_scalingA(1), m_scalingB(1),
                                                         m_scalingAMin(1), m_scalingAMax(0),
                                                         m_scalingBMin(1), m_scalingBMax(0), m_scalingIsSynced(false),
-                                                        m_ppal(nullptr), m_doclearbackground(true), m_clearsource(CS_WIDGET), 
+                                                        m_ppal(nullptr), m_ppaldiscretise(false), m_doclearbackground(true), m_clearsource(CS_WIDGET), 
                                                         m_groundType(GND_NONE), m_groundData(nullptr), m_groundDataFastFree(true),
                                                         m_groundMipMapping(false), m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
                                                         m_postMask(DPostmask::empty()),
@@ -206,16 +206,14 @@ public:
   {
     _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);
     
-    m_ppaldiscretise = m_allocatedPortions > 1;
-    
     m_impulsedata.type = impulsedata_t::IR_OFF;
     m_impulsedata.count = 0;
     
     m_ppalrange[PRNG_START] = 0.0f;
     m_ppalrange[PRNG_STOP] = 1.0f;
         
-    int spDivider = m_splitPortions&0xFF;
-    int divider2 = spDivider == 0? 1 : m_allocatedPortions / spDivider + (m_allocatedPortions % spDivider? 1 : 0);
+    unsigned int spDivider = m_splitPortions&0xFF;
+    unsigned int divider2 = spDivider == 0? 1 : m_allocatedPortions / spDivider + (m_allocatedPortions % spDivider? 1 : 0);
     if (((m_splitPortions >> 8)&0xFF) == 0)
     {
       m_splitterA = spDivider == 0? 1 : spDivider;
@@ -315,12 +313,15 @@ public:
   void                  setScalingLimitsHorz(unsigned int scmin, unsigned int scmax=0){ if (!m_matrixSwitchAB) setScalingLimitsA(scmin, scmax); else setScalingLimitsB(scmin, scmax); }
   void                  setScalingLimitsVert(unsigned int scmin, unsigned int scmax=0){ if (!m_matrixSwitchAB) setScalingLimitsB(scmin, scmax); else setScalingLimitsA(scmin, scmax); }
   void                  setScalingLimitsSynced(unsigned int scmin, unsigned int scmax=0){ m_scalingIsSynced = true; m_scalingAMin = m_scalingBMin = scmin < 1? 1 : scmin; m_scalingAMax = m_scalingBMax = scmax; clampScalingManually(); pendResize(true); }
+  
+//  void                  setScalingDefaultA(unsigned int sc){  if (sc < m_scalingAMin) sc = m_scalingAMin;   m_scalingA = sc;  innerUpdateGeometry();  }
+//  void                  setScalingDefaultB(unsigned int sc){  if (sc < m_scalingBMin) sc = m_scalingBMin;   m_scalingB = sc;  innerUpdateGeometry();  }
 public:
   virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const =0;
   void                  adjustSizeAndScale(int sizeA, int sizeB)
   {
     unsigned int matrixDimmA, matrixDimmB, scalingA, scalingB;
-    sizeAndScaleHint(sizeA/m_splitterA, sizeB/m_splitterB, &matrixDimmA, &matrixDimmB, &scalingA, &scalingB);
+    sizeAndScaleHint(sizeA/(int)m_splitterA, sizeB/(int)m_splitterB, &matrixDimmA, &matrixDimmB, &scalingA, &scalingB);
     bool  changedDimmA = m_matrixDimmA != matrixDimmA || m_scalingA != scalingA;
     m_matrixDimmA = matrixDimmA;
     m_scalingA = scalingA;
@@ -348,7 +349,7 @@ protected:
 private:
   void  clampScalingManually()
   {
-    unsigned int old_scaling_A = m_scalingA;
+    //unsigned int old_scaling_A = m_scalingA;
     unsigned int old_scaling_B = m_scalingB;
     clampScaling(&m_scalingA, &m_scalingB);
     if (m_scalingB != old_scaling_B  && m_datex == DATEX_1D)
@@ -384,6 +385,7 @@ public:
   void  setDataPalette(const IPalette* ppal)
   {
     m_ppal = ppal;
+    m_ppaldiscretise = ppal->paletteDiscretion();
     m_bitmaskPendingChanges |= PC_PALETTE;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
@@ -470,9 +472,10 @@ public:
   }
   const float*  getDataPtr() const {   return m_matrixData;    }
   float*        getDataPtr() {    return m_matrixData;   }     // You need manual update after data change
-  virtual const float*  getDataPtr(int portion) const { if (portion < 0 || portion >= m_allocatedPortions)  return nullptr; return &m_matrixData[portion*m_portionSize]; }
-  virtual float*        getDataPtr(int portion) { if (portion < 0 || portion >= m_allocatedPortions)  return nullptr; return &m_matrixData[portion*m_portionSize]; }     // You need manual update after data change
+  virtual const float*  getDataPtr(unsigned int portion) const { if (portion >= m_allocatedPortions)  return nullptr; return &m_matrixData[portion*m_portionSize]; }
+  virtual float*        getDataPtr(unsigned int portion) { if (portion >= m_allocatedPortions)  return nullptr; return &m_matrixData[portion*m_portionSize]; }     // You need manual update after data change
   void  manualDataPtrUpdate(){  vmanUpData(); }
+  void  updateData(){ vmanUpData(); }
 public:
   bool  getMinMax(float* rmin, float* rmax)
   {

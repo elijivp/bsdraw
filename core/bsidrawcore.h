@@ -34,13 +34,15 @@ enum  ORIENTATION       { OR_LRBT=0,  OR_RLBT,  OR_LRTB,  OR_RLTB,    // order f
 enum  DRAWVIEWALIGN     { DVA_LEFT=0,  DVA_CENTER,  DVA_RIGHT
                         };
 
-enum  SPLITPORTIONS     { SL_NONE=0,
-                          SL_VERT =0x0001,  SL_HORZ =0x0101,  SL_VERT2=0x0002,  SL_HORZ2=0x0102,
-                          SL_VERT3=0x0003,  SL_HORZ3=0x0103,  SL_VERT4=0x0004,  SL_HORZ4=0x0104,
-                          SL_VERT5=0x0005,  SL_HORZ5=0x0105,  SL_VERT6=0x0006,  SL_HORZ6=0x0106,
-                          SL_VERT7=0x0007,  SL_HORZ7=0x0107,  SL_VERT8=0x0008,  SL_HORZ8=0x0108,
-                          SL_VERT9=0x0009,  SL_HORZ9=0x0109,  SL_VERT10=0x000A,  SL_HORZ10=0x010A,
-                          SL_VERT11=0x000B,  SL_HORZ11=0x010B,  SL_VERT12=0x000C,  SL_HORZ12=0x010C,
+enum  SPLITPORTIONS     { SP_NONE=0,
+                          SP_COLUMN_TB      =0x10001,    SP_ROW_LR       =0x10101,  SP_COLUMN_BT    =0x0001,  SP_ROW_RL     =0x0101, 
+                          SP_COLUMNS_TB_2   =0x10002,    SP_ROWS_LR_2    =0x10102,  SP_COLUMNS_BT_2 =0x0002,  SP_ROWS_RL_2  =0x0102,
+                          SP_COLUMNS_TB_3   =0x10003,    SP_ROWS_LR_3    =0x10103,  SP_COLUMNS_BT_3 =0x0003,  SP_ROWS_RL_3  =0x0103,
+                          SP_COLUMNS_TB_4   =0x10004,    SP_ROWS_LR_4    =0x10104,  SP_COLUMNS_BT_4 =0x0004,  SP_ROWS_RL_4  =0x0104,
+                          SP_COLUMNS_TB_5   =0x10005,    SP_ROWS_LR_5    =0x10105,  SP_COLUMNS_BT_5 =0x0005,  SP_ROWS_RL_5  =0x0105,
+                          SP_COLUMNS_TB_6   =0x10006,    SP_ROWS_LR_6    =0x10106,  SP_COLUMNS_BT_6 =0x0006,  SP_ROWS_RL_6  =0x0106,
+                          SP_COLUMNS_TB_7   =0x10007,    SP_ROWS_LR_7    =0x10107,  SP_COLUMNS_BT_7 =0x0007,  SP_ROWS_RL_7  =0x0107,
+                          SP_COLUMNS_TB_8   =0x10008,    SP_ROWS_LR_8    =0x10108,  SP_COLUMNS_BT_8 =0x0008,  SP_ROWS_RL_8  =0x0108
                         };
 
 inline bool orientationMirroredHorz(ORIENTATION ort)

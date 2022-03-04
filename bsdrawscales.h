@@ -134,7 +134,7 @@ enum   // Draw Bars Flags
   DBF_ORIENT_INVERT=    0x4,          // invert Draw orientation
   DBF_INTERVENTBANNED=  0x8,          // deny use neighboor bars for MarginElement
   
-  DBF_ONLY2NOTES =            0x10,     // scale with first and last labels
+  DBF_NOTE_BORDERS_ONLY =     0x10,     // scale with first and last labels
   DBF_NOTESINSIDE =           0x20,     // first and last labels dont cross neighboor bars
   DBF_ENUMERATE_FROMZERO =    0x40,     // enumerator scale starts from 0, not from 1
   DBF_ENUMERATE_SHOWLAST =    0x80,     // forever show last enumerator and attach it to last mark
@@ -171,7 +171,7 @@ enum   // Draw Bars Flags
   DBF_NO_RETAP_ON_SCROLL =    0x200000,
   
   DBF_NATIVE_DIV_10_5_2 =     0x100000, // default
-  DBF_NATIVE_DIV_15_3_2 =     0x200000,
+  DBF_NATIVE_DIV_15_5_3 =     0x200000,
   DBF_NATIVE_DIV_10 =         0x300000
 };
 
@@ -448,6 +448,8 @@ class MEWScale: public MEQWrapper
 {
   Q_OBJECT
   friend class DrawBars;
+public:
+  void  updateTapParam(const void*);
 public:
 //  void  setPrefix(const char* str);
 //  void  setPostfix(const char* str);

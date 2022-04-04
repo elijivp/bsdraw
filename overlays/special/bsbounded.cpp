@@ -1,15 +1,14 @@
 /// Overlays:   data bound-depended (low and high data bounds)
-///   OValueLine. View: horizontal line across value
+///   OLevel. View: horizontal line across value
 /// Created By: Elijah Vlasov
 #include "bsbounded.h"
 #include "../../core/sheigen/bsshgentrace.h"
 #include "../../core/sheigen/bsshgencolor.h"
 
-OValueLine::OValueLine(float value): DrawOverlayTraced(), OVLCoordsOff(), OVLDimmsOff(), m_value(value) {}
-OValueLine::OValueLine(float value, const linestyle_t& linestyle): 
+OLevel::OLevel(float value, const linestyle_t& linestyle): 
   DrawOverlayTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(), m_value(value){}
 
-int OValueLine::fshTrace(int overlay, bool rotated, char *to) const
+int OLevel::fshTrace(int overlay, bool rotated, char *to) const
 {
   FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_DATABOUNDS); //databounds
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
@@ -22,6 +21,91 @@ int OValueLine::fshTrace(int overlay, bool rotated, char *to) const
   ocg.goto_func_end(true);
   return ocg.written();
 }
+
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+
+OLevelVariable::OLevelVariable(float value, const linestyle_t& linestyle): 
+  DrawOverlayTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(), m_value(value)
+{
+  appendUniform(DT_1F, &m_value);
+}
+
+void OLevelVariable::setLevel(float v, bool update)
+{
+  m_value = v;
+  updateParameter(false, update);
+}
+
+int OLevelVariable::fshTrace(int overlay, bool rotated, char *to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_DATABOUNDS); //databounds
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  ocg.goto_normed();
+  {
+    ocg.param_alias("value");
+    ocg.push("int zerooffset = int(((value-databounds[0])/(databounds[1]-databounds[0]))*ibounds.y + 0.49);");
+    ocg.trace_linehorz_l(nullptr, nullptr, "zerooffset", nullptr);
+  }
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+
+
+
+ORecLine::ORecLine(const linestyle_t& linestyle): DrawOverlayTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(),
+  ctr(0)
+{
+  for (int i=0; i<TOTAL; i++)
+    links[i] = -1;
+  _dm_coords.count = TOTAL;
+  _dm_coords.data = links;
+  appendUniform(DT_1I, &ctr);
+  appendUniform(DT_ARRI, &_dm_coords);
+}
+
+void ORecLine::increment(bool activate, bool update)
+{
+  if (activate)
+  {
+    for (int i=LAST-1; i>0; i--)
+      links[i] = links[i-1];
+    links[0] = ctr;
+  }
+  ctr++;
+  updateParameter(false, update);
+}
+
+int ORecLine::fshTrace(int overlay, bool rotated, char* to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_DATABOUNDS); //databounds
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+//  ocg.goto_normed();
+  {
+    ocg.param_alias("ctr");
+    ocg.push("int m = 10000;");
+    ocg.push("int v = -1;");
+    ocg.param_for_arr_begin("offset");
+    {
+      ocg.push("int delta = icoords.y - (ctr - offset);");
+      ocg.push("int apply = int(step(0, offset)*step(abs(delta), abs(m)));");
+      ocg.push("m = int(mix(m, delta, apply));");
+      ocg.push("v = int(mix(v, ctr - offset, apply));");
+    }
+    ocg.param_for_end();
+    ocg.push("ioffset = ivec2(0, v);");
+    ocg.goto_normed();
+    ocg.trace_linehorz_l(nullptr, nullptr, nullptr, nullptr);
+  }
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
+
+
+
 
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
@@ -228,11 +312,5 @@ OLevelSet::OLevelSet(int flags, int lstroke, int lspace, int ldots, COORDINATION
     if (transfer_kls[i].b > 1.0f) transfer_kls[i].b = 1.0f;
   }
 }
-
-
-
-
-
-
 
 

@@ -2625,8 +2625,10 @@ private:
         
         if (m > 1)
         {
+//          if (texts[m-1].visible)
+//            texts[m-1].visible = (MVORIG ? (pxEnd - pxLast) : -(pxEnd - pxLast)) > (BAR_VERT[area.atto] ? texts[m-1].uin_locsize.height() : texts[m-1].uin_locsize.width())? 1 : 0;
           if (texts[m-1].visible)
-            texts[m-1].visible = (MVORIG ? (pxEnd - pxLast) : -(pxEnd - pxLast)) > (BAR_VERT[area.atto] ? texts[m-1].uin_locsize.height() : texts[m-1].uin_locsize.width())? 1 : 0;
+            texts[m-1].visible = (MVORIG ? (pxEnd - pxLast) : -(pxEnd - pxLast)) > pixSpace? 1 : 0;
         }
       }
       
@@ -4184,7 +4186,7 @@ void DrawBars::mouseDoubleClickEvent(QMouseEvent* event)
           relatedopts_t rdata = pImpl->elemsBoundsSetupDepended[i]->cachedRdata();
           LL = rdata.rel_fixed.LL;
           HL = rdata.rel_fixed.HL;
-          precision = pImpl->elemsBoundsSetupDepended[i]->precision();
+          precision = pImpl->elemsBoundsSetupDepended[i]->precision() + 1;    // for type digit after current value
           inarea = true;
           break;
         }

@@ -152,6 +152,36 @@ int OFSquareCC::fshTrace(int overlay, bool rotated, char *to) const
 //  updateParameter(false, update);
 //}
 
+
+///////////////////////////////////////
+////////////////////////
+/// 
+
+
+OFRhombCC::OFRhombCC(float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float aside, const linestyle_t &kls): DrawOverlayTraced(kls),
+  OVLCoordsDynamic(cn, center_x, center_y), OVLDimms1Static(featcn == CR_SAME? cn : featcn, aside), m_fillcoeff(fillopacity)
+{
+}
+
+OFRhombCC::OFRhombCC(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float aside, const linestyle_t &kls): DrawOverlayTraced(kls),
+  OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimms1Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, aside), m_fillcoeff(fillopacity)
+{
+}
+
+int OFRhombCC::fshTrace(int overlay, bool rotated, char *to) const
+{
+  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.goto_normed();
+    ocg.trace_rhomb_cc("idimms1", m_fillcoeff);
+  }  
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
+
+
+
 /////////////////////////////////////////////
 //////////////////////////
 /// 
@@ -546,6 +576,96 @@ int   OFFactor::fshTrace(int overlay, bool rotated, char* to) const
   return ocg.written();
 }
 
+
+/////////////////////////////////////////////
+//////////////////////////
+/// 
+
+OFPointrun::OFPointrun(COORDINATION cr, float center_x, float center_y, COORDINATION featcn, float gap_w, int speed): 
+  DrawOverlaySimple(1), OVLCoordsDynamic(cr, center_x, center_y),
+  OVLDimmsOff(), m_cr(featcn), m_gap(gap_w), m_speed(speed)
+{
+}
+
+OFPointrun::OFPointrun(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap_w, int speed): 
+  DrawOverlaySimple(1), OVLCoordsDynamic(pcoords, offset_x, offset_y),
+  OVLDimmsOff(), m_cr(featcn), m_gap(gap_w), m_speed(speed)
+{
+}
+
+int   OFPointrun::fshTrace(int overlay, bool rotated, char* to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.goto_normed();
+    int amp = ocg.add_movecs_pixing(m_cr);
+    ocg.var_fixed("gap", m_gap);
+    ocg.movecs_pix_x("gap", amp);
+    
+    
+    if (m_speed <= 0)
+    {
+      ocg.var_fixed("speed", -m_speed);
+      ocg.push("int offsx = int(step(gap, abs(inormed.x)))*((inormed.x >> speed) << speed);");
+    }
+    else
+    {
+      ocg.var_fixed("speed", m_speed);
+      ocg.push("int n = sign(inormed.x);");
+      ocg.push("int x = n*inormed.x;");
+      ocg.push("int s = 2 + speed;");
+      ocg.push("while (x != 0){  x = x >> 1;   s = s + 1; }");
+//      ocg.push("int offsx = 1 + ((n*inormed.x << (2 + speed)) & ( ((1 << speed)-1) << (s - speed))) / ((1 << (2 + speed)) - 1);");
+      ocg.push("int offsx = ((n*inormed.x << (2 + speed)) & ( ((1 << speed)-1) << (s - speed))) / ((1 << (2 + speed)));");
+      ocg.push("offsx = offsx*n * int(step(gap, offsx));");
+    }
+    ocg.push("result = vec3(1.0, 1.0, 1.0);");
+    ocg.push("mixwell = step(inormed.x, offsx)*step(offsx, inormed.x)*step(inormed.y, 0)*step(0, inormed.y);");
+  }  
+  ocg.goto_func_end(false);
+  return ocg.written();
+}
+
+/////////////////////////////////////////////
+//////////////////////////
+/// 
+
+
+OFSubjectif::OFSubjectif(COORDINATION cr, float center_x, float center_y, COORDINATION featcn, float width, float gap_w, float gap_h, const linestyle_t& linestyle): 
+  DrawOverlayTraced(linestyle),  OVLCoordsDynamic(cr, center_x, center_y),
+  OVLDimms2Static(featcn == CR_SAME? cr : featcn, width*2 + gap_w, gap_h*2)
+{
+  m_gap = gap_w;
+}
+
+OFSubjectif::OFSubjectif(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float width, float gap_w, float gap_h, const linestyle_t& linestyle): 
+  DrawOverlayTraced(linestyle), OVLCoordsDynamic(pcoords, offset_x, offset_y),
+  OVLDimms2Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, width*2 + gap_w, gap_h*2)
+{
+  m_gap = gap_w;
+}
+
+int   OFSubjectif::fshTrace(int overlay, bool rotated, char* to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.goto_normed();
+    ocg.var_fixed("gap", m_gap);
+    ocg.movecs_pix_x("gap", 1);
+    
+//    ocg.push("ivec2 ofs = ivec2(sign(inormed.x)*idimms2.x, sign(inormed.y)*idimms2.y);");   // symmetric cross in center
+    
+    ocg.trace_2linehorz_c("idimms2.x", "gap", nullptr);
+//    ocg.push("int ofs = int(mix(idimms2.y, -idimms2.y, step(float(inormed.x), 0)));");
+//    ocg.trace_2linehorz_c("idimms2.x", nullptr, "ofs");
+    ocg.push("inormed.y = inormed.y - int(mix(idimms2.y, -idimms2.y, step(float(inormed.y), 0)));");
+    ocg.trace_2linehorz_c("idimms2.x - gap", nullptr, nullptr);
+  }  
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
 
 /////////////////////////////////////////////
 //////////////////////////

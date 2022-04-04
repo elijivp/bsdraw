@@ -51,10 +51,19 @@ public:
   OFSquareCC(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float halfside, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
-public:
-  float halfside() const;
-  void  updateHalfside(float aside);
 };
+
+class OFRhombCC: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimms1Static
+{
+protected:
+  float  m_fillcoeff;
+public:
+  OFRhombCC(float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float halfside, const linestyle_t& kls=linestyle_solid(1,1,1));
+  OFRhombCC(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float halfside, const linestyle_t& kls=linestyle_solid(1,1,1));
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+};
+
 
 class OFTriangle: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimms1Static
 {
@@ -160,6 +169,30 @@ protected:
 public:
   OFFactor(COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float gap, float size, const linestyle_t& kls=linestyle_solid(1,1,1));
   OFFactor(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap, float size=-1, const linestyle_t& kls=linestyle_solid(1,1,1));
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+};
+
+class OFPointrun: public DrawOverlaySimple, public OVLCoordsDynamic, public OVLDimmsOff
+{
+protected:
+  COORDINATION  m_cr;
+  float         m_gap;
+  int           m_speed;
+public:
+  OFPointrun(COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float gap_w, int speed);
+  OFPointrun(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap_w, int speed);
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+};
+
+class OFSubjectif: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimms2Static
+{
+protected:
+  float         m_gap;
+public:
+  OFSubjectif(COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float width, float gap_w, float gap_h, const linestyle_t& kls=linestyle_solid(1,1,1));
+  OFSubjectif(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float width, float gap_w, float gap_h, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };

@@ -9,6 +9,9 @@
 #ifndef BSOVERLAYSLIMIT
 // Using default bigsized overlay
 #endif
+#ifndef BSOVLUNIFORMSLIMIT
+// Using default uniforms limit
+#endif
 
 #include "bsidrawcore.h"
 #include "bsoverlay.h"
@@ -153,6 +156,11 @@ public:
 #else
   enum                    { OVLLIMIT=32 };
 #endif
+#ifdef BSOVLUNIFORMSLIMIT
+  enum                    { OVLUFLIMIT=BSOVLUNIFORMSLIMIT };
+#else
+  enum                    { OVLUFLIMIT=16 };
+#endif
 protected:
   /// inner. Overlays storage
   struct uniform_located_t
@@ -177,12 +185,22 @@ protected:
     unsigned int          ponger_update;
     int                   outloc;
     unsigned int          uf_count;
-    uniform_located_t*    uf_arr;
+    uniform_located_t     uf_arr[OVLUFLIMIT];
     msstruct_t            olinks;
-    void                _reinit(DrawOverlay* p, unsigned int ufcount){ povl = p; prct = povl->reactor(); ponger_reinit = ponger_update = 0; outloc = -1;  if (uf_count) delete []uf_arr;  uf_count = ufcount; if(uf_count) uf_arr = new uniform_located_t[ufcount]; olinks.type = msstruct_t::MS_SELF; }
+    void      _reinit(DrawOverlay* p, unsigned int ufcount)
+    {
+      povl = p;
+      prct = povl->reactor();
+      ponger_reinit = ponger_update = 0;
+      outloc = -1;
+//      if (uf_count) delete []uf_arr;
+      uf_count = ufcount; 
+//      if(uf_count) uf_arr = new uniform_located_t[ufcount];
+      olinks.type = msstruct_t::MS_SELF;
+    }
     void                _setdriven(int driverid){ olinks.type = msstruct_t::MS_DRIVEN;  olinks.details.drivenid = driverid; }
     overlays_t(): povl(nullptr), prct(nullptr), uf_count(0){}
-    ~overlays_t() { if (uf_count) delete[]uf_arr; }
+//    ~overlays_t() { if (uf_count) delete[]uf_arr; }
   }                     m_overlays[OVLLIMIT];
   unsigned int          m_overlaysCount;
   DrawEventReactor*           m_proactive;
@@ -688,7 +706,9 @@ public:
 private:
   void _ovlSet(int idx, DrawOverlay* povl, bool owner, bool doRoot, int rootidx)
   {
-    if (povl == nullptr){  povl = &m_overlaySingleEmpty;  owner = false; }
+    if (povl == nullptr){   povl = &m_overlaySingleEmpty;  owner = false; }
+    povl->increasePingerReinit();
+    povl->increasePingerUpdate();
     m_overlays[idx]._reinit(povl, povl->uniforms().count);
     if (doRoot)   m_overlays[idx]._setdriven(rootidx);
     if (povl != &m_overlaySingleEmpty)

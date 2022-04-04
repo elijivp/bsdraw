@@ -165,7 +165,7 @@ public:
   void  ban_trace(bool);
 public:           /// TRACES  from inormed
   void  trace_triangle_cc(const char *side, int direction, float fillcoeff=0.0f);   /// 0 - UP, 1 - DOWN
-  
+  void  simplemix_triangle_cc(const char *side, int direction, float fillcoeff=0.0f);   /// 0 - UP, 1 - DOWN
   
   void  trace_rect_xywh(const char* wh, float fillcoeff=0.0f, const char* crosslimit=nullptr);
   void  trace_rect_cc(const char* rdimms, float fillcoeff=0.0f, const char* crosslimit=nullptr);
@@ -175,9 +175,17 @@ public:           /// TRACES  from inormed
   
   void  trace_square_cc_begin(const char* halfside);
   void  trace_square_cc_end(float fillcoeff=0.0f);
+  
+  void  simplemix_square_cc(const char* halfside, float fillcoeff=0.0f);
+  
+  void  trace_rhomb_cc(const char *side2side, float fillcoeff);
+  void  simplemix_rhomb_cc(const char* side2side, float fillcoeff=0.0f);
 
   void  trace_circle_cc_begin(const char* radius, const char* border);
   void  trace_circle_cc_end(float fillcoeff/*, bool notraceinside=false*/);
+  
+  void  simplemix_circle_cc(const char* radius, float fillcoeff=0.0f);
+  void  simplemix_cross_cc(const char* size, float fillcoeff);
   
   void  trace_2linehorz_c(const char* isize = nullptr, const char* igap = nullptr, const char* ioffset = nullptr, const char* icrosslimit=nullptr);
   void  trace_2linevert_c(const char* size = nullptr, const char* gap = nullptr, const char* ioffset = nullptr, const char* crosslimit=nullptr);
@@ -187,6 +195,7 @@ public:           /// TRACES  from inormed
   void  trace_linevert_b(const char* isize = nullptr, const char* igap = nullptr, const char* ioffset = nullptr, const char* icrosslimit=nullptr);
   
   void  trace_lines_x(const char* size = nullptr, const char* igap = nullptr, const char* icrosslimit=nullptr);
+  
 public:
   void  trace_line_from_normed_to(const char* inormedendpoint);
 //  void  trace_ray_trough_normed_from(const char* inormedstartpoint);

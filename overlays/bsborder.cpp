@@ -59,12 +59,19 @@ int OBorderSelected::fshTrace(int overlay, bool rotated, char *to) const
   {
     ocg.goto_normed_empty();
     ocg.param_alias("selected");
-    ocg.var_const_fixed("border", (int)m_width);
-    ocg.push( "for (int i=0; i<2; i++){"
-                "result += (1.0 - step(float(border), float(icoords[i])))*insider(icoords[1-i], ivec2(0, ibounds[1-i]));"
-                "result += step(float(ibounds[i] - border), float(icoords[i]))*insider(icoords[1-i], ivec2(0, ibounds[1-i]));"
-              "}"
-              "result[0] = result[0]*step(float(selected), float(ispcell[0]))*step(float(ispcell[0]), float(selected));"
+//    ocg.var_const_fixed("border", (int)m_width);
+//    ocg.push( "for (int i=0; i<2; i++){"
+//                "result += (1.0 - step(float(border), float(icoords[i])))*insider(icoords[1-i], ivec2(0, ibounds[1-i]));"
+//                "result += step(float(ibounds[i] - border), float(icoords[i]))*insider(icoords[1-i], ivec2(0, ibounds[1-i]));"
+//              "}"
+//              "result[0] = result[0]*step(float(selected), float(ispcell[0]))*step(float(ispcell[0]), float(selected));"
+//          );
+    ocg.var_fixed("border", (int)m_width);
+    ocg.push("border = int(border/2.0 + 0.5);");
+    ocg.push( 
+                "result.xy += vec2(step(ibounds.y-border, icoords.y), icoords.x);"
+                "result.xy += vec2(step(icoords.y, border - 1), icoords.x);"
+                "result.xy = result.xy*step(float(selected), float(ispcell[0]))*step(float(ispcell[0]), float(selected));"
           );
   }  
   ocg.goto_func_end(true);

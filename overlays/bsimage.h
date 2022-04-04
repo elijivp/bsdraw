@@ -24,9 +24,10 @@ public:
   ~OVLQImage();
   QImage*         getImage(){ return m_pImage; }
   const QImage*   getImage() const { return m_pImage; }
-  bool            assignImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach);
   void            banAlphaChannel(bool ban);
   bool            isAlphaBanned() const;
+protected:
+  bool            assignImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach);
 protected:
   dmtype_image_t  m_dmti;         /// dont forget to register it after coords&dimms!
   QImage*         m_pImage;
@@ -44,7 +45,7 @@ public:
     OVLQImage(image, icvt, autorotated, detach){}
   
   void  reUpdate();
-  bool  setImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach);
+  bool  setImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach, bool update=true);
 };
 
 
@@ -58,7 +59,7 @@ protected:
   float           m_sizemultiplier[2];
 };
 
-class OImageStretched: public DrawOverlaySimpleImage, public OVLCoordsStatic, public OVLDimms2Static
+class OImageStretched: public DrawOverlaySimpleImage, public OVLCoordsStatic, public OVLDimms2Dynamic
 {
 public:
   OImageStretched(QImage* image, IMAGECONVERT icvt, bool autorotated, COORDINATION cn=CR_RELATIVE, float x=0.0f, float y=0.0f, float mult_w=1.0f, float mult_h=1.0f);

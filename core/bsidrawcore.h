@@ -67,11 +67,15 @@ inline bool orientationTransposed(ORIENTATION ort)
 
 enum BSPOSTMASKOVER {  PO_OFF=0, PO_SIGNAL=1, PO_EMPTY=2, PO_ALL=3 };
 enum BSPOSTMASKTYPE {  
-                  PM_CONTOUR, PM_LINELEFT, PM_LINERIGHT, PM_LINEBOTTOM, PM_LINETOP,
+                  PM_CONTOUR, 
+                  PM_LINELEFT, PM_LINERIGHT, PM_LINELEFTRIGHT, 
+                  PM_LINEBOTTOM, PM_LINETOP, PM_LINEBOTTOMTOP, 
                   PM_LINELEFTBOTTOM, PM_LINERIGHTBOTTOM, PM_LINELEFTTOP, PM_LINERIGHTTOP,
                   PM_CIRCLESMOOTH, PM_CIRCLEBORDERED, PM_DOT, 
                   PM_DOTLEFTBOTTOM, PM_DOTCONTOUR,
-                  PM_SHTRICHL, PM_SHTRICHR, PM_CROSS, PM_GRID, PM_FILL, PM_SQUARES  
+                  PM_SHTRICHL, PM_SHTRICHR, PM_CROSS, PM_GRID, PM_FILL, PM_SQUARES,
+                  PM_CIRCLESMOOTH2, PM_CIRCLEBORDERED2,
+                  _PM_TOTAL
 };
 
 struct  DPostmask
@@ -165,11 +169,10 @@ protected:
   virtual void innerOverlayReplace(int ovlid, DrawOverlay* ovl, bool owner)=0;
   virtual void innerOverlayRemove(int ovlid)=0;
 };
-
 class _DrawOverlay
 {
 public:
-  enum { MAXUNIFORMS = 10, MAXDRAWERS = 50 };
+  enum { MAXUNIFORMS = 16, MAXDRAWERS = 32 };
 private:
   dmtype_t          m_uniforms[MAXUNIFORMS];
   unsigned int      m_uniformsCount;
@@ -184,7 +187,7 @@ private:
   unsigned int      m_pinger_reinit;
   unsigned int      m_pinger_update;
 public:
-  _DrawOverlay(): m_uniformsCount(0), m_drawersCount(0), m_pinger_reinit(1), m_pinger_update(1) {}
+  _DrawOverlay(): m_uniformsCount(0), m_drawersCount(0), m_pinger_reinit(0), m_pinger_update(0) {}
   virtual ~_DrawOverlay()
   {
     for (unsigned int i=0; i<m_drawersCount; i++)
@@ -391,6 +394,14 @@ struct coordstriumv_t
   float   fx_pix, fy_pix;   // screen coords -margins *devicePixelRatio
   float   fx_rel, fy_rel;   // coords [0..1]    (for strict calculations)
 };
+
+struct coordstriumv_ex_t: coordstriumv_t
+{
+  int     ex_r, ex_c;
+//  float   ex_fx_inside, ex_fy_inside;
+  int     ex_count_rows, ex_count_columns;
+};
+
 
 class IOverlayReactor
 {

@@ -33,6 +33,16 @@ OVLQImage::~OVLQImage()
     delete m_pImage;
 }
 
+void OVLQImage::banAlphaChannel(bool ban)
+{
+  m_banalpha = ban;
+}
+
+bool OVLQImage::isAlphaBanned() const
+{
+  return m_banalpha;
+}
+
 bool  OVLQImage::assignImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach)
 {
   if (image != nullptr && image->isNull() == false)
@@ -80,26 +90,18 @@ bool  OVLQImage::assignImage(QImage* image, IMAGECONVERT icvt, bool autorotated,
   return true;
 }
 
-void OVLQImage::banAlphaChannel(bool ban)
-{
-  m_banalpha = ban;
-}
-
-bool OVLQImage::isAlphaBanned() const
-{
-  return m_banalpha;
-}
 
 
 void DrawOverlaySimpleImage::reUpdate()
 {
-  updateParameter(true, true);
+  updateParameter(false, true);
 }
 
-bool  DrawOverlaySimpleImage::setImage(QImage* image, OVLQImage::IMAGECONVERT icvt, bool autorotated, bool detach)
+bool  DrawOverlaySimpleImage::setImage(QImage* image, OVLQImage::IMAGECONVERT icvt, bool autorotated, bool detach, bool update)
 {
   bool result = assignImage(image, icvt, autorotated, detach);
-  updateParameter(true, true);
+//  updateParameter(true, update);
+  updateParameter(false, update);
   return result;
 }
 
@@ -128,9 +130,12 @@ int OImageOriginal::fshTrace(int overlay, bool rotated, char *to) const
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
-//    ocg.push("_fvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1.0 - step(float(idimms2.x), float(inormed.x)))*(1.0 - step(float(idimms2.y), float(inormed.y)));");
-    ocg.push("_fvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*step(float(inormed.x), float(idimms2.x))*step(float(inormed.y), float(idimms2.y));");
-    ocg.push( m_autorotated? "vec2  tcoords = inormed/vec2(idimms2.x, idimms2.y);" : "vec2  tcoords = inormed/vec2(idimms2.x, idimms2.y);");
+    ocg.push("_fvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*step(float(inormed.x), float(idimms2.x - 1))*step(float(inormed.y), float(idimms2.y - 1));");
+//    ocg.push( m_autorotated? "vec2  tcoords = inormed/vec2(idimms2.x, idimms2.y);" : "vec2  tcoords = vec2(inormed.x, idimms2.y - 1 - inormed.y) /vec2(idimms2.x, idimms2.y);");
+    ocg.push( m_autorotated? 
+                "vec2  tcoords = inormed/vec2(idimms2.x - 1, idimms2.y - 1);" :     // yep, -1
+                "vec2  tcoords = vec2(inormed.x, idimms2.y - 1 - inormed.y) /vec2(idimms2.x - 1, idimms2.y - 1);" // yep, -1
+                );
     ocg.push( "vec4 pixel = texture(");  ocg.param_get(); ocg.push(", vec2(tcoords.x, 1.0 - tcoords.y));");
     m_dmti.type == dmtype_image_t::RGB? ocg.push("result = pixel.rgb;") : ocg.push("result = pixel.bgr;");
     ocg.push(m_banalpha? "mixwell = _fvar;" : "mixwell = _fvar*pixel.a;");
@@ -146,7 +151,7 @@ int OImageOriginal::fshTrace(int overlay, bool rotated, char *to) const
 
 
 OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, bool autorotated, COORDINATION cn, float x, float y, float mult_w, float mult_h):
-  DrawOverlaySimpleImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsStatic(cn, x, y), OVLDimms2Static(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+  DrawOverlaySimpleImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsStatic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
@@ -154,7 +159,7 @@ OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, bool autorota
 }
 
 OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, bool autorotated, OVLCoordsStatic *pcoords, float offset_x, float offset_y, float mult_w, float mult_h):
-  DrawOverlaySimpleImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsStatic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Static(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+  DrawOverlaySimpleImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsStatic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;

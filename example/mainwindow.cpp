@@ -1284,6 +1284,73 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //    defaultPalette = &paletteBY;
     defaultPalette = &paletteRG;
   }
+  else if (MW_TEST == DEBUG_OVERLAYAREA)
+  {
+    SAMPLES = 1;
+    MAXLINES = 1;
+    PORTIONS = 1;
+    PRECREATE(1, 1);
+    for (unsigned int c=0; c<dccount; c++)
+      for (unsigned int i=0; i<drcount; i++)
+        draws[c*drcount + i] = new DrawIntensity(SAMPLES, MAXLINES, PORTIONS);
+    
+    for (unsigned int c=0; c<dccount; c++)
+      for (unsigned int i=0; i<drcount; i++)    //linestyle_green(4, 2, 0)
+      {
+//        DrawOverlay* ovl = new OSegment(linestyle_inverse_1(10, 8, 0), CR_ABSOLUTE, 20, 100);
+//        DrawOverlay* ovl = new OHighlight(linestyle_inverse_1(1, 0, 0), true, CR_ABSOLUTE, 10);
+//        ovl->setOTS(0.0f, 1.0f, 1.0f);
+//        draws[c*drcount + i]->ovlPushBack(ovl);
+        
+        
+//        DrawOverlay* ovl = new OFSubjectif(CR_RELATIVE, 0.0f, 0.0f, CR_ABSOLUTE, 40, 60, 3, linestyle_inverse_1(10, 6, 0));
+        
+        
+//        DrawOverlay* ovl = new OFPointrun(CR_RELATIVE, 0.0f, 0.0f, CR_ABSOLUTE, 40, 6);
+        
+//        int ovlroot = draws[c*drcount + i]->ovlPushBack(new OActiveCursor());
+//        draws[c*drcount + i]->ovlPushBack(ovl, ovlroot);
+        
+//        ORecLine* ovl = new ORecLine(linestyle_red(7,2,0));
+//        for (int i=0; i<10; i++)
+//          ovl->increment(false);
+//        ovl->increment(true);
+//        for (int i=0; i<5; i++)
+//          ovl->increment(false);
+//        ovl->increment(true);
+//        for (int i=0; i<20; i++)
+//          ovl->increment(false);
+        
+//        for (int j=0; j<4; j++)
+//        {
+//          DrawOverlay*  ovl = new OFRhombCC(0.2f, CR_RELATIVE, 0.2f + j*0.2f, 0.5f, CR_RELATIVE, 0.1f + 0.1f*j, linestyle_white(8, 4, 0));
+          
+//          draws[c*drcount + i]->ovlPushBack(ovl);
+//        }
+        
+        
+//        OGridCells* ovl = new OGridCells(5, 4, linestyle_inverse_1(4, 2, 0));
+//        draws[c*drcount + i]->ovlPushBack(ovl);
+        
+//        OActiveCell* ovl2 = new OActiveCell(5, 4, linestyle_red(10, 4, 0), 4);
+//        draws[c*drcount + i]->ovlPushBack(ovl2);
+        
+        OCluster* pMKFigures = new OCluster(false, 32, CR_RELATIVE, 0.05f, &paletteGnWh, false, 0.15f);
+        {
+          for (int r=0; r<8; r++)
+            for (int c=0; c<3; c++)
+              pMKFigures->updateItem(r*3 + c, 0.1f + 0.2f * c, 0.1f + 0.1f * r, 0.5f, (OCluster::FFORM)(r+1), 1.0f);
+          pMKFigures->updateFinished();
+        }
+        draws[c*drcount + i]->ovlPushBack(pMKFigures);
+      }
+    
+    
+    sp = SP_SLOWEST;
+//    sigtype = ST_PEAK3;
+    sigtype = ST_ZERO;
+//    sigtype = ST_MANYSIN;
+  }
   else if (MW_TEST == DEBUG_MEVSCALES)
   {   
     SAMPLES = 192;
@@ -2031,16 +2098,16 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 BS_STRETCH
 
                 BSAUTO_TEXT_ADD(QString::fromUtf8("Type: "))
-                QStringList dpmMain; dpmMain<<QString::fromUtf8("Contour")<<QString::fromUtf8("Line left")
-                                           <<QString::fromUtf8("Line right")<<QString::fromUtf8("Line bottom")
-                                              <<QString::fromUtf8("Line top")<<QString::fromUtf8("Lines left-bot")
-                                                <<QString::fromUtf8("Lines right-bot")
-                                                  <<QString::fromUtf8("Lines left-top")<<QString::fromUtf8("Lines right-top")
-                                                    <<QString::fromUtf8("Circle smooth")<<QString::fromUtf8("Circle bordered")<<
-                                                      QString::fromUtf8("Dot")<<QString::fromUtf8("Dot left-bot")<<QString::fromUtf8("Dot contour")
+                QStringList dpmMain; dpmMain<<QString::fromUtf8("Contour")
+                                          <<QString::fromUtf8("Line left")<<QString::fromUtf8("Line right")<<QString::fromUtf8("Line left-rigth")
+                                            <<QString::fromUtf8("Line bottom")<<QString::fromUtf8("Line top")<<QString::fromUtf8("Line bottom-top")
+                                              <<QString::fromUtf8("Lines left-bot")<<QString::fromUtf8("Lines right-bot")
+                                                <<QString::fromUtf8("Lines left-top")<<QString::fromUtf8("Lines right-top")
+                                                  <<QString::fromUtf8("Circle smooth")<<QString::fromUtf8("Circle bordered")
+                                                    <<QString::fromUtf8("Dot")<<QString::fromUtf8("Dot left-bot")<<QString::fromUtf8("Dot contour")
                                                       <<QString::fromUtf8("/")<<QString::fromUtf8("\\")
-                                                      <<QString::fromUtf8("Cross")<<QString::fromUtf8("Grid")
-                                                        <<QString::fromUtf8("Fill")<<QString::fromUtf8("Squares");
+                                                        <<QString::fromUtf8("Cross")<<QString::fromUtf8("Grid")
+                                                          <<QString::fromUtf8("Fill")<<QString::fromUtf8("Squares");
                 QComboBox* qcb = new QComboBox;
                 qcb->addItems(dpmMain);
                 qcb->setUserData(1, new BSUOD_DPM(0, dpm));
@@ -3193,19 +3260,19 @@ void MainWindow::generateData()
   {
     for (unsigned int i=0; i<drawscount; i++)
     {
-      OMarkFigures* pMKFigures = (OMarkFigures*)draws[i]->ovlGet(ovl_figures);
+      OCluster* pMKFigures = (OCluster*)draws[i]->ovlGet(ovl_figures);
       if (pMKFigures)
       {
-        int cf = pMKFigures->countFigures();
+        int cf = pMKFigures->count();
         #pragma omp parallel for
         for (int j=0; j<cf; j++)
         {
           float x = randbuf[j%DSAMPLES], y = randbuf[(cf - j - 1)%DSAMPLES];
           generateGaussian(0.5, 0.2, &x, &y);
-          pMKFigures->updateFigure(j, x, y);
+          pMKFigures->updateItem(j, x, y);
         }
         float nzm = randbuf[0];
-        pMKFigures->updateFigureZoom(rand()%pMKFigures->countFigures(), 1 + nzm);
+        pMKFigures->updateItemZoom(rand()%cf, 1 + nzm);
         pMKFigures->updateFinished();
       }
     }
@@ -3417,16 +3484,16 @@ void MainWindow::generateData()
   {
     for (unsigned int i=0; i<drawscount; i++)
     {
-      OMarkFigures* pMKFigures = (OMarkFigures*)draws[i]->ovlGet(ovl_figures);
+      OCluster* pMKFigures = (OCluster*)draws[i]->ovlGet(ovl_figures);
       if (pMKFigures)
       {
         std::normal_distribution<float> ND(0.5, 0.1);
         for (unsigned int i=0; i<pMKFigures->countFigures(); i++)
         {
-          pMKFigures->updateFigure(i, ND(gen), ND(gen));
+          pMKFigures->updateItem(i, ND(gen), ND(gen));
         }
         float nzm = ND(gen)*2;
-        pMKFigures->updateFigureZoom(rand()%pMKFigures->countFigures(), nzm*nzm*nzm);
+        pMKFigures->updateItemZoom(rand()%pMKFigures->countFigures(), nzm*nzm*nzm);
         pMKFigures->updateFinished();
       }
     }
@@ -3791,13 +3858,13 @@ void MainWindow::createOverlaySTD(int id)
     {
       if (!ovl_is_synced || i == 0)
       {
-        OMarkFigures* pMKFigures = new OMarkFigures(500, CR_ABSOLUTE_NOSCALED, 4, &paletteBkWh, false);
-        for (unsigned int j=0; j<pMKFigures->countFigures(); j++)
+        OCluster* pMKFigures = new OCluster(false, 500, CR_ABSOLUTE_NOSCALED, 4, &paletteBkWh, false);
+        for (unsigned int j=0; j<pMKFigures->count(); j++)
         {
-          pMKFigures->updateFigureForm(j, (OMarkFigures::FFORM)( 1 + j % 5));
-  //        pMKFigures->updateFigureColor(i, 1.0 - 0.15f*(rand()%4));
-  //        pMKFigures->updateFigureColor(i, (1+rand()%5)*0.15f);
-          pMKFigures->updateFigureColor(j, rand()/float(RAND_MAX));
+          pMKFigures->updateItemForm(j, (OCluster::FFORM)(1 + j % 6));
+  //        pMKFigures->updateItemColor(i, 1.0 - 0.15f*(rand()%4));
+  //        pMKFigures->updateItemColor(i, (1+rand()%5)*0.15f);
+          pMKFigures->updateItemColor(j, rand()/float(RAND_MAX));
         }
         ovl_figures = draws[i]->ovlPushBack(pMKFigures);
       }
@@ -4195,7 +4262,7 @@ void MainWindow::changeClusterPalette()
   {
     for (unsigned int i=0; i<drawscount; i++)
     {
-      OMarkFigures* pMKFigures = dynamic_cast<OMarkFigures*>(draws[i]->ovlGet(ovl_figures));
+      OCluster* pMKFigures = dynamic_cast<OCluster*>(draws[i]->ovlGet(ovl_figures));
       if (pMKFigures)
       {
         pMKFigures->setPalette(ppalettes_adv[rand() % sizeof(ppalettes_adv)/sizeof(ppalettes_adv[0])], false);

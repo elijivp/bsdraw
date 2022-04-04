@@ -328,20 +328,21 @@ void FshMainGenerator::main_end(const DPostmask &fsp)
                                           " + step(imrect[2] - imrect.x, post_mask[2]) + step(imrect[3] - imrect.y, post_mask[2]));", // PM_CONTOUR
                                   "float ppb_in = step(imrect.x, post_mask[2]);", // PM_LINELEFT
                                   "float ppb_in = step(imrect[2] - imrect.x, post_mask[2]);", // PM_LINERIGHT
+                                  "float ppb_in = sign(step(imrect.x, post_mask[2]) + step(imrect[2] - imrect.x, post_mask[2]));",   // PM_LINELEFTRIGHT
+      
                                   "float ppb_in = step(imrect.y, post_mask[2]);", // PM_LINEBOTTOM
                                   "float ppb_in = step(imrect[3] - imrect.y, post_mask[2]);", // PM_LINETOP
+                                  "float ppb_in = sign(step(imrect.y, post_mask[2]) + step(imrect[3] - imrect.y, post_mask[2]));",   // PM_LINEBOTTOMTOP
+      
                                   "float ppb_in = sign(step(imrect.x, post_mask[2])+step(imrect.y, post_mask[2]));", //  PM_LINELEFTBOTTOM
                                   "float ppb_in = sign(step(imrect[2] - imrect.x, post_mask[2])+step(imrect.y, post_mask[2]));", //  PM_LINERIGHTBOTTOM
                                   "float ppb_in = sign(step(imrect.x, post_mask[2])+step(imrect[3] - imrect.y, post_mask[2]));", //  PM_LINELEFTTOP
                                   "float ppb_in = sign(step(imrect[2] - imrect.x, post_mask[2])+step(imrect[3] - imrect.y, post_mask[2]));", // PM_LINERIGHTTOP 
                                   "vec2 _ppb_pos = vec2(abs(0.5 - float(imrect.x)/imrect[2]), abs(0.5 - float(imrect.y)/imrect[3]));"
                                     "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
-//"float ppb_in = smoothstep((post_mask[2]*0.1 + 0.2)*(post_mask[2]*0.1 + 0.2), 0.7*0.7, _ppb_d2);"
                                     "float ppb_in = smoothstep(0.25*0.25, (0.66 - post_mask[2]*0.05)*(0.66 - post_mask[2]*0.05), _ppb_d2);", // PM_CIRCLESMOOTH
                                   "vec2 _ppb_pos = vec2(abs(0.5 - float(imrect.x)/imrect[2]), abs(0.5 - float(imrect.y)/imrect[3]));"
                                     "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
-//                                    "float ppb_in = smoothstep(0.5*0.5, (0.9 - post_mask[2]*0.02)*(0.9 - post_mask[2]*0.02), _ppb_d2);", // PM_CIRCLEBORDERED
-//                                    "float ppb_in = smoothstep(0.3*0.3, (0.6 - post_mask[2]*0.02)*(0.6 - post_mask[2]*0.02), _ppb_d2);", // PM_CIRCLEBORDERED
                                     "float ppb_in = smoothstep(0.4*0.4, (0.6 - post_mask[2]*0.02)*(0.6 - post_mask[2]*0.02), _ppb_d2);", // PM_CIRCLEBORDERED
                                   "float ppb_in = step(abs(imrect.x-imrect[2]/2), post_mask[2])*step(abs(imrect.y-imrect[3]/2), post_mask[2]);", // PM_DOT
                                   "float ppb_in = step(imrect.x, post_mask[2])*step(imrect.y, post_mask[2]);", // PM_DOTLEFTBOTTOM
@@ -356,6 +357,20 @@ void FshMainGenerator::main_end(const DPostmask &fsp)
                                   "float ppb_in = step(mod(abs(imrect.x - imrect.y), (post_mask[2] + 1.0)*2.0), 0.0);", // PM_GRID
                                   "float ppb_in = step(mod(abs(imrect.x - imrect.y), 2.0 + post_mask[2]) + mod(abs(imrect.x - imrect[3] - 1 + imrect.y), 2.0 + post_mask[2]), 0.0);", // PM_FILL
                                   "float ppb_in = step(mod(abs(imrect.x - imrect.y) + abs(imrect.x - imrect[3] + 1 + imrect.y), 3.0 + post_mask[2]), 0.0);" // PM_SQUARES
+      
+//                                  "vec2 _ppb_pos = vec2(float(imrect[3])/imrect[2], float(imrect[2])/imrect[3]);"
+                                  "vec2 _ppb_pos = vec2(float(imrect[2])/imrect[3], float(imrect[3])/imrect[2]);"
+                                  "_ppb_pos = vec2(max(_ppb_pos.x, 1.0), max(_ppb_pos.y, 1.0));"
+                                  "_ppb_pos = _ppb_pos*vec2(abs(0.5 - float(imrect.x)/imrect[2]), abs(0.5 - float(imrect.y)/imrect[3]));"
+                                    "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
+                                    "float ppb_in = smoothstep(0.25*0.25, (0.66 - post_mask[2]*0.05)*(0.66 - post_mask[2]*0.05), _ppb_d2);", // PM_CIRCLESMOOTH
+                                      
+//                                  "vec2 _ppb_pos = vec2(float(imrect[3])/imrect[2], float(imrect[2])/imrect[3]);"
+                                  "vec2 _ppb_pos = vec2(float(imrect[2])/imrect[3], float(imrect[3])/imrect[2]);"
+                                  "_ppb_pos = vec2(max(_ppb_pos.x, 1.0), max(_ppb_pos.y, 1.0));"
+                                  "_ppb_pos = _ppb_pos*vec2(abs(0.5 - float(imrect.x)/imrect[2]), abs(0.5 - float(imrect.y)/imrect[3]));"
+                                    "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
+                                    "float ppb_in = smoothstep(0.4*0.4, (0.6 - post_mask[2]*0.02)*(0.6 - post_mask[2]*0.02), _ppb_d2);", // PM_CIRCLEBORDERED
       
     };
     

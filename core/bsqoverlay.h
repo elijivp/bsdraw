@@ -96,6 +96,18 @@ signals:
   void  mouseAction(bool activePhase, float center);
 };
 
+/****/
+
+class OQRemitCellPress: public QObject, public IOverlayReactor    // coordstriumv_ex_t  !!
+{
+  Q_OBJECT
+public:
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* doStop);
+signals:
+  void  mouseAction(int row, int column, int count_rows, int count_columns);
+};
+
+
 
 //class OQClicker: public QObject, public DrawOverlayProactive
 //{

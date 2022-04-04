@@ -25,14 +25,16 @@ enum { SDPSIZE_NONE =0, SDPSIZE_MARKER=63 };
 class DrawSDPicture: public DrawQWidget
 {
   QImage*     m_pImage;
+  bool        m_allowNoscaledResize;
 protected:
   void  reConstructor(unsigned int samplesHorz, unsigned int samplesVert);
 public:
-  DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert, QImage* img, unsigned int backgroundColor=0x00000000);
-  DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert, const char* imagepath, unsigned int backgroundColor=0x00000000);
+  DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert, QImage* img, unsigned int backgroundColor=0x00000000, bool allowNoscaledResize=true);
+  DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert, const char* imagepath, unsigned int backgroundColor=0x00000000, bool allowNoscaledResize=true);
   
   DrawSDPicture(QImage* img, float sizeMultiplier=1.0f, unsigned int backgroundColor=0x00000000);
   DrawSDPicture(const char* imagepath, float sizeMultiplier=1.0f, unsigned int backgroundColor=0x00000000);
+  ~DrawSDPicture();
   QImage*           getImage(){ return m_pImage; }
   const QImage*     getImage() const { return m_pImage; }
   

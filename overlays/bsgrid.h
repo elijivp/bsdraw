@@ -62,4 +62,17 @@ protected:
   int fshTrace(int overlay, bool rotated, char *to) const;
 };
 
+
+// Cells
+class OGridCells: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff
+{
+protected:
+  int             m_rows, m_columns;
+public:
+  OGridCells(int rows, int columns, const linestyle_t& linestyle);
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+};
+
+
 #endif // GRID_H

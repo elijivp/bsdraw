@@ -74,8 +74,10 @@ void FshTraceGenerator::_gtb(OVL_ORIENTATION orient)
     // OO_INVERSED
         "coords.qp"
     };
-    m_offset += msprintf(&m_to[m_offset], //"ivec2 icoords = ivec2(floor(coords.pq*ibounds + vec2(0.49,0.49)));" SHNL /// ??1
-//                                          "ivec2 icoords = ivec2(floor(%s*(ibounds - ivec2(1,1)) + vec2(0.49, 0.49)));" SHNL
+    m_offset += msprintf(&m_to[m_offset], 
+//                         "ivec2 icoords = ivec2(floor(coords.pq*ibounds + vec2(0.49,0.49)));" SHNL /// ??1
+//                         "ivec2 icoords = ivec2(floor(%s*(ibounds - ivec2(1,1)) + vec2(0.49, 0.49)));" SHNL
+//                          "ivec2 icoords = ivec2(%s*(ibounds - ivec2(1,1)) + vec2(0.49, 0.49));" SHNL
                          "ivec2 icoords = ivec2(%s*(ibounds));" SHNL
                                           , coords_orient[int(orient)]);
   }
@@ -345,23 +347,23 @@ void FshTraceGenerator::goto_normed(const char *someparam, int pixing, bool save
 
 void FshTraceGenerator::goto_normed_empty()
 {
-  m_offset += msprintf(&m_to[m_offset], "ivec2 inormed = ivec2(0,0);");
+  m_offset += msprintf(&m_to[m_offset], "ivec2 inormed = ivec2(0,0);" SHNL);
 }
 
 void FshTraceGenerator::goto_normed_rotated(const char *angleRadName)
 {
-  m_offset += msprintf(&m_to[m_offset], "mat2 rotationMatrix = mat2 (cos(%s), -sin(%s), sin(%s), cos(%s));  inormed = inormed*rotationMatrix;", angleRadName, angleRadName, angleRadName, angleRadName);
+  m_offset += msprintf(&m_to[m_offset], "mat2 rotationMatrix = mat2 (cos(%s), -sin(%s), sin(%s), cos(%s));  inormed = inormed*rotationMatrix;" SHNL, angleRadName, angleRadName, angleRadName, angleRadName);
 }
 
-void FshTraceGenerator::var_fixed(const char *name, float value){  m_offset += msprintf(&m_to[m_offset], "float %s = %f;", name, value); }
+void FshTraceGenerator::var_fixed(const char *name, float value){  m_offset += msprintf(&m_to[m_offset], "float %s = %f;" SHNL, name, value); }
 
-void FshTraceGenerator::var_const_fixed(const char *name, float value){  m_offset += msprintf(&m_to[m_offset], "const float %s = %f;", name, value); }
+void FshTraceGenerator::var_const_fixed(const char *name, float value){  m_offset += msprintf(&m_to[m_offset], "const float %s = %f;" SHNL, name, value); }
 
 void FshTraceGenerator::var_inline(const char* name, float v){  m_offset += msprintf(&m_to[m_offset], name, v); }
 
-void FshTraceGenerator::var_fixed(const char *name, int value){  m_offset += msprintf(&m_to[m_offset], "int %s = %d;", name, value); }
+void FshTraceGenerator::var_fixed(const char *name, int value){  m_offset += msprintf(&m_to[m_offset], "int %s = %d;" SHNL, name, value); }
 
-void FshTraceGenerator::var_const_fixed(const char *name, int value){  m_offset += msprintf(&m_to[m_offset], "const int %s = %d;", name, value); }
+void FshTraceGenerator::var_const_fixed(const char *name, int value){  m_offset += msprintf(&m_to[m_offset], "const int %s = %d;" SHNL, name, value); }
 
 void FshTraceGenerator::var_inline(const char* name, int v){  m_offset += msprintf(&m_to[m_offset], name, v); }
 
@@ -516,6 +518,30 @@ void FshTraceGenerator::trace_triangle_cc(const char *side, int direction, float
                                                                     ""));
 }
 
+void FshTraceGenerator::simplemix_triangle_cc(const char* side, int direction, float fillcoeff)
+{  
+  if (direction == 0 || direction == 2)
+  {
+    m_offset += msprintf(&m_to[m_offset], "float sg2 = -step(-%1, inormed.%2);" SHNL
+                                          "sg2 = -(inormed.%2 + sg2*%1);" SHNL
+                                          "mixwell = step(abs(inormed.%3), sg2)*step(-%1/2, inormed.%2) - step(abs(inormed.%3), sg2-1)*step(-%1/2+1, inormed.%2)*%F;" SHNL
+                         , side, 
+                         direction == 0? "y" : "x", 
+                         direction == 0? "x" : "y", 
+                         1.0f - fillcoeff);
+  }
+  else if (direction == 1 || direction == 3)
+  {
+    m_offset += msprintf(&m_to[m_offset], "float sg2 = step(-%1, inormed.%2);" SHNL
+                                          "sg2 = (inormed.%2 + sg2*%1);" SHNL
+                                          "mixwell = step(abs(inormed.%3), sg2)*step(inormed.%2, %1/2) - step(abs(inormed.%3), sg2-1)*step(inormed.%2, %1/2-1)*%F;" SHNL
+                         , side, 
+                         direction == 1? "y" : "x", 
+                         direction == 1? "x" : "y", 
+                         1.0f - fillcoeff);
+  }
+}
+
 
 void FshTraceGenerator::trace_rect_xywh(const char *wh, float fillcoeff, const char *crosslimit)
 {
@@ -551,13 +577,49 @@ void FshTraceGenerator::trace_rect_cc(const char *rdimms, float fillcoeff, const
   }
 }
 
-void FshTraceGenerator::trace_square_lb_begin(const char *aside) {  m_offset += msprintf(&m_to[m_offset], "vec2 _sqdimms = vec2(%s, %s);", aside, aside);  trace_rect_xywh("_sqdimms"); }
+void FshTraceGenerator::trace_square_lb_begin(const char* aside) {  m_offset += msprintf(&m_to[m_offset], "vec2 _sqdimms = vec2(%s, %s);", aside, aside);  trace_rect_xywh("_sqdimms"); }
 
 void FshTraceGenerator::trace_square_lb_end(float fillcoeff) {  trace_rect_xywh("_sqdimms", fillcoeff); }
 
-void FshTraceGenerator::trace_square_cc_begin(const char *halfside) {  m_offset += msprintf(&m_to[m_offset], "vec2 _sq2dimms = vec2(%s, %s);", halfside, halfside);  trace_rect_cc("_sq2dimms"); }
+void FshTraceGenerator::trace_square_cc_begin(const char* halfside) {  m_offset += msprintf(&m_to[m_offset], "vec2 _sq2dimms = vec2(%s, %s);", halfside, halfside);  trace_rect_cc("_sq2dimms"); }
 
 void FshTraceGenerator::trace_square_cc_end(float fillcoeff) {  trace_rect_cc("_sq2dimms", fillcoeff); }
+
+void FshTraceGenerator::simplemix_square_cc(const char* halfside, float fillcoeff)
+{
+  m_offset += msprintf(&m_to[m_offset], "mixwell = step(int(abs(inormed.x)), %1)*step(%1, int(abs(inormed.x)))*step(int(abs(inormed.y)), %1-1) + "
+                                                  "step(int(abs(inormed.y)), %1)*step(%1, int(abs(inormed.y)))*step(int(abs(inormed.x)), %1) + "
+                                                  "(step(int(abs(inormed.x)), %1-1)*step(int(abs(inormed.y)), %1-1)) * %F;", halfside, fillcoeff);
+}
+
+void FshTraceGenerator::trace_rhomb_cc(const char* side2side, float fillcoeff)
+{   
+  m_offset += msprintf(&m_to[m_offset], "vec2 sg2 = vec2(1 - 2*step(0, inormed.x), 1 - 2*step(0, inormed.y));" SHNL
+                                        "sg2 = vec2(sg2[0]*(inormed.x - (-1 + 2*step(0, inormed.x))*%s), sg2[1]*inormed.y);" SHNL
+                                        "_mvar[0] = (1.0 + thick - clamp(abs(sg2[0] + sg2[1]), 0.0, 1.0 + thick))/(1.0 + thick);" SHNL
+                       , side2side, side2side);
+  
+  m_offset += msprintf(&m_to[m_offset], "_mvar[1] = distance(vec2(0,0), vec2(sg2[0], sg2[1]));" SHNL,
+                                          side2side);
+  
+  m_offset += msprintf(&m_to[m_offset], "result = mix(result, vec3(_mvar*_tracepass, 0.0), 1.0 - step(abs(_mvar[0]) - abs(result[0]), 0.0) );" SHNL);
+  
+  if (fillcoeff > 0.0f)
+  {
+    m_offset += msprintf(&m_to[m_offset],
+                        "_mvar = vec2(step(abs(inormed.y), sg2[0]), 0.0);" SHNL
+                        "result = mix(result, vec3(_mvar[0] * %F * _tracepass[0], 0,0), _mvar[0] * (1.0 - step(1.0, result[0])) );" SHNL,
+                        fillcoeff);
+  }
+}
+
+void FshTraceGenerator::simplemix_rhomb_cc(const char* side2side, float fillcoeff)
+{
+  m_offset += msprintf(&m_to[m_offset], "float sg2 = 1 - 2*step(0, inormed.x);" SHNL
+                                        "sg2 = sg2*(inormed.x - (-1 + 2*step(0, inormed.x))*%s);" SHNL
+                                        "mixwell = step(abs(inormed.y), sg2)*step(sg2, abs(inormed.y)) + step(abs(inormed.y), sg2 - 1)*%F;" SHNL
+                       , side2side, fillcoeff);
+}
 
 void FshTraceGenerator::trace_circle_cc_begin(const char *radius, const char *border) { m_offset += msprintf(&m_to[m_offset], "vec4 _cd = vec4(%s-1, %s + thick, inormed.x*inormed.x + inormed.y*inormed.y, %s);", radius, border, border); }
 
@@ -585,7 +647,28 @@ void FshTraceGenerator::trace_circle_cc_end(float fillcoeff/*, bool notraceinsid
 //                                          "_mvar = vec3(clamp(mixwell_onborder + mixwell_before + mixwell_aftere, 0.0,1.0), atan(float(inormed.x), float(inormed.y))/(2*PI), 2*PI*_cd[0]);" SHNL
                          "_mvar = vec2(clamp(mixwell_onborder + mixwell_before + mixwell_aftere, 0.0,1.0), atan(float(inormed.x), float(inormed.y))*_cd[0]);" SHNL
                                           TRACE_MIX_MVAR_WITH_RESULT
-                        );
+                         );
+}
+
+void FshTraceGenerator::simplemix_circle_cc(const char* radius, float fillcoeff)
+{
+  m_offset += msprintf(&m_to[m_offset], 
+                                         "float sg = inormed.x*inormed.x + inormed.y*inormed.y;" SHNL
+                                         "float fd = (sg - %1*%1)/max(%1/16.0, 2.0);" SHNL
+                                         "mixwell = 1.0 - clamp(fd*fd/(16*%1), 0.0, 1.0);" SHNL
+                                         "mixwell = max(mixwell, step(sg, %1*%1)*%F);" SHNL 
+                       , radius, fillcoeff);
+}
+
+void FshTraceGenerator::simplemix_cross_cc(const char* side, float fillcoeff)
+{
+//  if (fillcoeff > 0.9f)
+//    fillcoeff = 0.9f;
+  if (fillcoeff < 0.5f)
+    fillcoeff = 0.5f;
+  m_offset += msprintf(&m_to[m_offset], "float sc = abs(inormed.x) - abs(inormed.y);"
+                                        "mixwell = clamp(1.0 - sc*sc*%F, 0.0, 1.0)*step(abs(inormed.x), %s)*step(abs(inormed.y), %s);" SHNL
+                       , 1.0f - fillcoeff, side, side);
 }
 
 //                                              crosslimit                                           offset                                                 

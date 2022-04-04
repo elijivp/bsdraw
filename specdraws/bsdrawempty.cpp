@@ -29,19 +29,30 @@ public:
 };
 SheiGeneratorEmpty::~SheiGeneratorEmpty(){}
 
-DrawEmpty::DrawEmpty(unsigned int samplesHorz, unsigned int samplesVert, unsigned int backcolor): DrawQWidget(DATEX_2D, new SheiGeneratorEmpty(backcolor), 1, OR_LRTB)
+DrawEmpty::DrawEmpty(unsigned int samplesHorz, unsigned int samplesVert, unsigned int backcolor, bool allowNoscaledResize): 
+  DrawQWidget(DATEX_2D, new SheiGeneratorEmpty(backcolor), 1, OR_LRTB), m_allowNoscaledResize(allowNoscaledResize)
 {
   m_matrixDimmA = samplesHorz;
   m_matrixDimmB = samplesVert;
-  m_portionSize = samplesHorz*samplesVert;
+  m_portionSize = 0;
   deployMemory();
 }
 
 void DrawEmpty::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
 {
-  *matrixDimmA = m_matrixDimmA;
-  *matrixDimmB = m_matrixDimmB;
-  *scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
-  *scalingB = (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB);
+  if (m_allowNoscaledResize)
+  {
+    *matrixDimmA = sizeA / m_scalingA;
+    *matrixDimmB = sizeB / m_scalingB;
+    *scalingA = m_scalingA;
+    *scalingB = m_scalingB;
+  }
+  else
+  {
+    *matrixDimmA = m_matrixDimmA;
+    *matrixDimmB = m_matrixDimmB;
+    *scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
+    *scalingB = (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB);
+  }
   clampScaling(scalingA, scalingB);
 }

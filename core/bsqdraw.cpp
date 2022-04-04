@@ -288,7 +288,7 @@ void DrawQWidget::initCollectAndCompileShader()
     /// 2. Init ovl locations and textures
     {
       char _tempvd[64];
-      unsigned int  texNew[96 - HT_OVERLAYSSTART];
+      unsigned int  texNew[HT_OVERLAYSGLLIMIT - HT_OVERLAYSSTART];
       unsigned int  texNewCount=0;
       for (unsigned int i=0; i<m_overlaysCount; i++)
       {
@@ -312,11 +312,11 @@ void DrawQWidget::initCollectAndCompileShader()
                 m_overlays[i].ponger_update < m_overlays[i].povl->pingerUpdate())
             {
               m_overlays[i].uf_arr[j].tex_idx = HT_OVERLAYSSTART + texNewCount;
-              glGenTextures(1, &texNew[texNewCount]);
-              texNewCount++;
+              glGenTextures(1, &texNew[texNewCount++]);
             }
             else
               texNew[texNewCount++] = m_texAll[m_overlays[i].uf_arr[j].tex_idx];
+            Q_ASSERT(texNewCount <= HT_OVERLAYSGLLIMIT - HT_OVERLAYSSTART);
           }
         }
         m_overlays[i].ponger_reinit = m_overlays[i].ponger_update = 0;
@@ -422,14 +422,15 @@ void DrawQWidget::paintGL()
 //  }
 //    glEnable(GL_BLEND);
   
+  
+  
+  if (havePendOn(PC_INIT, m_bitmaskPendingChanges))
+  {
+    initCollectAndCompileShader();
+  }
   int bitmaskPendingChanges = m_bitmaskPendingChanges;
   unpendAll();
   
-  if (havePendOn(PC_INIT, bitmaskPendingChanges))
-  {
-    initCollectAndCompileShader();
-//    qDebug()<<"compiling sh";
-  }
   if (m_doclearbackground || !havePending(bitmaskPendingChanges))
   {
     glClearColor(m_clearcolor[0], m_clearcolor[1], m_clearcolor[2], 1.0f);
@@ -602,11 +603,14 @@ void DrawQWidget::paintGL()
       if ((loc = m_locations[SF_COLORRANGE]) != -1)     m_ShaderProgram.setUniformValue(loc, *(const QVector2D*)this->m_ppalrange);
     }
     
+//    qDebug()<<"PRE";
     for (unsigned int i=0; i<m_texOvlCount; i++)
     {
       glActiveTexture(GL_TEXTURE0 + HT_OVERLAYSSTART + i);
       glBindTexture(GL_TEXTURE_2D, m_texAll[HT_OVERLAYSSTART + i]);
+//      qDebug()<<i<<HT_OVERLAYSSTART + i;
     }
+//    qDebug()<<"POST";
     
     if (havePendOn(PC_PARAMSOVL, bitmaskPendingChanges))
     {
@@ -653,22 +657,20 @@ void DrawQWidget::paintGL()
               case DT_SAMP4:
               {
                 const dmtype_sampler_t* psampler = (const dmtype_sampler_t*)data;
-                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
-                {
-                  glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
-//                  glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, GLsizei(psampler->count), 1, 0, GL_RGBA, GL_FLOAT, psampler->data);
-                  glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, GLsizei(psampler->count), 1, 0, GL_RGBA, GL_FLOAT, psampler->data);
-                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                  m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
-                }
+//                qDebug()<<"__"<<i<<"/"<<m_overlaysCount<<"("<<m_overlays[i].uf_count<<")"<<ufm.tex_idx<<"   lim="<<psampler->count;
+                glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
+                //  if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())    its not a classic texture!
+                glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, GLsizei(psampler->count), 1, 0, GL_RGBA, GL_FLOAT, psampler->data);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
                 break;
               }
               case DT_TEXTURE:
               {
-                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
+//                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
                 {
                   glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
 //                  glBindTexture(GL_TEXTURE_2D, m_textures[ufm.tex_idx]);
@@ -711,7 +713,7 @@ void DrawQWidget::paintGL()
               }
               case DT_PALETTE: case DT__HC_PALETTE:
               {
-                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
+//                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
                 {
                   glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
                   const dmtype_palette_t* cdp = (const dmtype_palette_t*)ufm.dataptr;
@@ -1536,9 +1538,10 @@ bool BSQSelectorA::reactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, c
     ORIENTATION orient = pwdg->orientation();
     {
       unsigned int ssA = pwdg->sizeA()/pwdg->sizeDataA();
-      int x = ct->fx_pix, y = ct->fy_pix;
-      unsigned int cellA = (orientationTransposed(orient)? y : x) / ssA;
-      if (orientationMirroredHorz(orient))
+      int posA = orientationTransposed(orient) ? ct->fy_pix : ct->fx_pix;
+      unsigned int cellA = posA / ssA;
+      bool mirrored = (orientationTransposed(orient) ? orientationMirroredHorz(orient) : orientationMirroredVert(orient)) ^ m_inversed;
+      if (mirrored)
         cellA = pwdg->sizeDataA() - 1 - cellA;
       emit selectionChanged(cellA + m_startswith);
     }
@@ -1555,9 +1558,10 @@ bool BSQSelectorB::reactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, c
     ORIENTATION orient = pwdg->orientation();
     {
       unsigned int ssB = pwdg->sizeB()/pwdg->sizeDataB();
-      int x = ct->fx_pix, y = ct->fy_pix;
-      unsigned int cellB = (orientationTransposed(orient)? x : y) / ssB;
-      if (orientationMirroredVert(orient) == false)
+      int posB = orientationTransposed(orient) ? ct->fx_pix : ct->fy_pix;
+      unsigned int cellB = posB / ssB;
+      bool mirrored = (orientationTransposed(orient) ? orientationMirroredVert(orient) : orientationMirroredHorz(orient)) ^ m_inversed;
+      if (mirrored == false)
         cellB = pwdg->sizeDataB() - 1 - cellB;
       emit selectionChanged(cellB + m_startswith);
     }

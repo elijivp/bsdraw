@@ -285,3 +285,39 @@ int OGridDecart::fshTrace(int overlay, bool rotated, char *to) const
   return ocg.written();
 }
 
+
+/********************************************/
+
+
+OGridCells::OGridCells(int rows, int columns, const linestyle_t& linestyle): 
+  DrawOverlayTraced(linestyle), m_rows(rows), m_columns(columns)
+{
+}
+
+int         OGridCells::fshTrace(int overlay, bool rotated, char* to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, 0);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  
+  ocg.goto_normed();
+  
+  ocg.var_fixed("cr", m_columns, m_rows);
+  
+  ocg.push( "vec2   cellsizepix = vec2(float(ibounds.x-1) / cr.x, float(ibounds.y-1) / cr.y);");
+  ocg.push( "ivec2  optiid = ivec2(inormed.x / cellsizepix.x + 0.49, inormed.y / cellsizepix.y + 0.49);");
+  
+  {
+    ocg.push( "ioffset = ivec2(cellsizepix.x*optiid.x, 0);");
+    ocg.push( "inormed = icoords - ioffset;");
+    ocg.trace_linevert_b(nullptr, nullptr, nullptr, nullptr);
+  }
+  
+  {
+    ocg.push( "ioffset = ivec2(0, cellsizepix.y*optiid.y);");
+    ocg.push( "inormed = icoords - ioffset;");
+    ocg.trace_linehorz_l(nullptr, nullptr, nullptr, nullptr);
+  }
+  
+  ocg.goto_func_end(true);
+  return ocg.written();
+}

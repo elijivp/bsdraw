@@ -38,7 +38,7 @@ protected:
   virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool *doStop);
 };
 
-class OPolyLine: public DrawOverlayTraced, public OVLCoordsStatic, public OVLDimmsOff, public IOverlayReactor
+class OPolyLine: public DrawOverlayTraced, public OVLCoordsStatic, public OVLDimmsOff
 {
 protected:
   unsigned int  ptCountMax;
@@ -50,7 +50,6 @@ public:
   OPolyLine(unsigned int countPointsMax, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
-  virtual IOverlayReactor*  reactor() { return this; }
 public:
   unsigned int count() const { return ptCount; }
   void  setPointsCount(unsigned int newCount);
@@ -58,26 +57,26 @@ public:
   void  updatePoints();
 };
 
-class ODropLine: public OPolyLine
+class ODropLine: public OPolyLine, public IOverlayReactor
 {
   bool          followMoving;
 public:
   ODropLine(unsigned int maxpoints, bool lastFollowsMouse=true, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
+  virtual IOverlayReactor*  reactor() { return this; }
   virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool *doStop);
 };
 
-class OBrush: public OPolyLine
+class OBrush: public OPolyLine, public IOverlayReactor
 {
 public:
   OBrush(unsigned int memoryPoints, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
+  virtual IOverlayReactor*  reactor() { return this; }
   virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool *doStop);
 };
 
-
-
-/////////// Selectors
+/////////// Selectors && Highlights
 
 class OSelectorReaction: public DrawOverlayTraced, public OVLCoordsDimmsLinked, public IOverlayReactor
 {
@@ -93,6 +92,17 @@ public:
 protected:
   virtual IOverlayReactor*  reactor() { return this; }
   virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool *doStop);
+};
+
+class OHighlight: public OSelectorReaction
+{
+  COORDINATION    m_cr;
+  float           m_gap;
+  float           m_limit;
+public:
+  OHighlight(const linestyle_t& kls, bool moveable=false, COORDINATION cr=CR_RELATIVE, float gap=0.0f, float limitsize=-1.0f);
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
 class OSelector: public OSelectorReaction
@@ -118,5 +128,32 @@ public:
 protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
+
+
+/////////// Segments
+
+class OSegmentReaction: public DrawOverlayTraced, public OVLCoordsDimmsLinked, public IOverlayReactor
+{
+protected:
+  int       m_phase;
+  ovlcoords_t m_dxy;
+  OSegmentReaction(const linestyle_t& kls);
+protected:
+  virtual IOverlayReactor*  reactor() { return this; }
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool *doStop);
+};
+
+class OSegment: public OSegmentReaction
+{
+  COORDINATION    m_cr;
+  float           m_gap;
+  float           m_size;
+public:
+  OSegment(const linestyle_t& kls, COORDINATION cr, float gap, float size);
+protected:
+  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+};
+
+
 
 #endif // POINTS_H

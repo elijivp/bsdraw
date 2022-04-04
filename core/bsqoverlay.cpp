@@ -106,3 +106,16 @@ bool  OQRemitPressMove_Release::overlayReactionMouse(OVL_REACTION_MOUSE orm, con
     emit mouseAction(false, v);
   return false;
 }
+
+
+/**********************************************************************/
+
+bool OQRemitCellPress::overlayReactionMouse(OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* doStop)
+{
+  if (orm == ORM_LMPRESS)
+  {
+    const coordstriumv_ex_t* ctex = (const coordstriumv_ex_t*)ct;
+    emit mouseAction(ctex->ex_r, ctex->ex_c, ctex->ex_count_rows, ctex->ex_count_columns);
+  }
+  return false;
+}

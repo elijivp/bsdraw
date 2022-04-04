@@ -2,50 +2,53 @@
 #define BSBOUNDED_H
 
 /// Overlays:   data bound-depended (low and high data bounds)
-///   OValueLine. View: horizontal line across value
+///   OLevel. View: horizontal line across value
 /// Created By: Elijah Vlasov
 
 #include "../../core/bsoverlay.h"
 
-class OValueLine: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff
+class OLevel: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff
 {
   float   m_value;
 public:
-  OValueLine(float value=0.0f);
-  OValueLine(float value, const linestyle_t& linestyle);
+  OLevel(float value, const linestyle_t& linestyle=linestyle_inverse_1(0,1,1));
 protected:
   virtual int fshTrace(int overlay, bool rotated, char* to) const;
 };
 
-//class _OLevelSet: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff
-//{
-//private:
-//  enum  LINETYPE {  LT_HORZ, LT_VERT  };
-//  unsigned int  m_activecount;
-//  COORDINATION  m_cn;
-//  bool          m_static;
-//  float         m_mr1, m_mr2;
-//  LINETYPE      m_lt;
-  
-//  linestyle_t*    m_kls;
-//  dmtype_arr_t    dtarr;
-//  float*          m_data;
-//public:
-//  _OLevelSet(unsigned int maxcount, linestyle_t* pkls, float* poffsets, COORDINATION cn, bool isstatic=false, float margin1=0.0f, float margin2=0.0f);
-  
-//  unsigned int    count() const { return m_activecount; }
-//  unsigned int    total() const { return dtarr.count; }
-//  float           offset(int idx) const { return m_data[idx]; }
-//  linestyle_t     linestyle(int idx) const { return m_kls[idx]; }
-  
-//  void  pushLine(float offset, bool update=true);
-//  void  popLine(bool update=true);
-//  void  replaceLine(int idx, float offset, bool update=true);
-//  void  clear(bool update=true);
-//protected:
-//  int   fshTrace(int overlay, bool rotated, char* to) const;
-//  int   fshColor(int overlay, char* to) const;
-//};
+
+class OLevelVariable: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff
+{
+  float   m_value;
+public:
+  OLevelVariable(float value, const linestyle_t& linestyle=linestyle_inverse_1(0,1,1));
+  void    setLevel(float v, bool update=true);
+  float   level() const { return m_value; }
+protected:
+  virtual int fshTrace(int overlay, bool rotated, char* to) const;
+};
+
+
+//////////////////////
+
+
+
+class ORecLine: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff
+{
+  enum  { TOTAL = 33, LAST = 32 };
+  int           ctr;
+  int           links[TOTAL];
+  dmtype_arr_t _dm_coords;
+public:
+  ORecLine(const linestyle_t& linestyle);
+public:
+  void      increment(bool activate, bool update=true);
+protected:
+  virtual int fshTrace(int overlay, bool rotated, char* to) const;
+};
+
+
+//////////////////////
 
 class _OLevelSet: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff
 {

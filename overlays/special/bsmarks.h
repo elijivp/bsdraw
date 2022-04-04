@@ -3,7 +3,7 @@
 
 /// Overlays:   set of little figures
 ///   OMarkDashs. View: little lines like | || | ||   | |
-///   OMarkFigures. View: little figures, types described by FFORM
+///   OCluster. View: little figures, types described by FFORM
 /// Created By: Elijah Vlasov
 
 #include "../../core/bsoverlay.h"
@@ -35,12 +35,19 @@ public:
 
 
 /// max figures count limited by videoadapter
-class OMarkFigures: public DrawOverlayHard, public OVLCoordsStatic, public OVLDimmsOff
+class OCluster: public DrawOverlayHard, public OVLCoordsStatic, public OVLDimmsOff
 {
+public:
+  struct    clusteritem_t
+  {
+    float   x, y;
+    float   zoom;
+    float   form_color;
+  };
 protected:
-  unsigned int      m_maxfigures;
-  struct            figinfo_t;
-  struct figinfo_t  *m_figures;
+  bool              m_crossable;
+  unsigned int      m_total;
+  clusteritem_t*    m_items;
   virtual int fshTrace(int overlay, bool rotated, char* to) const;
 private:
   dmtype_arr_t      m_dm_coords;
@@ -48,21 +55,26 @@ private:
   COORDINATION      m_featcn;
   float             m_figsize, m_figopc;
 public:
-  enum  FFORM { F_OFF=0, F_SQUARE, F_CIRCLE, F_CROSS, F_TGL_UP, F_TGL_DOWN };
+  enum  FFORM { F_OFF=0, F_SQUARE, F_CIRCLE, F_CROSS, F_RHOMB, 
+                F_TGL_UP, F_TGL_DOWN, F_TGL_LEFT, F_TGL_RIGHT,
+                _F_SPECIAL, _F_COUNT = _F_SPECIAL - 1
+              };
 public:
-  OMarkFigures(unsigned int maxfigures, COORDINATION featcn, float figsize, const IPalette* ipal, bool discrete, float figopacity=0.5f);
-  ~OMarkFigures();
+  OCluster(bool crossable, unsigned int maxfigures, COORDINATION featcn, float figsize, const IPalette* ipal, bool discrete, float figopacity=0.5f);
+  ~OCluster();
+  
+  const clusteritem_t&  item(unsigned int idx) const {  return m_items[idx]; }
 public:
   ///   Idx from zero
-  void  updateFigure(unsigned int idx, float x, float y);
-  void  updateFigureColor(unsigned int idx, float color);
-  void  updateFigureZoom(unsigned int idx, float zoom);
-  void  updateFigureForm(unsigned int idx, FFORM form);
-  void  updateFigure(unsigned int idx, float x, float y, float color);
-  void  updateFigure(unsigned int idx, float x, float y, float color, FFORM form, float zoom=1.0f);
+  void  updateItem(unsigned int idx, float x, float y);
+  void  updateItemColor(unsigned int idx, float color);
+  void  updateItemZoom(unsigned int idx, float zoom);
+  void  updateItemForm(unsigned int idx, FFORM form);
+  void  updateItem(unsigned int idx, float x, float y, float color);
+  void  updateItem(unsigned int idx, float x, float y, float color, FFORM form, float zoom=1.0f);
   void  updateFinished();
 public:
-  unsigned  int countFigures() const { return m_maxfigures; }
+  unsigned  int count() const { return m_total; }
 };
 
 

@@ -9,7 +9,7 @@
 class SheiGeneratorSDP: public ISheiGenerator
 {
 public:
-  enum MODE { MODE_NONE, MODE_MARKER63 };
+  enum MODE { MODE_NONE, MODE_MARKER };
   MODE          m_mode;
   unsigned int  m_bckclr;
 public:
@@ -40,7 +40,7 @@ public:
 //                  "post_mask[0] = mix(1.0, post_mask[0], step( value , post_mask[1]));"
                   );
     }
-    else if (m_mode == MODE_MARKER63)
+    else if (m_mode == MODE_MARKER)
     {
       fmg.push(
                   "float marker = mod(pixsdp[2]*255.0, 4.0)*16.0 + mod(pixsdp[1]*255.0, 4.0)*4.0 + mod(pixsdp[0]*255.0, 4.0);"
@@ -78,8 +78,9 @@ void DrawSDPicture::reConstructor(unsigned int samplesHorz, unsigned int samples
   deployMemory();
 }
 
-DrawSDPicture::DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert, QImage* img, unsigned int backgroundColor):
-  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER63, backgroundColor), 1, OR_LRTB)
+DrawSDPicture::DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert, QImage* img, unsigned int backgroundColor, bool allowNoscaledResize):
+  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER, backgroundColor), 1, OR_LRTB),
+  m_allowNoscaledResize(allowNoscaledResize)
 {
   m_pImage = new QImage(img->convertToFormat(QImage::Format_ARGB32));
   m_pImage->detach();
@@ -87,8 +88,9 @@ DrawSDPicture::DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert,
 }
 
 
-DrawSDPicture::DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert, const char* imagepath, unsigned int backgroundColor):
-  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER63, backgroundColor), 1, OR_LRTB)
+DrawSDPicture::DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert, const char* imagepath, unsigned int backgroundColor, bool allowNoscaledResize):
+  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER, backgroundColor), 1, OR_LRTB), 
+  m_allowNoscaledResize(allowNoscaledResize)
 {
   QImage orig(imagepath);
   m_pImage = new QImage(orig.convertToFormat(QImage::Format_ARGB32));
@@ -98,7 +100,7 @@ DrawSDPicture::DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert,
 }
 
 DrawSDPicture::DrawSDPicture(QImage* img, float sizeMultiplier, unsigned int backgroundColor):
-  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER63, backgroundColor), 1, OR_LRTB)
+  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER, backgroundColor), 1, OR_LRTB)
 {
   m_pImage = new QImage(img->convertToFormat(QImage::Format_ARGB32));
   m_pImage->detach();
@@ -106,13 +108,18 @@ DrawSDPicture::DrawSDPicture(QImage* img, float sizeMultiplier, unsigned int bac
 }
 
 DrawSDPicture::DrawSDPicture(const char* imagepath, float sizeMultiplier, unsigned int backgroundColor):
-  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER63, backgroundColor), 1, OR_LRTB)
+  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER, backgroundColor), 1, OR_LRTB)
 {
   QImage orig(imagepath);
   m_pImage = new QImage(orig.convertToFormat(QImage::Format_ARGB32));
   m_pImage->detach();
 
   reConstructor(qRound(m_pImage->width()*sizeMultiplier), qRound(m_pImage->height()*sizeMultiplier));
+}
+
+DrawSDPicture::~DrawSDPicture()
+{
+  delete m_pImage;
 }
 
 bool DrawSDPicture::isNull() const
@@ -122,10 +129,20 @@ bool DrawSDPicture::isNull() const
 
 void DrawSDPicture::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
 {
-  *matrixDimmA = m_matrixDimmA;
-  *matrixDimmB = m_matrixDimmB;
-  *scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
-  *scalingB = (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB);
+  if (m_allowNoscaledResize)
+  {
+    *matrixDimmA = sizeA / m_scalingA;
+    *matrixDimmB = sizeB / m_scalingB;
+    *scalingA = m_scalingA;
+    *scalingB = m_scalingB;
+  }
+  else
+  {
+    *matrixDimmA = m_matrixDimmA;
+    *matrixDimmB = m_matrixDimmB;
+    *scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
+    *scalingB = (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB);
+  }
   clampScaling(scalingA, scalingB);
 }
 

@@ -190,6 +190,51 @@ bool OActiveCursorCarrierL2::overlayReactionMouse(OVL_REACTION_MOUSE oreact, con
   return result;
 }
 
+
+OActiveCursorCarrierL3::OActiveCursorCarrierL3(IOverlayReactor* iop, IOverlayReactor* iop2, IOverlayReactor* iop3, bool linkToScaledCenter): OActiveCursor(linkToScaledCenter),
+  m_iop(iop), m_iop2(iop2), m_iop3(iop3)
+{
+}
+
+OActiveCursorCarrierL3::OActiveCursorCarrierL3(IOverlayReactor* iop, IOverlayReactor* iop2, IOverlayReactor* iop3, 
+                                               COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter):
+  OActiveCursor(cn, default_x, default_y, linkToScaledCenter),
+  m_iop(iop), m_iop2(iop2), m_iop3(iop3)
+{
+}
+
+bool OActiveCursorCarrierL3::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop)
+{
+  bool result = false;
+  if (oreact == ORM_LMPRESS || oreact == ORM_LMMOVE)
+  {
+    if (isVisible() == false)
+    {
+      setVisible(true, false);
+      m_iop->overlayReactionVisible(true);
+      m_iop2->overlayReactionVisible(true);
+      m_iop3->overlayReactionVisible(true);
+    }
+    setCoordinates(ct->fx_ovl, ct->fy_ovl);
+    result = true;
+  }
+  else if (oreact == ORM_RMPRESS)
+  {
+    if (isVisible())
+    {
+      setVisible(false);
+      m_iop->overlayReactionVisible(false);
+      m_iop2->overlayReactionVisible(false);
+      m_iop3->overlayReactionVisible(false);
+      result = true;
+    }
+  }
+  result |= m_iop->overlayReactionMouse(oreact, ct, doStop);
+  result |= m_iop2->overlayReactionMouse(oreact, ct, doStop);
+  result |= m_iop3->overlayReactionMouse(oreact, ct, doStop);
+  return result;
+}
+
 /********************************************************************************************************************************************/
 /********************************************************************************************************************************************/
 
@@ -273,4 +318,90 @@ int   OActiveRandom::fshTrace(int overlay, bool rotated, char* to) const
 //  ocg.goto_func_end(false);
 //  return ocg.written();
 //}
+
+
+OActiveCell::OActiveCell(int rows, int columns, const linestyle_t& linestyle, int margin): 
+  DrawOverlayTraced(linestyle), m_rows(rows), m_columns(columns), m_selrow(-1), m_selcolumn(-1), m_margin(margin)
+{
+  m_selfloat[0] = m_selfloat[1] = -1.0f;
+  appendUniform(DT_2F, m_selfloat);
+}
+
+int         OActiveCell::fshTrace(int overlay, bool rotated, char* to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, 0);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  
+  ocg.goto_normed();
+  
+  ocg.var_fixed("cr", m_columns, m_rows);
+  ocg.var_fixed("mgn", m_margin);
+  
+  ocg.push( "vec2   cellsizepix = vec2(float(ibounds.x) / cr.x, float(ibounds.y) / cr.y);");
+  
+  ocg.param_alias("click");
+  ocg.push( "ivec2  optiid = ivec2((click.x*ibounds.x) / cellsizepix.x, (click.y*ibounds.y) / cellsizepix.y);");
+  
+  ocg.push( "ioffset = ivec2(cellsizepix.x*optiid.x + mgn, cellsizepix.y*optiid.y + mgn);");
+  ocg.push( "inormed = icoords - ioffset;");
+  ocg.push( "ivec2 iwh = ivec2(cellsizepix.x - 2*mgn, cellsizepix.y - 2*mgn);");
+  
+  ocg.trace_rect_xywh("iwh", 0.0f);
+  
+  
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
+
+bool        OActiveCell::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop)
+{
+  bool up=false;
+  if (oreact == ORM_LMPRESS)
+  {
+    *doStop = true;
+    
+    int r = int(ct->fy_rel * m_rows), c = int(ct->fx_rel * m_columns);
+    
+    if (r >= 0 && r < m_rows && c >= 0 && c < m_columns)
+    {
+      m_selrow = r;
+      m_selcolumn = c;
+      up = true;
+      m_selfloat[0] = ct->fx_ovl;
+      m_selfloat[1] = ct->fy_ovl;
+    }
+  }
+  else if (oreact == ORM_RMPRESS)
+  {
+    up = m_selrow != -1 || m_selcolumn != -1;
+    m_selrow = m_selcolumn = -1;
+    
+    m_selfloat[0] = -1;
+    m_selfloat[1] = -1;
+  }
+  if (up)
+    updateParameter(false, true);
+  return up;
+}
+
+OActiveCellCarrier::OActiveCellCarrier(IOverlayReactor* iop, int rows, int columns, const linestyle_t& linestyle, int margin):
+  OActiveCell(rows, columns, linestyle, margin), m_iop(iop)
+{
+}
+
+bool OActiveCellCarrier::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop)
+{
+  bool result = OActiveCell::overlayReactionMouse(oreact, ct, doStop);
+  if (result)
+  {
+    (coordstriumv_t&)c_ctex = *ct;
+    c_ctex.ex_r = m_selrow;
+    c_ctex.ex_c = m_selcolumn;
+    c_ctex.ex_count_rows = m_rows;
+    c_ctex.ex_count_columns = m_columns;
+    result |= m_iop->overlayReactionMouse(oreact, &c_ctex, doStop);
+  }
+  return result;
+}
+
 

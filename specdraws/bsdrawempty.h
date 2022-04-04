@@ -15,8 +15,9 @@
 
 class DrawEmpty: public DrawQWidget
 {
+  bool      m_allowNoscaledResize;
 public:
-  DrawEmpty(unsigned int samplesHorz, unsigned int samplesVert, unsigned int backcolor);
+  DrawEmpty(unsigned int samplesHorz, unsigned int samplesVert, unsigned int backcolor, bool allowNoscaledResize=false);
 protected:
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
 };

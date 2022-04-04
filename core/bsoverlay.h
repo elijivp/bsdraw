@@ -257,9 +257,48 @@ public:
     return  (m_wh.w < 0? m_xy.x + m_wh.w  : m_xy.x) < xy.x && xy.x < (m_wh.w < 0? m_xy.x : m_xy.x + m_wh.w) &&
             (m_wh.h < 0? m_xy.y + m_wh.h  : m_xy.y) < xy.y && xy.y < (m_wh.h < 0? m_xy.y : m_xy.y + m_wh.h);
   }
+public:
+  void          setCoordinates(float x, float y, bool update=true){ m_xy.x = x; m_xy.y = y; updateParameter(false, update); }
+  void          setCoordX(float x, bool update=true){ m_xy.x = x; updateParameter(false, update); }
+  void          setCoordY(float y, bool update=true){ m_xy.y = y; updateParameter(false, update); }
+public:
+  void          moveCoordinates(float dx, float dy, bool update=true){ m_xy.x += dx; m_xy.y += dy; updateParameter(false, update); }
+  float         moveCoordX(float dx, bool update=true){ m_xy.x += dx; updateParameter(false, update); return m_xy.x; }
+  float         moveCoordY(float dy, bool update=true){ m_xy.y += dy; updateParameter(false, update); return m_xy.y; }
+public:
   typedef OVLCoordsDimmsLinked     coords_type_t;
   typedef OVLCoordsDimmsLinked     dimms_type_t;
 };
+
+/////////
+
+//class OVLDimms22Linked: virtual protected _DrawOverlay
+//{
+//protected:
+//  COORDINATION  m_cn;
+//  ovlcoords_t   m_x1y1;
+//  ovlcoords_t   m_x2y2;
+//  bool          m_dimmsready;
+//public:
+//  OVLDimms22Linked(COORDINATION cn, float x1, float y1, float x2, float y2): m_cn(cn), m_x1y1(x1,y1), m_x2y2(x2,y2), m_dimmsready(true) 
+//  { appendUniform(DT_2F, (const void*)&m_x1y1);   appendUniform(DT_2F, (const void*)&m_x2y2); }
+//  COORDINATION  getCoordination() const { return m_cn; }
+////  bool dimms(float* left, float* top, float* right, float* bottom) const
+////  {
+////    *left  = m_wh.w < 0? m_xy.x + m_wh.w : m_xy.x;
+////    *right = m_wh.w < 0? m_xy.x : m_xy.x + m_wh.w;
+////    *top   = m_wh.h < 0? m_xy.y + m_wh.h : m_xy.y;
+////    *bottom= m_wh.h < 0? m_xy.y : m_xy.y + m_wh.h;
+////    return m_dimmsready;
+////  }
+////  bool inrect(ovlcoords_t xy) const
+////  {
+////    return  (m_wh.w < 0? m_xy.x + m_wh.w  : m_xy.x) < xy.x && xy.x < (m_wh.w < 0? m_xy.x : m_xy.x + m_wh.w) &&
+////            (m_wh.h < 0? m_xy.y + m_wh.h  : m_xy.y) < xy.y && xy.y < (m_wh.h < 0? m_xy.y : m_xy.y + m_wh.h);
+////  }
+//  typedef OVLDimms22Linked     coords_type_t;
+//  typedef OVLDimms22Linked     dimms_type_t;
+//};
 
 
 #endif // OVERLAY_H

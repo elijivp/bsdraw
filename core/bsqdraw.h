@@ -62,9 +62,9 @@ protected:
   int                     c_width, c_height;
   float                   m_viewTurn;
 protected:
-  unsigned int            m_texAll[96];
+  enum  { HT_MATRIX=0, HT_PAL, HT_GND, HT_OVERLAYSSTART,      HT_OVERLAYSGLLIMIT=96 };
+  unsigned int            m_texAll[HT_OVERLAYSGLLIMIT];
   unsigned int            m_texOvlCount;
-  enum  { HT_MATRIX=0, HT_PAL, HT_GND, HT_OVERLAYSSTART };
 public:
   DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions=SP_NONE);
   ~DrawQWidget();
@@ -257,13 +257,17 @@ protected:
   OVL_REACTION_MOUSE    m_action;
   OVL_REACTION_MOUSE    m_drop;
   int                   m_startswith;
+  bool                  m_inversed;
 public:
-  BSQProactiveSelectorBase(OVL_REACTION_MOUSE action, OVL_REACTION_MOUSE drop): m_action(action), m_drop(drop), m_startswith(0){}
+  BSQProactiveSelectorBase(OVL_REACTION_MOUSE action, OVL_REACTION_MOUSE drop): 
+    m_action(action), m_drop(drop), m_startswith(0), m_inversed(false){}
   ~BSQProactiveSelectorBase();
 public:
   void  setStarts(int v){ m_startswith = v; }
   OVL_REACTION_MOUSE  action() const { return m_action; }
   void  setAction(OVL_REACTION_MOUSE action){ m_action = action; }
+  bool  inversed() const { return m_inversed; }
+  void  setInversed(bool inversed){ m_inversed = inversed; }
 };
 
 class BSQProactiveSelector: public BSQProactiveSelectorBase

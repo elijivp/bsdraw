@@ -137,7 +137,7 @@ void OSprites::setPalette(const IPalette* ipal, bool discrete)
 {
   m_dm_palette.ppal = ipal;
   m_dm_palette.discrete = discrete;
-  _DrawOverlay::updateParameter(true, true); 
+  _DrawOverlay::updateParameter(false, true); 
 }
 
 void  OSprites::setKPDC(unsigned int idx, float x, float y){ ((kpdc_t*)m_kpdc.data)[idx].x = x; ((kpdc_t*)m_kpdc.data)[idx].y = y; }
@@ -156,7 +156,7 @@ void  OSprites::setKPDC(unsigned int idx, float x, float y, float zoom, float co
 
 void OSprites::updateKPDC()
 {
-  _DrawOverlay::updateParameter(true, true);
+  _DrawOverlay::updateParameter(false, true);
 }
 
 const kpdc_t& OSprites::at(int idx) const
@@ -171,7 +171,7 @@ void OSprites::setActiveCount(unsigned int count)
     if (count != m_countactive)
     {
       m_countactive = count;
-//      _DrawOverlay::updateParameter(false, update);
+//      _DrawOverlay::updateParameter(false, true);
     }
   }
 }

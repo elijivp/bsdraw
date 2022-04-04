@@ -221,7 +221,7 @@ bool OBrush::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_
 
 OSelectorReaction::OSelectorReaction(const linestyle_t &kls, float alpha, bool moveable, bool saveneg): 
   DrawOverlayTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f),
-  m_alpha(alpha), m_phase(-1), m_move(moveable), m_neg(saveneg)
+  m_alpha(alpha), m_phase(-1), m_move(moveable), m_neg(saveneg), m_dxy(0.0f, 0.0f)
 {
   if (alpha > 0.0f)
     m_linestyle.outside = OLS_OPACITY_LINEAR;
@@ -287,6 +287,34 @@ bool OSelectorReaction::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const co
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+OHighlight::OHighlight(const linestyle_t& kls, bool moveable, COORDINATION cr, float gap, float limitsize): OSelectorReaction(kls, 0.0f, moveable, true),
+  m_cr(cr), m_gap(gap), m_limit(limitsize)
+{
+}
+
+int OHighlight::fshTrace(int overlay, bool rotated, char *to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    int cw = ocg.add_movecs_pixing(m_cr);
+    ocg.var_fixed("gap", (float)m_gap);
+    ocg.movecs_pix_x("gap", cw);
+    if (m_limit > 0)
+    {
+      ocg.var_fixed("limit", (float)m_limit);
+      ocg.movecs_pix_x("limit", cw);
+    }
+    
+    ocg.goto_normed();
+    ocg.trace_2linehorz_c("idimms2.x", "gap", nullptr, m_limit > 0 ? "limit" : nullptr);
+  }
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
+
+
+
 
 OSelector::OSelector(const linestyle_t& kls, float alpha, bool moveable): OSelectorReaction(kls, alpha, moveable, false)
 {
@@ -348,3 +376,71 @@ int OSelectorBand::fshTrace(int overlay, bool rotated, char *to) const
   ocg.goto_func_end(true);
   return ocg.written();
 }
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+OSegmentReaction::OSegmentReaction(const linestyle_t &kls): 
+  DrawOverlayTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f), m_phase(-1)
+{
+}
+
+bool OSegmentReaction::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool*)
+{
+  bool result = false;
+  if (oreact == ORM_LMPRESS || oreact == ORM_RMPRESS)
+  {
+    m_phase = oreact == ORM_LMPRESS? 1 : 0;
+    m_xy = ovlcoords_t(ct->fx_ovl, ct->fy_ovl);
+    m_dxy = m_xy;
+    m_wh = ovldimms2_t(0.0f, 0.0f);
+    m_dimmsready = false;
+    result = true;
+  }
+  else
+  {
+    if (m_phase == 1)
+    {
+      ovlcoords_t pdt(ct->fx_ovl, ct->fy_ovl);
+      m_wh.w = pdt.x - m_dxy.x;  //if (m_wh.w < 0/* && !m_neg*/){  m_wh.w = -m_wh.w; m_xy.x = pdt.x; }  //if (m_wh[0] < 0) m_wh[0] = -m_wh[0];
+      m_wh.h = pdt.y - m_dxy.y;  //if (m_wh.h < 0/* && !m_neg*/){  m_wh.h = -m_wh.h; m_xy.y = pdt.y; } //if (m_wh[1] < 0) m_wh[1] = -m_wh[1];
+      result = true;
+    }
+    if (oreact == ORM_LMRELEASE)
+    {
+      m_phase = 0;
+      m_dimmsready = true;
+    }
+  }
+  return result;
+}
+
+OSegment::OSegment(const linestyle_t& kls, COORDINATION cr, float gap, float size): OSegmentReaction(kls), 
+  m_cr(cr), m_gap(gap), m_size(size)
+{
+}
+
+int OSegment::fshTrace(int overlay, bool rotated, char* to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    int cw = ocg.add_movecs_pixing(m_cr);
+    ocg.var_fixed("gap", (float)m_gap);
+    ocg.movecs_pix_x("gap", cw);
+    ocg.var_fixed("size", (float)m_size);
+    ocg.movecs_pix_x("size", cw);
+    
+    ocg.goto_normed();
+    ocg.trace_2linehorz_c("size", "gap");
+    ocg.trace_line_from_normed_to("idimms2");
+    ocg.push("inormed = inormed - ivec2(idimms2);");
+    ocg.trace_2linehorz_c("size", "gap");
+  }
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
+
+

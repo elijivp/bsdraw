@@ -21,10 +21,9 @@ private:
 public:
   FshColorGenerator(int overlay, char *deststring, int ovlctr=0);
   FshColorGenerator(const _DrawOverlay::uniforms_t& ufms, int overlay, char *deststring, int ovlctr=0);
-  unsigned int  written() const { return m_offset; }
+  unsigned int  written() const { return (unsigned int)m_offset; }
 public:
-  enum  CGV { CGV_COLORED, CGV_TRACED, CGV_TEXTURED, CGV_EMPTY };
-  void  goto_func_begin(CGV cgv);
+  void  goto_func_begin();
 public:
   void  param_alias(const char *name);
   void  paramarr_alias(const char *name, const char* idxname);
@@ -33,9 +32,10 @@ public:
   void  mixwell_by_alpha(float alpha);
   void  mixwell_by_traced(const linestyle_t& kls);
 public:
-  void  color_by_rgb(float r, float g, float b);
-  void  color_by_inversive(int idx);
-  void  color_by_traced(const linestyle_t& kls);
+  void  brushResult(const color3f_t& clr);
+  void  brushResult(float r, float g, float b);
+  void  brushResult(const linestyle_t& kls);
+  void  invertResult(int idx);
 public:
   void  push(const char* text);
   

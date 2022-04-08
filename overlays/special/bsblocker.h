@@ -7,7 +7,7 @@
 
 #include "../../core/bsoverlay.h"
 
-class OBlocker: public DrawOverlaySimple, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
+class OBlocker: public DrawOverlay_ColorForegoing, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
 {
   int     m_blockstate;
   float   m_clr[3];
@@ -23,7 +23,7 @@ protected:
   virtual bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop);
 };
 
-class OBlockerDots: public DrawOverlaySimple, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
+class OBlockerDots: public DrawOverlay_ColorForegoing, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
 {
   int     m_mod[2];
   float   m_mixdot, m_mixback;

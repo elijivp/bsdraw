@@ -14,48 +14,54 @@ enum  OVL_ORIENTATION   {  OO_INHERITED=0, OO_DEFAULT=1,
                            OO_INVERSED
                         };
 
-class DrawOverlaySimple: public DrawOverlay
+
+/// Shader takes color and mixwell from fshTrace result: in_variant[0..4] = [r g b mixwell]
+class DrawOverlay_ColorForegoing: public DrawOverlay
 {
   int   m_inversive;
 public:
-  DrawOverlaySimple(int inversive_algo=0, bool visible=true): DrawOverlay(visible), m_inversive(inversive_algo){}
+  DrawOverlay_ColorForegoing(int inversive_algo=0, bool visible=true): DrawOverlay(visible), m_inversive(inversive_algo){}
 protected:
   virtual int fshColor(int overlay, char *to) const;
 };
 
-class _DrawOverlayLined: public DrawOverlay
+
+/// Shader takes only mixwell from fshTrace result: in_variant[0..4] = [- - - mixwell]
+class DrawOverlay_ColorDomestic: public DrawOverlay
+{
+  color3f_t         m_color;
+public:
+  DrawOverlay_ColorDomestic(const color3f_t& color, bool visible=true): DrawOverlay(visible), m_color(color){}
+protected:
+  virtual int fshColor(int overlay, char *to) const;
+};
+
+/// Shader takes outsideline, path position and mixwell from fshTrace result: in_variant[0..4] = [ols path - mixwell]
+class DrawOverlay_ColorTraced: public DrawOverlay
 {
 protected:
   linestyle_t       m_linestyle;
-//  linestyle_t       m_linestyle_outside;
 public:
+//  DrawOverlay_ColorTraced(bool visible=true): DrawOverlay(visible), m_linestyle(linestyle_solid(1,1,1)){}
+  DrawOverlay_ColorTraced(const linestyle_t& linestyle, bool visible=true): DrawOverlay(visible), m_linestyle(linestyle){}
   void              setLineStyle(const linestyle_t& linestyle, bool update=true){  m_linestyle = linestyle; updateParameter(true, update); }
   linestyle_t       getLineStyle() const {  return m_linestyle;  }
-public:
-  _DrawOverlayLined(bool visible): DrawOverlay(visible), m_linestyle(linestyle_solid(1,1,1)){}
-  _DrawOverlayLined(bool visible, const linestyle_t& linestyle): DrawOverlay(visible), m_linestyle(linestyle){}
-};
-
-class DrawOverlayTraced: public _DrawOverlayLined
-{
-public:
-  DrawOverlayTraced(bool visible=true): _DrawOverlayLined(visible){}
-  DrawOverlayTraced(const linestyle_t& linestyle, bool visible=true): _DrawOverlayLined(visible, linestyle){}
 protected:
   virtual int fshColor(int overlay, char *to) const;
 };
 
-class DrawOverlayHard: public _DrawOverlayLined
+/// Shader takes nondirect color and mixwell from fshTrace result: in_variant[0..4] = [ptr_to_color - - mixwell]
+class DrawOverlay_ColorThroughPalette: public DrawOverlay
 {
 private:
   dmtype_palette_t    m_dm_palette;
 public:
-  DrawOverlayHard(const IPalette* ipal, bool discrete, const linestyle_t& linestyle=linestyle_solid(1,1,1), bool visible=true): 
-    _DrawOverlayLined(visible, linestyle)
+  DrawOverlay_ColorThroughPalette(const IPalette* ipal, bool discrete, bool visible=true):  DrawOverlay(visible)
   {
     m_dm_palette.ppal = ipal;
     m_dm_palette.discrete = discrete;
-    appendUniform(DT__HC_PALETTE, &m_dm_palette);
+//    appendUniform(DT__HC_PALETTE, &m_dm_palette);
+    appendUniform(DT_PALETTE, &m_dm_palette);
   }
   void  setPalette(const IPalette* ipal, bool discrete)
   {

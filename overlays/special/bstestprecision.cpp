@@ -6,7 +6,7 @@
 
 //#include <QDebug>
 
-OTestPrecision::OTestPrecision(): DrawOverlaySimple(),
+OTestPrecision::OTestPrecision(): DrawOverlay_ColorForegoing(),
   OVLCoordsOff(), OVLDimmsOff()
 {
 //  appendUniform(DT_1I, &m_blockstate);

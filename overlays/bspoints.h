@@ -13,7 +13,7 @@
 
 #include "../core/bsoverlay.h"
 
-class OPTFill: public DrawOverlaySimple, public OVLCoordsDynamic, public OVLDimmsOff
+class OPTFill: public DrawOverlay_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsOff
 {
 protected:
   linestyle_t   m_fill;
@@ -23,7 +23,7 @@ protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
-class ODropPoints: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
+class ODropPoints: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
 {
 protected:
   unsigned int ptCountMax;
@@ -38,7 +38,7 @@ protected:
   virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool *doStop);
 };
 
-class OPolyLine: public DrawOverlayTraced, public OVLCoordsStatic, public OVLDimmsOff
+class OPolyLine: public DrawOverlay_ColorTraced, public OVLCoordsStatic, public OVLDimmsOff
 {
 protected:
   unsigned int  ptCountMax;
@@ -78,7 +78,7 @@ protected:
 
 /////////// Selectors && Highlights
 
-class OSelectorReaction: public DrawOverlayTraced, public OVLCoordsDimmsLinked, public IOverlayReactor
+class OSelectorReaction: public DrawOverlay_ColorTraced, public OVLCoordsDimmsLinked, public IOverlayReactor
 {
 protected:
   float     m_alpha;
@@ -132,7 +132,7 @@ protected:
 
 /////////// Segments
 
-class OSegmentReaction: public DrawOverlayTraced, public OVLCoordsDimmsLinked, public IOverlayReactor
+class OSegmentReaction: public DrawOverlay_ColorTraced, public OVLCoordsDimmsLinked, public IOverlayReactor
 {
 protected:
   int       m_phase;

@@ -29,12 +29,6 @@ inline unsigned int  msexpandParams(char* to, int overlay, unsigned int uniforms
   /// PARAMS
   for (unsigned int i=0; i<uniformsCount; i++)
   {
-    if (uniforms[i].type >= DT__HC_SPECIAL_TYPES)
-    {
-  //      m_paramsctr++;
-      continue;
-    }
-    
     int glsl_types_idx = (int)uniforms[i].type;
     if (glsl_types_idx < (int)sizeof(glsl_types))
     {

@@ -22,7 +22,7 @@ void bs_detachFutureImagesInConstructors(bool dt){  g_bs_detach_image = dt; }
 
 
 OVLQImage::OVLQImage(QImage *image, IMAGECONVERT icvt, bool autorotated, bool detach):
-  m_pImage(nullptr), m_autorotated(autorotated), m_imageowner(false), m_banalpha(false)
+  m_pImage(nullptr), m_autorotated(autorotated), m_imageowner(false)
 {
   assignImage(image, icvt, autorotated, detach);
 }
@@ -31,16 +31,6 @@ OVLQImage::~OVLQImage()
 {
   if (m_imageowner && m_pImage != nullptr)
     delete m_pImage;
-}
-
-void OVLQImage::banAlphaChannel(bool ban)
-{
-  m_banalpha = ban;
-}
-
-bool OVLQImage::isAlphaBanned() const
-{
-  return m_banalpha;
 }
 
 bool  OVLQImage::assignImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach)
@@ -92,12 +82,19 @@ bool  OVLQImage::assignImage(QImage* image, IMAGECONVERT icvt, bool autorotated,
 
 
 
-void DrawOverlaySimpleImage::reUpdate()
+
+void DrawOverlay_ColorForegoingImage::banAlphaChannel(bool ban, bool update)
+{
+  m_banalpha = ban;
+  updateParameter(true, update);
+}
+
+void DrawOverlay_ColorForegoingImage::reUpdate()
 {
   updateParameter(false, true);
 }
 
-bool  DrawOverlaySimpleImage::setImage(QImage* image, OVLQImage::IMAGECONVERT icvt, bool autorotated, bool detach, bool update)
+bool  DrawOverlay_ColorForegoingImage::setImage(QImage* image, OVLQImage::IMAGECONVERT icvt, bool autorotated, bool detach, bool update)
 {
   bool result = assignImage(image, icvt, autorotated, detach);
 //  updateParameter(true, update);
@@ -109,7 +106,7 @@ bool  DrawOverlaySimpleImage::setImage(QImage* image, OVLQImage::IMAGECONVERT ic
 /////////////////////////////////////////////////////////
 
 OImageOriginal::OImageOriginal(QImage* image, IMAGECONVERT icvt, bool autorotated, COORDINATION cn, float x, float y, float mult_w, float mult_h): 
-  DrawOverlaySimpleImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsDynamic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+  DrawOverlay_ColorForegoingImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsDynamic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
@@ -117,7 +114,7 @@ OImageOriginal::OImageOriginal(QImage* image, IMAGECONVERT icvt, bool autorotate
 }
 
 OImageOriginal::OImageOriginal(QImage *image, IMAGECONVERT icvt, bool autorotated, OVLCoordsStatic *pcoords, float offset_x, float offset_y, float mult_w, float mult_h):
-  DrawOverlaySimpleImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsDynamic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+  DrawOverlay_ColorForegoingImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsDynamic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
@@ -151,7 +148,7 @@ int OImageOriginal::fshTrace(int overlay, bool rotated, char *to) const
 
 
 OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, bool autorotated, COORDINATION cn, float x, float y, float mult_w, float mult_h):
-  DrawOverlaySimpleImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsStatic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+  DrawOverlay_ColorForegoingImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsStatic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
@@ -159,7 +156,7 @@ OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, bool autorota
 }
 
 OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, bool autorotated, OVLCoordsStatic *pcoords, float offset_x, float offset_y, float mult_w, float mult_h):
-  DrawOverlaySimpleImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsStatic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+  DrawOverlay_ColorForegoingImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsStatic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;

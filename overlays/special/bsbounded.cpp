@@ -6,7 +6,7 @@
 #include "../../core/sheigen/bsshgencolor.h"
 
 OLevel::OLevel(float value, const linestyle_t& linestyle): 
-  DrawOverlayTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(), m_value(value){}
+  DrawOverlay_ColorTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(), m_value(value){}
 
 int OLevel::fshTrace(int overlay, bool rotated, char *to) const
 {
@@ -26,7 +26,7 @@ int OLevel::fshTrace(int overlay, bool rotated, char *to) const
 //////////////////////////////////////////////////////////////////////////////////
 
 OLevelVariable::OLevelVariable(float value, const linestyle_t& linestyle): 
-  DrawOverlayTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(), m_value(value)
+  DrawOverlay_ColorTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(), m_value(value)
 {
   appendUniform(DT_1F, &m_value);
 }
@@ -56,7 +56,7 @@ int OLevelVariable::fshTrace(int overlay, bool rotated, char *to) const
 
 
 
-ORecLine::ORecLine(const linestyle_t& linestyle): DrawOverlayTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(),
+ORecLine::ORecLine(const linestyle_t& linestyle): DrawOverlay_ColorTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(),
   ctr(0)
 {
   for (int i=0; i<TOTAL; i++)
@@ -112,7 +112,7 @@ int ORecLine::fshTrace(int overlay, bool rotated, char* to) const
 
 
 _OLevelSet::_OLevelSet(unsigned int maxcount, linestyle_t* pkls, line_t* poffsets, COORDINATION cn, bool isstatic, float margin1, float margin2): 
-  DrawOverlayTraced(), m_activecount(0), m_cn(cn), m_static(isstatic), m_mr1(margin1), m_mr2(margin2), 
+  DrawOverlay(true), m_activecount(0), m_cn(cn), m_static(isstatic), m_mr1(margin1), m_mr2(margin2), 
   m_lt(LT_HORZ), m_kls(pkls), m_data(poffsets)
 {
   for (int i=0; i<maxcount; i++)
@@ -267,16 +267,16 @@ int _OLevelSet::fshTrace(int overlay, bool rotated, char* to) const
 int _OLevelSet::fshColor(int overlay, char* to) const
 {
   FshColorGenerator ocg(overlay, to);
-  ocg.goto_func_begin(FshColorGenerator::CGV_TRACED);
+  ocg.goto_func_begin();
   {
-    const char* prefix = "if (trace_on_pix[2] == ";
+    const char* prefix = "if (in_variant[2] == ";
     const char* numi[] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"};
     const char* postfix = ".0) {";
     for (int i=0; i<dtarr.count; i++)
     {
       ocg.push(prefix); ocg.push(numi[i]);  ocg.push(postfix);
       ocg.mixwell_by_traced(m_kls[i]);
-      ocg.color_by_traced(m_kls[i]);
+      ocg.brushResult(m_kls[i]);
       ocg.push("}");
     }
   }

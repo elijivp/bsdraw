@@ -73,7 +73,9 @@ private:
                           COS_DROPLINES, COS_BRUSH, COS_CLUSTER, COS_FOLLOWERS, 
                           COS_INSIDE, COS_COVERL, COS_COVERH, COS_CONTOUR, 
                           COS_SELECTOR, COS_SELECTOR2, COS_OBJECTIF,
-                          COS_SPRITEALPHA, COS_FOREGROUND, COS_BACKGROUND };
+                          COS_SPRITEALPHA, COS_FOREGROUND, COS_BACKGROUND,
+                          COS_SHADOW1, COS_SHADOW2, COS_SHADOW3
+                        };
 signals:
   void    remitBounds(float);
 private slots:

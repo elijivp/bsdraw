@@ -103,13 +103,10 @@ enum  DTYPE       /// Trace/simple shader datatypes
               DT_ARR,   DT_ARR2,  DT_ARR3, DT_ARR4, 
               DT_ARRI, DT_ARRI2, DT_ARRI3, DT_ARRI4, 
               DT_SAMP4, DT_1I, DT_2I, DT_3I, DT_4I,
-              DT_TEXTURE, DT_PALETTE,
-              
-              /// special Color shader datatypes (Hard)
-              DT__HC_SPECIAL_TYPES=100, DT__HC_PALETTE
+              DT_TEXTURE, DT_PALETTE
 };
 
-inline bool dtIsTexture(DTYPE dtype) { return dtype == DT_SAMP4 || dtype == DT_TEXTURE || dtype == DT_PALETTE || dtype == DT__HC_PALETTE; }
+inline bool dtIsTexture(DTYPE dtype) { return dtype == DT_SAMP4 || dtype == DT_TEXTURE || dtype == DT_PALETTE; }
 
 struct dmtype_t
 {
@@ -308,6 +305,43 @@ public:
     return fn(&srcdata[portion*m_srcsize + stepsize*i], stepsize);
   }
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct  color3f_t
+{
+  float         r,g,b;
+};
+
+
+#if __cplusplus > 19971
+#define __color3f__(red, green, blue) {red,green,blue}
+#else
+inline color3f_t    __color3f__(float red, float green, float blue)
+{   color3f_t result = { red,green,blue };   return result;    }
+#endif
+
+inline color3f_t    color3f_inverse_1(){ return __color3f__(0,0,0); }
+inline color3f_t    color3f_inverse_2(){ return __color3f__(0,0,0); }
+inline color3f_t    color3f_inverse_3(){ return __color3f__(0,0,0); }
+
+inline color3f_t    color3f_white(){ return __color3f__(1,1,1); }
+inline color3f_t    color3f_yellow(){ return __color3f__(1,1,0); }
+inline color3f_t    color3f_black(){ return __color3f__(0,0,0); }
+inline color3f_t    color3f_red(){ return __color3f__(1,0,0); }
+inline color3f_t    color3f_blue(){ return __color3f__(0,0,1); }
+inline color3f_t    color3f_orange(){ return __color3f__(1,0.6f,0.3f); }
+inline color3f_t    color3f_redlight(){ return __color3f__(1,0.6f,0.6f); }
+inline color3f_t    color3f_green(){ return __color3f__(0,1,0); }
+inline color3f_t    color3f_bluelight(){ return __color3f__(0.5f,0.75f,1); }
+inline color3f_t    color3f_bluesoft(){ return __color3f__(0.35f,0.65f,1); }
+inline color3f_t    color3f_purple(){ return __color3f__(1,0,1); }
+inline color3f_t    color3f_grey(){ return __color3f__(0.5f,0.5f,0.5f); }
+inline color3f_t    color3f_greylight(){ return __color3f__(0.7f,0.7f,0.7f); }
+inline color3f_t    color3f_greydark(){ return __color3f__(0.2f,0.2f,0.2f); }
+
+inline color3f_t    color3f(unsigned int hex){  return __color3f__((hex & 0xFF)/255.0f, (hex>>8 & 0xFF)/255.0f, (hex>>16 & 0xFF)/255.0f); }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

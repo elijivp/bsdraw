@@ -6,13 +6,13 @@
 #include "bsfigures.h"
 #include "../core/sheigen/bsshgentrace.h"
 
-OFPoint::OFPoint(COORDINATION cn, float center_x, float center_y, const linestyle_t& kls): DrawOverlaySimple(),
+OFPoint::OFPoint(COORDINATION cn, float center_x, float center_y, const linestyle_t& kls): DrawOverlay_ColorForegoing(),
   OVLCoordsDynamic(cn, center_x, center_y), OVLDimms1Static(CR_ABSOLUTE, 1)
 {
   r = kls.r;  g = kls.g;  b = kls.b;
 }
 
-OFPoint::OFPoint(OVLCoordsStatic* pcoords, float offset_x, float offset_y, const linestyle_t& kls): DrawOverlaySimple(),
+OFPoint::OFPoint(OVLCoordsStatic* pcoords, float offset_x, float offset_y, const linestyle_t& kls): DrawOverlay_ColorForegoing(),
   OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimms1Static(CR_ABSOLUTE, 1)
 {
   r = kls.r;  g = kls.g;  b = kls.b;
@@ -36,12 +36,12 @@ int   OFPoint::fshTrace(int overlay, bool rotated, char* to) const
 ////////////////////////
 /// 
 
-OFCircle::OFCircle(float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float radius, const linestyle_t &kls, float border): DrawOverlayTraced(kls), 
+OFCircle::OFCircle(float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float radius, const linestyle_t &kls, float border): DrawOverlay_ColorTraced(kls), 
   OVLCoordsDynamic(cn, center_x, center_y), OVLDimms1Static(featcn == CR_SAME? cn : featcn, radius), m_fillcoeff(fillopacity), m_border(border)
 {
 }
 
-OFCircle::OFCircle(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float radius, const linestyle_t &kls, float border): DrawOverlayTraced(kls), 
+OFCircle::OFCircle(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float radius, const linestyle_t &kls, float border): DrawOverlay_ColorTraced(kls), 
   OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimms1Static(featcn == CR_SAME? pcoords->getCoordination(): featcn, radius), m_fillcoeff(fillopacity), m_border(border)
 {
 }
@@ -78,12 +78,12 @@ int   OFCircle::fshTrace(int overlay, bool rotated, char* to) const
 /// 
 
 
-OFSquare::OFSquare(float fillopacity, COORDINATION cn, float leftbottom_x, float leftbottom_y, COORDINATION featcn, float aside, const linestyle_t &kls): DrawOverlayTraced(kls),
+OFSquare::OFSquare(float fillopacity, COORDINATION cn, float leftbottom_x, float leftbottom_y, COORDINATION featcn, float aside, const linestyle_t &kls): DrawOverlay_ColorTraced(kls),
   OVLCoordsDynamic(cn, leftbottom_x, leftbottom_y), OVLDimms1Static(featcn == CR_SAME? cn : featcn, aside), m_fillcoeff(fillopacity)
 {
 }
 
-OFSquare::OFSquare(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float aside, const linestyle_t &kls): DrawOverlayTraced(kls),
+OFSquare::OFSquare(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float aside, const linestyle_t &kls): DrawOverlay_ColorTraced(kls),
   OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimms1Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, aside), m_fillcoeff(fillopacity)
 {
 }
@@ -118,12 +118,12 @@ int OFSquare::fshTrace(int overlay, bool rotated, char *to) const
 /// 
 
 
-OFSquareCC::OFSquareCC(float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float aside, const linestyle_t &kls): DrawOverlayTraced(kls),
+OFSquareCC::OFSquareCC(float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float aside, const linestyle_t &kls): DrawOverlay_ColorTraced(kls),
   OVLCoordsDynamic(cn, center_x, center_y), OVLDimms1Static(featcn == CR_SAME? cn : featcn, aside), m_fillcoeff(fillopacity)
 {
 }
 
-OFSquareCC::OFSquareCC(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float aside, const linestyle_t &kls): DrawOverlayTraced(kls),
+OFSquareCC::OFSquareCC(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float aside, const linestyle_t &kls): DrawOverlay_ColorTraced(kls),
   OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimms1Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, aside), m_fillcoeff(fillopacity)
 {
 }
@@ -158,12 +158,12 @@ int OFSquareCC::fshTrace(int overlay, bool rotated, char *to) const
 /// 
 
 
-OFRhombCC::OFRhombCC(float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float aside, const linestyle_t &kls): DrawOverlayTraced(kls),
+OFRhombCC::OFRhombCC(float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float aside, const linestyle_t &kls): DrawOverlay_ColorTraced(kls),
   OVLCoordsDynamic(cn, center_x, center_y), OVLDimms1Static(featcn == CR_SAME? cn : featcn, aside), m_fillcoeff(fillopacity)
 {
 }
 
-OFRhombCC::OFRhombCC(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float aside, const linestyle_t &kls): DrawOverlayTraced(kls),
+OFRhombCC::OFRhombCC(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float aside, const linestyle_t &kls): DrawOverlay_ColorTraced(kls),
   OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimms1Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, aside), m_fillcoeff(fillopacity)
 {
 }
@@ -186,13 +186,13 @@ int OFRhombCC::fshTrace(int overlay, bool rotated, char *to) const
 //////////////////////////
 /// 
 
-OFTriangle::OFTriangle(ORIENT orientation, float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float side, const linestyle_t &kls): DrawOverlayTraced(kls),
+OFTriangle::OFTriangle(ORIENT orientation, float fillopacity, COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float side, const linestyle_t &kls): DrawOverlay_ColorTraced(kls),
   OVLCoordsDynamic(cn, center_x, center_y), OVLDimms1Static(featcn == CR_SAME? cn : featcn, side), m_orientation(orientation), m_fillcoeff(fillopacity)
 {
   
 }
 
-OFTriangle::OFTriangle(ORIENT orientation, float fillopacity, OVLCoordsStatic *pcoords, float offset_x, float offset_y, COORDINATION featcn, float side, const linestyle_t &kls): DrawOverlayTraced(kls),
+OFTriangle::OFTriangle(ORIENT orientation, float fillopacity, OVLCoordsStatic *pcoords, float offset_x, float offset_y, COORDINATION featcn, float side, const linestyle_t &kls): DrawOverlay_ColorTraced(kls),
   OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimms1Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, side), m_orientation(orientation), m_fillcoeff(fillopacity)
 {
   
@@ -227,28 +227,28 @@ int OFTriangle::fshTrace(int overlay, bool rotated, char *to) const
 //////////////////////////
 /// 
 
-OFLine::OFLine(LINETYPE linetype, COORDINATION cr, float start_x, float start_y, COORDINATION featcn, float gap, float size, const linestyle_t& linestyle): DrawOverlayTraced(linestyle), 
+OFLine::OFLine(LINETYPE linetype, COORDINATION cr, float start_x, float start_y, COORDINATION featcn, float gap, float size, const linestyle_t& linestyle): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(cr, start_x, start_y),
   OVLDimmsOff(),
   m_lt(linetype), m_featcn(featcn), m_param1(gap), m_param2(size < 0 ? 5000.0f : size)
 {
 }
 
-OFLine::OFLine(LINETYPE linetype, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap, float size, const linestyle_t& linestyle): DrawOverlayTraced(linestyle), 
+OFLine::OFLine(LINETYPE linetype, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap, float size, const linestyle_t& linestyle): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(pcoords, offset_x, offset_y),
   OVLDimmsOff(),
   m_lt(linetype), m_featcn(featcn), m_param1(gap), m_param2(size < 0 ? 5000.0f : size)
 {
 }
 
-OFLine::OFLine(COORDINATION cn, float start_x, float start_y, float end_x, float end_y, const linestyle_t& linestyle): DrawOverlayTraced(linestyle), 
+OFLine::OFLine(COORDINATION cn, float start_x, float start_y, float end_x, float end_y, const linestyle_t& linestyle): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(cn, start_x, start_y),
   OVLDimmsOff(),
   m_lt(-1), m_param1(end_x), m_param2(end_y)
 {
 }
 
-OFLine::OFLine(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float end_x, float end_y, const linestyle_t& linestyle): DrawOverlayTraced(linestyle), 
+OFLine::OFLine(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float end_x, float end_y, const linestyle_t& linestyle): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(pcoords, offset_x, offset_y),
   OVLDimmsOff(),
   m_lt(-1), m_param1(end_x), m_param2(end_y)
@@ -304,14 +304,14 @@ int   OFLine::fshTrace(int overlay, bool rotated, char* to) const
 //////////////////////////
 /// 
 
-OFRay::OFRay(COORDINATION cn, float start_x, float start_y, const linestyle_t& linestyle): DrawOverlayTraced(linestyle), 
+OFRay::OFRay(COORDINATION cn, float start_x, float start_y, const linestyle_t& linestyle): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(cn, 0.0f, 0.0f),
   OVLDimmsOff(),
   m_start_x(start_x), m_start_y(start_y), m_additcn(CR_SAME), m_length(0)
 {
 }
 
-OFRay::OFRay(COORDINATION cn, float start_x, float start_y, COORDINATION additcn, float length, const linestyle_t& linestyle): DrawOverlayTraced(linestyle), 
+OFRay::OFRay(COORDINATION cn, float start_x, float start_y, COORDINATION additcn, float length, const linestyle_t& linestyle): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(cn, 0.0f, 0.0f),
   OVLDimmsOff(),
   m_start_x(start_x), m_start_y(start_y), m_additcn(additcn), m_length(length)
@@ -319,7 +319,7 @@ OFRay::OFRay(COORDINATION cn, float start_x, float start_y, COORDINATION additcn
   
 }
 
-OFRay::OFRay(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float start_x, float start_y, const linestyle_t& linestyle): DrawOverlayTraced(linestyle), 
+OFRay::OFRay(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float start_x, float start_y, const linestyle_t& linestyle): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(pcoords, offset_x, offset_y),
   OVLDimmsOff(),
   m_start_x(start_x), m_start_y(start_y), m_additcn(CR_SAME), m_length(0)
@@ -327,7 +327,7 @@ OFRay::OFRay(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float sta
 }
 
 OFRay::OFRay(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float start_x, float start_y, COORDINATION additcn, float length, const linestyle_t& linestyle)
-  : DrawOverlayTraced(linestyle), 
+  : DrawOverlay_ColorTraced(linestyle), 
     OVLCoordsDynamic(pcoords, offset_x, offset_y),
     OVLDimmsOff(),
     m_start_x(start_x), m_start_y(start_y), m_additcn(additcn), m_length(length)
@@ -367,14 +367,14 @@ int   OFRay::fshTrace(int overlay, bool rotated, char* to) const
 
 
 
-OFArrow::OFArrow(COORDINATION cn, float arrow_x, float arrow_y, float end_x, float end_y, const linestyle_t& linestyle): DrawOverlayTraced(linestyle), 
+OFArrow::OFArrow(COORDINATION cn, float arrow_x, float arrow_y, float end_x, float end_y, const linestyle_t& linestyle): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(cn, arrow_x, arrow_y),
   OVLDimmsOff(),
   m_at(-1), m_param1(end_x), m_param2(end_y)
 {
 }
 
-OFArrow::OFArrow(OVLCoordsStatic* pcoords, float offset_arrow_x, float offset_arrow_y, float end_x, float end_y, const linestyle_t& linestyle): DrawOverlayTraced(linestyle), 
+OFArrow::OFArrow(OVLCoordsStatic* pcoords, float offset_arrow_x, float offset_arrow_y, float end_x, float end_y, const linestyle_t& linestyle): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(pcoords, offset_arrow_x, offset_arrow_y),
   OVLDimmsOff(),
   m_at(-1), m_param1(end_x), m_param2(end_y)
@@ -421,14 +421,14 @@ int   OFArrow::fshTrace(int overlay, bool rotated, char* to) const
 //////////////////////////
 /// 
 
-OFCross::OFCross(COORDINATION cn, float start_x, float start_y, COORDINATION featcn, float gap, float size, const linestyle_t &linestyle): DrawOverlayTraced(linestyle), 
+OFCross::OFCross(COORDINATION cn, float start_x, float start_y, COORDINATION featcn, float gap, float size, const linestyle_t &linestyle): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(cn, start_x, start_y),
   OVLDimms1Static(featcn == CR_SAME? cn : featcn, size < 0 ? 5000.0f : size),
   m_gap(gap)
 {
 }
 
-OFCross::OFCross(OVLCoordsStatic *pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap, float size, const linestyle_t &linestyle): DrawOverlayTraced(linestyle), 
+OFCross::OFCross(OVLCoordsStatic *pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap, float size, const linestyle_t &linestyle): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(pcoords, offset_x, offset_y),
   OVLDimms1Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, size < 0 ? 5000.0f : size),
   m_gap(gap)
@@ -455,14 +455,14 @@ int OFCross::fshTrace(int overlay, bool rotated, char *to) const
 /// 
 
 OFAngle::OFAngle(OFAngle::ORIENT orient, COORDINATION cr, float center_x, float center_y, COORDINATION featcn, float size_x, float size_y, const linestyle_t& linestyle): 
-  DrawOverlayTraced(linestyle), OVLCoordsDynamic(cr, center_x, center_y),
+  DrawOverlay_ColorTraced(linestyle), OVLCoordsDynamic(cr, center_x, center_y),
   OVLDimms2Static(featcn == CR_SAME? cr : featcn, size_x, size_y), 
   m_orient(orient)
 {
 }
 
 OFAngle::OFAngle(OFAngle::ORIENT orient, OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float size_x, float size_y, const linestyle_t& linestyle): 
-  DrawOverlayTraced(linestyle), OVLCoordsDynamic(pcoords, offset_x, offset_y),
+  DrawOverlay_ColorTraced(linestyle), OVLCoordsDynamic(pcoords, offset_x, offset_y),
   OVLDimms2Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, size_x, size_y), 
   m_orient(orient)
 {
@@ -496,14 +496,14 @@ int   OFAngle::fshTrace(int overlay, bool rotated, char* to) const
 /// 
 
 OFVisir::OFVisir(COORDINATION cr, float center_x, float center_y, COORDINATION featcn, float gap, float size, const linestyle_t& linestyle): 
-  DrawOverlayTraced(linestyle), OVLCoordsDynamic(cr, center_x, center_y),
+  DrawOverlay_ColorTraced(linestyle), OVLCoordsDynamic(cr, center_x, center_y),
   OVLDimms2Static(featcn == CR_SAME? cr : featcn, size, size),
   m_gap(gap)
 {
 }
 
 OFVisir::OFVisir(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap, float size, const linestyle_t& linestyle): 
-  DrawOverlayTraced(linestyle), OVLCoordsDynamic(pcoords, offset_x, offset_y),
+  DrawOverlay_ColorTraced(linestyle), OVLCoordsDynamic(pcoords, offset_x, offset_y),
   OVLDimms2Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, size, size),
   m_gap(gap)
 {
@@ -545,14 +545,14 @@ int   OFVisir::fshTrace(int overlay, bool rotated, char* to) const
 /// 
 
 OFFactor::OFFactor(COORDINATION cr, float center_x, float center_y, COORDINATION featcn, float gap, float size, const linestyle_t& linestyle): 
-  DrawOverlayTraced(linestyle), OVLCoordsDynamic(cr, center_x, center_y),
+  DrawOverlay_ColorTraced(linestyle), OVLCoordsDynamic(cr, center_x, center_y),
   OVLDimms2Static(featcn == CR_SAME? cr : featcn, size, size),
   m_gap(gap)
 {
 }
 
 OFFactor::OFFactor(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap, float size, const linestyle_t& linestyle): 
-  DrawOverlayTraced(linestyle), OVLCoordsDynamic(pcoords, offset_x, offset_y),
+  DrawOverlay_ColorTraced(linestyle), OVLCoordsDynamic(pcoords, offset_x, offset_y),
   OVLDimms2Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, size, size),
   m_gap(gap)
 {
@@ -582,13 +582,13 @@ int   OFFactor::fshTrace(int overlay, bool rotated, char* to) const
 /// 
 
 OFPointrun::OFPointrun(COORDINATION cr, float center_x, float center_y, COORDINATION featcn, float gap_w, int speed): 
-  DrawOverlaySimple(1), OVLCoordsDynamic(cr, center_x, center_y),
+  DrawOverlay_ColorForegoing(1), OVLCoordsDynamic(cr, center_x, center_y),
   OVLDimmsOff(), m_cr(featcn), m_gap(gap_w), m_speed(speed)
 {
 }
 
 OFPointrun::OFPointrun(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float gap_w, int speed): 
-  DrawOverlaySimple(1), OVLCoordsDynamic(pcoords, offset_x, offset_y),
+  DrawOverlay_ColorForegoing(1), OVLCoordsDynamic(pcoords, offset_x, offset_y),
   OVLDimmsOff(), m_cr(featcn), m_gap(gap_w), m_speed(speed)
 {
 }
@@ -633,14 +633,14 @@ int   OFPointrun::fshTrace(int overlay, bool rotated, char* to) const
 
 
 OFSubjectif::OFSubjectif(COORDINATION cr, float center_x, float center_y, COORDINATION featcn, float width, float gap_w, float gap_h, const linestyle_t& linestyle): 
-  DrawOverlayTraced(linestyle),  OVLCoordsDynamic(cr, center_x, center_y),
+  DrawOverlay_ColorTraced(linestyle),  OVLCoordsDynamic(cr, center_x, center_y),
   OVLDimms2Static(featcn == CR_SAME? cr : featcn, width*2 + gap_w, gap_h*2)
 {
   m_gap = gap_w;
 }
 
 OFSubjectif::OFSubjectif(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float width, float gap_w, float gap_h, const linestyle_t& linestyle): 
-  DrawOverlayTraced(linestyle), OVLCoordsDynamic(pcoords, offset_x, offset_y),
+  DrawOverlay_ColorTraced(linestyle), OVLCoordsDynamic(pcoords, offset_x, offset_y),
   OVLDimms2Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, width*2 + gap_w, gap_h*2)
 {
   m_gap = gap_w;
@@ -673,7 +673,7 @@ int   OFSubjectif::fshTrace(int overlay, bool rotated, char* to) const
 
 
 OFObjectif::OFObjectif(COORDINATION cr, float center_x, float center_y, COORDINATION featcn, float width, float height, float gap_w, float gap_h, const linestyle_t& linestyle): 
-  DrawOverlayTraced(linestyle),  OVLCoordsDynamic(cr, center_x, center_y),
+  DrawOverlay_ColorTraced(linestyle),  OVLCoordsDynamic(cr, center_x, center_y),
   OVLDimms2Static(featcn == CR_SAME? cr : featcn, width, height)
 {
   m_gap[0] = gap_w;
@@ -681,7 +681,7 @@ OFObjectif::OFObjectif(COORDINATION cr, float center_x, float center_y, COORDINA
 }
 
 OFObjectif::OFObjectif(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORDINATION featcn, float width, float height, float gap_w, float gap_h, const linestyle_t& linestyle): 
-  DrawOverlayTraced(linestyle), OVLCoordsDynamic(pcoords, offset_x, offset_y),
+  DrawOverlay_ColorTraced(linestyle), OVLCoordsDynamic(pcoords, offset_x, offset_y),
   OVLDimms2Static(featcn == CR_SAME? pcoords->getCoordination() : featcn, width, height)
 {
   m_gap[0] = gap_w;
@@ -712,14 +712,14 @@ int   OFObjectif::fshTrace(int overlay, bool rotated, char* to) const
 
 
 
-OFDouble::OFDouble(bool horz, COORDINATION cn, float center, COORDINATION featcn, float gap, const linestyle_t& kls): DrawOverlayTraced(kls), 
+OFDouble::OFDouble(bool horz, COORDINATION cn, float center, COORDINATION featcn, float gap, const linestyle_t& kls): DrawOverlay_ColorTraced(kls), 
   OVLCoordsDynamic(cn, horz? 0.0f : center, horz? center: 0.0f),
   OVLDimms2Dynamic(featcn == CR_SAME? cn : featcn, horz? 0.0f : gap, horz? gap : 0.0f),
   m_horz(horz), m_gap(gap)
 {
 }
 
-OFDouble::OFDouble(bool horz, OVLCoordsStatic* pcoords, float center, COORDINATION featcn, float gap, const linestyle_t& kls): DrawOverlayTraced(kls),
+OFDouble::OFDouble(bool horz, OVLCoordsStatic* pcoords, float center, COORDINATION featcn, float gap, const linestyle_t& kls): DrawOverlay_ColorTraced(kls),
   OVLCoordsDynamic(pcoords, horz? 0.0f : center, horz? center: 0.0f),
   OVLDimms2Dynamic(featcn == CR_SAME? pcoords->getCoordination() : featcn, horz? gap : 0.0f, horz? 0.0f : gap),
   m_horz(horz), m_gap(gap)

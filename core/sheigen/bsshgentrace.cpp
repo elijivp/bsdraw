@@ -396,6 +396,13 @@ void FshTraceGenerator::var_fixed(const char *name, float v1, float v2, float v3
 void FshTraceGenerator::var_const_fixed(const char *name, float v1, float v2, float v3, float v4){  m_offset += msprintf(&m_to[m_offset], "const vec4 %s = vec4(%f, %f, %f, %f);" SHNL, name, v1, v2, v3, v4); }
 
 
+void FshTraceGenerator::var_fixed(const char *name, const color3f_t& v){  m_offset += msprintf(&m_to[m_offset], "vec3 %s = vec3(%f, %f, %f);" SHNL, name, v.r, v.g, v.b); }
+
+void FshTraceGenerator::var_const_fixed(const char *name, const color3f_t& v){  m_offset += msprintf(&m_to[m_offset], "const vec3 %s = vec3(%f, %f, %f);" SHNL, name, v.r, v.g, v.b); }
+
+void FshTraceGenerator::var_inline(const char* name, const color3f_t& v){  m_offset += msprintf(&m_to[m_offset], name, v.r, v.g, v.b); }
+
+
 
 void FshTraceGenerator::var_array_f_empty(const char* name, int size){  m_offset += msprintf(&m_to[m_offset], "float %s[%d];" SHNL, name, size);   }
 void FshTraceGenerator::var_array_ff_empty(const char* name, int size){  m_offset += msprintf(&m_to[m_offset], "vec2 %s[%d];" SHNL, name, size);   }
@@ -455,6 +462,11 @@ void FshTraceGenerator::push(const char* text, unsigned int len)
     m_offset += len - 1;
   }
 }
+
+void FshTraceGenerator::push(int v){  m_offset += msprintf(&m_to[m_offset], "%d", v); }
+
+void FshTraceGenerator::push(float v){  m_offset += msprintf(&m_to[m_offset], "%f", v); }
+
 
 //void FshTraceGenerator::inside_begin1(const char *limrad1){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(-%s,float(inormed.x))*step(-%s,float(inormed.y))*(1-step(%s + 1.0, float(inormed.x)))*(1-step(%s + 1.0, float(inormed.y))));   if (inside != 0){" SHNL,
 //                                                                              limrad1, limrad1, limrad1, limrad1); }

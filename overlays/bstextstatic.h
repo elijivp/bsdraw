@@ -51,7 +51,7 @@ protected:
   void          innerSetText(const otextopts_t& ot, const QFont& font);
 };
 
-class OTextTraced: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
+class OTextTraced: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
 {
 public:
   OTextTraced(const char* text, COORDINATION cn, float xpos, float ypos,
@@ -77,7 +77,7 @@ protected:
   bool m_rectangled;
 };
 
-class OTextColored: public DrawOverlaySimple, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
+class OTextColored: public DrawOverlay_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
 {
 public:
   OTextColored(const char* text, COORDINATION cn, float xpos, float ypos,
@@ -111,7 +111,7 @@ protected:
 };
 
 
-class OTextPaletted: public DrawOverlayHard, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
+class OTextPaletted: public DrawOverlay_ColorThroughPalette, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
 {
 public:
   OTextPaletted(const char* text, COORDINATION cn, float xpos, float ypos,

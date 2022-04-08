@@ -24,8 +24,6 @@ public:
   ~OVLQImage();
   QImage*         getImage(){ return m_pImage; }
   const QImage*   getImage() const { return m_pImage; }
-  void            banAlphaChannel(bool ban);
-  bool            isAlphaBanned() const;
 protected:
   bool            assignImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach);
 protected:
@@ -33,23 +31,27 @@ protected:
   QImage*         m_pImage;
   bool            m_autorotated;
   bool            m_imageowner;
-  bool            m_banalpha;
 };
 
 
 
-class DrawOverlaySimpleImage: public DrawOverlaySimple, public OVLQImage
+class DrawOverlay_ColorForegoingImage: public DrawOverlay_ColorForegoing, public OVLQImage
 {
+protected:
+  bool            m_banalpha;
 public:
-  DrawOverlaySimpleImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach=false): 
-    OVLQImage(image, icvt, autorotated, detach){}
-  
+  DrawOverlay_ColorForegoingImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach=false): 
+    OVLQImage(image, icvt, autorotated, detach), m_banalpha(false){}
+public:
+  void            banAlphaChannel(bool ban, bool update=true);
+  bool            isAlphaBanned() const { return m_banalpha; }
+public:
   void  reUpdate();
   bool  setImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach, bool update=true);
 };
 
 
-class OImageOriginal: public DrawOverlaySimpleImage, public OVLCoordsDynamic, public OVLDimms2Dynamic
+class OImageOriginal: public DrawOverlay_ColorForegoingImage, public OVLCoordsDynamic, public OVLDimms2Dynamic
 {
 public:
   OImageOriginal(QImage* image, IMAGECONVERT icvt, bool autorotated, COORDINATION cn, float x, float y, float mult_w=1.0f, float mult_h=1.0f);
@@ -59,7 +61,7 @@ protected:
   float           m_sizemultiplier[2];
 };
 
-class OImageStretched: public DrawOverlaySimpleImage, public OVLCoordsStatic, public OVLDimms2Dynamic
+class OImageStretched: public DrawOverlay_ColorForegoingImage, public OVLCoordsStatic, public OVLDimms2Dynamic
 {
 public:
   OImageStretched(QImage* image, IMAGECONVERT icvt, bool autorotated, COORDINATION cn=CR_RELATIVE, float x=0.0f, float y=0.0f, float mult_w=1.0f, float mult_h=1.0f);

@@ -11,28 +11,28 @@ enum  EXTENDED_REGULAR {
   EGO_RISK_H, EGO_RISK_V, EGO_RISK_B
 };
 
-OGridRegular::OGridRegular(REGULAR go, COORDINATION cn, float startchannel, float stepsize, const linestyle_t& linestyle, int maxsteps, bool showGridAtZero): DrawOverlayTraced(linestyle), 
+OGridRegular::OGridRegular(REGULAR go, COORDINATION cn, float startchannel, float stepsize, const linestyle_t& linestyle, int maxsteps, bool showGridAtZero): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(cn, go == REGULAR_HORZ? 0.0f : startchannel, go == REGULAR_HORZ? startchannel : 0.0f),
   OVLDimmsOff(),
   m_gridtype((int)go), m_stepsize(stepsize), m_maxsteps(maxsteps), m_zeroreg(showGridAtZero), m_additcn(CR_SAME)
 {
 }
 
-OGridRegular::OGridRegular(OGridRegular::REGULAR go, COORDINATION cn, float startchannel, COORDINATION cnstep, float stepsize, const linestyle_t& linestyle, int maxsteps, bool showGridAtZero): DrawOverlayTraced(linestyle), 
+OGridRegular::OGridRegular(OGridRegular::REGULAR go, COORDINATION cn, float startchannel, COORDINATION cnstep, float stepsize, const linestyle_t& linestyle, int maxsteps, bool showGridAtZero): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(cn, go == REGULAR_HORZ? 0.0f : startchannel, go == REGULAR_HORZ? startchannel : 0.0f),
   OVLDimmsOff(),
   m_gridtype((int)go), m_stepsize(stepsize), m_maxsteps(maxsteps), m_zeroreg(showGridAtZero), m_additcn(cnstep)
 {
 }
 
-OGridRegular::OGridRegular(float start, float stepsize, const linestyle_t& linestyle, int maxsteps, bool showGridAtZero): DrawOverlayTraced(linestyle), 
+OGridRegular::OGridRegular(float start, float stepsize, const linestyle_t& linestyle, int maxsteps, bool showGridAtZero): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(CR_RELATIVE, 0.0f, start),
   OVLDimmsOff(),
   m_gridtype(EGO_REGULAR_B), m_stepsize(stepsize), m_maxsteps(maxsteps), m_zeroreg(showGridAtZero), m_additcn(CR_SAME)
 {
 }
 
-OGridRegular::OGridRegular(RISK gr, COORDINATION cn, float startchannel, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps): DrawOverlayTraced(linestyle),
+OGridRegular::OGridRegular(RISK gr, COORDINATION cn, float startchannel, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps): DrawOverlay_ColorTraced(linestyle),
   OVLCoordsDynamic(cn, gr == RISK_HORZ? mark_centeroffset : startchannel, gr == RISK_HORZ? startchannel : mark_centeroffset),
   OVLDimmsOff(),
   m_gridtype((int)gr + EGO_RISK_H), m_stepsize(stepsize), m_specheight(risk_height), m_babsheight(absolute_height), m_maxsteps(maxsteps), m_additcn(CR_SAME)
@@ -40,7 +40,7 @@ OGridRegular::OGridRegular(RISK gr, COORDINATION cn, float startchannel, float s
 }
 
 OGridRegular::OGridRegular(OGridRegular::RISK gr, COORDINATION cn, float startchannel, COORDINATION cnstep, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps)
-  : DrawOverlayTraced(linestyle),
+  : DrawOverlay_ColorTraced(linestyle),
     OVLCoordsDynamic(cn, gr == RISK_HORZ? mark_centeroffset : startchannel, gr == RISK_HORZ? startchannel : mark_centeroffset),
     OVLDimmsOff(),
     m_gridtype((int)gr + EGO_RISK_H), m_stepsize(stepsize), m_specheight(risk_height), m_babsheight(absolute_height), m_maxsteps(maxsteps), m_additcn(cnstep)
@@ -48,7 +48,7 @@ OGridRegular::OGridRegular(OGridRegular::RISK gr, COORDINATION cn, float startch
 }
 
 OGridRegular::OGridRegular(float start, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps)
-  : DrawOverlayTraced(linestyle),
+  : DrawOverlay_ColorTraced(linestyle),
     OVLCoordsDynamic(CR_RELATIVE, mark_centeroffset, start),
     OVLDimmsOff(),
     m_gridtype(EGO_RISK_B), m_stepsize(stepsize), m_specheight(risk_height), m_babsheight(absolute_height), m_maxsteps(maxsteps), m_additcn(CR_SAME)
@@ -168,7 +168,7 @@ int OGridRegular::fshTrace(int overlay, bool rotated, char *to) const
 
 /********************************************/
 
-OGridCircular::OGridCircular(COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float stepsize, const linestyle_t& linestyle, int maxsteps, float border): DrawOverlayTraced(linestyle), 
+OGridCircular::OGridCircular(COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float stepsize, const linestyle_t& linestyle, int maxsteps, float border): DrawOverlay_ColorTraced(linestyle), 
   OVLCoordsDynamic(cn, center_x, center_y),
   OVLDimmsOff(),
   m_featcn(featcn), m_stepsize(stepsize), m_maxsteps(maxsteps), m_border(border)
@@ -218,7 +218,7 @@ int OGridCircular::fshTrace(int overlay, bool rotated, char *to) const
 /********************************************/
 
 OGridDecart::OGridDecart(COORDINATION cn, float center_x, float center_y, float step_x, float step_y, int absolute_risk_height, float limit_x_left, float limit_x_right, float limit_y_top, float limit_y_bottom, const linestyle_t &linestyle):
-  DrawOverlayTraced(linestyle),
+  DrawOverlay_ColorTraced(linestyle),
   OVLCoordsDynamic(cn, center_x, center_y),
   OVLDimmsOff(),
   m_riskheight(absolute_risk_height)
@@ -290,7 +290,7 @@ int OGridDecart::fshTrace(int overlay, bool rotated, char *to) const
 
 
 OGridCells::OGridCells(int rows, int columns, const linestyle_t& linestyle): 
-  DrawOverlayTraced(linestyle), m_rows(rows), m_columns(columns)
+  DrawOverlay_ColorTraced(linestyle), m_rows(rows), m_columns(columns)
 {
 }
 

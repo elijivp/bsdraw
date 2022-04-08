@@ -27,35 +27,46 @@ FshColorGenerator::FshColorGenerator(const _DrawOverlay::uniforms_t& ufms, int o
   m_offset += msexpandParams(&m_to[m_offset], m_overlay, loc_uniformsCount, loc_uniforms);
 }
 
-void FshColorGenerator::goto_func_begin(CGV cgv)
+//void FshColorGenerator::goto_func_begin(CGV cgv)
+//{
+//  if (cgv == CGV_EMPTY)
+//    m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 overcolor, in vec3 undercolor) {" SHNL
+//                                            "vec3 result;" SHNL
+//                                            "float mixwell = 0.0;" SHNL
+//                        , m_overlay);
+//  else if (cgv == CGV_COLORED)
+//    m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 overcolor, in vec3 undercolor) {" SHNL
+//                                            "vec3 result = overcolor.rgb;" SHNL
+//                                            "float mixwell = overcolor[3];" SHNL
+//                        , m_overlay);
+//  else if (cgv == CGV_TRACED)
+//    m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 in_variant, in vec3 undercolor) {" SHNL
+//                                            "vec3 result;" SHNL
+//                                            "float mixwell = 0.0;" SHNL
+//                        , m_overlay);
+//  else if (cgv == CGV_TEXTURED)
+//  {
+//    m_offset += msprintf(&m_to[m_offset],   "uniform highp sampler2D opm%D_%D;" SHNL
+//                                            "vec3 overlayColor%d(in vec4 txtm, in vec3 undercolor) {" SHNL
+//                                            "vec3 result = texture(opm%D_%D, vec2(txtm[0], 0.0)).rgb;" SHNL
+//                                            "float mixwell = txtm[3];" SHNL
+//                        , m_overlay, m_paramsctr
+//                        , m_overlay
+//                        , m_overlay, m_paramsctr
+//                        );
+//    m_paramsctr++;
+//  }
+//}
+
+
+void FshColorGenerator::goto_func_begin()
 {
-  if (cgv == CGV_EMPTY)
-    m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 overcolor, in vec3 undercolor) {" SHNL
+  m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 in_variant, in vec3 undercolor) " SHNL
+                                          "{" SHNL
                                             "vec3 result;" SHNL
-                                            "float mixwell = 0.0;" SHNL
-                        , m_overlay);
-  else if (cgv == CGV_COLORED)
-    m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 overcolor, in vec3 undercolor) {" SHNL
-                                            "vec3 result = overcolor.rgb;" SHNL
-                                            "float mixwell = overcolor[3];" SHNL
-                        , m_overlay);
-  else if (cgv == CGV_TRACED)
-    m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 trace_on_pix, in vec3 undercolor) {" SHNL
-                                            "vec3 result;" SHNL
-                                            "float mixwell = 0.0;" SHNL
-                        , m_overlay);
-  else if (cgv == CGV_TEXTURED)
-  {
-    m_offset += msprintf(&m_to[m_offset],   "uniform highp sampler2D opm%D_%D;" SHNL
-                                            "vec3 overlayColor%d(in vec4 txtm, in vec3 undercolor) {" SHNL
-                                            "vec3 result = texture(opm%D_%D, vec2(txtm[0], 0.0)).rgb;" SHNL
-                                            "float mixwell = txtm[3];" SHNL
-                        , m_overlay, m_paramsctr
-                        , m_overlay
-                        , m_overlay, m_paramsctr
-                        );
-    m_paramsctr++;
-  }
+                                            "float mixwell = 0.0;" SHNL,
+                       m_overlay
+                       );
 }
 
 void FshColorGenerator::param_alias(const char *name)
@@ -86,11 +97,11 @@ void FshColorGenerator::mixwell_by_traced(const linestyle_t &kls)
 {
   /// 1. Mixwell
   {
-    const char* decl_mixwell[] =          {   "mixwell = step(1.0, float(trace_on_pix[0]));" SHNL, 
-                                              "mixwell = 1.0 - step(float(trace_on_pix[0]), 0.0);" SHNL,
-                                              "mixwell = trace_on_pix[0];" SHNL,
-                                              "mixwell = (1 - trace_on_pix[0]*trace_on_pix[0]);" SHNL,
-                                              "mixwell = trace_on_pix[0];" SHNL,
+    const char* decl_mixwell[] =          {   "mixwell = step(1.0, float(in_variant[0]));" SHNL, 
+                                              "mixwell = 1.0 - step(float(in_variant[0]), 0.0);" SHNL,
+                                              "mixwell = in_variant[0];" SHNL,
+                                              "mixwell = (1 - in_variant[0]*in_variant[0]);" SHNL,
+                                              "mixwell = in_variant[0];" SHNL,
                                                        };
     m_offset += msprintf(&m_to[m_offset], "%s", decl_mixwell[kls.outside]);
   }
@@ -101,8 +112,8 @@ void FshColorGenerator::mixwell_by_traced(const linestyle_t &kls)
     else if (kls.lenstroke == 0)
       m_offset += msprintf(&m_to[m_offset], "const int lenspace = %d;" SHNL
                                             "const int countdot = %d;" SHNL
-//                                            "int rounded = int(floor(trace_on_pix[1] * trace_on_pix[2] + 0.49));" SHNL
-                                            "int pos = int(mod(trace_on_pix[1], float(2*countdot - 1 + lenspace)));" SHNL
+//                                            "int rounded = int(floor(in_variant[1] * in_variant[2] + 0.49));" SHNL
+                                            "int pos = int(mod(in_variant[1], float(2*countdot - 1 + lenspace)));" SHNL
                                             "int mixdot = int((1.0 - step(2.0*countdot, float(pos)))*step(1.0, mod(pos - (2.0*countdot-1.0), 2.0)));" SHNL
                                             "mixwell = mixwell*mixdot;" SHNL,
                           kls.lenspace, kls.countdot);
@@ -110,20 +121,33 @@ void FshColorGenerator::mixwell_by_traced(const linestyle_t &kls)
       m_offset += msprintf(&m_to[m_offset], "const int lenstroke = %d;" SHNL
                                             "const int lenspace = %d;" SHNL
                                             "const int countdot = %d;" SHNL
-//                                            "int rounded = int(floor(trace_on_pix[1] * trace_on_pix[2]));" SHNL
-                                            "int pos = int(mod(trace_on_pix[1], lenstroke + lenspace + (1 + lenspace) * countdot));" SHNL
+//                                            "int rounded = int(floor(in_variant[1] * in_variant[2]));" SHNL
+                                            "int pos = int(mod(in_variant[1], lenstroke + lenspace + (1 + lenspace) * countdot));" SHNL
                                             "int mixban = int(step(float(lenstroke), float(pos))*step(1.0, mod(pos - lenstroke + 1, lenspace + 1)));" SHNL
                                             "mixwell = mixwell*(1 - mixban);" SHNL, 
                           kls.lenstroke, kls.lenspace, kls.countdot);
   }
 }
 
-void FshColorGenerator::color_by_rgb(float r, float g, float b)
+void FshColorGenerator::brushResult(const color3f_t& clr)
+{
+  m_offset += msprintf(&m_to[m_offset], "result = vec3(%F,%F,%F);", clr.r, clr.g, clr.b);
+}
+
+void FshColorGenerator::brushResult(float r, float g, float b)
 {
   m_offset += msprintf(&m_to[m_offset], "result = vec3(%F,%F,%F);", r, g, b);
 }
 
-void FshColorGenerator::color_by_inversive(int idx)
+void FshColorGenerator::brushResult(const linestyle_t &kls)
+{
+  if (kls.inversive == 0)
+    brushResult(kls.r, kls.g, kls.b);
+  else
+    invertResult(kls.inversive);
+}
+
+void FshColorGenerator::invertResult(int idx)
 {
   static const char* decl_inversive[] = {     "result = 1.0 - undercolor;" SHNL,
                                               "result = step(0.5, undercolor); result = (vec3(0.5,0.5,0.5) - result) + undercolor;" SHNL,
@@ -139,14 +163,6 @@ void FshColorGenerator::color_by_inversive(int idx)
     m_offset += msprintf(&m_to[m_offset], "%s", decl_inversive[idx-1]);
 }
 
-void FshColorGenerator::color_by_traced(const linestyle_t &kls)
-{
-  if (kls.inversive == 0)
-    color_by_rgb(kls.r, kls.g, kls.b);
-  else
-    color_by_inversive(kls.inversive);
-}
-
 void FshColorGenerator::push(const char *text)
 {
   while (*text != '\0')
@@ -155,7 +171,7 @@ void FshColorGenerator::push(const char *text)
 
 void FshColorGenerator::goto_func_end()
 {
-  m_offset += msprintf(&m_to[m_offset],  "return mix(undercolor, result, mixwell);" SHNL
+  m_offset += msprintf(&m_to[m_offset],   "return mix(undercolor, result, mixwell);" SHNL
                                         "}" SHNL);
 }
 

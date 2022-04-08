@@ -5,9 +5,10 @@
 /// Created By: Elijah Vlasov
 #include "bsborder.h"
 #include "../core/sheigen/bsshgentrace.h"
+#include "../core/sheigen/bsshgencolor.h"
 
 
-OBorder::OBorder(const linestyle_t &kls, int lineset): DrawOverlayTraced(kls), OVLDimmsOff(), m_lineset(lineset)
+OBorder::OBorder(const linestyle_t &kls, int lineset): DrawOverlay_ColorTraced(kls), OVLDimmsOff(), m_lineset(lineset)
 {
 }
 
@@ -31,11 +32,69 @@ int OBorder::fshTrace(int overlay, bool rotated, char *to) const
   return ocg.written();
 }
 
+/*******************************************************************************************************************************************************/
 
+
+OShadow::OShadow(int lineset, unsigned int pxwidth, float weight, const color3f_t &clr): DrawOverlay_ColorDomestic(clr), OVLCoordsOff(), OVLDimmsOff(), 
+  m_weight(weight), m_lineset(pxwidth == 0? 0 : lineset), m_color(clr)
+{
+  for (int i=0; i<4; i++)
+    m_pxwidth[i] = (int)pxwidth - 1;
+}
+
+OShadow::OShadow(int pxwidth_left, int pxwidth_top, int pxwidth_right, int pxwidth_bottom, float weight, const color3f_t& clr): DrawOverlay_ColorDomestic(clr), OVLCoordsOff(), OVLDimmsOff(), 
+  m_weight(weight), m_color(clr)
+{
+  m_lineset = 0;
+  m_pxwidth[0] = pxwidth_left;      if (pxwidth_left > 0)  m_lineset |= OBLINE_LEFT;
+  m_pxwidth[1] = pxwidth_top;       if (pxwidth_top > 0)  m_lineset |= OBLINE_TOP;
+  m_pxwidth[2] = pxwidth_right;     if (pxwidth_right > 0)  m_lineset |= OBLINE_RIGHT;
+  m_pxwidth[3] = pxwidth_bottom;    if (pxwidth_bottom > 0)  m_lineset |= OBLINE_BOTTOM;
+}
+
+int OShadow::fshTrace(int overlay, bool rotated, char *to) const
+{
+  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.var_const_fixed("weight", m_weight);
+    
+    if (m_lineset)
+    {
+      ocg.goto_normed();
+      
+      const char* dds[] = { "inormed.x",
+                            "ibounds.y - 1 - inormed.y",
+                            "ibounds.x - 1 - inormed.x",
+                            "inormed.y",
+                          };
+      ocg.push("ivec2 dd = ivec2(9999, 0);");
+      for (int i=0; i<4; i++)
+      {
+        if (m_lineset & (1 << i))
+        {
+          ocg.push("dd = (ivec2)mix(dd, ivec2(");
+          ocg.push(dds[i]);
+          ocg.push(", ");
+          ocg.push(m_pxwidth[i]);
+          ocg.push("), step(");
+          ocg.push(dds[i]);
+          ocg.push(", dd[0]));");
+        }
+      }
+  //    ocg.push("int dd = inormed.x")
+      ocg.push("mixwell = clamp(1.0 + dd[1] - dd[0], 0.0, 1.0 + dd[1])/(1.0 + dd[1]);");
+      ocg.push("mixwell = 1.22 - 1.22 / (1 + 4.5*mixwell);");
+      ocg.push("mixwell = clamp(weight*(mixwell*mixwell*mixwell), 0.0, 1.0)*step(0.0, mixwell);");
+    }
+  }  
+  ocg.goto_func_end(false);
+  return ocg.written();
+}
 
 /*******************************************************************************************************************************************************/
 
-_OSelected::_OSelected(unsigned int widthpixels, int default_selection, const linestyle_t& kls): DrawOverlayTraced(kls), OVLDimmsOff(),
+_OSelected::_OSelected(unsigned int widthpixels, int default_selection, const linestyle_t& kls): DrawOverlay_ColorTraced(kls), OVLDimmsOff(),
   m_selected(default_selection), m_width(widthpixels)
 {
   appendUniform(DT_1I, &m_selected);
@@ -160,7 +219,7 @@ int OColumnsSelected::fshTrace(int overlay, bool rotated, char* to) const
 
 /*******************************************************************************************************************************************************/
 
-OToons::OToons(COORDINATION cr, float diameter, float border, const linestyle_t &kls, bool banclikcks): DrawOverlayTraced(kls),
+OToons::OToons(COORDINATION cr, float diameter, float border, const linestyle_t &kls, bool banclikcks): DrawOverlay_ColorTraced(kls),
   OVLCoordsStatic(CR_RELATIVE, 0.5f, 0.5f),
   OVLDimms1Static(cr, diameter/2.0f),
   m_radius2(diameter*diameter/4.0f), m_border(border), m_banclicks(banclikcks)

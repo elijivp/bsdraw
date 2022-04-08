@@ -8,7 +8,7 @@
 
 #include "../../core/bsoverlay.h"
 
-class OMarkDashs: public DrawOverlayHard, public OVLCoordsStatic, public OVLDimmsOff
+class OMarkDashs: public DrawOverlay_ColorThroughPalette, public OVLCoordsStatic, public OVLDimmsOff
 {
 protected:
   unsigned int      m_maxmarks;
@@ -35,7 +35,7 @@ public:
 
 
 /// max figures count limited by videoadapter
-class OCluster: public DrawOverlayHard, public OVLCoordsStatic, public OVLDimmsOff
+class OCluster: public DrawOverlay_ColorThroughPalette, public OVLCoordsStatic, public OVLDimmsOff
 {
 public:
   struct    clusteritem_t

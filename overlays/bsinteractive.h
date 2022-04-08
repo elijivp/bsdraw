@@ -11,7 +11,7 @@
 
 #include "../core/bsoverlay.h"
 
-class _OActiveBase: public DrawOverlaySimple, public OVLCoordsDynamic, public OVLDimmsOff, public IOverlayReactor
+class _OActiveBase: public DrawOverlay_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsOff, public IOverlayReactor
 {
   bool  m_linked;
 public:
@@ -25,7 +25,7 @@ protected:
 
 ////
 
-class OActivePointer: public DrawOverlaySimple, public OVLCoordsDynamic, public OVLDimmsOff
+class OActivePointer: public DrawOverlay_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
   OActivePointer(COORDINATION cn, float center_x, float center_y);
@@ -99,7 +99,7 @@ typedef OActiveCursorCarrierL3 OActiveCursorCarrier3;
 
 //////////////////////////////////
 
-class OActiveRandom: public DrawOverlaySimple, public OVLCoordsDynamic, public OVLDimmsOff
+class OActiveRandom: public DrawOverlay_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
   OActiveRandom();
@@ -110,7 +110,7 @@ protected:
   float   m_seed[2];
 };
 
-//class Interactive1DMaxMin: public DrawOverlaySimple, public OVLCoordsOff, public OVLDimmsOff
+//class Interactive1DMaxMin: public DrawOverlay_ColorForegoing, public OVLCoordsOff, public OVLDimmsOff
 //{
 //public:
 //  enum POINTERTYPE {  PT_MAX_H, PT_MIN_H, PT_MAX_V, PT_MIN_V  };
@@ -123,7 +123,7 @@ protected:
 
 ///////////////////////////////////////
 
-class OActiveCell: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
+class OActiveCell: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
 {
 protected:
   int             m_rows, m_columns;

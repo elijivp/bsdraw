@@ -123,6 +123,10 @@ public:
   void  var_fixed(const char* name, float v1, float v2, float v3, float v4);
   void  var_const_fixed(const char* name, float v1, float v2, float v3, float v4);
   
+  void  var_fixed(const char* name, const color3f_t& v);
+  void  var_const_fixed(const char* name, const color3f_t& v);
+  void  var_inline(const char* name, const color3f_t& v);
+  
   void  var_array_f_empty(const char* name, int size);
   void  var_array_ff_empty(const char* name, int size);
   void  var_array_fff_empty(const char* name, int size);
@@ -151,6 +155,8 @@ public:
 public:
   void  push(const char* sztext);
   void  push(const char* text, unsigned int len);
+  void  push(int v);
+  void  push(float v);
 public:
   void  inside_begin1(const char* limrad1);
   void  inside_begin2(const char* limits2);

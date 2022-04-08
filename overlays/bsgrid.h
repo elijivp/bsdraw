@@ -10,7 +10,7 @@
 #include "../core/bsoverlay.h"
 
 /// Standard regular grid
-class OGridRegular: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimmsOff
+class OGridRegular: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
   enum REGULAR  {  REGULAR_HORZ, REGULAR_VERT };
@@ -36,7 +36,7 @@ protected:
 };
 
 /// Circular grid
-class OGridCircular: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimmsOff
+class OGridCircular: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
   OGridCircular(COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, float border=1.5f);
@@ -50,7 +50,7 @@ protected:
 };
 
 /// Dekart grid
-class OGridDecart: public DrawOverlayTraced, public OVLCoordsDynamic, public OVLDimmsOff
+class OGridDecart: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
   OGridDecart(COORDINATION cn, float center_x, float center_y, float step_x, float step_y, int absolute_risk_height, float limit_x_left=-1, float limit_x_right=-1, float limit_y_top=-1, float limit_y_bottom=-1, const linestyle_t& linestyle=linestyle_white(1,0,0));
@@ -64,7 +64,7 @@ protected:
 
 
 // Cells
-class OGridCells: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff
+class OGridCells: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLDimmsOff
 {
 protected:
   int             m_rows, m_columns;

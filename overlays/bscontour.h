@@ -11,7 +11,7 @@
 #include "../core/bsoverlay.h"
 
 /// Contour by Single samples with color from linestyle
-class OContour: public DrawOverlayTraced, public OVLCoordsOff, public OVLDimmsOff
+class OContour: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLDimmsOff
 {
   float   m_from, m_to;
   bool    m_noscaled_contour;
@@ -23,7 +23,7 @@ protected:
 };
 
 /// Contour by Single samples with color from palette
-class OContourPal: public DrawOverlayHard, public OVLCoordsOff, public OVLDimmsOff
+class OContourPal: public DrawOverlay_ColorThroughPalette, public OVLCoordsOff, public OVLDimmsOff
 {
   float   m_from, m_to;
   bool    m_noscaled_contour;
@@ -34,7 +34,7 @@ protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 };
 
-class OCover: public DrawOverlaySimple, public OVLCoordsOff, public OVLDimmsOff
+class OCover: public DrawOverlay_ColorForegoing, public OVLCoordsOff, public OVLDimmsOff
 {
 public:
   enum  COVER_OTHER_PORTIONS { COP_COVER, COP_SAVEUPPER, COP_SAVELOWER, COP_SAVEALL  };
@@ -49,7 +49,7 @@ protected:
   virtual int   fshTrace(int overlay, bool rotated, char* to) const;
 }; 
 
-class OSlice: public DrawOverlaySimple, public OVLCoordsOff, public OVLDimmsOff
+class OSlice: public DrawOverlay_ColorForegoing, public OVLCoordsOff, public OVLDimmsOff
 {
 private:
   float   m_cover;

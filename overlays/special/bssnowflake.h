@@ -7,7 +7,7 @@
 
 #include "../bsimage.h"
 
-class OSnowflake: public DrawOverlaySimple, public OVLQImage, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
+class OSnowflake: public DrawOverlay_ColorForegoing, public OVLQImage, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
 {
 public:
   OSnowflake(QImage* image, IMAGECONVERT icvt, unsigned int count, float sizemultiplier);

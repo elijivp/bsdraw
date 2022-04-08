@@ -711,7 +711,7 @@ void DrawQWidget::paintGL()
                 }
                 break;
               }
-              case DT_PALETTE: case DT__HC_PALETTE:
+              case DT_PALETTE:
               {
 //                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
                 {

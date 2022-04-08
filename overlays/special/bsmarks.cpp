@@ -6,7 +6,7 @@
 
 #include "../../core/sheigen/bsshgentrace.h"
 
-OMarkDashs::OMarkDashs(unsigned int maxmarks, COORDINATION cn, float areaPos, COORDINATION featcn, float marksize, const IPalette *ipal, bool discrete): DrawOverlayHard(ipal, discrete), 
+OMarkDashs::OMarkDashs(unsigned int maxmarks, COORDINATION cn, float areaPos, COORDINATION featcn, float marksize, const IPalette *ipal, bool discrete): DrawOverlay_ColorThroughPalette(ipal, discrete), 
   OVLCoordsStatic(cn, 0.0f, areaPos),
   OVLDimmsOff(),
   m_maxmarks(maxmarks), m_featcn(featcn), m_marksize(marksize)
@@ -69,7 +69,7 @@ int OMarkDashs::fshTrace(int overlay, bool rotated, char *to) const
 /***********************************************************************************************************************************/
 
 OCluster::OCluster(bool crossable, unsigned int maxfigures, COORDINATION featcn, float figsize, const IPalette* ipal, bool discrete, float figopacity): 
-  DrawOverlayHard(ipal, discrete), OVLCoordsStatic(CR_RELATIVE, 0.5f, 0.5f), OVLDimmsOff(),
+  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsStatic(CR_RELATIVE, 0.5f, 0.5f), OVLDimmsOff(),
   m_crossable(crossable), m_total(maxfigures), m_featcn(featcn), m_figsize(figsize), m_figopc(figopacity)
 {
   m_items = new clusteritem_t[m_total];

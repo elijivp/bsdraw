@@ -13,7 +13,7 @@
 #include <math.h>
 #include <memory.h>
 
-OPTFill::OPTFill(const linestyle_t& kls): DrawOverlaySimple(),
+OPTFill::OPTFill(const linestyle_t& kls): DrawOverlay_ColorForegoing(),
   OVLCoordsDynamic(CR_RELATIVE, 0.0f, 0.0f), OVLDimmsOff(), m_fill(kls)
 {
 }
@@ -35,7 +35,7 @@ int OPTFill::fshTrace(int overlay, bool rotated, char *to) const
 
 
 
-ODropPoints::ODropPoints(unsigned int ptlimit, COORDINATION, float, const linestyle_t& kls): DrawOverlayTraced(kls),
+ODropPoints::ODropPoints(unsigned int ptlimit, COORDINATION, float, const linestyle_t& kls): DrawOverlay_ColorTraced(kls),
   OVLCoordsOff(), OVLDimmsOff(), ptCountMax(ptlimit)
 {
   ptdrops = new ovlcoords_t[ptCountMax];
@@ -93,7 +93,7 @@ bool ODropPoints::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstr
 
 /******************/
 
-OPolyLine::OPolyLine(unsigned int countPointsMax, const linestyle_t& kls): DrawOverlayTraced(kls),
+OPolyLine::OPolyLine(unsigned int countPointsMax, const linestyle_t& kls): DrawOverlay_ColorTraced(kls),
   OVLCoordsStatic(CR_RELATIVE, 0.0f, 0.0f), OVLDimmsOff(), ptCountMax(countPointsMax)//, c_x(-10000), c_y(-10000)
 {
   ptdrops = new ovlcoords_t[ptCountMax];
@@ -220,7 +220,7 @@ bool OBrush::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 OSelectorReaction::OSelectorReaction(const linestyle_t &kls, float alpha, bool moveable, bool saveneg): 
-  DrawOverlayTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f),
+  DrawOverlay_ColorTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f),
   m_alpha(alpha), m_phase(-1), m_move(moveable), m_neg(saveneg), m_dxy(0.0f, 0.0f)
 {
   if (alpha > 0.0f)
@@ -383,7 +383,7 @@ int OSelectorBand::fshTrace(int overlay, bool rotated, char *to) const
 
 
 OSegmentReaction::OSegmentReaction(const linestyle_t &kls): 
-  DrawOverlayTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f), m_phase(-1)
+  DrawOverlay_ColorTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f), m_phase(-1)
 {
 }
 

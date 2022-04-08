@@ -218,7 +218,7 @@ public:
 
 #include "stdarg.h"
 
-class PaletteONFLY: public PaletteSTD<24, true>
+class PaletteENUM: public PaletteSTD<24, true>
 {
   float         m_k, m_b;
   int           m_states;
@@ -249,70 +249,70 @@ public:
   int   states() const { return m_states; }
   int   uniqueColors() const { return m_states; }
 public:
-  PaletteONFLY(unsigned int clr1){ for (int i=0; i<TOTAL; i++)  palbuf[i] = clr1; m_k = 0.0f; m_b = 0.0f; m_states = 1; }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2){ reconstruct(2, clr1, clr2); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3){ reconstruct(3, clr1, clr2, clr3); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4){ reconstruct(4, clr1, clr2, clr3, clr4); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5){ reconstruct(5, clr1, clr2, clr3, clr4, clr5); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6){ reconstruct(6, clr1, clr2, clr3, clr4, clr5, clr6); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1){ for (int i=0; i<TOTAL; i++)  palbuf[i] = clr1; m_k = 0.0f; m_b = 0.0f; m_states = 1; }
+  PaletteENUM(unsigned int clr1, unsigned int clr2){ reconstruct(2, clr1, clr2); }
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3){ reconstruct(3, clr1, clr2, clr3); }
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4){ reconstruct(4, clr1, clr2, clr3, clr4); }
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5){ reconstruct(5, clr1, clr2, clr3, clr4, clr5); }
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6){ reconstruct(6, clr1, clr2, clr3, clr4, clr5, clr6); }
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7){ reconstruct(7, clr1, clr2, clr3, clr4, clr5, clr6, clr7); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8){ reconstruct(8, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9){ reconstruct(9, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10){ reconstruct(10, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11){ reconstruct(11, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18,
                   unsigned int clr19){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18,
                   unsigned int clr19, unsigned int clr20){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18,
                   unsigned int clr19, unsigned int clr20, unsigned int clr21){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20, clr21); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18,
                   unsigned int clr19, unsigned int clr20, unsigned int clr21, unsigned int clr22){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20, clr21, clr22); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18,
                   unsigned int clr19, unsigned int clr20, unsigned int clr21, unsigned int clr22, unsigned int clr23){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20, clr21, clr22, clr23); }
-  PaletteONFLY(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18,
                   unsigned int clr19, unsigned int clr20, unsigned int clr21, unsigned int clr22, unsigned int clr23, unsigned int clr24){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20, clr21, clr22, clr23, clr24); }
   
 public:
   template <int maxCount>
-  PaletteONFLY(const PaletteBORDS<maxCount>& cpy)
+  PaletteENUM(const PaletteBORDS<maxCount>& cpy)
   {
     int NM = TOTAL < maxCount? TOTAL : maxCount;
     for (int i=0; i<NM; i++)
@@ -324,13 +324,13 @@ public:
 };
 
 
-//template <unsigned int color> class PaletteONFLY: public PaletteSTD<1, true> {
-//public: PaletteONFLY(){ 
+//template <unsigned int color> class PaletteENUM: public PaletteSTD<1, true> {
+//public: PaletteENUM(){ 
 //    PaletteSTD<1, true>::palbuf[0] = color;
 //  } };
 
-//template <unsigned int clr1, unsigned int clr2> class PaletteONFLY: public PaletteSTD<2, true> {
-//public: PaletteONFLY(){ 
+//template <unsigned int clr1, unsigned int clr2> class PaletteENUM: public PaletteSTD<2, true> {
+//public: PaletteENUM(){ 
 //    PaletteSTD<1, true>::palbuf[0] = color;
 //  } };
 

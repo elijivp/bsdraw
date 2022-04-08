@@ -244,6 +244,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     draws[8]->ovlPushBack(new OTextColored(gnames[2], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, OO_INHERITED, 0x00000000, 0x77FFFFFF, 0x00000000));
     
     sigtype = ST_SINXX;
+    
+//    for (int i=0; i<drcount*dccount; i++)
+//      draws[i]->ovlPushBack(new OShadow(OBLINE_LEFT | OBLINE_TOP | OBLINE_RIGHT | OBLINE_BOTTOM, 4, 0.65f));
+//      draws[i]->ovlPushBack(new OShadow(3, 3, 4, 4, 0.65f));
   }
   else if (MW_TEST == DEMO_2_scaling)  /// Demo 2
   {
@@ -1079,9 +1083,9 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //    static PaletteIMPACT<30>  pimp(0x00373737, 0x00FF8867, 0x00FFFF00, 0x000000FF, 
 //                                            0x00006622, 0x0000FFFF, 0x000000FF);
     
-//    static PaletteONFLY  pimp(0x0000FF, 0x00A5FF, 0x00FFFF, 0x008000, 0xFF0000, 0x82004b, 0xee82ee );
-//    static PaletteONFLY  pimp(0x0000FF, 0x00A5FF, 0x00FFFF, 0x008000, 0xFF0000, 0x82004b, 0xee82ee );
-    static PaletteONFLY  pimp(0x00444444, 0x00003200, 0x0000ff00, 0x0000ffff);
+//    static PaletteENUM  pimp(0x0000FF, 0x00A5FF, 0x00FFFF, 0x008000, 0xFF0000, 0x82004b, 0xee82ee );
+//    static PaletteENUM  pimp(0x0000FF, 0x00A5FF, 0x00FFFF, 0x008000, 0xFF0000, 0x82004b, 0xee82ee );
+    static PaletteENUM  pimp(0x00444444, 0x00003200, 0x0000ff00, 0x0000ffff);
     defaultPalette = &pimp;
     sigtype = ST_CUSTOM;
     
@@ -1843,6 +1847,9 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                   BSFieldSetup(tr("Sprite\nalpha opaque"), &fntSTD, COS_SPRITEALPHA, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                   BSFieldSetup(tr("Foreground\nstretchable"), &fntSTD, COS_FOREGROUND, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                   BSFieldSetup(tr("Background\nstatic"), &fntSTD, COS_BACKGROUND, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Shadow rb"), &fntSTD, COS_SHADOW1, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Shadow full"), &fntSTD, COS_SHADOW2, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
+                  BSFieldSetup(tr("Shadow light"), &fntSTD, COS_SHADOW3, BFS_CHECKABLE, btnMinWidth, btnMaxWidth),
                 };
                 
                 BSLAYOUT->setSpacing(2);
@@ -3958,6 +3965,21 @@ void MainWindow::createOverlaySTD(int id)
       draws[i]->ovlPushBack(ovl);
       break;
     }
+    case COS_SHADOW1:
+    {
+      draws[i]->ovlPushBack(new OShadow(OBLINE_RIGHT | OBLINE_BOTTOM, 3));
+      break;
+    }
+    case COS_SHADOW2:
+    {
+      draws[i]->ovlPushBack(new OShadow(3, 3, 4, 4));
+      break;
+    }
+    case COS_SHADOW3:
+    {
+      draws[i]->ovlPushBack(new OShadow(2, 2, 3, 3, 0.75f, color3f_white()));
+      break;
+    }
     default: break;
     }
   }
@@ -4042,7 +4064,7 @@ void MainWindow::changeOVLForm(int value)
 {
   for (unsigned int i=0; i<drawscount; i++)
   {
-    _DrawOverlayLined* povl = dynamic_cast<_DrawOverlayLined*>(draws[i]->ovlGet(active_ovl));
+    DrawOverlay_ColorTraced* povl = dynamic_cast<DrawOverlay_ColorTraced*>(draws[i]->ovlGet(active_ovl));
     if (povl)
     {
       linestyle_t kls = povl->getLineStyle();
@@ -4092,7 +4114,7 @@ void MainWindow::changeOVLFeatures(int id)
     
     for (unsigned int i=0; i<drawscount; i++)
     {
-      _DrawOverlayLined* povl = dynamic_cast<_DrawOverlayLined*>(draws[i]->ovlGet(active_ovl));
+      DrawOverlay_ColorTraced* povl = dynamic_cast<DrawOverlay_ColorTraced*>(draws[i]->ovlGet(active_ovl));
       if (povl)
       {
         linestyle_t kls = linestyle_update(povl->getLineStyle(), clr.redF(), clr.greenF(), clr.blueF());
@@ -4108,7 +4130,7 @@ void MainWindow::changeOVLFeatures(int id)
   {
     for (unsigned int i=0; i<drawscount; i++)
     {
-      _DrawOverlayLined* povl = dynamic_cast<_DrawOverlayLined*>(draws[i]->ovlGet(active_ovl));
+      DrawOverlay_ColorTraced* povl = dynamic_cast<DrawOverlay_ColorTraced*>(draws[i]->ovlGet(active_ovl));
       if (povl)
       {
         linestyle_t kls = povl->getLineStyle();
@@ -4273,7 +4295,7 @@ void MainWindow::changeClusterPalette()
   {
     for (unsigned int i=0; i<drawscount; i++)
     {
-      DrawOverlayHard* povl= dynamic_cast<DrawOverlayHard*>(draws[i]->ovlGet(1));
+      DrawOverlay_ColorThroughPalette* povl= dynamic_cast<DrawOverlay_ColorThroughPalette*>(draws[i]->ovlGet(1));
       if (povl)
       {
         povl->setPalette(ppalettes_adv[rand() % sizeof(ppalettes_adv)/sizeof(ppalettes_adv[0])], false);

@@ -7,7 +7,7 @@
 
 #include "../../core/bsoverlay.h"
 
-class OTestPrecision: public DrawOverlaySimple, public OVLCoordsOff, public OVLDimmsOff
+class OTestPrecision: public DrawOverlay_ColorForegoing, public OVLCoordsOff, public OVLDimmsOff
 {
 public:
   OTestPrecision();

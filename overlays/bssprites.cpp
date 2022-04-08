@@ -39,7 +39,7 @@ OSprites::OSprites(QImage* image, OVLQImage::IMAGECONVERT icvt, float sizemultip
   
   m_dm_palette.ppal = ipal;
   m_dm_palette.discrete = discrete;
-  appendUniform(DT__HC_PALETTE, &m_dm_palette);
+  appendUniform(DT_SAMP4, &m_dm_palette);
 }
 
 OSprites::~OSprites()
@@ -103,15 +103,18 @@ int OSprites::fshTrace(int overlay, bool rotated, char *to) const
 int OSprites::fshColor(int overlay, char* to) const
 {
   FshColorGenerator ocg(overlay, to, 3);
-  if (m_cr == -1)
-  {
-    ocg.goto_func_begin(FshColorGenerator::CGV_TEXTURED);
-//    ocg.push("mixwell = trace[0];");
-  }
-  else
-    ocg.goto_func_begin(FshColorGenerator::CGV_COLORED);
+  ocg.goto_func_begin();
+  ocg.push("result = in_variant.rgb;"
+           "mixwell = in_variant.a;");
   ocg.goto_func_end();
-//  Q_ASSERT(false);
+//  if (m_cr == -1)
+//  {
+//    ocg.goto_func_begin(FshColorGenerator::CGV_TEXTURED);
+////    ocg.push("mixwell = trace[0];");
+//  }
+//  else
+//    ocg.goto_func_begin(FshColorGenerator::CGV_COLORED);
+//  ocg.goto_func_end();
   return ocg.written();
 }
 

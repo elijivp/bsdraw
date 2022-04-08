@@ -12,10 +12,10 @@
 /********************************************************************************************************************************************/
 /********************************************************************************************************************************************/
 
-_OActiveBase::_OActiveBase(bool linkToScaledCenter): DrawOverlaySimple(0, false),
+_OActiveBase::_OActiveBase(bool linkToScaledCenter): DrawOverlay_ColorForegoing(0, false),
   OVLCoordsDynamic(CR_RELATIVE, 0.5, 0.5), OVLDimmsOff(), m_linked(linkToScaledCenter) {}
 
-_OActiveBase::_OActiveBase(COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter): DrawOverlaySimple(0, true),
+_OActiveBase::_OActiveBase(COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter): DrawOverlay_ColorForegoing(0, true),
   OVLCoordsDynamic(cn, default_x, default_y), OVLDimmsOff(), m_linked(linkToScaledCenter) {}
 
 int   _OActiveBase::fshTrace(int overlay, bool rotated, char* to) const
@@ -39,7 +39,7 @@ int   _OActiveBase::fshTrace(int overlay, bool rotated, char* to) const
 /********************************************************************************************************************************************/
 
 
-OActivePointer::OActivePointer(COORDINATION cn, float center_x, float center_y): DrawOverlaySimple(),
+OActivePointer::OActivePointer(COORDINATION cn, float center_x, float center_y): DrawOverlay_ColorForegoing(),
   OVLCoordsDynamic(cn, center_x, center_y), OVLDimmsOff(){}
 
 int   OActivePointer::fshTrace(int overlay, bool rotated, char* to) const
@@ -240,7 +240,7 @@ bool OActiveCursorCarrierL3::overlayReactionMouse(OVL_REACTION_MOUSE oreact, con
 
 #include <time.h>
 
-OActiveRandom::OActiveRandom(): DrawOverlaySimple(), OVLCoordsDynamic(CR_RELATIVE, 0.0, 0.0)
+OActiveRandom::OActiveRandom(): DrawOverlay_ColorForegoing(), OVLCoordsDynamic(CR_RELATIVE, 0.0, 0.0)
 {
   m_ctr = 10;
   m_seed[0] = m_seed[1] = clock();
@@ -272,7 +272,7 @@ int   OActiveRandom::fshTrace(int overlay, bool rotated, char* to) const
 /********************************************************************************************************************************************/
 /********************************************************************************************************************************************/
 
-//Interactive1DMaxMin::Interactive1DMaxMin(POINTERTYPE pt): DrawOverlaySimple(), m_pointerType(pt)
+//Interactive1DMaxMin::Interactive1DMaxMin(POINTERTYPE pt): DrawOverlay_ColorForegoing(), m_pointerType(pt)
 //{
 //}
 
@@ -321,7 +321,7 @@ int   OActiveRandom::fshTrace(int overlay, bool rotated, char* to) const
 
 
 OActiveCell::OActiveCell(int rows, int columns, const linestyle_t& linestyle, int margin): 
-  DrawOverlayTraced(linestyle), m_rows(rows), m_columns(columns), m_selrow(-1), m_selcolumn(-1), m_margin(margin)
+  DrawOverlay_ColorTraced(linestyle), m_rows(rows), m_columns(columns), m_selrow(-1), m_selcolumn(-1), m_margin(margin)
 {
   m_selfloat[0] = m_selfloat[1] = -1.0f;
   appendUniform(DT_2F, m_selfloat);

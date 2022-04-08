@@ -39,7 +39,7 @@ static void make_contour_constants(FshTraceGenerator* ocg, unsigned char checkma
 
 
 OContour::OContour(float from, float to, const linestyle_t &kls, bool noscaled_contour, unsigned char checkmask): 
-  DrawOverlayTraced(kls), OVLCoordsOff(), OVLDimmsOff(),
+  DrawOverlay_ColorTraced(kls), OVLCoordsOff(), OVLDimmsOff(),
   m_from(from), m_to(to), m_noscaled_contour(noscaled_contour), m_checkmask(checkmask)
 {
 }
@@ -68,7 +68,7 @@ int OContour::fshTrace(int overlay, bool rotated, char *to) const
             
           ocg.push( "_fvar = getValue2D(p, fcoords2);"
                     "_mvar[1] = step(bnd.x, _fvar)*step(_fvar, bnd.y);"
-                    "result = mix(result, vec3(_mvar[0]*_mvar[1], 0, 1), step(result[0], _mvar[0]*_mvar[1]) );"    /// trace_on_pix not finished
+                    "result = mix(result, vec3(_mvar[0]*_mvar[1], 0, 1), step(result[0], _mvar[0]*_mvar[1]) );"    /// in_variant not finished
                   "}");
         }
       }
@@ -82,7 +82,7 @@ int OContour::fshTrace(int overlay, bool rotated, char *to) const
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 OContourPal::OContourPal(float from, float to, const IPalette* ipal, bool discrete, bool noscaled_contour, unsigned char checkmask): 
-  DrawOverlayHard(ipal, discrete), OVLCoordsOff(), OVLDimmsOff(),
+  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsOff(), OVLDimmsOff(),
   m_from(from), m_to(to), m_noscaled_contour(noscaled_contour), m_checkmask(checkmask)
 {
 }
@@ -128,7 +128,7 @@ OCover::OCover(float from, float to, float r, float g, float b, COVER_OTHER_PORT
 {
 }
 
-OCover::OCover(float from, float to, int inversive_algo, COVER_OTHER_PORTIONS cop): DrawOverlaySimple(inversive_algo), m_from(from), m_to(to), m_cover_r(0.0f), m_cover_g(0.0f), m_cover_b(0.0f), m_cop(cop)
+OCover::OCover(float from, float to, int inversive_algo, COVER_OTHER_PORTIONS cop): DrawOverlay_ColorForegoing(inversive_algo), m_from(from), m_to(to), m_cover_r(0.0f), m_cover_g(0.0f), m_cover_b(0.0f), m_cop(cop)
 {
 }
 
@@ -171,7 +171,7 @@ OSlice::OSlice(float cover, float r, float g, float b): m_cover(cover), m_slice_
 {
 }
 
-OSlice::OSlice(float cover, int inversive_algo): DrawOverlaySimple(inversive_algo), 
+OSlice::OSlice(float cover, int inversive_algo): DrawOverlay_ColorForegoing(inversive_algo), 
   m_cover(cover), m_slice_r(0.0f), m_slice_g(0.0f), m_slice_b(0.0f)
 {
 }

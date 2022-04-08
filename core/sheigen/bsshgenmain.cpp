@@ -207,7 +207,7 @@ FshMainGenerator::FshMainGenerator(char *deststring, unsigned int allocatedPorti
   {
     m_offset += msprintf(&m_to[m_offset], "uniform highp vec4 ovl_exsettings%D;" SHNL
                                           "vec4 overlayTrace%d(in ivec2 ispcell, in vec4 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 shapeself);" SHNL
-                                          "vec3 overlayColor%d(in vec4 trace_on_pix, in vec3 color);" SHNL,
+                                          "vec3 overlayColor%d(in vec4 in_variant, in vec3 color);" SHNL,
                         i+1, i+1, i+1);
   }
 }
@@ -356,7 +356,7 @@ void FshMainGenerator::main_end(const DPostmask &fsp)
                                   "float ppb_in = step(mod(float(imrect.x), 4.0),0.0)*step(mod(float(imrect.y), 4.0), 0.0) + mod(float(imrect.x),2.0)*mod(float(imrect.y),2.0);", // PM_CROSS
                                   "float ppb_in = step(mod(abs(imrect.x - imrect.y), (post_mask[2] + 1.0)*2.0), 0.0);", // PM_GRID
                                   "float ppb_in = step(mod(abs(imrect.x - imrect.y), 2.0 + post_mask[2]) + mod(abs(imrect.x - imrect[3] - 1 + imrect.y), 2.0 + post_mask[2]), 0.0);", // PM_FILL
-                                  "float ppb_in = step(mod(abs(imrect.x - imrect.y) + abs(imrect.x - imrect[3] + 1 + imrect.y), 3.0 + post_mask[2]), 0.0);" // PM_SQUARES
+                                  "float ppb_in = step(mod(abs(imrect.x - imrect.y) + abs(imrect.x - imrect[3] + 1 + imrect.y), 3.0 + post_mask[2]), 0.0);", // PM_SQUARES
       
 //                                  "vec2 _ppb_pos = vec2(float(imrect[3])/imrect[2], float(imrect[2])/imrect[3]);"
                                   "vec2 _ppb_pos = vec2(float(imrect[2])/imrect[3], float(imrect[3])/imrect[2]);"

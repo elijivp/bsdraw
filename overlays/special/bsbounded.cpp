@@ -8,14 +8,14 @@
 OLevel::OLevel(float value, const linestyle_t& linestyle): 
   DrawOverlay_ColorTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(), m_value(value){}
 
-int OLevel::fshTrace(int overlay, bool rotated, char *to) const
+int OLevel::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_DATABOUNDS); //databounds
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_DATABOUNDS); //databounds
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   ocg.goto_normed();
   {
     ocg.var_const_fixed("value", m_value);
-    ocg.push("int zerooffset = int(((value-databounds[0])/(databounds[1]-databounds[0]))*ibounds.y + 0.49);");
+    ocg.push("int zerooffset = int(((value-databounds[0])/(databounds[1]-databounds[0]))*ov_ibounds.y + 0.49);");
     ocg.trace_linehorz_l(nullptr, nullptr, "zerooffset", nullptr);
   }
   ocg.goto_func_end(true);
@@ -37,14 +37,14 @@ void OLevelVariable::setLevel(float v, bool update)
   updateParameter(false, update);
 }
 
-int OLevelVariable::fshTrace(int overlay, bool rotated, char *to) const
+int OLevelVariable::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_DATABOUNDS); //databounds
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_DATABOUNDS); //databounds
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   ocg.goto_normed();
   {
     ocg.param_alias("value");
-    ocg.push("int zerooffset = int(((value-databounds[0])/(databounds[1]-databounds[0]))*ibounds.y + 0.49);");
+    ocg.push("int zerooffset = int(((value-databounds[0])/(databounds[1]-databounds[0]))*ov_ibounds.y + 0.49);");
     ocg.trace_linehorz_l(nullptr, nullptr, "zerooffset", nullptr);
   }
   ocg.goto_func_end(true);
@@ -79,9 +79,9 @@ void ORecLine::increment(bool activate, bool update)
   updateParameter(false, update);
 }
 
-int ORecLine::fshTrace(int overlay, bool rotated, char* to) const
+int ORecLine::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_DATABOUNDS); //databounds
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_DATABOUNDS); //databounds
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
 //  ocg.goto_normed();
   {
@@ -194,9 +194,9 @@ void _OLevelSet::clear(bool update)
   }
 }
 
-int _OLevelSet::fshTrace(int overlay, bool rotated, char* to) const
+int _OLevelSet::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_DATABOUNDS);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_DATABOUNDS);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   {
     ocg.param_alias("count");
@@ -252,10 +252,10 @@ int _OLevelSet::fshTrace(int overlay, bool rotated, char* to) const
       ocg.push("ivec2 inormed = icoords - ivec2(oc[lid][1], 0);");
     {
       if (false)  ;
-      else if (m_lt == LT_HORZ)             ocg.trace_linehorz_l("ibounds.x - cs_mr1 - cs_mr2", "cs_mr1");
+      else if (m_lt == LT_HORZ)             ocg.trace_linehorz_l("ov_ibounds.x - cs_mr1 - cs_mr2", "cs_mr1");
       //        else if (m_lt == LT_HORZ_BYRIGHT)     ocg.trace_linehorz_r("cs_mr2", "cs_mr1");
       //        else if (m_lt == LT_VERT_BYTOP)       ocg.trace_linevert_t("cs_mr2", "cs_mr1");
-      else if (m_lt == LT_VERT)             ocg.trace_linevert_b("ibounds.y - cs_mr1 - cs_mr2", "cs_mr1");
+      else if (m_lt == LT_VERT)             ocg.trace_linevert_b("ov_ibounds.y - cs_mr1 - cs_mr2", "cs_mr1");
     }
     ocg.push("result[2] = lid;");
   }

@@ -20,7 +20,7 @@ protected:
 public:
   OPTFill(const linestyle_t& kls);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 class ODropPoints: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
@@ -33,7 +33,7 @@ protected:
 public:
   ODropPoints(unsigned int ptlimit, COORDINATION featcn, float radius, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
   virtual IOverlayReactor*  reactor() { return this; }
   virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool *doStop);
 };
@@ -49,7 +49,7 @@ protected:
 public:
   OPolyLine(unsigned int countPointsMax, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 public:
   unsigned int count() const { return ptCount; }
   void  setPointsCount(unsigned int newCount);
@@ -102,7 +102,7 @@ class OHighlight: public OSelectorReaction
 public:
   OHighlight(const linestyle_t& kls, bool moveable=false, COORDINATION cr=CR_RELATIVE, float gap=0.0f, float limitsize=-1.0f);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 class OSelector: public OSelectorReaction
@@ -110,7 +110,7 @@ class OSelector: public OSelectorReaction
 public:
   OSelector(const linestyle_t& kls, float alpha=0.2f, bool moveable=false);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 class OSelectorCirc: public OSelectorReaction
@@ -118,7 +118,7 @@ class OSelectorCirc: public OSelectorReaction
 public:
   OSelectorCirc(const linestyle_t& kls, float alpha=0.2f, bool moveable=false);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 class OSelectorBand: public OSelectorReaction
@@ -126,7 +126,7 @@ class OSelectorBand: public OSelectorReaction
 public:
   OSelectorBand(const linestyle_t& kls, float alpha=0.2f, bool moveable=false);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 
@@ -151,7 +151,7 @@ class OSegment: public OSegmentReaction
 public:
   OSegment(const linestyle_t& kls, COORDINATION cr, float gap, float size);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 

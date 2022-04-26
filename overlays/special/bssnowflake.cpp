@@ -37,9 +37,9 @@ void OSnowflake::update()
   updateParameter(false, true);
 }
 
-int OSnowflake::fshTrace(int overlay, bool rotated, char *to) const
+int OSnowflake::fshOVCoords(int overlay, bool switchedab, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_RANDOM);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_RANDOM);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.var_const_fixed("spritescount", (int)m_count);
@@ -58,12 +58,12 @@ int OSnowflake::fshTrace(int overlay, bool rotated, char *to) const
       ocg.push( "randomer = texture(");  ocg.param_mem(texrandomer); ocg.push(", vec2(float(i)/float(spritescount-1), 0.0)).rgba;");
       ocg.push( "ivec2 rect_size = ivec2(base_size*(mix(0.3 + randomer[0]*0.4, 1.0, step(0.99, randomer[0]))));"
                 "_mvar.xy = vec2(cos(counter*(0.3 + 1.0/(0.3+randomer[0]))/(2.0*3.1415))*5*((randomer[0] - 1.0)*0.5 + 0.6)*(2.0*mod(i, 2) - 1.0), counter*(randomer[0]*2.0 + 1.2));"
-                "_mvar.x = randomer[1]*ibounds.x + _mvar.x;"
-                "_mvar.y = mod((1.0-randomer[2])*ibounds.y - _mvar.y, ibounds.y + rect_size.y);"
+                "_mvar.x = randomer[1]*ov_ibounds.x + _mvar.x;"
+                "_mvar.y = mod((1.0-randomer[2])*ov_ibounds.y - _mvar.y, ov_ibounds.y + rect_size.y);"
                 
-                "_mvar.x = _mvar.x + (1.0-step(moveto[3], 0.0))*(counter - moveto[2])*(distance(vec2(moveto.x, 1.0 - moveto.y), vec2(_mvar.xy/ibounds)))*(1.0 - 2.0*step(moveto.x, _mvar.x/ibounds.x))*(randomer[0]*1.5+1.0);"
+                "_mvar.x = _mvar.x + (1.0-step(moveto[3], 0.0))*(counter - moveto[2])*(distance(vec2(moveto.x, 1.0 - moveto.y), vec2(_mvar.xy/ov_ibounds)))*(1.0 - 2.0*step(moveto.x, _mvar.x/ov_ibounds.x))*(randomer[0]*1.5+1.0);"
                 
-                "ivec2 inormed = icoords - ivec2(_mvar.x, ibounds.y - _mvar.y);"
+                "ivec2 inormed = icoords - ivec2(_mvar.x, ov_ibounds.y - _mvar.y);"
                 "_fvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1.0-step(rect_size.x, float(inormed.x)))*(1.0-step(rect_size.y, float(inormed.y)));"
                 "vec2  tcoords = inormed/vec2(rect_size.x-1, rect_size.y-1);");
       

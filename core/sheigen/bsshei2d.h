@@ -35,29 +35,25 @@ public:
     fmg.push( "{" );
     {
       if (dsup == DS_NONE)
-      {
         fmg.value2D("float value");
-        fmg.push("ovMix = max(ovMix, value);");
-      }
       else if (dsup == DS_DOMSTD)
         fmg.push(
-                  "float domain = texture(texGround, relcoords).r;"
+                  "float domain = texture(texGround, abc_coords).r;"
                   "float value = texture(texData, vec2(domain, 0.0)).r;"  // domain /float(countGround-1)
-                  "ovMix = max(ovMix, value);"
                 );
       else if (dsup == DS_DOMBLACK)
         fmg.push(
-                  "float domain = texture(texGround, relcoords).r;"
+                  "float domain = texture(texGround, abc_coords).r;"
                   "float value = texture(texData, vec2(domain, 0.0)).r * (1-step(domain, 0.0));"    // /float(countGround-1)
-                  "ovMix = max(ovMix, value);"
                 );
       
-      fmg.push( "value = palrange[0] + (palrange[1] - palrange[0])*value;" );
+      fmg.push(  "dvalue = max(dvalue, value);");
+      fmg.push(  "value = palrange[0] + (palrange[1] - palrange[0])*value;" );
       
       if ( splitPortions == SP_NONE )
-        fmg.push( "result = result + texture(texPalette, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );
+        fmg.push("result = result + texture(texPalette, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );
       else
-        fmg.push( "result.rgb = mix(texture(texPalette, vec2(value, 0.0)).rgb, result.rgb, step(countPortions, float(explicitPortion)));" );
+        fmg.push("result.rgb = mix(texture(texPalette, vec2(value, 0.0)).rgb, result.rgb, step(countPortions, float(explicitPortion)));" );
       
       fmg.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" );
     }

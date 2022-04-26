@@ -17,7 +17,7 @@ class OBorder: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLDi
 public:
   OBorder(const linestyle_t& kls=linestyle_solid(1,1,1), int lineset=OBLINE_LEFT|OBLINE_TOP|OBLINE_RIGHT|OBLINE_BOTTOM);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 class OShadow: public DrawOverlay_ColorDomestic, public OVLCoordsOff, public OVLDimmsOff
@@ -30,7 +30,7 @@ public:
   OShadow(int lineset, unsigned int pxwidth=2, float weight=0.75f, const color3f_t& c3f=color3f_black());
   OShadow(int pxwidth_left, int pxwidth_top, int pxwidth_right, int pxwidth_bottom, float weight=0.75f, const color3f_t& c3f=color3f_black());
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 
@@ -50,7 +50,7 @@ class OBorderSelected: public _OSelected
 public:
   OBorderSelected(unsigned int widthpixels, int default_selection=0, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 class ORowSelected: public _OSelected
@@ -58,7 +58,7 @@ class ORowSelected: public _OSelected
 public:
   ORowSelected(unsigned int widthpixels, int default_selection=0, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 class OColumnSelected: public _OSelected
@@ -66,7 +66,7 @@ class OColumnSelected: public _OSelected
 public:
   OColumnSelected(unsigned int widthpixels, int default_selection=0, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 class OColumnsSelected: public _OSelected
@@ -76,7 +76,7 @@ class OColumnsSelected: public _OSelected
 public:
   OColumnsSelected(unsigned int widthpixels, int default_selection=0, int addLeft=0, int addRight=0, bool cyclic=false, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 
@@ -87,7 +87,7 @@ class OToons: public DrawOverlay_ColorTraced, public OVLCoordsStatic, public OVL
 public:
   OToons(COORDINATION cr, float diameter, float border, const linestyle_t& =linestyle_solid(0,0,0), bool banclikcks=true);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 //  virtual bool  clickBanned(float x, float y) const;
 //  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool* doStop);
 };

@@ -58,20 +58,17 @@ public:
   {
     FshMainGenerator fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
     fmg.main_begin(FshMainGenerator::INIT_BYVALUE, m_bckclr, orient, fsp);
-    
-    
-    fmg.push( "ivec2 icoords = ivec2(relcoords*(ibounds));" SHNL);
-    fmg.push( "float mixwell = 1.0;"  SHNL );
+    fmg.push("ivec2 icoords = ivec2(abc_coords*(ab_ibounds));" SHNL);
     
     if (m_automargin)
     {
       fmg.cintvar("am", m_automargin);
       fmg.push(
-                "ivec2 im = ivec2(min(am, ibounds.x/2), min(am, ibounds.y/2));" SHNL
-                "ibounds = ibounds - 2*im;" SHNL
+                "ivec2 im = ivec2(min(am, ab_ibounds.x/2), min(am, ab_ibounds.y/2));" SHNL
+                "ab_ibounds = ab_ibounds - 2*im;" SHNL
                 "icoords = icoords - im;" SHNL
-//                "mixwell = mixwell*step(0.0, float(icoords.x))*step(0.0, float(icoords.y))*step(float(icoords.x), float(ibounds.x))*step(float(icoords.y), float(ibounds.y));" SHNL
-                "mixwell = mixwell*step(0.0, float(icoords.x))*step(0.0, float(icoords.y))*(1.0 - step(float(ibounds.x), float(icoords.x)))*(1.0 - step(float(ibounds.y), float(icoords.y)));" SHNL
+//                "mixwell = mixwell*step(0.0, float(icoords.x))*step(0.0, float(icoords.y))*step(float(icoords.x), float(ab_ibounds.x))*step(float(icoords.y), float(ab_ibounds.y));" SHNL
+                "mixwell = mixwell*step(0.0, float(icoords.x))*step(0.0, float(icoords.y))*(1.0 - step(float(ab_ibounds.x), float(icoords.x)))*(1.0 - step(float(ab_ibounds.y), float(icoords.y)));" SHNL
             );
     }
     
@@ -87,8 +84,8 @@ public:
 //      case CP_PAINTED_GROSS:       fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 1.0 - sqrt(VALCLR));" SHNL); break;
 //      case CP_PAINTED_SYMMETRIC:   fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 0.5 - abs(VALCLR - 0.5) );" SHNL); break;
 //      case CP_REPAINTED:                fmg.push("float portionColor = (palrange[1] - (palrange[1] - palrange[0])*(float(i)/float(allocatedPortions)))*VALCLR;" SHNL); break;
-//      case CP_PALETTE:           fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
-//      case CP_PALETTE_SPLIT:      fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*float(i)/float(allocatedPortions)*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
+//      case CP_PALETTE:           fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
+//      case CP_PALETTE_SPLIT:      fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*float(i)/float(allocatedPortions)*b_coord_ns/ab_fndimms.y;" SHNL); break;
 //      }
 //    }
 //    else
@@ -100,8 +97,8 @@ public:
 //      case CP_PAINTED_GROSS:       fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*sqrt(VALCLR);" SHNL); break;
 //      case CP_PAINTED_SYMMETRIC:   fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
 //      case CP_REPAINTED:                fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*(1.0 - VALCLR);" SHNL); break;
-//      case CP_PALETTE:           fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
-//      case CP_PALETTE_SPLIT:      fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
+//      case CP_PALETTE:           fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
+//      case CP_PALETTE_SPLIT:      fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
 //      }
 //    }
     
@@ -116,8 +113,8 @@ public:
       case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 0.5 - abs(VALCLR - 0.5));" SHNL); break;
       case CP_REPAINTED:            fmg.push("float porc = (palrange[1] - (palrange[1] - palrange[0])*(float(allocatedPortions - 1 - i)/float(allocatedPortions)))*VALCLR;" SHNL); break;
         
-      case CP_PALETTE:              fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
-      case CP_PALETTE_SPLIT:        fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])/float(allocatedPortions)*(i + fcoords_noscaled.y/fbounds_noscaled.y);" SHNL); break;
+      case CP_PALETTE:              fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
+      case CP_PALETTE_SPLIT:        fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])/float(allocatedPortions)*(i + b_coord_ns/ab_fndimms.y);" SHNL); break;
       }
     }
     else
@@ -130,7 +127,7 @@ public:
       case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
       case CP_REPAINTED:            fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - VALCLR);" SHNL); break;
         
-      case CP_PALETTE: case CP_PALETTE_SPLIT:      fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
+      case CP_PALETTE: case CP_PALETTE_SPLIT:      fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
       }
     }
     
@@ -139,38 +136,38 @@ public:
     if (m_type == DH_LINE)
     {
       fmg.push(   
-                  "float center = float(ibounds.y/2);" SHNL
+                  "float center = float(ab_ibounds.y/2);" SHNL
                   "distwell = abs(icoords.y - center);" SHNL
                   );
     }
     else if (m_type == DH_SAW || m_type == DH_TRIANGLE || m_type == DH_MEANDER)
     {
       fmg.cintvar("icnt", m_subcount);
-      fmg.push(   "if (ibounds.x > 1 && ibounds.y > 1)" SHNL
+      fmg.push(   "if (ab_ibounds.x > 1 && ab_ibounds.y > 1)" SHNL
                   "{" SHNL
-                    "float window = ibounds.x/float(icnt);" SHNL
+                    "float window = ab_ibounds.x/float(icnt);" SHNL
                     "float fx = mod(float(icoords.x), window);" SHNL
       );
       {
         if (m_type == DH_SAW)
         {
-          fmg.push( "float nl = length(vec2(window, ibounds.y));" SHNL
-                    "distwell = abs(fx*float(ibounds.y)/nl - icoords.y*float(window)/nl);" SHNL
+          fmg.push( "float nl = length(vec2(window, ab_ibounds.y));" SHNL
+                    "distwell = abs(fx*float(ab_ibounds.y)/nl - icoords.y*float(window)/nl);" SHNL
                     "distwell = min(distwell, abs(fx));" SHNL
           );
         }
         else if (m_type == DH_TRIANGLE)
         {
-          fmg.push( "float nl = length(vec2(window, 2*ibounds.y));" SHNL
-                    "distwell = abs((fx-window/2)*2*float(ibounds.y)/nl - icoords.y*float(window)/nl);" SHNL
-                    "distwell = min(distwell, abs(fx*2*float(ibounds.y)/nl - (ibounds.y - icoords.y)*float(window)/nl));" SHNL
+          fmg.push( "float nl = length(vec2(window, 2*ab_ibounds.y));" SHNL
+                    "distwell = abs((fx-window/2)*2*float(ab_ibounds.y)/nl - icoords.y*float(window)/nl);" SHNL
+                    "distwell = min(distwell, abs(fx*2*float(ab_ibounds.y)/nl - (ab_ibounds.y - icoords.y)*float(window)/nl));" SHNL
           );
         }
         else if (m_type == DH_MEANDER)
         {
           fmg.push( 
                     "float fodd = mod(float(int(float(icoords.x)/window)), 2.0);" SHNL
-                    "distwell = mix(abs(icoords.y - 0), abs(ibounds.y - 1 - icoords.y), fodd);" SHNL
+                    "distwell = mix(abs(icoords.y - 0), abs(ab_ibounds.y - 1 - icoords.y), fodd);" SHNL
                     "distwell = min(distwell, abs(fx));" SHNL
           );
         }
@@ -180,12 +177,12 @@ public:
     }
     else if (m_type == DH_DIAGONAL)
     {
-      fmg.push(   "if (ibounds.x > 1 && ibounds.y > 1)" SHNL
+      fmg.push(   "if (ab_ibounds.x > 1 && ab_ibounds.y > 1)" SHNL
                   "{" SHNL
-//                    "float k = float(ibounds.y)/ibounds.x;" SHNL
+//                    "float k = float(ab_ibounds.y)/ab_ibounds.x;" SHNL
 //                    "distwell = abs(icoords.y - k*icoords.x);" SHNL
-                    "float nl = length(vec2(ibounds-ivec2(1,1)));" SHNL
-                    "distwell = abs(icoords.x*float(ibounds.y-1)/nl - icoords.y*float(ibounds.x-1)/nl);" SHNL
+                    "float nl = length(vec2(ab_ibounds-ivec2(1,1)));" SHNL
+                    "distwell = abs(icoords.x*float(ab_ibounds.y-1)/nl - icoords.y*float(ab_ibounds.x-1)/nl);" SHNL
                   "}" SHNL
             );
     }
@@ -224,10 +221,7 @@ public:
   {
     FshMainGenerator fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
     fmg.main_begin(FshMainGenerator::INIT_BYVALUE, m_bckclr, orient, fsp);
-    
-    
-    fmg.push( "ivec2 icoords = ivec2(relcoords*(ibounds));" SHNL);
-    fmg.push( "float mixwell = 1.0;"  SHNL );
+    fmg.push( "ivec2 icoords = ivec2(abc_coords*(ab_ibounds));" SHNL);
     
     fmg.cfloatvar("portionColor", m_value);
     fmg.push( "float distwell = 0.0;"  SHNL );

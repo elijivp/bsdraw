@@ -18,7 +18,7 @@ public:
   void    setUnlocked(bool unlocked);
   bool    isLocked() const {  return m_blockstate; }
 protected:
-  virtual int fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
   virtual IOverlayReactor*  reactor() { return this; }
   virtual bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop);
 };
@@ -33,7 +33,7 @@ public:
   void    setLocked(bool locked);
   void    setUnlocked(bool unlocked);
 protected:
-  virtual int fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
   virtual IOverlayReactor*  reactor() { return this; }
   virtual bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop);
 };

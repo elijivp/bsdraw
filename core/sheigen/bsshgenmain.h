@@ -31,6 +31,8 @@ class FshMainGenerator
   
   impulsedata_t                       m_impulsegen;
   
+  ORIENTATION                         m_orient;
+  
   unsigned int                        m_ovlscount;
   const ovlfraginfo_t*                m_ovls;
   
@@ -63,7 +65,7 @@ public:
   void  cintvar(const char* name, int value);
   void  cintvar(const char* name, int value1, int value2);
 public:
-  void  value2D(const char* varname, const char* coordsname="relcoords", const char* portionname="i");
+  void  value2D(const char* varname, const char* coordsname="abc_coords", const char* portionname="i");
 private:
 };
 

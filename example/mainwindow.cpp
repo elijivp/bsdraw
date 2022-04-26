@@ -178,6 +178,11 @@ QString palette2string(const QString& name, const T& pptr, unsigned int clc)
 }
 
 
+#define TESTTRASS
+#ifdef TESTTRASS
+OTrassBase3F* ovl;
+#endif
+
 MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent), 
   MW_TEST(testnumber), randomer(nullptr), active_ovl(0), ovl_visir(-1), ovl_marks(-1), ovl_figures(-1), ovl_snowflake(-1), ovl_active_mark(9), ovl_is_synced(true), sigtype(ST_PEAK3), sig_k(1), sig_b(0)
 {  
@@ -202,9 +207,9 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 3;
     PRECREATE(3, 3);
     draws[0] = new DrawIntensity(SAMPLES, MAXLINES, 1);
-    draws[0]->ovlPushBack(new OTextColored("Intensity", CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, OO_INHERITED, 0x00000000, 0x77FFFFFF, 0x00000000));
+    draws[0]->ovlPushBack(new OTextColored("Intensity", CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, 0x00000000, 0x77FFFFFF, 0x00000000));
     draws[3] = new DrawDomain(SAMPLES, MAXLINES, 1, false, OR_LRBT, true);
-    draws[3]->ovlPushBack(new OTextColored("Domain", CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, OO_INHERITED, 0x00000000, 0x77FFFFFF, 0x00000000));
+    draws[3]->ovlPushBack(new OTextColored("Domain", CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, 0x00000000, 0x77FFFFFF, 0x00000000));
     {
       DIDomain& ddm = *((DrawDomain*)draws[3])->domain();
       
@@ -217,7 +222,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       }
     }
     draws[6] = new DrawRecorder(SAMPLES, MAXLINES);
-    draws[6]->ovlPushBack(new OTextColored("Recorder", CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, OO_LRBT, 0x00000000, 0x77FFFFFF, 0x00000000));
+    draws[6]->ovlPushBack(new OTextColored("Recorder", CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, 0x00000000, 0x77FFFFFF, 0x00000000), OO_AREA_LRBT);
     
     graphopts_t  gopts[] = { graphopts_t::goDots(), 
                              graphopts_t::goInterp(0.6f, DE_NONE), 
@@ -228,7 +233,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     for (unsigned int i=0; i<sizeof(gopts)/sizeof(graphopts_t); i++)
     {
       draws[3*i + 1] = new DrawGraph(SAMPLES, PORTIONS, gopts[i]);
-      draws[3*i + 1]->ovlPushBack(new OTextColored(gnames[i], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, OO_INHERITED, 0x00000000, 0x77FFFFFF, 0x00000000));
+      draws[3*i + 1]->ovlPushBack(new OTextColored(gnames[i], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, 0x00000000, 0x77FFFFFF, 0x00000000));
     }
     
     for (unsigned int i=0; i<sizeof(gopts)/sizeof(graphopts_t) - 1; i++)
@@ -237,11 +242,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //      gopts[i].dotsmooth = i == 0? 0.5f : 0.1f;
       gopts[i].dotsmooth = i == 0? 0.1f : 1.0f;
       draws[3*i + 2] = new DrawGraph(SAMPLES, PORTIONS, gopts[i], coloropts_t::copts(CP_REPAINTED, 0.0f, 1.0f/*, 0x00777777*/));
-      draws[3*i + 2]->ovlPushBack(new OTextColored(gnames[i], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, OO_INHERITED, 0x00000000, 0x77FFFFFF, 0x00000000));
+      draws[3*i + 2]->ovlPushBack(new OTextColored(gnames[i], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, 0x00000000, 0x77FFFFFF, 0x00000000));
     }
     
     draws[8] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(0.3f, DE_NONE, 0.15f));
-    draws[8]->ovlPushBack(new OTextColored(gnames[2], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, OO_INHERITED, 0x00000000, 0x77FFFFFF, 0x00000000));
+    draws[8]->ovlPushBack(new OTextColored(gnames[2], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, 0x00000000, 0x77FFFFFF, 0x00000000));
     
     sigtype = ST_SINXX;
     
@@ -457,6 +462,33 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(1, 2);
     for (unsigned int i=0; i<drawscount; i++)
       draws[i] = new DrawRecorder(SAMPLES, MAXLINES, 2000, PORTIONS);
+    
+#ifdef TESTTRASS
+    {
+      ovl = new OTrassSelectable(15, 400, &palette_idl_BuGn, false, 400);
+      trasspoint_t tline[15];
+      for (int i=0; i<200; i++)
+      {
+        for (int j=0; j<15; j++)
+        {
+//          tline[j].intensity = j == 5? float(i % 2) : 1.0f;
+//          tline[j].intensity = j == 5? 0 : (j + 2)/17.0f;
+//          tline[j].intensity = j == 5? 0 : j == 10? 1.0f : 0.5f;
+          tline[j].intensity = j == 5? 0 : 0.9f;
+          tline[j].position = ((SAMPLES/30.0f + SAMPLES/15.0f*j) + (rand()/float(RAND_MAX)-0.5f)*4)/float(SAMPLES);
+          tline[j].halfstrob = 0.01f;
+        }
+        ovl->appendTrassline(tline);
+      }
+      ((OTrassSelectable*)ovl)->select(1);
+      for (unsigned int i=0; i<drawscount; i++)
+        draws[i]->ovlPushBack(ovl);
+    }
+    
+    sp = SP_FAST;
+    sigtype = ST_MANYSIN;
+    defaultPalette = ppalettes_adv[32];
+#endif
   }
   else if (MW_TEST == DRAW_POLAR) /// polar draw
   {
@@ -568,7 +600,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       draws[i] = new DrawGraph(SAMPLES, PORTIONS, gts[i]);
       draws[i]->setPostMask(fsp[i]);
       
-      draws[i]->ovlPushBack(new OTextColored(gnames[i], CR_XABS_YREL_NOSCALED_SCALED, 10.0f, 0.85f, 12, OO_INHERITED, 0x00000000, 0x33FFFFFF, 0x00000000));
+      draws[i]->ovlPushBack(new OTextColored(gnames[i], CR_XABS_YREL_NOSCALED_SCALED, 10.0f, 0.85f, 12, 0x00000000, 0x33FFFFFF, 0x00000000));
     }
 
     sigtype = ST_GEN_NORM;
@@ -621,7 +653,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
       draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.5f, DE_QINTERP), coloropts_t::copts(CP_MONO, 1.0f, 0.3f, i == 2? 0x00AAAAAA : 0xFFFFFFFF));
 //      draws[i]->setScalingLimitsHorz(7);
-//      draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.8f, 0.7f, 12, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
+//      draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.8f, 0.7f, 12, 0x00000000, 0x11FFFFFF, 0x00000000));
     }
 //    this->setMinimumHeight(1000);
 //    this->setMinimumWidth(1200);
@@ -714,7 +746,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         
         {
           QString gname = QString("smooth ") + QString::number(gopts.smooth);
-          draws[c*drcount + i]->ovlPushBack(new OTextColored(gname.toUtf8().data(), CR_RELATIVE, 0.55f, 0.05f, 12, OO_INHERITED, 0x00000000, 0x44FFFFFF, 0x00000000));
+          draws[c*drcount + i]->ovlPushBack(new OTextColored(gname.toUtf8().data(), CR_RELATIVE, 0.55f, 0.05f, 12, 0x00000000, 0x44FFFFFF, 0x00000000));
         }
       }
     
@@ -739,7 +771,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp2(0.5, DE_NONE), coloropts_t::copts(0x00111111));
       draws[i]->setOrientation(orients[i]);
       draws[i]->ovlPushBack(new OTextColored(ornames[i], CR_XABS_YREL_NOSCALED, 10.0f, 0.05f,
-                                             12, i == 0 || i == drawscount-1? OO_BTRL : OO_LRBT, 0x00000000, 0x00FFFFFF, 0x00000000));
+                                             12, 0x00000000, 0x00FFFFFF, 0x00000000), i == 0 || i == drawscount-1? OO_AREA_LRBT : OO_AREA_TBLR );
     }
 
     sigtype = ST_MOVE;
@@ -773,8 +805,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //      gopts[i].dotsmooth = 2.0;
       gopts[i].dotsmooth = 0.8f;
       draws[i] = new DrawGraph(SAMPLES, PORTIONS, gopts[i]);
-      draws[i]->ovlPushBack(new OTextColored(gnames[i], CR_XABS_YREL_NOSCALED, 10.0f, 0.85f, 12, OO_INHERITED, 0x00000000, 0x44FFFFFF, 0x00000000));
-      draws[i]->ovlPushBack(new OTextColored("Resize me", CR_RELATIVE, 0.15f, 0.97, 12, OO_TBLR, 0x00000000, 0x44FFFFFF, 0x00000000));
+      draws[i]->ovlPushBack(new OTextColored(gnames[i], CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x44FFFFFF, 0x00000000));
+      draws[i]->ovlPushBack(new OTextColored("Resize me", CR_XABS_YREL_NOSCALED, 10.0f, 0.15f, 12, 0x00000000, 0x44FFFFFF, 0x00000000));
     }
     
     this->setMinimumWidth(1200);
@@ -841,7 +873,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //        draws[c*drcount + i]->setScalingLimitsHorz(16);
 //        draws[c*drcount + i]->setScalingLimitsVert(10,10);
       }
-    draws[0]->ovlPushBack(new OTextColored("Original", CR_XABS_YREL_NOSCALED, 5.0f, 0.9f, 12, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
+    draws[0]->ovlPushBack(new OTextColored("Original", CR_XABS_YREL_NOSCALED, 5.0f, 0.9f, 12, 0x00000000, 0x11FFFFFF, 0x00000000));
     
     sigtype = ST_RAND;
     defaultPalette = (const IPalette*)ppalettes_adv[69];
@@ -868,7 +900,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //      draws[i]->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINELEFTTOP, 0, 0.3f,0.3f,0.3f));
       draws[i]->setScalingLimitsHorz(7);
       
-      draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.8f, 0.7f, 12, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
+      draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.8f, 0.7f, 12, 0x00000000, 0x11FFFFFF, 0x00000000));
     }
 //    this->setMinimumHeight(1000);
 //    this->setMinimumWidth(1200);
@@ -927,7 +959,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         draws[c*drcount + i]->setImpulse(imp[c*drcount + i]);
         draws[c*drcount + i]->setScalingLimitsA(50);
         draws[c*drcount + i]->setScalingLimitsB(50);
-        draws[c*drcount + i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[c*drcount + i], 0, 10,2,10,2), CR_RELATIVE, 0.05f, 0.05f, 8, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
+        draws[c*drcount + i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[c*drcount + i], 0, 10,2,10,2), CR_RELATIVE, 0.05f, 0.05f, 8, 0x00000000, 0x11FFFFFF, 0x00000000));
       }
     sigtype = ST_RAMP;
 //    sigtype = ST_SIN;
@@ -953,7 +985,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       draws[i]->setImpulse(imp[i]);
       draws[i]->setScalingLimitsA(50);
       draws[i]->setScalingLimitsB(50);
-      draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.05f, 0.05f, 8, OO_INHERITED, 0x00000000, 0x11FFFFFF, 0x00000000));
+      draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.05f, 0.05f, 8, 0x00000000, 0x11FFFFFF, 0x00000000));
     }
     sigtype = ST_PEAK;
 //    defaultPalette = ppalettes_adv[12];
@@ -1303,7 +1335,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       {
 //        DrawOverlay* ovl = new OSegment(linestyle_inverse_1(10, 8, 0), CR_ABSOLUTE, 20, 100);
 //        DrawOverlay* ovl = new OHighlight(linestyle_inverse_1(1, 0, 0), true, CR_ABSOLUTE, 10);
-//        ovl->setOTS(0.0f, 1.0f, 1.0f);
+//        ovl->setOTS(0.0f, 1.0f, 0.0f, 1.0f);
 //        draws[c*drcount + i]->ovlPushBack(ovl);
         
         
@@ -1464,23 +1496,23 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //      draws[i]->setClearByPalette();
       if (MW_TEST == LET_IT_SNOW)
       {
-        DrawOverlay* oimg = new OImageStretched(new QImage(img_path_mikey), OVLQImage::IC_BLOCKALPHA, false);
+        DrawOverlay* oimg = new OImageStretched(new QImage(img_path_mikey), OVLQImage::IC_BLOCKALPHA);
         oimg->setSlice(0.35);
         oimg->setOpacity(0.1);
         draws[i]->ovlPushBack(oimg);
         ovl_snowflake = draws[i]->ovlPushBack(new OSnowflake(new QImage(img_path_sprite), OSnowflake::IC_AUTO, SAMPLES/4/*500*/, 0.2f));
-        draws[i]->ovlPushBack(new OTextTraced("Press Me", CR_RELATIVE, 0.5f, 0.1f, 12, OO_INHERITED, true));
+        draws[i]->ovlPushBack(new OTextTraced("Press Me", CR_RELATIVE, 0.5f, 0.1f, 12, true));
       }
       else if (MW_TEST == DRAW_BRIGHT && i == 0)
       {
-        DrawOverlay* oimg = new OImageStretched(new QImage(img_path_normal), OVLQImage::IC_BLOCKALPHA, false);
+        DrawOverlay* oimg = new OImageStretched(new QImage(img_path_normal), OVLQImage::IC_BLOCKALPHA);
         oimg->setSlice(0.35);
         oimg->setOpacity(0.15);
         draws[i]->ovlPushBack(oimg);
       }
       else if (MW_TEST == DEBUG_VOCAB)
       {
-        DrawOverlay* oimg = new OImageStretched(new QImage(img_path_normal), OVLQImage::IC_ASIS, false);
+        DrawOverlay* oimg = new OImageStretched(new QImage(img_path_normal), OVLQImage::IC_ASIS);
         oimg->setSlice(0.35);
         oimg->setOpacity(0.15);
         draws[i]->ovlPushBack(oimg);
@@ -1497,9 +1529,9 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       for (unsigned int i=0; i<drawscount; i++)
       {
         QImage  img(img_path_normal);
-        DrawOverlay* ovl = new OImageStretched(&img, OVLQImage::IC_AUTO, false);
+        DrawOverlay* ovl = new OImageStretched(&img, OVLQImage::IC_AUTO);
         ovl->setSlice(i != 1? 0.25f : 0.0f);
-        draws[i]->ovlPushBack(ovl);
+        draws[i]->ovlPushBack(ovl, OO_AREA_LRBT);
         draws[i]->ovlPushBack(new OGridRegular(OGridRegular::REGULAR_HORZ, CR_RELATIVE, 0.05, 0.05, linestyle_greydark(5,1,0),-1));
         draws[i]->ovlPushBack(new OGridRegular(OGridRegular::REGULAR_VERT, CR_RELATIVE, 0.05, 0.05, linestyle_greydark(5,1,0),-1));
         draws[i]->ovlPushBack(new OGridDecart(CR_RELATIVE, 0.05, 0.5, 0.1, 0.1, 3));
@@ -1982,12 +2014,20 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                       QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeOVLOpacity(int)));
                     BS_STOP
                     BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                      BSAUTO_LBL_ADD(BSFieldSetup(tr("Slice:")));
+                      BSAUTO_LBL_ADD(BSFieldSetup(tr("Slice LL:")));
                       QSlider* slider = new QSlider(Qt::Horizontal);
-                      slider->setRange(0,100);
+                      slider->setRange(-10, 100);
+                      slider->setValue(0);
+                      BSADD(slider);
+                      QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeOVLSliceLL(int)));
+                    BS_STOP
+                    BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+                      BSAUTO_LBL_ADD(BSFieldSetup(tr("Slice HL:")));
+                      QSlider* slider = new QSlider(Qt::Horizontal);
+                      slider->setRange(0, 110);
                       slider->setValue(100);
                       BSADD(slider);
-                      QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeOVLSlice(int)));
+                      QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeOVLSliceHL(int)));
                     BS_STOP
                   BS_STOP
                 BS_STOP
@@ -3848,7 +3888,7 @@ void MainWindow::createOverlaySTD(int id)
       else
         draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_tmp));
       
-      draws[i]->ovlPushBack(new OTextTraced("Press left mouse button", CR_RELATIVE, 0.05, 0.05, 12, OO_INHERITED, true, linestyle_white(5,2,0)));
+      draws[i]->ovlPushBack(new OTextTraced("Press left mouse button", CR_RELATIVE, 0.05, 0.05, 12, true, linestyle_white(5,2,0)));
       break;
     }
     case COS_BRUSH:
@@ -3858,7 +3898,7 @@ void MainWindow::createOverlaySTD(int id)
       else
         draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_tmp));
       
-      draws[i]->ovlPushBack(new OTextTraced("Draw with your new brush", CR_RELATIVE, 0.05, 0.05, 12, OO_INHERITED, true, linestyle_white(5,2,0)));
+      draws[i]->ovlPushBack(new OTextTraced("Draw with your new brush", CR_RELATIVE, 0.05, 0.05, 12, true, linestyle_white(5,2,0)));
       break;
     }
     case COS_CLUSTER:
@@ -3890,7 +3930,7 @@ void MainWindow::createOverlaySTD(int id)
       draws[i]->ovlPushBack(new OTextTraced("LEFT", CR_ABSOLUTE, -80, 50, 12), ovl_visir);
       draws[i]->ovlPushBack(new OTextTraced("RIGHT", CR_ABSOLUTE, 50, 50, 12), ovl_visir);
       draws[i]->ovlPushBack(new OTextTraced("We all", CR_ABSOLUTE, -25, -60, 12), ovl_visir);
-      draws[i]->ovlPushBack(new OTextTraced("Follow mouse", CR_ABSOLUTE, -50, -80, 12, OO_INHERITED, false, linestyle_red(1,0,0)), ovl_visir);
+      draws[i]->ovlPushBack(new OTextTraced("Follow mouse", CR_ABSOLUTE, -50, -80, 12, false, linestyle_red(1,0,0)), ovl_visir);
       break;
     }
     case COS_INSIDE:
@@ -3929,7 +3969,7 @@ void MainWindow::createOverlaySTD(int id)
       else
         draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_tmp));
       
-      draws[i]->ovlPushBack(new OTextTraced("Press left mouse button and move", CR_RELATIVE, 0.05f, 0.05f, 11, OO_INHERITED, true, linestyle_white(5,2,0)));
+      draws[i]->ovlPushBack(new OTextTraced("Press left mouse button and move", CR_RELATIVE, 0.05f, 0.05f, 11, true, linestyle_white(5,2,0)));
       break;
     }
     case COS_OBJECTIF:
@@ -3947,37 +3987,38 @@ void MainWindow::createOverlaySTD(int id)
         else
           draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_visir));
         QImage img(img_path_sprite);
-        draws[i]->ovlPushBack(new OImageOriginal(&img, OVLQImage::IC_AUTO, false, CR_PIXEL, -24, 0, 0.2f, 0.2f), ovl_visir);
+        draws[i]->ovlPushBack(new OImageOriginal(&img, OVLQImage::IC_AUTO, CR_PIXEL, -24, 0, 0.2f, 0.2f), ovl_visir);
       }
       break;
     }
     case COS_FOREGROUND:
     {
       QImage  img(img_path_normal);
-      draws[i]->ovlPushBack(new OImageStretched(&img, OVLQImage::IC_BLOCKALPHA, false));
+      draws[i]->ovlPushBack(new OImageStretched(&img, OVLQImage::IC_BLOCKALPHA));
       break;
     }
     case COS_BACKGROUND:
     {
       QImage  img(img_path_normal);
-      DrawOverlay* ovl = new OImageOriginal(&img, OVLQImage::IC_AUTO, false, CR_RELATIVE, 0.0f, 0.0f);
+//      DrawOverlay* ovl = new OImageOriginal(&img, OVLQImage::IC_AUTO, CR_RELATIVE, 0.0f, 0.0f);
+      DrawOverlay* ovl = new OImageOriginal(&img, OVLQImage::IC_AUTO, 1);
       ovl->setSlice(0.0f);
       draws[i]->ovlPushBack(ovl);
       break;
     }
     case COS_SHADOW1:
     {
-      draws[i]->ovlPushBack(new OShadow(OBLINE_RIGHT | OBLINE_BOTTOM, 3));
+      draws[i]->ovlPushBack(new OShadow(OBLINE_RIGHT | OBLINE_BOTTOM, 3), OO_INHERITED);
       break;
     }
     case COS_SHADOW2:
     {
-      draws[i]->ovlPushBack(new OShadow(3, 3, 4, 4));
+      draws[i]->ovlPushBack(new OShadow(3, 3, 4, 4), OO_AREA_LRBT);
       break;
     }
     case COS_SHADOW3:
     {
-      draws[i]->ovlPushBack(new OShadow(2, 2, 3, 3, 0.75f, color3f_white()));
+      draws[i]->ovlPushBack(new OShadow(2, 2, 3, 3, 0.75f, color3f_white()), OO_AREA_LRBT);
       break;
     }
     default: break;
@@ -4040,13 +4081,23 @@ void MainWindow::changeOVLOpacity(int op)
   }
 }
 
-void MainWindow::changeOVLSlice(int op)
+void MainWindow::changeOVLSliceLL(int op)
 {
   for (unsigned int i=0; i<drawscount; i++)
   {
     DrawOverlay* povl = draws[i]->ovlGet(active_ovl);
     if (povl)
-      povl->setSlice(op/100.0f);
+      povl->setSliceLL(op/100.0f);
+  }
+}
+
+void MainWindow::changeOVLSliceHL(int op)
+{
+  for (unsigned int i=0; i<drawscount; i++)
+  {
+    DrawOverlay* povl = draws[i]->ovlGet(active_ovl);
+    if (povl)
+      povl->setSliceHL(op/100.0f);
   }
 }
 
@@ -4185,7 +4236,7 @@ void MainWindow::metaOVLReplace(int vistype)
           case BTV_LINEVERT:  newOverlay = new OFLine(OFLine::LT_VERT_BYBOTTOM, ocs, 0.0, 0.0, CR_ABSOLUTE, 10, 100, linestyle_green(1,0,0)); break;
           case BTV_FACTOR:  newOverlay = new OFFactor(ocs, 0.0, 0.0, CR_ABSOLUTE_NOSCALED, 10, 30, linestyle_yellow(5,1,0)); break;
           case BTV_CROSS:  newOverlay = new OFLine(OFLine::LT_CROSS, ocs, 0.0, 0.0, CR_ABSOLUTE, 10, -1, linestyle_green(1,0,0)); break;
-          case BTV_TEXT: newOverlay = new OTextTraced("CREATED", ocs, 0.0, 0.0, 12, OO_INHERITED, true, linestyle_solid(1,0,0)); break;
+          case BTV_TEXT: newOverlay = new OTextTraced("CREATED", ocs, 0.0, 0.0, 12, true, linestyle_solid(1,0,0)); break;
           case BTV_BORDER: newOverlay = new OBorder(linestyle_solid(1,0,0)); break;
           default: break;
         }
@@ -4214,7 +4265,7 @@ void MainWindow::metaOVLCreate(int vistype)
         case BTV_LINEVERT:  newOverlay = new OFLine(OFLine::LT_VERT_BYBOTTOM, cr, 0.5, 0.5, CR_ABSOLUTE, 10, 100, linestyle_green(1,0,0)); break;
         case BTV_FACTOR:  newOverlay = new OFFactor(cr, 0.5, 0.5, CR_ABSOLUTE_NOSCALED, 10, 30, linestyle_yellow(5,1,0)); break;
         case BTV_CROSS:  newOverlay = new OFLine(OFLine::LT_CROSS, cr, 0.5, 0.5, CR_ABSOLUTE, 10, -1, linestyle_green(1,0,0)); break;
-        case BTV_TEXT: newOverlay = new OTextTraced("CREATED", CR_RELATIVE, 0.5, 0.5, 12, OO_INHERITED, true, linestyle_solid(1,0,0)); break;
+        case BTV_TEXT: newOverlay = new OTextTraced("CREATED", CR_RELATIVE, 0.5, 0.5, 12, true, linestyle_solid(1,0,0)); break;
         case BTV_BORDER: newOverlay = new OBorder(linestyle_solid(1,0,0)); break;
         default: break;
       }
@@ -4280,6 +4331,23 @@ void MainWindow::changeMarkData(int ivalue)
 
 void MainWindow::changeClusterPalette()
 {
+#ifdef TESTTRASS
+  trasspoint_t tline[15];
+  for (int i=0; i<100; i++)
+  {
+    for (int j=0; j<15; j++)
+    {
+//          tline[j].intensity = j == 5? float(i % 2) : 1.0f;
+      tline[j].intensity = j == 0? 0.1f : 0;
+      tline[j].position = i / 100.0f;
+      tline[j].halfstrob = 0.05f;
+    }
+    ovl->appendTrassline(tline);
+  }
+  return;
+#endif
+  
+  
   if (ovl_figures != -1)
   {
     for (unsigned int i=0; i<drawscount; i++)

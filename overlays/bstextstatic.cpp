@@ -17,8 +17,8 @@
 #define QTCOMPAT_FORMAT QImage::Format_ARGB32
 #endif
 
-OITextStatic::OITextStatic(DrawOverlay* ovllink, const char* text, unsigned int fontSize, OVL_ORIENTATION orient): 
-  m_ovllink(ovllink), m_pImage(nullptr), m_orient(orient)
+OITextStatic::OITextStatic(DrawOverlay* ovllink, const char* text, unsigned int fontSize): 
+  m_ovllink(ovllink), m_pImage(nullptr)
 {
   m_ovllink.appendUniform(DT_TEXTURE, &dmti);
   
@@ -27,15 +27,15 @@ OITextStatic::OITextStatic(DrawOverlay* ovllink, const char* text, unsigned int 
   innerSetText(otextopts_t(text, 0), f1);
 }
 
-OITextStatic::OITextStatic(DrawOverlay* ovllink, const char* text, const QFont& font, OVL_ORIENTATION orient): 
-  m_ovllink(ovllink), m_pImage(nullptr), m_orient(orient)
+OITextStatic::OITextStatic(DrawOverlay* ovllink, const char* text, const QFont& font): 
+  m_ovllink(ovllink), m_pImage(nullptr)
 {
   m_ovllink.appendUniform(DT_TEXTURE, &dmti);
   innerSetText(otextopts_t(text, 0), font);
 }
 
-OITextStatic::OITextStatic(DrawOverlay* ovllink, const otextopts_t& text, unsigned int fontSize, OVL_ORIENTATION orient):
-  m_ovllink(ovllink), m_pImage(nullptr), m_orient(orient)
+OITextStatic::OITextStatic(DrawOverlay* ovllink, const otextopts_t& text, unsigned int fontSize):
+  m_ovllink(ovllink), m_pImage(nullptr)
 {
   m_ovllink.appendUniform(DT_TEXTURE, &dmti);
   QFont f1(QApplication::font());
@@ -43,8 +43,8 @@ OITextStatic::OITextStatic(DrawOverlay* ovllink, const otextopts_t& text, unsign
   innerSetText(text, f1);
 }
 
-OITextStatic::OITextStatic(DrawOverlay* ovllink, const otextopts_t& text, const QFont& font, OVL_ORIENTATION orient):
-  m_ovllink(ovllink), m_pImage(nullptr), m_orient(orient)
+OITextStatic::OITextStatic(DrawOverlay* ovllink, const otextopts_t& text, const QFont& font):
+  m_ovllink(ovllink), m_pImage(nullptr)
 {
   m_ovllink.appendUniform(DT_TEXTURE, &dmti);
   innerSetText(text, font);
@@ -101,51 +101,51 @@ void  OITextStatic::innerSetText(const otextopts_t& ot, const QFont &font)
 
 
 OTextTraced::OTextTraced(const char* text, COORDINATION cn, float xpos, float ypos, 
-                         unsigned int fontSize, OVL_ORIENTATION orient, bool rectangled, const linestyle_t& kls): 
-  DrawOverlay_ColorTraced(kls), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, fontSize, orient),
+                         unsigned int fontSize, bool rectangled, const linestyle_t& kls): 
+  DrawOverlay_ColorTraced(kls), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, fontSize),
   m_rectangled(rectangled)
 {
 }
 
 OTextTraced::OTextTraced(const char* text, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-                         unsigned int fontSize, OVL_ORIENTATION orient, bool rectangled, const linestyle_t& kls): 
-  DrawOverlay_ColorTraced(kls), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, fontSize, orient),
+                         unsigned int fontSize, bool rectangled, const linestyle_t& kls): 
+  DrawOverlay_ColorTraced(kls), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, fontSize),
   m_rectangled(rectangled)
 {
 }
 
 OTextTraced::OTextTraced(const char* text, COORDINATION cn, float xpos, float ypos,
-                         const QFont& font, OVL_ORIENTATION orient, bool rectangled, const linestyle_t& kls): 
-  DrawOverlay_ColorTraced(kls), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, font, orient),
+                         const QFont& font, bool rectangled, const linestyle_t& kls): 
+  DrawOverlay_ColorTraced(kls), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, font),
   m_rectangled(rectangled)
 {
 }
 
 OTextTraced::OTextTraced(const char* text, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-                         const QFont& font, OVL_ORIENTATION orient, bool rectangled, const linestyle_t& kls):
-  DrawOverlay_ColorTraced(kls), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, font, orient),
+                         const QFont& font, bool rectangled, const linestyle_t& kls):
+  DrawOverlay_ColorTraced(kls), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, font),
   m_rectangled(rectangled)
 {
 }
 
 OTextTraced::OTextTraced(const otextopts_t& oto, COORDINATION cn, float xpos, float ypos,
-                         const QFont& font, OVL_ORIENTATION orient, bool rectangled, const linestyle_t& kls): 
-  DrawOverlay_ColorTraced(kls), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, font, orient),
+                         const QFont& font, bool rectangled, const linestyle_t& kls): 
+  DrawOverlay_ColorTraced(kls), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, font),
   m_rectangled(rectangled)
 {
 }
 
 OTextTraced::OTextTraced(const otextopts_t& oto, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-                         const QFont& font, OVL_ORIENTATION orient, bool rectangled, const linestyle_t& kls):
-  DrawOverlay_ColorTraced(kls), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, font, orient),
+                         const QFont& font, bool rectangled, const linestyle_t& kls):
+  DrawOverlay_ColorTraced(kls), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, font),
   m_rectangled(rectangled)
 {
 }
 
-int OTextTraced::fshTrace(int overlay, bool rotated, char *to) const
+int OTextTraced::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, m_orient);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.var_const_fixed("rect_size", (int)dmti.w, (int)dmti.h);
@@ -169,65 +169,65 @@ int OTextTraced::fshTrace(int overlay, bool rotated, char *to) const
 /////////////////////////////////////////////////////////
 
 OTextColored::OTextColored(const char* text, COORDINATION cn, float xpos, float ypos,
-                           unsigned int fontSize, OVL_ORIENTATION orient, int argbTextColor, int argbBackColor, int argbBorderColor): 
-  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, fontSize, orient),
+                           unsigned int fontSize, int argbTextColor, int argbBackColor, int argbBorderColor): 
+  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, fontSize),
   m_argbTextColor(argbTextColor), m_argbBackColor(argbBackColor), m_argbBorderColor(argbBorderColor)
 {
 }
 
 OTextColored::OTextColored(const char* text, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-                           unsigned int fontSize, OVL_ORIENTATION orient, int argbTextColor, int argbBackColor, int argbBorderColor): 
-  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, fontSize, orient),
+                           unsigned int fontSize, int argbTextColor, int argbBackColor, int argbBorderColor): 
+  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, fontSize),
   m_argbTextColor(argbTextColor), m_argbBackColor(argbBackColor), m_argbBorderColor(argbBorderColor)
 {
 }
 
 OTextColored::OTextColored(const char* text, COORDINATION cn, float xpos, float ypos,
-                           const QFont& font, OVL_ORIENTATION orient, int argbTextColor, int argbBackColor, int argbBorderColor): 
-  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, font, orient),
+                           const QFont& font, int argbTextColor, int argbBackColor, int argbBorderColor): 
+  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, font),
   m_argbTextColor(argbTextColor), m_argbBackColor(argbBackColor), m_argbBorderColor(argbBorderColor)
 {
 }
 
 OTextColored::OTextColored(const char* text, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-                           const QFont& font, OVL_ORIENTATION orient, int argbTextColor, int argbBackColor, int argbBorderColor):
-  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, font, orient),
+                           const QFont& font, int argbTextColor, int argbBackColor, int argbBorderColor):
+  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, font),
   m_argbTextColor(argbTextColor), m_argbBackColor(argbBackColor), m_argbBorderColor(argbBorderColor)
 {
 }
 
 OTextColored::OTextColored(const otextopts_t& oto, COORDINATION cn, float xpos, float ypos,
-                           unsigned int fontSize, OVL_ORIENTATION orient, int argbTextColor, int argbBackColor, int argbBorderColor): 
-  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, fontSize, orient),
+                           unsigned int fontSize, int argbTextColor, int argbBackColor, int argbBorderColor): 
+  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, fontSize),
   m_argbTextColor(argbTextColor), m_argbBackColor(argbBackColor), m_argbBorderColor(argbBorderColor)
 {
 }
 
 OTextColored::OTextColored(const otextopts_t& oto, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-                           unsigned int fontSize, OVL_ORIENTATION orient, int argbTextColor, int argbBackColor, int argbBorderColor):
-  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, fontSize, orient),
+                           unsigned int fontSize, int argbTextColor, int argbBackColor, int argbBorderColor):
+  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, fontSize),
   m_argbTextColor(argbTextColor), m_argbBackColor(argbBackColor), m_argbBorderColor(argbBorderColor)
 {
 }
 
 OTextColored::OTextColored(const otextopts_t& oto, COORDINATION cn, float xpos, float ypos,
-                           const QFont& font, OVL_ORIENTATION orient, int argbTextColor, int argbBackColor, int argbBorderColor): 
-  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, font, orient),
+                           const QFont& font, int argbTextColor, int argbBackColor, int argbBorderColor): 
+  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, font),
   m_argbTextColor(argbTextColor), m_argbBackColor(argbBackColor), m_argbBorderColor(argbBorderColor)
 {
 }
 
 OTextColored::OTextColored(const otextopts_t& oto, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-                           const QFont& font, OVL_ORIENTATION orient, int argbTextColor, int argbBackColor, int argbBorderColor):
-  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, font, orient),
+                           const QFont& font, int argbTextColor, int argbBackColor, int argbBorderColor):
+  DrawOverlay_ColorForegoing(), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, font),
   m_argbTextColor(argbTextColor), m_argbBackColor(argbBackColor), m_argbBorderColor(argbBorderColor)
 {
 }
 
-int OTextColored::fshTrace(int overlay, bool rotated, char *to) const
+int OTextColored::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, m_orient);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.var_const_fixed("rect_size", (int)dmti.w, (int)dmti.h);
@@ -275,52 +275,51 @@ int OTextColored::fshTrace(int overlay, bool rotated, char *to) const
 //////////////////////////////////////////
 
 OTextPaletted::OTextPaletted(const char* text, COORDINATION cn, float xpos, float ypos,
-                             unsigned int fontSize, OVL_ORIENTATION orient, bool rectangled, const IPalette* ipal, bool discrete): 
-  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, fontSize, orient),
+                             unsigned int fontSize, bool rectangled, const IPalette* ipal, bool discrete): 
+  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, fontSize),
   m_rectangled(rectangled)
 {
 }
 
 OTextPaletted::OTextPaletted(const char* text, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-                             unsigned int fontSize, OVL_ORIENTATION orient, bool rectangled, const IPalette* ipal, bool discrete): 
-  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, fontSize, orient),
+                             unsigned int fontSize, bool rectangled, const IPalette* ipal, bool discrete): 
+  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, fontSize),
   m_rectangled(rectangled)
 {
 }
 
 OTextPaletted::OTextPaletted(const char* text, COORDINATION cn, float xpos, float ypos,
-                             const QFont& font, OVL_ORIENTATION orient, bool rectangled, const IPalette* ipal, bool discrete): 
-  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, font, orient),
+                             const QFont& font, bool rectangled, const IPalette* ipal, bool discrete): 
+  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, font),
   m_rectangled(rectangled)
 {
 }
 
 OTextPaletted::OTextPaletted(const char* text, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-                             const QFont& font, OVL_ORIENTATION orient, bool rectangled, const IPalette* ipal, bool discrete):
-  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, font, orient),
+                             const QFont& font, bool rectangled, const IPalette* ipal, bool discrete):
+  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, text, font),
   m_rectangled(rectangled)
 {
 }
 
 OTextPaletted::OTextPaletted(const otextopts_t& oto, COORDINATION cn, float xpos, float ypos,
-                             const QFont& font, OVL_ORIENTATION orient, bool rectangled, const IPalette* ipal, bool discrete): 
-  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, font, orient),
+                             const QFont& font, bool rectangled, const IPalette* ipal, bool discrete): 
+  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsDynamic(cn, xpos, ypos), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, font),
   m_rectangled(rectangled)
 {
 }
 
 OTextPaletted::OTextPaletted(const otextopts_t& oto, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-                             const QFont& font, OVL_ORIENTATION orient, bool rectangled, const IPalette* ipal, bool discrete):
-  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, font, orient),
+                             const QFont& font, bool rectangled, const IPalette* ipal, bool discrete):
+  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsDynamic(pcoords, offset_x, offset_y), OVLDimmsStatic(CR_ABSOLUTE), OITextStatic(this, oto, font),
   m_rectangled(rectangled)
 {
 }
 
-int OTextPaletted::fshTrace(int overlay, bool rotated, char* to) const
+int OTextPaletted::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this, m_orient);
-  ocg.param_pass(); // Kostyl
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.var_const_fixed("rect_size", (int)dmti.w, (int)dmti.h);
@@ -329,7 +328,7 @@ int OTextPaletted::fshTrace(int overlay, bool rotated, char* to) const
     {
       ocg.push( "vec2  tcoords = inormed/vec2(rect_size.x-1, rect_size.y-1);"
                 "float textpixel = texture(");  ocg.param_get(); ocg.push(", vec2(tcoords.x, 1.0 - tcoords.y)).a;"
-                "result += vec3(inside*textpixel, 0.0, 1.0);"
+                "result += vec3(inside*textpixel, 0.0, 0.0);"
                 "float textmixwell = inside*textpixel;"
                 );
       if (m_rectangled)

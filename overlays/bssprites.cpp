@@ -47,9 +47,9 @@ OSprites::~OSprites()
   delete [](kpdc_t*)m_kpdc.data;
 }
 
-int OSprites::fshTrace(int overlay, bool rotated, char *to) const
+int OSprites::fshOVCoords(int overlay, bool switchedab, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_RANDOM);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_RANDOM);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.var_const_fixed("countmax", (int)m_countmax);
@@ -65,9 +65,9 @@ int OSprites::fshTrace(int overlay, bool rotated, char *to) const
       
       {   /// zoom
         if (m_cb == CB_CENTER)
-          ocg.push("ivec2 inormed = icoords - ivec2(kpdc[0]*ibounds.x, kpdc[1]*ibounds.y) + rect_size/2;");
+          ocg.push("ivec2 inormed = icoords - ivec2(kpdc[0]*ov_ibounds.x, kpdc[1]*ov_ibounds.y) + rect_size/2;");
         else
-          ocg.push("ivec2 inormed = icoords - ivec2(kpdc[0]*ibounds.x, kpdc[1]*ibounds.y);");
+          ocg.push("ivec2 inormed = icoords - ivec2(kpdc[0]*ov_ibounds.x, kpdc[1]*ov_ibounds.y);");
       }
       
       ocg.push( "_fvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1.0-step(rect_size.x, float(inormed.x)))*(1.0-step(rect_size.y, float(inormed.y)));"

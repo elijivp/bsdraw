@@ -8,14 +8,8 @@
 
 #include "bsidrawcore.h"
 
-enum  OVL_ORIENTATION   {  OO_INHERITED=0, OO_DEFAULT=1,
-                           OO_LRBT=1, OO_RLBT, OO_LRTB, OO_RLTB, OO_TBLR, OO_BTLR, OO_TBRL, OO_BTRL,
-                           OO_IHBT  , OO_IHTB, OO_LRIH, OO_RLIH,
-                           OO_INVERSED
-                        };
 
-
-/// Shader takes color and mixwell from fshTrace result: in_variant[0..4] = [r g b mixwell]
+/// Shader takes color and mixwell from fshOVCoords result: in_variant[0..4] = [r g b mixwell]
 class DrawOverlay_ColorForegoing: public DrawOverlay
 {
   int   m_inversive;
@@ -26,7 +20,7 @@ protected:
 };
 
 
-/// Shader takes only mixwell from fshTrace result: in_variant[0..4] = [- - - mixwell]
+/// Shader takes only mixwell from fshOVCoords result: in_variant[0..4] = [- - - mixwell]
 class DrawOverlay_ColorDomestic: public DrawOverlay
 {
   color3f_t         m_color;
@@ -36,13 +30,12 @@ protected:
   virtual int fshColor(int overlay, char *to) const;
 };
 
-/// Shader takes outsideline, path position and mixwell from fshTrace result: in_variant[0..4] = [ols path - mixwell]
+/// Shader takes outsideline, path position and mixwell from fshOVCoords result: in_variant[0..4] = [ols path - mixwell]
 class DrawOverlay_ColorTraced: public DrawOverlay
 {
 protected:
   linestyle_t       m_linestyle;
 public:
-//  DrawOverlay_ColorTraced(bool visible=true): DrawOverlay(visible), m_linestyle(linestyle_solid(1,1,1)){}
   DrawOverlay_ColorTraced(const linestyle_t& linestyle, bool visible=true): DrawOverlay(visible), m_linestyle(linestyle){}
   void              setLineStyle(const linestyle_t& linestyle, bool update=true){  m_linestyle = linestyle; updateParameter(true, update); }
   linestyle_t       getLineStyle() const {  return m_linestyle;  }
@@ -50,7 +43,7 @@ protected:
   virtual int fshColor(int overlay, char *to) const;
 };
 
-/// Shader takes nondirect color and mixwell from fshTrace result: in_variant[0..4] = [ptr_to_color - - mixwell]
+/// Shader takes nondirect color and mixwell from fshOVCoords result: in_variant[0..4] = [ptr_to_color inversation - mixwell]
 class DrawOverlay_ColorThroughPalette: public DrawOverlay
 {
 private:
@@ -60,8 +53,7 @@ public:
   {
     m_dm_palette.ppal = ipal;
     m_dm_palette.discrete = discrete;
-//    appendUniform(DT__HC_PALETTE, &m_dm_palette);
-    appendUniform(DT_PALETTE, &m_dm_palette);
+    appendUniform(DT_PALETTE, &m_dm_palette, true);
   }
   void  setPalette(const IPalette* ipal, bool discrete)
   {

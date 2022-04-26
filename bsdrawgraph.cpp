@@ -27,22 +27,23 @@ public:
   virtual int           portionMeshType() const{  return PMT_FORCE1D; }
   virtual unsigned int  shvertex_pendingSize() const { return VshMainGenerator1D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const { return VshMainGenerator1D()(to); }
-  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 4800 + FshMainGenerator::basePendingSize(imp, ovlscount); }
+  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 5000 + FshMainGenerator::basePendingSize(imp, ovlscount); }
   virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, 
                                          ORIENTATION orient, SPLITPORTIONS splitGraphs, const impulsedata_t& imp,
                                          unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
     FshMainGenerator fmg(to, allocatedPortions, splitGraphs, imp, ovlscount, ovlsinfo);
-    float opacity = graphopts.opacity > 1.0f? 1.0f : graphopts.opacity < 0.0f? 0.0f : graphopts.opacity;
-    fmg.cfloatvar("specopc", 1.0f - opacity);
     fmg.main_begin( coloropts.backcolor != 0xFFFFFFFF? FshMainGenerator::INIT_BYVALUE : FshMainGenerator::INIT_BYPALETTE, 
                     coloropts.backcolor, orient, fsp);
+    fmg.push("mixwell = 0.0;");
+    
+    fmg.cfloatvar("specopc", 1.0f - (graphopts.opacity > 1.0f? 1.0f : graphopts.opacity < 0.0f? 0.0f : graphopts.opacity));
     
     static const char graph_locals[] = 
-                                      "vec2  fbounds_noscaled = vec2(viewdimm_a, viewdimm_b);" SHNL
-                                      "vec2  fbounds = vec2(ibounds);" SHNL
-                                      "vec2  fcoords = (relcoords*(fbounds));" SHNL   /// ! no floor.
-                                      "vec2  fcoords_noscaled = floor(relcoords*(fbounds_noscaled));" SHNL
+                                      "vec2  ab_fndimms = vec2(viewdimm_a, viewdimm_b);" SHNL
+                                      "vec2  ab_fbounds = vec2(ab_ibounds);" SHNL
+                                      "float b_coord = abc_coords.y*ab_fbounds.y;" SHNL   /// ! no floor.
+                                      "float b_coord_ns = floor(abc_coords.y*ab_fndimms.y);" SHNL
                                     ;
     fmg.push(graph_locals);
     {
@@ -73,43 +74,43 @@ public:
       
       if (needDots == 1)
       {
-        fmg.push( "vec3  fx = vec3(relcoords.x, relcoords.x, relcoords.x);" SHNL );
+        fmg.push( "vec3  fx = vec3(abc_coords.x, abc_coords.x, abc_coords.x);" SHNL );
         fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = explicitPortion;" SHNL );
         fmg.push(
                   "{" SHNL
                     "vec3   fy = vec3(getValue1D(i, fx[0]));" SHNL
-                    "vec3   fy_ns = floor(fy*(ibounds_noscaled.y-1));" SHNL
-                    "vec3   fy_view = fy*(ibounds.y-1);" SHNL
+                    "vec3   fy_ns = floor(fy*(ab_indimms.y-1));" SHNL
+                    "vec3   fy_view = fy*(ab_ibounds.y-1);" SHNL
                     "ivec3  iy_view = ivec3(floor(fy_view));" SHNL
               );
       }
       else if (needDots == 3)
       {
-        fmg.push( "vec3 fx = vec3(float(max(relcoords.x*ibounds_noscaled.x, 1) - 1)/ibounds_noscaled.x, "
-                    "relcoords.x, "
-                    "float(min(relcoords.x*ibounds_noscaled.x, ibounds_noscaled.x-1)  + 1)/ibounds_noscaled.x);" SHNL
+        fmg.push( "vec3 fx = vec3(float(max(abc_coords.x*ab_indimms.x, 1) - 1)/ab_indimms.x, "
+                    "abc_coords.x, "
+                    "float(min(abc_coords.x*ab_indimms.x, ab_indimms.x-1)  + 1)/ab_indimms.x);" SHNL
                   );
         fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = explicitPortion;" SHNL );
         fmg.push(
                   "{" SHNL
                     "vec3  fy = vec3(getValue1D(i, fx[0]), getValue1D(i, fx[1]), getValue1D(i, fx[2]));" SHNL
-                    "vec3  fy_ns = floor(fy*(ibounds_noscaled.y-1));" SHNL
-                    "vec3  fy_view = fy*(ibounds.y - 1);" SHNL
+                    "vec3  fy_ns = floor(fy*(ab_indimms.y-1));" SHNL
+                    "vec3  fy_view = fy*(ab_ibounds.y - 1);" SHNL
                     "ivec3 iy_view = ivec3(floor(fy_view));" SHNL
               );
       }
       else if (needDots == 4)
       {
-        fmg.push( "vec4 fx = vec4(float(max(relcoords.x*ibounds_noscaled.x, 1) - 1)/ibounds_noscaled.x, relcoords.x, " SHNL
-                    "float(min(relcoords.x*ibounds_noscaled.x, ibounds_noscaled.x-1)  + 1)/ibounds_noscaled.x, " SHNL
-                    "float(min(relcoords.x*ibounds_noscaled.x, ibounds_noscaled.x-2)  + 2)/ibounds_noscaled.x);" SHNL
+        fmg.push( "vec4 fx = vec4(float(max(abc_coords.x*ab_indimms.x, 1) - 1)/ab_indimms.x, abc_coords.x, " SHNL
+                    "float(min(abc_coords.x*ab_indimms.x, ab_indimms.x-1)  + 1)/ab_indimms.x, " SHNL
+                    "float(min(abc_coords.x*ab_indimms.x, ab_indimms.x-2)  + 2)/ab_indimms.x);" SHNL
                   );
         fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = explicitPortion;" SHNL );
         fmg.push(
                   "{" SHNL
                     "vec4  fy = vec4(getValue1D(i, fx[0]), getValue1D(i, fx[1]), getValue1D(i, fx[2]), getValue1D(i, fx[3]));" SHNL
-                    "vec4  fy_ns = floor(fy*(ibounds_noscaled.y-1));" SHNL
-                    "vec4  fy_view = fy*(ibounds.y - 1);" SHNL
+                    "vec4  fy_ns = floor(fy*(ab_indimms.y-1));" SHNL
+                    "vec4  fy_view = fy*(ab_ibounds.y - 1);" SHNL
                     "ivec4 iy_view = ivec4(floor(fy_view));" SHNL
               );
       }
@@ -122,11 +123,11 @@ public:
         if (graphopts.descaling == DE_LINTERP_SCALINGLEFT || graphopts.descaling == DE_LINTERP_SCALINGCENTER)
         {
           if (graphopts.descaling == DE_LINTERP_SCALINGLEFT)
-            fmg.push( "vec3 fds = vec3(immod.x/float(iscaling.x)) + vec3(-1.0/iscaling.x, 0.0, 1.0/iscaling.x);" SHNL);
+            fmg.push( "vec3 fds = vec3(immod.x/float(ab_iscaler.x)) + vec3(-1.0/ab_iscaler.x, 0.0, 1.0/ab_iscaler.x);" SHNL);
           else if (graphopts.descaling == DE_LINTERP_SCALINGCENTER)
-            fmg.push( "vec3 fds = vec3((immod.x - iscaling.x/2)/float(iscaling.x)) + vec3(-1.0/iscaling.x, 0.0, 1.0/iscaling.x);" SHNL);
+            fmg.push( "vec3 fds = vec3((immod.x - ab_iscaler.x/2)/float(ab_iscaler.x)) + vec3(-1.0/ab_iscaler.x, 0.0, 1.0/ab_iscaler.x);" SHNL);
           
-          fmg.push( "fy_view = vec3(" SHNL    // fy_view*step(float(iscaling.x), 1.0) + (1 - step(float(iscaling.x), 1.0))*"
+          fmg.push( "fy_view = vec3(" SHNL    // fy_view*step(float(ab_iscaler.x), 1.0) + (1 - step(float(ab_iscaler.x), 1.0))*"
                                       "mix(iy_view[1] + (iy_view[1] - iy_view[0])*fds.x, iy_view[1] + (iy_view[2] - iy_view[1])*fds.x, step(0.0, fds.x))," SHNL
                                       "mix(iy_view[1] + (iy_view[1] - iy_view[0])*fds.y, iy_view[1] + (iy_view[2] - iy_view[1])*fds.y, step(0.0, fds.y))," SHNL
                                       "mix(iy_view[1] + (iy_view[1] - iy_view[0])*fds.z, iy_view[1] + (iy_view[2] - iy_view[1])*fds.z, step(0.0, fds.z))" SHNL
@@ -138,13 +139,13 @@ public:
 #if 0
 //                    "float corrector = clamp(float(iy_view[2] - iy_view[1] + (iy_view[1] - iy_view[0]))/((iy_view[2] - iy_view[1]) - (iy_view[1] - iy_view[0])), -4.0, 4.0);"
 //                    "float corrector = clamp(0.5 + 0.5*(iy_view[1] - iy_view[0])/(iy_view[2] - iy_view[1]) + step(abs(iy_view[1] - iy_view[0]), 0.0)*2*sign(iy_view[2] - iy_view[1]), -4.0, 4.0);"
-//                    "float surrector = 1.0 - abs(iy_view[2] - iy_view[1])/float(ibounds.y);"
+//                    "float surrector = 1.0 - abs(iy_view[2] - iy_view[1])/float(ab_ibounds.y);"
 //                    "float surrector = 1.0 - step(iy_view[2] - iy_view[1], 5.0)/(iy_view[0] - iy_view[1]);"
 //                    "surrector = mix(1.0, 0.0, surrector);"
           
-//                    "vec3 fcorr = vec3((fsteps.x - 1.0)/float(iscaling.x)*mix(corrector, 1.0, (fsteps.x - 1.0)/float(iscaling.x)*surrector), "
-//                                      "(fsteps.x      )/float(iscaling.x)*mix(corrector, 1.0, (fsteps.x      )/float(iscaling.x)*surrector), "
-//                                      "(fsteps.x + 1.0)/float(iscaling.x)*mix(corrector, 1.0, (fsteps.x + 1.0)/float(iscaling.x)*surrector)"
+//                    "vec3 fcorr = vec3((fsteps.x - 1.0)/float(ab_iscaler.x)*mix(corrector, 1.0, (fsteps.x - 1.0)/float(ab_iscaler.x)*surrector), "
+//                                      "(fsteps.x      )/float(ab_iscaler.x)*mix(corrector, 1.0, (fsteps.x      )/float(ab_iscaler.x)*surrector), "
+//                                      "(fsteps.x + 1.0)/float(ab_iscaler.x)*mix(corrector, 1.0, (fsteps.x + 1.0)/float(ab_iscaler.x)*surrector)"
 //                                      ");"
           
 //                      "vec3(ify[1] - fsteps[2], ify[1], ify[1] + fsteps[1]*fcorr[1]),"
@@ -152,12 +153,12 @@ public:
 #endif
           fmg.push( 
                     "float corrector = clamp(0.5 + 0.5*(iy_view[1] - iy_view[0])/(iy_view[2] - iy_view[1]) + 0.0*(iy_view[2] - iy_view[1]), -4.0, 4.0);"
-//                    "float surrector = step(iscaling.y*4.0, float(abs(iy_view[2] - iy_view[1])))*step(iscaling.y*4.0, float(abs(iy_view[0] - iy_view[1])))*(step(float(sign((iy_view[2] - iy_view[1])*(iy_view[0] - iy_view[1]))), 0.0));"
+//                    "float surrector = step(ab_iscaler.y*4.0, float(abs(iy_view[2] - iy_view[1])))*step(ab_iscaler.y*4.0, float(abs(iy_view[0] - iy_view[1])))*(step(float(sign((iy_view[2] - iy_view[1])*(iy_view[0] - iy_view[1]))), 0.0));"
                     "float surrector = 1.0;"
-                    "vec3 fsteps = vec3(float(immod.x), iy_view[2] - iy_view[1], (iy_view[1] - iy_view[0])/float(iscaling.x));"
-                    "vec3 fcorr = vec3((fsteps.x - 1.0)/float(iscaling.x)*mix(1.0, corrector, (1.0 - (fsteps.x - 1.0)/float(iscaling.x))*surrector), "
-                                      "(fsteps.x      )/float(iscaling.x)*mix(1.0, corrector, (1.0 - (fsteps.x      )/float(iscaling.x))*surrector), "
-                                      "(fsteps.x + 1.0)/float(iscaling.x)*mix(1.0, corrector, (1.0 - (fsteps.x + 1.0)/float(iscaling.x))*surrector)"
+                    "vec3 fsteps = vec3(float(immod.x), iy_view[2] - iy_view[1], (iy_view[1] - iy_view[0])/float(ab_iscaler.x));"
+                    "vec3 fcorr = vec3((fsteps.x - 1.0)/float(ab_iscaler.x)*mix(1.0, corrector, (1.0 - (fsteps.x - 1.0)/float(ab_iscaler.x))*surrector), "
+                                      "(fsteps.x      )/float(ab_iscaler.x)*mix(1.0, corrector, (1.0 - (fsteps.x      )/float(ab_iscaler.x))*surrector), "
+                                      "(fsteps.x + 1.0)/float(ab_iscaler.x)*mix(1.0, corrector, (1.0 - (fsteps.x + 1.0)/float(ab_iscaler.x))*surrector)"
                                       ");"
                 
                     "fy_view = mix("
@@ -167,16 +168,16 @@ public:
                     );
 //          fmg.push( 
 //                    "float corrector = clamp(0.5 + 0.5*(iy_view[1] - iy_view[0])/(iy_view[2] - iy_view[1]) + 0.0*(iy_view[2] - iy_view[1]), -4.0, 4.0);"
-////                    "float surrector = step(iscaling.y*4.0, float(abs(iy_view[2] - iy_view[1])))*step(iscaling.y*4.0, float(abs(iy_view[0] - iy_view[1])))*(step(float(sign((iy_view[2] - iy_view[1])*(iy_view[0] - iy_view[1]))), 0.0));"
+////                    "float surrector = step(ab_iscaler.y*4.0, float(abs(iy_view[2] - iy_view[1])))*step(ab_iscaler.y*4.0, float(abs(iy_view[0] - iy_view[1])))*(step(float(sign((iy_view[2] - iy_view[1])*(iy_view[0] - iy_view[1]))), 0.0));"
 //                    "float surrector = 1.0;"
-//                    "float fcx = (immod.x - iscaling.x/2);"
+//                    "float fcx = (immod.x - ab_iscaler.x/2);"
 ////                "float fcx = immod.x;"
-//                    "vec3 fcorr = vec3((fcx - 1.0)/float(iscaling.x)*mix(1.0, corrector, (1.0 - (fcx - 1.0)/float(iscaling.x))*surrector), "
-//                                      "(fcx      )/float(iscaling.x)*mix(1.0, corrector, (1.0 - (fcx      )/float(iscaling.x))*surrector), "
-//                                      "(fcx + 1.0)/float(iscaling.x)*mix(1.0, corrector, (1.0 - (fcx + 1.0)/float(iscaling.x))*surrector)"
+//                    "vec3 fcorr = vec3((fcx - 1.0)/float(ab_iscaler.x)*mix(1.0, corrector, (1.0 - (fcx - 1.0)/float(ab_iscaler.x))*surrector), "
+//                                      "(fcx      )/float(ab_iscaler.x)*mix(1.0, corrector, (1.0 - (fcx      )/float(ab_iscaler.x))*surrector), "
+//                                      "(fcx + 1.0)/float(ab_iscaler.x)*mix(1.0, corrector, (1.0 - (fcx + 1.0)/float(ab_iscaler.x))*surrector)"
 //                                      ");"
-//                    "vec3 fds = vec3((immod.x - iscaling.x/2)/float(iscaling.x)) + vec3(-1.0/iscaling.x, 0.0, 1.0/iscaling.x);"
-//                    "fy_view = vec3("     // fy_view*step(float(iscaling.x), 1.0) + (1 - step(float(iscaling.x), 1.0))*"
+//                    "vec3 fds = vec3((immod.x - ab_iscaler.x/2)/float(ab_iscaler.x)) + vec3(-1.0/ab_iscaler.x, 0.0, 1.0/ab_iscaler.x);"
+//                    "fy_view = vec3("     // fy_view*step(float(ab_iscaler.x), 1.0) + (1 - step(float(ab_iscaler.x), 1.0))*"
 //                                      "mix(iy_view[1] + (iy_view[1] - iy_view[0]*fcorr[0])*fds.x, iy_view[1] + (iy_view[2] - iy_view[1]*fcorr[0])*fds.x, step(0.0, fds.x)),"
 //                                      "mix(iy_view[1] + (iy_view[1] - iy_view[0]*fcorr[1])*fds.y, iy_view[1] + (iy_view[2] - iy_view[1]*fcorr[1])*fds.y, step(0.0, fds.y)),"
 //                                      "mix(iy_view[1] + (iy_view[1] - iy_view[0]*fcorr[2])*fds.z, iy_view[1] + (iy_view[2] - iy_view[1]*fcorr[2])*fds.z, step(0.0, fds.z))"
@@ -195,8 +196,8 @@ public:
                                         "clamp(0.5 - ss[2]*ss[1]*mix(0.5, 0.15, srs[1])*sqrt(dd[2]*dd[2] + 1.0)/sqrt(dd[1]*dd[1] + 1.0), -3.0, 3.0)"
                                       ");" SHNL
 //                "vec2 corrector = vec2( 0.5, 0.5 );" SHNL
-                "vec3 fsteps = vec3(float(immod.x), iy_view[2] - iy_view[1], (iy_view[1] - iy_view[0])/float(iscaling.x));" SHNL
-                "vec3 stepF = vec3((fsteps.x - 1.0)/float(iscaling.x), (fsteps.x   )/float(iscaling.x), (fsteps.x + 1.0)/float(iscaling.x));" SHNL
+                "vec3 fsteps = vec3(float(immod.x), iy_view[2] - iy_view[1], (iy_view[1] - iy_view[0])/float(ab_iscaler.x));" SHNL
+                "vec3 stepF = vec3((fsteps.x - 1.0)/float(ab_iscaler.x), (fsteps.x   )/float(ab_iscaler.x), (fsteps.x + 1.0)/float(ab_iscaler.x));" SHNL
                 
                 "dd = vec3(mix(corrector[0], corrector[1], stepF[0]), mix(corrector[0], corrector[1], stepF[1]), mix(corrector[0], corrector[1], stepF[2]));" SHNL
 
@@ -219,11 +220,11 @@ public:
         
         if (needDots == 3)
           fmg.push( "iy_view = ivec3(floor(fy_view));" SHNL
-                    "fy_ns = floor(fy_view/(iscaling.y));" SHNL
+                    "fy_ns = floor(fy_view/(ab_iscaler.y));" SHNL
                     );
         else
           fmg.push( "iy_view = ivec4(floor(fy_view));" SHNL
-                    "fy_ns = floor(fy_view/(iscaling.y));" SHNL
+                    "fy_ns = floor(fy_view/(ab_iscaler.y));" SHNL
                     );
       }
       
@@ -234,11 +235,12 @@ public:
       {
         if (graphopts.dotsize == 0)
           fmg.push( 
-                      "float MIXWELL = step(distance(fcoords_noscaled, vec2(fcoords_noscaled.x, fy_ns[1])), 0.0);" SHNL // ??? 0.0?
-                      "post_mask[0] = post_mask[0]*(1.0 - MIXWELL) + MIXWELL;" SHNL
+//                      "float mixwellp = step(distance(fcoords_noscaled, vec2(fcoords_noscaled.x, fy_ns[1])), 0.0);" SHNL // ??? 0.0?
+                      "float mixwellp = step(b_coord_ns, fy_ns[1])*step(fy_ns[1], b_coord_ns);" SHNL // ??? 0.0?
+                      "post_mask[0] = post_mask[0]*(1.0 - mixwellp) + mixwellp;" SHNL
                     );
         else
-          fmg.push(   "float MIXWELL = 0.0;" SHNL );
+          fmg.push(   "float mixwellp = 0.0;" SHNL );
         
         fmg.push("float VALCLR = fy[1];" SHNL);
       }
@@ -247,9 +249,9 @@ public:
         if (graphopts.smooth <= -0.99f)   /// special 8bit interp
         {
           fmg.push( 
-                    "float fmix_self = 1.0 - abs(fcoords_noscaled.y - fy_ns[1]);" SHNL
-                    "float fmix_prev = (fy_ns[0] - fcoords_noscaled.y)/(fy_ns[0]-fy_ns[1]);" SHNL
-                    "float fmix_next = (fy_ns[2] - fcoords_noscaled.y)/(fy_ns[2]-fy_ns[1]);" SHNL
+                    "float fmix_self = 1.0 - abs(b_coord_ns - fy_ns[1]);" SHNL
+                    "float fmix_prev = (fy_ns[0] - b_coord_ns)/(fy_ns[0]-fy_ns[1]);" SHNL
+                    "float fmix_next = (fy_ns[2] - b_coord_ns)/(fy_ns[2]-fy_ns[1]);" SHNL
                     "fmix_prev = step(0.5, fmix_prev)*(1.0 - step(1.0, fmix_prev));" SHNL   /// shot is not in (->0)
                     "fmix_next = step(0.5, fmix_next)*(1.0 - step(1.0, fmix_next));" SHNL   /// shot is not in (->0)
                     );
@@ -260,11 +262,11 @@ public:
           {
 #if 0                   /// default simple algo, with bad V-effect
             fmg.push( 
-                        "float fmix_self = 1.0 - abs(fcoords_noscaled.y - fy_ns[1])/(1.4*(1.0 + specsmooth));" SHNL
+                        "float fmix_self = 1.0 - abs(b_coord_ns - fy_ns[1])/(1.4*(1.0 + specsmooth));" SHNL
                   
                         "float fsig_prev = sign(fy_ns[0] - fy_ns[1]);" SHNL
                         "float fsig_next = sign(fy_ns[2] - fy_ns[1]);" SHNL
-                        "float ffdist = (fcoords_noscaled.y - fy_ns[1])/(1.0 + specsmooth);"
+                        "float ffdist = (b_coord_ns - fy_ns[1])/(1.0 + specsmooth);"
                         "float fmix_prev = 1.0 - clamp(ffdist/(fy_ns[0]-fy_ns[1] + fsig_prev*1), 0.0, 1.0);" SHNL   /// fsig_prev*1 == addit. specsmooth level
                         "float fmix_next = 1.0 - clamp(ffdist/(fy_ns[2]-fy_ns[1] + fsig_next*1), 0.0, 1.0);" SHNL   /// fsig_next*2 == addit. specsmooth level
                   
@@ -273,20 +275,20 @@ public:
                       );
 #elif 0                 /// advanced algo with nonsmooth line transition
             fmg.push( 
-  //                      "float fmix_self = abs(fcoords_noscaled.y - fy_ns[1]);" SHNL
+  //                      "float fmix_self = abs(b_coord_ns - fy_ns[1]);" SHNL
   //                      "fmix_self = 1.0 / (1.0 + fmix_self*2.0);" SHNL
   //                      "fmix_self = fmix_self + specsmooth*2.0*(0.25-(fmix_self-0.5)*(fmix_self-0.5));" SHNL    /// 2.0 - decay
-                        "float fmix_self = abs(fcoords_noscaled.y - fy_ns[1]);" SHNL
+                        "float fmix_self = abs(b_coord_ns - fy_ns[1]);" SHNL
                         "fmix_self = (1.0-fmix_self + fmix_self*(0.25+specsmooth*0.375))*step(fmix_self, 2.0);" SHNL
                   
                         "float fsig_prev = sign(fy_ns[0] - fy_ns[1]);" SHNL
                         "float fsig_next = sign(fy_ns[2] - fy_ns[1]);" SHNL
-  //                      "float fsig_self = sign(fcoords_noscaled.y - fy_ns[1]);" SHNL
+  //                      "float fsig_self = sign(b_coord_ns - fy_ns[1]);" SHNL
   //                      "float fcoop_prev = fsig_prev*fsig_self;" SHNL
   //                      "float fcoop_next = fsig_next*fsig_self;" SHNL
                   
-                        "float fmix_prev = (fy_ns[0] - fcoords_noscaled.y)/(fy_ns[0]-fy_ns[1]);" SHNL
-                        "float fmix_next = (fy_ns[2] - fcoords_noscaled.y)/(fy_ns[2]-fy_ns[1]);" SHNL
+                        "float fmix_prev = (fy_ns[0] - b_coord_ns)/(fy_ns[0]-fy_ns[1]);" SHNL
+                        "float fmix_next = (fy_ns[2] - b_coord_ns)/(fy_ns[2]-fy_ns[1]);" SHNL
                         "fmix_prev = fmix_prev*step(0.0, fmix_prev)*(1.0 - step(1.0, fmix_prev));" SHNL
                         "fmix_next = fmix_next*step(0.0, fmix_next)*(1.0 - step(1.0, fmix_next));" SHNL
                         "float fmix_rej = step(1.0, fsig_prev*fsig_next)*0.25;" SHNL
@@ -300,7 +302,7 @@ public:
                         );
 #elif 1                 /// advanced algo with smooth line transition
             fmg.push( 
-                        "float fmix_self = abs(fcoords_noscaled.y - fy_ns[1]);" SHNL
+                        "float fmix_self = abs(b_coord_ns - fy_ns[1]);" SHNL
                         "fmix_self = (1.0-fmix_self + fmix_self*(0.25+specsmooth*0.375))*step(fmix_self, 2.0);" SHNL  /// 0.25 shading
                   
                         "float fsig_prev = sign(fy_ns[0] - fy_ns[1]);" SHNL
@@ -308,8 +310,8 @@ public:
   
                         "float fmix_prev = fy_ns[0] + fsig_prev;" SHNL      /// adding 1 outside pixel for future shading
                         "float fmix_next = fy_ns[2] + fsig_next;" SHNL      /// adding 1 outside pixel for future shading
-                        "fmix_prev = (fmix_prev - fcoords_noscaled.y)/(fmix_prev-fy_ns[1]);" SHNL
-                        "fmix_next = (fmix_next - fcoords_noscaled.y)/(fmix_next-fy_ns[1]);" SHNL
+                        "fmix_prev = (fmix_prev - b_coord_ns)/(fmix_prev-fy_ns[1]);" SHNL
+                        "fmix_next = (fmix_next - b_coord_ns)/(fmix_next-fy_ns[1]);" SHNL
                   
                         "fmix_prev = fmix_prev*step(0.0, fmix_prev)*(1.0 - step(1.0, fmix_prev));" SHNL   /// shot is not in (->0)
                         "fmix_next = fmix_next*step(0.0, fmix_next)*(1.0 - step(1.0, fmix_next));" SHNL   /// shot is not in (->0)
@@ -323,15 +325,15 @@ public:
                         );
 #else                 /// advanced algo with smooth line transition but bad V-effect destroys
             fmg.push( 
-                        "float fmix_self = abs(fcoords_noscaled.y - fy_ns[1]);" SHNL
+                        "float fmix_self = abs(b_coord_ns - fy_ns[1]);" SHNL
                         "fmix_self = (1.0-fmix_self + fmix_self*(0.25+specsmooth*0.375))*step(fmix_self, 2.0);" SHNL
                   
                         "float fsig_prev = sign(fy_ns[0] - fy_ns[1]);" SHNL
                         "float fsig_next = sign(fy_ns[2] - fy_ns[1]);" SHNL
                         "float fmix_prev = fy_ns[0] + (fy_ns[0] - fy_ns[1])/4 + fsig_prev;" SHNL
                         "float fmix_next = fy_ns[2] + (fy_ns[2] - fy_ns[1])/4 + fsig_next;" SHNL
-                        "fmix_prev = (fmix_prev - fcoords_noscaled.y)/(fmix_prev-fy_ns[1]);" SHNL
-                        "fmix_next = (fmix_next - fcoords_noscaled.y)/(fmix_next-fy_ns[1]);" SHNL
+                        "fmix_prev = (fmix_prev - b_coord_ns)/(fmix_prev-fy_ns[1]);" SHNL
+                        "fmix_next = (fmix_next - b_coord_ns)/(fmix_next-fy_ns[1]);" SHNL
                         "fmix_prev = fmix_prev*step(0.0, fmix_prev)*(1.0 - step(1.0, fmix_prev));" SHNL
                         "fmix_next = fmix_next*step(0.0, fmix_next)*(1.0 - step(1.0, fmix_next));" SHNL
                         "float fmix_rej = step(1.0, fsig_prev*fsig_next)*0.25;" SHNL
@@ -348,68 +350,68 @@ public:
               fmg.push( 
                           "float fsig_prev = sign(fy_ns[0] - fy_ns[1]);" SHNL
                           "float fsig_next = sign(fy_ns[2] - fy_ns[1]);" SHNL
-                          "float fmix_prev = smoothstep(fy_ns[0] + fsig_prev, fy_ns[1], fcoords_noscaled.y);" SHNL
-                          "float fmix_next = smoothstep(fy_ns[2] + fsig_next, fy_ns[1], fcoords_noscaled.y);" SHNL
+                          "float fmix_prev = smoothstep(fy_ns[0] + fsig_prev, fy_ns[1], b_coord_ns);" SHNL
+                          "float fmix_next = smoothstep(fy_ns[2] + fsig_next, fy_ns[1], b_coord_ns);" SHNL
                           "fmix_prev = fmix_prev*step(0.0, fmix_prev)*(1.0 - step(1.0, fmix_prev));" SHNL
                           "fmix_next = fmix_next*step(0.0, fmix_next)*(1.0 - step(1.0, fmix_next));" SHNL
-                          "float fmix_self = 1.0 - abs(fcoords_noscaled.y - fy_ns[1])/(1.4*(1.0 + specsmooth));"
+                          "float fmix_self = 1.0 - abs(b_coord_ns - fy_ns[1])/(1.4*(1.0 + specsmooth));"
                         );
             }
         }
         fmg.push( 
                   "vec3 fhit = vec3(0.0, step(1.0, fmix_self), 0.0);" SHNL
-                  "float MIXWELL =  max(fhit.y, specopc*max(max(fmix_prev, fmix_next), fmix_self ));" SHNL
-                  "fhit.x = 1.0 - step(MIXWELL, 0.0);" SHNL
-                  "float VALCLR = fcoords_noscaled.y / fbounds_noscaled.y;" SHNL
+                  "float mixwellp =  max(fhit.y, specopc*max(max(fmix_prev, fmix_next), fmix_self ));" SHNL
+                  "fhit.x = 1.0 - step(mixwellp, 0.0);" SHNL
+                  "float VALCLR = b_coord_ns / ab_fndimms.y;" SHNL
                  );
         if (graphopts.postrect == PR_VALUEAROUND || graphopts.postrect == PR_SUMMARY)
-          fmg.push("vec2 fhit_rect = vec2(min(min(fy_ns[0], fy_ns[2]), fy_ns[1]-1)*iscaling.y, max(max(fy_ns[0], fy_ns[2]), fy_ns[1]+1)*iscaling.y + iscaling.y - 1);" SHNL);
+          fmg.push("vec2 fhit_rect = vec2(min(min(fy_ns[0], fy_ns[2]), fy_ns[1]-1)*ab_iscaler.y, max(max(fy_ns[0], fy_ns[2]), fy_ns[1]+1)*ab_iscaler.y + ab_iscaler.y - 1);" SHNL);
       } // interp
       else if (isHistogram)
       {
         //        fmg.push(                 
-        //                  "vec3 fhit = vec3(sign(fcoords_noscaled.y - fy_ns[1]), 0.0, 0.0);" SHNL
+        //                  "vec3 fhit = vec3(sign(b_coord_ns - fy_ns[1]), 0.0, 0.0);" SHNL
         //                  "fhit.xy = vec2(step(fhit.x, 0.0), 1.0 - abs(fhit.x));" SHNL
-        //                  "fhit.z = (1.0 - fhit.x)*specopc*(1.0 - clamp((fcoords_noscaled.y-fy_ns[1])/(1.0 + specsmooth*10.0), 0.0, 1.0));" SHNL
-        //                  "float MIXWELL = fhit.y + (fhit.x - fhit.y)*specopc + fhit.z;" SHNL
+        //                  "fhit.z = (1.0 - fhit.x)*specopc*(1.0 - clamp((b_coord_ns-fy_ns[1])/(1.0 + specsmooth*10.0), 0.0, 1.0));" SHNL
+        //                  "float mixwellp = fhit.y + (fhit.x - fhit.y)*specopc + fhit.z;" SHNL
         //                  "fhit.z = 1.0 - step(fhit.z, 0.0);" SHNL
                   
         //                  "float fneiprec = iy_view[1];" SHNL
         //                  );
         fmg.push(                               
                   "float fmix_max = max(fy_ns[0], fy_ns[2]); " SHNL
-                  "float fy_addit = (fmix_max - fy_ns[1])*iscaling.y;" SHNL
+                  "float fy_addit = (fmix_max - fy_ns[1])*ab_iscaler.y;" SHNL
                   "fy_addit = fy_addit*step(0.0, fy_addit);" SHNL
                   "fmix_max = fmix_max + 1.0 - step(fmix_max, fy_ns[1]);" SHNL      /// adding 1 outside pixel for future shading
-                  "fmix_max = (fmix_max - fcoords_noscaled.y)/(fmix_max-fy_ns[1]);" SHNL
+                  "fmix_max = (fmix_max - b_coord_ns)/(fmix_max-fy_ns[1]);" SHNL
                   "fmix_max = fmix_max*step(0.0, fmix_max)*(1.0 - step(1.0, fmix_max));" SHNL   /// shot is not in (->0)
                   "fmix_max = mix(fmix_max, 0.2, (1.0-step(fmix_max, 0.0))*step(fmix_max, 0.2));" SHNL    /// 0.2 level for all 0..0.2
                   "fmix_max = mix(fmix_max, 1.0, step(1.0, fmix_max));" SHNL
               
-                  "float fmix_self = fcoords_noscaled.y - fy_ns[1];" SHNL
+                  "float fmix_self = b_coord_ns - fy_ns[1];" SHNL
                   "vec3 fhit = vec3(step(fmix_self, 0.0), 0.0, 0.0);" SHNL
                   "fhit.y = fhit.x*step(0.0, fmix_self);" SHNL
 //                  "fhit.z = (1.0 - fhit.x)*step(fmix_self, 1.0)*(0.25+specsmooth*0.375);" SHNL
-                  "float MIXWELL =  max(fhit.y, specopc*(max(fhit.x, fmix_max)) );" SHNL
+                  "float mixwellp =  max(fhit.y, specopc*(max(fhit.x, fmix_max)) );" SHNL
           
                   "float fneiprec = iy_view[1] + fy_addit;" SHNL
                   );
         
         if (graphopts.postrect == PR_VALUEAROUND || graphopts.postrect == PR_SUMMARY)
-          fmg.push("vec2 fhit_rect = vec2(0.0, int(fy_ns[1])*iscaling.y + iscaling.y - 1);" SHNL);
+          fmg.push("vec2 fhit_rect = vec2(0.0, int(fy_ns[1])*ab_iscaler.y + ab_iscaler.y - 1);" SHNL);
         
         if (graphopts.graphtype == GT_HISTOGRAM_MESH)
           fmg.push( 
-//                    "MIXWELL = mix(MIXWELL*0.8, mix(MIXWELL, 0.5*MIXWELL, step(fcoords.y, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
-//                    "MIXWELL = mix(MIXWELL*0.6, mix(MIXWELL, 0.4*MIXWELL, step(fcoords.y, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
-                    "MIXWELL = mix(MIXWELL*0.6, mix(MIXWELL, 0.4*MIXWELL, step(fcoords.y, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
+//                    "mixwellp = mix(mixwellp*0.8, mix(mixwellp, 0.5*mixwellp, step(b_coord, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
+//                    "mixwellp = mix(mixwellp*0.6, mix(mixwellp, 0.4*mixwellp, step(b_coord, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
+                    "mixwellp = mix(mixwellp*0.6, mix(mixwellp, 0.4*mixwellp, step(b_coord, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
                     "neib[0] = mix(neib[0], fneiprec, step(neib[0], fneiprec));" SHNL
 //                    "fhit = fhit*step(neib[0], fneiprec);" SHNL
                     );
         else if (graphopts.graphtype == GT_HISTOGRAM_CROSSMAX)
             fmg.push( "neib[1] = max(neib[1], fneiprec);" SHNL
                       "fneiprec = step(neib[1], fneiprec);" SHNL  /// reassign!!
-                      "MIXWELL = MIXWELL*fneiprec;" SHNL
+                      "mixwellp = mixwellp*fneiprec;" SHNL
                       "fhit = fhit*fneiprec;" SHNL
                       );
         else if (graphopts.graphtype == GT_HISTOGRAM_CROSSMIN)
@@ -419,12 +421,13 @@ public:
                       "neib[2] = mix(fhit.x, 1.0, neib[2]);" SHNL   /// + 0.0*fhit.z
   
                       "fneiprec = (fhit.z + neib[2])*step(neib[0], fneiprec)*step(floor(fneiprec), neib[1]);" SHNL  /// reassign!!
-                      "MIXWELL = MIXWELL*fneiprec;" SHNL
+                      "mixwellp = mixwellp*fneiprec;" SHNL
                       "fhit = fhit*fneiprec;" SHNL
                       );
           
         if (coloropts.cpolicy != CP_REPAINTED)
-          fmg.push("float VALCLR = clamp(fcoords_noscaled.y/fy[1], 0.0, 1.0);" SHNL);
+//          fmg.push("float VALCLR = clamp(b_coord_ns/fy[1], 0.0, 1.0);" SHNL);
+          fmg.push("float VALCLR = clamp(b_coord_ns/fy_ns[1], 0.0, 1.0);" SHNL);
         else
           fmg.push("float VALCLR = fy[1];" SHNL);
       } // histogram
@@ -437,19 +440,19 @@ public:
           fmg.push("post_mask[0] = post_mask[0]*(1.0 - fhit.y)*(1.0 - fhit.x) + fhit.y*fhit.x;" SHNL);
         else if (graphopts.postrect == PR_VALUEAROUND)
           fmg.push("post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL
-                   "imrect.ga = int(1.0 - fhit.x)*imrect.ga + int(fhit.x)*ivec2(fcoords.y - fhit_rect[0], fhit_rect[1] - fhit_rect[0]);" SHNL);
+                   "imrect.ga = int(1.0 - fhit.x)*imrect.ga + int(fhit.x)*ivec2(b_coord - fhit_rect[0], fhit_rect[1] - fhit_rect[0]);" SHNL);
         else if (graphopts.postrect == PR_SUMMARY)
           fmg.push("post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL
-                   "imrect.ga = int(1.0 - (fhit.x - fhit.y))*imrect.ga + int(fhit.x - fhit.y)*ivec2(fcoords.y - fhit_rect[0], fhit_rect[1] - fhit_rect[0]);" SHNL);
+                   "imrect.ga = int(1.0 - (fhit.x - fhit.y))*imrect.ga + int(fhit.x - fhit.y)*ivec2(b_coord - fhit_rect[0], fhit_rect[1] - fhit_rect[0]);" SHNL);
       }
       
       
       {
         const char*   descaling[] = { "", "", "", // DE_NONE and DE_LINTERP
-                                      "MIXWELL = MIXWELL * (1.0 - abs(sign( immod.x - iscaling.x/2)));",
-                                      "MIXWELL = MIXWELL * (1.0 - abs(int( immod.x - iscaling.x/2) / (iscaling.x/2.0)));",
-                                      "MIXWELL = MIXWELL * (1.0 - abs(int( immod.x - iscaling.x/2) / (iscaling.x/4.0)));",
-                                      "MIXWELL = MIXWELL * (1.0/abs(int( immod.x - iscaling.x/2)));",
+                                      "mixwellp = mixwellp * (1.0 - abs(sign( immod.x - ab_iscaler.x/2)));",
+                                      "mixwellp = mixwellp * (1.0 - abs(int( immod.x - ab_iscaler.x/2) / (ab_iscaler.x/2.0)));",
+                                      "mixwellp = mixwellp * (1.0 - abs(int( immod.x - ab_iscaler.x/2) / (ab_iscaler.x/4.0)));",
+                                      "mixwellp = mixwellp * (1.0/abs(int( immod.x - ab_iscaler.x/2)));",
                                       "", ""  // DE_SINTERP, DE_QINTERP
                                     };
         if ((unsigned int)graphopts.descaling < sizeof(descaling)/sizeof(const char*))
@@ -459,7 +462,7 @@ public:
       if (graphopts.dotsize)
       {       
         fmg.push( "{" SHNL
-                    "float hscx = floor(iscaling.x/2.0 + 0.49);" SHNL);
+                    "float hscx = floor(ab_iscaler.x/2.0 + 0.49);" SHNL);
         if (graphopts.dotsize > 0)
           fmg.cintvar("dotsize", graphopts.dotsize);
         else
@@ -472,23 +475,25 @@ public:
         
         if (deinterpSL)
         {
-          fmg.push("float remoded_x = float(relcoords.x*ibounds.x - immod.x)/fbounds.x*ibounds_noscaled.x + (step(iscaling.x/2.0, float(immod.x)));" SHNL
-                   "float remoded_offs = iscaling.x/2.0 - 0.5;" SHNL
+          fmg.push("float demoded_x = float(abc_coords.x*ab_ibounds.x - immod.x)/ab_fbounds.x*ab_indimms.x + (step(ab_iscaler.x/2.0, float(immod.x)));" SHNL
+                   "float demoded_offs = ab_iscaler.x/2.0 - 0.5;" SHNL
                    );
         }
         else
-          fmg.push("float remoded_x = float(relcoords.x*ibounds.x - immod.x)/fbounds.x*ibounds_noscaled.x;" SHNL
-                   "float remoded_offs = 0.0;" SHNL
+          fmg.push("float demoded_x = float(abc_coords.x*ab_ibounds.x - immod.x)/ab_fbounds.x*ab_indimms.x;" SHNL
+                   "float demoded_offs = 0.0;" SHNL
                    );
         
         fmg.push(   "for (int j=-dist_limit; j<=dist_limit; j++)" SHNL
                     "{" SHNL
-                      "float reltoval = float(remoded_x + j)/ibounds_noscaled.x;" SHNL
+                      "float reltoval = float(demoded_x + j)/ab_indimms.x;" SHNL
                       "float NVALCLR = getValue1D(i, reltoval);" SHNL
-                      "float fdist_weight = (dotsize - distance(fcoords, vec2( floor(reltoval*fbounds.x) - remoded_offs + hscx, floor(NVALCLR*(ibounds.y-1)))) ) / float(dotsize);" SHNL
+//                      "float fdist_weight = (dotsize - distance(fcoords, vec2( floor(reltoval*ab_fbounds.x) - demoded_offs + hscx, floor(NVALCLR*(ab_ibounds.y-1)))) ) / float(dotsize);" SHNL
+//                      "float fdist_weight = (dotsize - distance(abc_coords*ab_fbounds, vec2( floor(reltoval*ab_fbounds.x) - demoded_offs + hscx, floor(NVALCLR*(ab_ibounds.y-1)))) ) / float(dotsize);" SHNL
+                      "float fdist_weight = 1.0 - distance(abc_coords*ab_fbounds, vec2( floor(reltoval*ab_fbounds.x) - demoded_offs + hscx, floor(NVALCLR*(ab_ibounds.y-1)))) / float(dotsize);" SHNL
                       "fdist_weight = min(fdist_weight*(1.0 + dotsmooth), 1.0);" SHNL
-                      "VALCLR = mix(NVALCLR, VALCLR, step(fdist_weight, MIXWELL));" SHNL // calc before new MIXWELL
-                      "MIXWELL = mix(fdist_weight, MIXWELL, step(fdist_weight, MIXWELL));" SHNL
+                      "VALCLR = mix(NVALCLR, VALCLR, step(fdist_weight, mixwellp));" SHNL // calc before new mixwellp
+                      "mixwellp = mix(fdist_weight, mixwellp, step(fdist_weight, mixwellp));" SHNL
                     "}" SHNL                    
                   "}" SHNL);
       }
@@ -504,8 +509,8 @@ public:
         case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 0.5 - abs(VALCLR - 0.5));" SHNL); break;
         case CP_REPAINTED:            fmg.push("float porc = (palrange[1] - (palrange[1] - palrange[0])*(float(allocatedPortions - 1 - i)/float(allocatedPortions)))*VALCLR;" SHNL); break;
           
-        case CP_PALETTE:              fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
-        case CP_PALETTE_SPLIT:        fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])/float(allocatedPortions)*(i + fcoords_noscaled.y/fbounds_noscaled.y);" SHNL); break;
+        case CP_PALETTE:              fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
+        case CP_PALETTE_SPLIT:        fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])/float(allocatedPortions)*(i + b_coord_ns/ab_fndimms.y);" SHNL); break;
         }
       }
       else
@@ -518,22 +523,23 @@ public:
         case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
         case CP_REPAINTED:            fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - VALCLR);" SHNL); break;
           
-        case CP_PALETTE: case CP_PALETTE_SPLIT:      fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])*fcoords_noscaled.y/fbounds_noscaled.y;" SHNL); break;
+        case CP_PALETTE: case CP_PALETTE_SPLIT:      fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
         }
       }
 
-      fmg.push(   "vec3  colorGraph = texture(texPalette, vec2(porc, 0.0)).rgb;" SHNL );
+      fmg.push(  "vec3  colorGraph = texture(texPalette, vec2(porc, 0.0)).rgb;" SHNL );
       
       if (graphopts.graphtype == GT_HISTOGRAM_SUM)
-        fmg.push(   "result = result + colorGraph*vec3(MIXWELL);" SHNL
-                    "ovMix = max(ovMix, MIXWELL*relcoords.y);" SHNL
-                  "}" SHNL // for
-            );
+        fmg.push("result = result + colorGraph*vec3(mixwellp);" SHNL );
       else
-        fmg.push(   "result = mix(result, colorGraph, MIXWELL);" SHNL
-                    "ovMix = max(ovMix, MIXWELL*relcoords.y);" SHNL
-                  "}" SHNL // for
-            );
+        fmg.push("result = mix(result, colorGraph, mixwellp);" SHNL );
+      
+      fmg.push(  "mixwell = max(mixwell, mixwellp);" SHNL);
+      
+      fmg.push(  "dvalue = mix(fy[1], dvalue, step(abs(b_coord - dvalue), abs(b_coord - fy[1])) );" SHNL);
+      fmg.push("}" SHNL ); // for
+      
+//      fmg.push("dvalue = mix(dvalue, b_coord, step(mixwell, 0.0));" SHNL);
     }
     fmg.main_end(fsp);
     return fmg.written();

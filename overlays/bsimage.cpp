@@ -21,10 +21,10 @@ void bs_detachFutureImagesInConstructors(bool dt){  g_bs_detach_image = dt; }
 
 
 
-OVLQImage::OVLQImage(QImage *image, IMAGECONVERT icvt, bool autorotated, bool detach):
-  m_pImage(nullptr), m_autorotated(autorotated), m_imageowner(false)
+OVLQImage::OVLQImage(QImage *image, IMAGECONVERT icvt, bool detach):
+  m_pImage(nullptr), m_imageowner(false)
 {
-  assignImage(image, icvt, autorotated, detach);
+  assignImage(image, icvt, detach);
 }
 
 OVLQImage::~OVLQImage()
@@ -33,7 +33,7 @@ OVLQImage::~OVLQImage()
     delete m_pImage;
 }
 
-bool  OVLQImage::assignImage(QImage* image, IMAGECONVERT icvt, bool autorotated, bool detach)
+bool  OVLQImage::assignImage(QImage* image, IMAGECONVERT icvt, bool detach)
 {
   if (image != nullptr && image->isNull() == false)
   {
@@ -41,7 +41,6 @@ bool  OVLQImage::assignImage(QImage* image, IMAGECONVERT icvt, bool autorotated,
       delete m_pImage;
     
     m_imageowner = false;
-    m_autorotated = autorotated;
     
     switch (icvt)
     {
@@ -83,20 +82,20 @@ bool  OVLQImage::assignImage(QImage* image, IMAGECONVERT icvt, bool autorotated,
 
 
 
-void DrawOverlay_ColorForegoingImage::banAlphaChannel(bool ban, bool update)
+void DrawOverlay_Image::banAlphaChannel(bool ban, bool update)
 {
   m_banalpha = ban;
   updateParameter(true, update);
 }
 
-void DrawOverlay_ColorForegoingImage::reUpdate()
+void DrawOverlay_Image::reUpdate()
 {
   updateParameter(false, true);
 }
 
-bool  DrawOverlay_ColorForegoingImage::setImage(QImage* image, OVLQImage::IMAGECONVERT icvt, bool autorotated, bool detach, bool update)
+bool  DrawOverlay_Image::setImage(QImage* image, OVLQImage::IMAGECONVERT icvt, bool detach, bool update)
 {
-  bool result = assignImage(image, icvt, autorotated, detach);
+  bool result = assignImage(image, icvt, detach);
 //  updateParameter(true, update);
   updateParameter(false, update);
   return result;
@@ -105,34 +104,45 @@ bool  DrawOverlay_ColorForegoingImage::setImage(QImage* image, OVLQImage::IMAGEC
 
 /////////////////////////////////////////////////////////
 
-OImageOriginal::OImageOriginal(QImage* image, IMAGECONVERT icvt, bool autorotated, COORDINATION cn, float x, float y, float mult_w, float mult_h): 
-  DrawOverlay_ColorForegoingImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsDynamic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+OImageOriginal::OImageOriginal(QImage* image, IMAGECONVERT icvt, COORDINATION cn, float x, float y, float mult_w, float mult_h): 
+  DrawOverlay_Image(image, icvt, g_bs_detach_image), OVLCoordsDynamic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f),
+  m_anchor(0)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
   appendUniform(DT_TEXTURE, &m_dmti);
 }
 
-OImageOriginal::OImageOriginal(QImage *image, IMAGECONVERT icvt, bool autorotated, OVLCoordsStatic *pcoords, float offset_x, float offset_y, float mult_w, float mult_h):
-  DrawOverlay_ColorForegoingImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsDynamic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+OImageOriginal::OImageOriginal(QImage *image, IMAGECONVERT icvt, OVLCoordsStatic *pcoords, float offset_x, float offset_y, float mult_w, float mult_h):
+  DrawOverlay_Image(image, icvt, g_bs_detach_image), OVLCoordsDynamic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f),
+  m_anchor(0)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
   appendUniform(DT_TEXTURE, &m_dmti);
 }
 
-int OImageOriginal::fshTrace(int overlay, bool rotated, char *to) const
+OImageOriginal::OImageOriginal(QImage* image, OVLQImage::IMAGECONVERT icvt, int anchor, float mult_w, float mult_h):
+  DrawOverlay_Image(image, icvt, g_bs_detach_image), OVLCoordsDynamic(CR_RELATIVE, 0.0f, 0.0f), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f),
+  m_anchor(1)
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  m_sides.w = m_dmti.w*mult_w;
+  m_sides.h = m_dmti.h*mult_h;
+  appendUniform(DT_TEXTURE, &m_dmti);
+}
+
+int OImageOriginal::fshOVCoords(int overlay, bool switchedab, char *to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
+    if (m_anchor != 0)
+    {
+      ocg.push("inormed = inormed - ivec2(max((ov_ibounds[0] - idimms2.x)/2, 0), max((ov_ibounds[1] - idimms2.y)/2, 0));");
+    }
     ocg.push("_fvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*step(float(inormed.x), float(idimms2.x - 1))*step(float(inormed.y), float(idimms2.y - 1));");
-//    ocg.push( m_autorotated? "vec2  tcoords = inormed/vec2(idimms2.x, idimms2.y);" : "vec2  tcoords = vec2(inormed.x, idimms2.y - 1 - inormed.y) /vec2(idimms2.x, idimms2.y);");
-    ocg.push( m_autorotated? 
-                "vec2  tcoords = inormed/vec2(idimms2.x - 1, idimms2.y - 1);" :     // yep, -1
-                "vec2  tcoords = vec2(inormed.x, idimms2.y - 1 - inormed.y) /vec2(idimms2.x - 1, idimms2.y - 1);" // yep, -1
-                );
+    ocg.push( "vec2  tcoords = inormed/vec2(idimms2.x - 1, idimms2.y - 1);" );     // yep, -1
     ocg.push( "vec4 pixel = texture(");  ocg.param_get(); ocg.push(", vec2(tcoords.x, 1.0 - tcoords.y));");
     m_dmti.type == dmtype_image_t::RGB? ocg.push("result = pixel.rgb;") : ocg.push("result = pixel.bgr;");
     ocg.push(m_banalpha? "mixwell = _fvar;" : "mixwell = _fvar*pixel.a;");
@@ -147,31 +157,30 @@ int OImageOriginal::fshTrace(int overlay, bool rotated, char *to) const
 
 
 
-OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, bool autorotated, COORDINATION cn, float x, float y, float mult_w, float mult_h):
-  DrawOverlay_ColorForegoingImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsStatic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, COORDINATION cn, float x, float y, float mult_w, float mult_h):
+  DrawOverlay_Image(image, icvt, g_bs_detach_image), OVLCoordsStatic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
   appendUniform(DT_TEXTURE, &m_dmti);
 }
 
-OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, bool autorotated, OVLCoordsStatic *pcoords, float offset_x, float offset_y, float mult_w, float mult_h):
-  DrawOverlay_ColorForegoingImage(image, icvt, autorotated, g_bs_detach_image), OVLCoordsStatic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, OVLCoordsStatic *pcoords, float offset_x, float offset_y, float mult_w, float mult_h):
+  DrawOverlay_Image(image, icvt, g_bs_detach_image), OVLCoordsStatic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
   appendUniform(DT_TEXTURE, &m_dmti);
 }
 
-int OImageStretched::fshTrace(int overlay, bool rotated, char *to) const
+int OImageStretched::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.push("_fvar = 1.0;");
-    ocg.push( m_autorotated? "vec2 relcoords = coords.pq;" : "vec2 relcoords = coords.st;");
-    ocg.push( "vec4 pixel = texture(");  ocg.param_get(); ocg.push(", vec2(relcoords.x, 1.0 - relcoords.y));");
+    ocg.push( "vec4 pixel = texture(");  ocg.param_get(); ocg.push(", vec2(coords.x, 1.0 - coords.y));");
     m_dmti.type == dmtype_image_t::RGB? ocg.push("result = pixel.rgb;") : ocg.push("result = pixel.bgr;");
     ocg.push(m_banalpha? "mixwell = _fvar;" : "mixwell = _fvar*pixel.a;");
   }

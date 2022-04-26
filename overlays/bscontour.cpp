@@ -10,9 +10,9 @@
 
 static void make_contour_constants(FshTraceGenerator* ocg, unsigned char checkmask)
 {
-  const char cc[] = "ivec2 ibounds_noscaled = ivec2(viewdimm_a, viewdimm_b);"
-                    "ivec2 inoscaled = ivec2(floor(coords.pq * ibounds_noscaled));"
-                    "ivec2 iscaled = ivec2(floor(coords.pq * ibounds));";
+  const char cc[] = 
+                    "ivec2 inoscaled = ivec2(floor(coords * ov_indimms));"
+                    "ivec2 iscaled = ivec2(floor(coords * ov_ibounds));";
   ocg->push(cc, sizeof(cc));
   int indcount=0, indicies[8] = { 0,0,0,0,0,0,0,0 };
   for (int i=0; i<8; i++)
@@ -44,9 +44,9 @@ OContour::OContour(float from, float to, const linestyle_t &kls, bool noscaled_c
 {
 }
 
-int OContour::fshTrace(int overlay, bool rotated, char *to) const
+int OContour::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_GETVALUE);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     if (m_checkmask)
@@ -56,15 +56,15 @@ int OContour::fshTrace(int overlay, bool rotated, char *to) const
       
       ocg.push( "for (int p=0; p<countPortions; p++){");
       {
-        ocg.push( "_fvar = getValue2D(p, (inoscaled + vec2(0.49, 0.49))/vec2(ibounds_noscaled.xy));"
+        ocg.push( "_fvar = getValue2D(p, (inoscaled + vec2(0.49, 0.49))/vec2(ov_indimms.xy));"
                   "_mvar[0] = 1.0 - step(bnd.x, _fvar)*step(_fvar, bnd.y);"
                   "for (int i=0; i<cellscount; i++){"
                   );
         {
           if (m_noscaled_contour)
-            ocg.push("vec2 fcoords2 = (iscaled + cell[i] + vec2(0.49, 0.49))/vec2(ibounds.xy);");
+            ocg.push("vec2 fcoords2 = (iscaled + cell[i] + vec2(0.49, 0.49))/vec2(ov_ibounds.xy);");
           else
-            ocg.push("vec2 fcoords2 = (inoscaled + cell[i] + vec2(0.49, 0.49))/vec2(ibounds_noscaled.xy);");
+            ocg.push("vec2 fcoords2 = (inoscaled + cell[i] + vec2(0.49, 0.49))/vec2(ov_indimms.xy);");
             
           ocg.push( "_fvar = getValue2D(p, fcoords2);"
                     "_mvar[1] = step(bnd.x, _fvar)*step(_fvar, bnd.y);"
@@ -87,28 +87,27 @@ OContourPal::OContourPal(float from, float to, const IPalette* ipal, bool discre
 {
 }
 
-int OContourPal::fshTrace(int overlay, bool rotated, char *to) const
+int OContourPal::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_GETVALUE);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
-  ocg.param_pass(); // Kostyl
   {
     if (m_checkmask)
     {
       ocg.var_const_fixed("bnd", m_from, m_to);
       make_contour_constants(&ocg, m_checkmask);
     
-      ocg.push( "result = vec3(1.0,0.0,0.0);" );
-      ocg.push( "_mvar[0] = getValue2D(0, (inoscaled + vec2(0.49, 0.49))/vec2(ibounds_noscaled.xy));"
+      ocg.push( "result = vec3(0.0,0.0,0.0);" );    // ?Dafuq?
+      ocg.push( "_mvar[0] = getValue2D(0, (inoscaled + vec2(0.49, 0.49))/vec2(ov_indimms.xy));"
                 "_mvar[0] = 1.0 - step(bnd.x, _mvar[0])*step(_mvar[0], bnd.y);"
                 );
   
       ocg.push( "for (int i=0; i<8; i++){");
       {
         if (m_noscaled_contour)
-          ocg.push("vec2 fcoords2 = (iscaled + cell[i] + vec2(0.49, 0.49))/vec2(ibounds.xy);");
+          ocg.push("vec2 fcoords2 = (iscaled + cell[i] + vec2(0.49, 0.49))/vec2(ov_ibounds.xy);");
         else
-          ocg.push("vec2 fcoords2 = (inoscaled + cell[i] + vec2(0.49, 0.49))/vec2(ibounds_noscaled.xy);");
+          ocg.push("vec2 fcoords2 = (inoscaled + cell[i] + vec2(0.49, 0.49))/vec2(ov_indimms.xy);");
           
         ocg.push( "_fvar = getValue2D(0, fcoords2);"
                   "_mvar[1] = (_fvar - bnd.x) / (bnd.y - bnd.x);"
@@ -132,9 +131,9 @@ OCover::OCover(float from, float to, int inversive_algo, COVER_OTHER_PORTIONS co
 {
 }
 
-int OCover::fshTrace(int overlay, bool rotated, char *to) const
+int OCover::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_GETVALUE);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.var_const_fixed("bnd", m_from, m_to);
@@ -143,7 +142,7 @@ int OCover::fshTrace(int overlay, bool rotated, char *to) const
               "vec3 maxes = vec3(0);"
               );
     ocg.push( "for (int p=0; p<countPortions; p++){"
-                "_fvar = getValue2D(p, coords.pq);"
+                "_fvar = getValue2D(p, coords);"
                 "maxes[0] = max(maxes[0], step(bnd.x, _fvar)*step(_fvar, bnd.y));"
                 "maxes[1] = max(maxes[1], 1.0 - step(bnd.x, _fvar));"
                 "maxes[2] = max(maxes[2], 1.0 - step(_fvar, bnd.y));"
@@ -176,16 +175,16 @@ OSlice::OSlice(float cover, int inversive_algo): DrawOverlay_ColorForegoing(inve
 {
 }
 
-int OSlice::fshTrace(int overlay, bool rotated, char *to) const
+int OSlice::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_GETVALUE);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.var_const_fixed("clr", m_slice_r, m_slice_g, m_slice_b);
     ocg.push( "result = clr;" );
     ocg.var_const_fixed("cover", m_cover);
     ocg.push( "for (int p=0; p<countPortions; p++){"
-                "_fvar = cover*getValue2D(p, coords.pq);"
+                "_fvar = cover*getValue2D(p, coords);"
                 "mixwell = max(mixwell, _fvar);"
               "}"
               );

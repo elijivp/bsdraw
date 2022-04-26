@@ -12,7 +12,7 @@ class OTestPrecision: public DrawOverlay_ColorForegoing, public OVLCoordsOff, pu
 public:
   OTestPrecision();
 protected:
-  virtual int fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
 //  virtual bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop);
 };
 

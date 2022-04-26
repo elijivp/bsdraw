@@ -2318,6 +2318,7 @@ public:
   
   void  init(int marksLimit, float ODD, float ODDbase, int minSpacing, int roundsteps, int _miniPerMaxi, int _divalgo) /// marksLimit = 0 for init later
   {
+    Q_ASSERT(ODD != 0.0f);
     odd = ODD;
     oddbase = ODDbase;
     pixSpace = minSpacing;

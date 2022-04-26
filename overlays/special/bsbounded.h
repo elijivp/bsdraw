@@ -13,7 +13,7 @@ class OLevel: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLDim
 public:
   OLevel(float value, const linestyle_t& linestyle=linestyle_inverse_1(0,1,1));
 protected:
-  virtual int fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 
@@ -25,7 +25,7 @@ public:
   void    setLevel(float v, bool update=true);
   float   level() const { return m_value; }
 protected:
-  virtual int fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 
@@ -44,7 +44,7 @@ public:
 public:
   void      increment(bool activate, bool update=true);
 protected:
-  virtual int fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 
@@ -88,7 +88,7 @@ public:
   bool  lineVisible(int idx) const { return m_data[idx].activated > 0; }
   void  clear(bool update=true);
 protected:
-  int   fshTrace(int overlay, bool rotated, char* to) const;
+  int   fshOVCoords(int overlay, bool switchedab, char* to) const;
   int   fshColor(int overlay, char* to) const;
 };
 

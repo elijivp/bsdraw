@@ -49,7 +49,7 @@ class DrawOverlayEmpty: public DrawOverlay
 {
 public:
   DrawOverlayEmpty(): DrawOverlay(true){}
-  virtual int  fshTrace(int, bool, char*) const;
+  virtual int  fshOVCoords(int, bool, char*) const;
   virtual int  fshColor(int, char*) const;
 };
 
@@ -180,6 +180,7 @@ protected:
   struct overlays_t
   {
     DrawOverlay*          povl;
+    OVL_ORIENTATION       orient;
     IOverlayReactor*      prct;
     unsigned int          ponger_reinit;
     unsigned int          ponger_update;
@@ -187,14 +188,15 @@ protected:
     unsigned int          uf_count;
     uniform_located_t     uf_arr[OVLUFLIMIT];
     msstruct_t            olinks;
-    void      _reinit(DrawOverlay* p, unsigned int ufcount)
+    void      _reinit(DrawOverlay* p, OVL_ORIENTATION o, unsigned int ufcount)
     {
       povl = p;
+      orient = o;
       prct = povl->reactor();
       ponger_reinit = ponger_update = 0;
       outloc = -1;
 //      if (uf_count) delete []uf_arr;
-      uf_count = ufcount; 
+      uf_count = ufcount;
 //      if(uf_count) uf_arr = new uniform_located_t[ufcount];
       olinks.type = msstruct_t::MS_SELF;
     }
@@ -367,15 +369,15 @@ protected:
 private:
   void  clampScalingManually()
   {
-    //unsigned int old_scaling_A = m_scalingA;
-    unsigned int old_scaling_B = m_scalingB;
+    //unsigned int old_scaler_a = m_scalingA;
+    unsigned int old_scaler_b = m_scalingB;
     clampScaling(&m_scalingA, &m_scalingB);
-    if (m_scalingB != old_scaling_B  && m_datex == DATEX_1D)
+    if (m_scalingB != old_scaler_b  && m_datex == DATEX_1D)
     {
-      float coeff = float(old_scaling_B) / m_scalingB;
+      float coeff = float(old_scaler_b) / m_scalingB;
       m_matrixDimmB = (unsigned int)(m_matrixDimmB*coeff + 0.5f);
     }
-//    m_bitmaskPendingChanges |= sizeAndScaleChanged(old_scaling_A != m_scalingA, old_scaling_B != m_scalingB);
+//    m_bitmaskPendingChanges |= sizeAndScaleChanged(old_scaler_a != m_scalingA, old_scaler_b != m_scalingB);
   }
 public:
   void  setDataTextureInterpolation(bool interp)
@@ -628,40 +630,45 @@ public:
   }
 public:
   /// 3. Overlays
-  int             ovlPushBack(DrawOverlay* povl, bool owner=true)
+  int             ovlPushBack(DrawOverlay* povl, OVL_ORIENTATION orient=OO_INHERITED, bool owner=true)
   {
     if (m_overlaysCount == OVLLIMIT) return -1;
-    _ovlSet(m_overlaysCount, povl, owner, false, 0);
+    _ovlSet(m_overlaysCount, povl, orient, owner, false, 0);
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ++m_overlaysCount;
   }
-  int             ovlPushBack(DrawOverlay* povl, int ovlroot, bool owner=true)
+  int             ovlPushBack(DrawOverlay* povl, int ovlroot, OVL_ORIENTATION orient=OO_INHERITED, bool owner=true)
   {
     if (m_overlaysCount == OVLLIMIT || ovlroot <= 0 || ovlroot > (int)m_overlaysCount) return -1;
-    _ovlSet(m_overlaysCount, povl, owner, true, ovlroot-1);
+    _ovlSet(m_overlaysCount, povl, orient, owner, true, ovlroot-1);
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ++m_overlaysCount;
   }
-  int             ovlReplace(int ovl, DrawOverlay* povl, bool owner, DrawOverlay** old=nullptr, bool followPrevRoot=true)
+  int             ovlReplace(int ovl, DrawOverlay* povl, OVL_ORIENTATION orient=OO_SAME, bool owner=true, DrawOverlay** old=nullptr)
   {
     ovl--;
-    msstruct_t prevroot = m_overlays[ovl].olinks;
+    OVL_ORIENTATION c_orient = orient == OO_SAME? m_overlays[ovl].orient : orient;
     if (_ovlRemove(ovl, old) == false)
       return -1;
-    _ovlSet(ovl, povl, owner, followPrevRoot & (prevroot.type == msstruct_t::MS_DRIVEN), prevroot.details.drivenid);
+    _ovlSet(ovl, povl, c_orient, owner, false, 0);
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ovl + 1;
   }
-  int             ovlReplace(int ovl, DrawOverlay* povl, bool owner, DrawOverlay** old, int ovlroot)
+  int             ovlReplace(int ovl, DrawOverlay* povl, int ovlroot, OVL_ORIENTATION orient=OO_SAME, bool owner=true, DrawOverlay** old=nullptr)
   {
-    ovl--;  ovlroot--;
-    if (ovlroot >= ovl) return -1;
+    ovl--;
+    OVL_ORIENTATION c_orient = orient == OO_SAME? m_overlays[ovl].orient : orient;
+    if (ovlroot == 0)
+      ovlroot = m_overlays[ovl].olinks.details.drivenid;
+    else
+      ovlroot--;
+    if (ovlroot < 0 || ovlroot >= ovl) return -1;
     if (_ovlRemove(ovl, old) == false)
       return -1;
-    _ovlSet(ovl, povl, owner, true, ovlroot);
+    _ovlSet(ovl, povl, c_orient, owner, true, ovlroot);
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ovl + 1;
@@ -704,12 +711,12 @@ public:
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
   }
 private:
-  void _ovlSet(int idx, DrawOverlay* povl, bool owner, bool doRoot, int rootidx)
+  void _ovlSet(int idx, DrawOverlay* povl, OVL_ORIENTATION orient, bool owner, bool doRoot, int rootidx)
   {
     if (povl == nullptr){   povl = &m_overlaySingleEmpty;  owner = false; }
     povl->increasePingerReinit();
     povl->increasePingerUpdate();
-    m_overlays[idx]._reinit(povl, povl->uniforms().count);
+    m_overlays[idx]._reinit(povl, orient, povl->uniforms().count);
     if (doRoot)   m_overlays[idx]._setdriven(rootidx);
     if (povl != &m_overlaySingleEmpty)
       povl->assign(idx, this, owner);
@@ -730,7 +737,7 @@ private:
       removable = nullptr;
     else
     {
-      m_overlays[idx]._reinit(&m_overlaySingleEmpty, 0);
+      m_overlays[idx]._reinit(&m_overlaySingleEmpty, OO_INHERITED, 0);
       if (removable->preDelete(this) == true)
       {
         delete removable;
@@ -756,9 +763,9 @@ protected:
     if (pendonly) return;
     if (!autoUpdateBanned(RD_BYOVL_ACTIONS))  callWidgetUpdate();
   }
-  virtual void            innerOverlayReplace(int ovlid, DrawOverlay* novl, bool owner)
+  virtual void            innerOverlayReplace(int ovlid, DrawOverlay* novl, OVL_ORIENTATION orient, bool owner)
   {
-    m_overlays[ovlid]._reinit(novl, novl->uniforms().count);  ///_setdriven derived
+    m_overlays[ovlid]._reinit(novl, orient == OO_SAME? m_overlays[ovlid].orient : orient, novl->uniforms().count);  ///_setdriven derived
     if (novl != &m_overlaySingleEmpty)
     {
       novl->assign(ovlid, this, owner);
@@ -768,7 +775,7 @@ protected:
   }
   virtual void            innerOverlayRemove(int ovlid)
   {
-    m_overlays[ovlid]._reinit(&m_overlaySingleEmpty, 0);
+    m_overlays[ovlid]._reinit(&m_overlaySingleEmpty, OO_INHERITED, 0);
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
   }

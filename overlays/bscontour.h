@@ -19,7 +19,7 @@ class OContour: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLD
 public:
   OContour(float from, float to, const linestyle_t& kls, bool noscaled_contour=true, unsigned char checkmask=0xFF); // checkmask: left-bottom to around
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 /// Contour by Single samples with color from palette
@@ -31,7 +31,7 @@ class OContourPal: public DrawOverlay_ColorThroughPalette, public OVLCoordsOff, 
 public:
   OContourPal(float from, float to, const IPalette* ipal, bool discrete, bool noscaled_contour=true, unsigned char checkmask=0xFF);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 class OCover: public DrawOverlay_ColorForegoing, public OVLCoordsOff, public OVLDimmsOff
@@ -46,7 +46,7 @@ public:
   OCover(float from, float to, float r, float g, float b, COVER_OTHER_PORTIONS = COP_SAVEUPPER);
   OCover(float from, float to, int inversive_algo, COVER_OTHER_PORTIONS = COP_SAVEUPPER);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 }; 
 
 class OSlice: public DrawOverlay_ColorForegoing, public OVLCoordsOff, public OVLDimmsOff
@@ -58,7 +58,7 @@ public:
   OSlice(float cover, float r, float g, float b);
   OSlice(float cover, int inversive_algo);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 }; 
 
 

@@ -20,9 +20,9 @@
 
 extern int msprintf(char* to, const char* format, ...);
 
-int DrawOverlayEmpty::fshTrace(int overlay, bool /*rotated*/, char* to) const
+int DrawOverlayEmpty::fshOVCoords(int overlay, bool /*switchedab*/, char* to) const
 {
-  return msprintf(to, "vec4 overlayTrace%d(in ivec2 ispcell, in vec4 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition){ return vec4(0.0,0.0,0.0,0.0); }\n", overlay);
+  return msprintf(to, "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition){ return vec4(0.0,0.0,0.0,0.0); }\n", overlay);
 }
 
 int DrawOverlayEmpty::fshColor(int overlay, char* to) const
@@ -43,8 +43,8 @@ int DrawOverlayEmpty::fshColor(int overlay, char* to) const
 //  if (sf == SF_COUNTPORTIONS)   return "countPortions";
 //  if (sf == SF_DIMM_A)          return "viewdimm_a";
 //  if (sf == SF_DIMM_B)          return "viewdimm_b";
-//  if (sf == SF_CHNL_SCALING_A)  return "scaling_a";
-//  if (sf == SF_CHNL_SCALING_B)  return "scaling_b";
+//  if (sf == SF_CHNL_scaler_a)  return "scaler_a";
+//  if (sf == SF_CHNL_scaler_b)  return "scaler_b";
 //  if (sf == SF_DATABOUNDS)      return "databounds";
 //  if (sf == SF_DYNRANGE)      return "databounds";
 //  if (sf == SF_VIEW_TURN)       return "viewturn";
@@ -110,9 +110,9 @@ void DrawQWidget::compileWhenInitializeGL(bool cflag)
 
 inline const char*  fastpaced_settings(char* tmpbuf, unsigned int ovl)
 {
-  /// EQuals: srintf(_tempvd, "ovl_exsettings%d", i + 1);
+  /// EQuals: srintf(_tempvd, "ovl_otss_%d", i + 1);
   static char chset[] = {'0','1','2','3','4','5','6','7','8','9'};
-  const char* base = "ovl_exsettings";
+  const char* base = "ovl_otss_";    // opacity, thickness, slice
   char* p = tmpbuf;
   while (*base)  *p++ = *base++;
   *(p + 3) = '\0';
@@ -222,6 +222,8 @@ void DrawQWidget::initCollectAndCompileShader()
         ovlsinfo[i].link = m_overlays[i].olinks.details.drivenid;
       else
         ovlsinfo[i].link = -1;
+      
+      ovlsinfo[i].orient = m_overlays[i].orient;
     }
     unsigned int fsh_written = m_pcsh->shfragment_store(m_allocatedPortions, m_postMask, m_orient, m_splitPortions, 
                                                         m_impulsedata, m_overlaysCount, ovlsinfo, m_fshmem);
@@ -247,9 +249,9 @@ void DrawQWidget::initCollectAndCompileShader()
   char  ovlshaderbuf[8192*2];
   for (unsigned int i=0; i<m_overlaysCount; i++)
   {     
-    int fshtResult = m_overlays[i].povl->fshTrace(i + 1, m_matrixSwitchAB, ovlshaderbuf);
+    int fshtResult = m_overlays[i].povl->fshOVCoords(i + 1, m_matrixSwitchAB, ovlshaderbuf);
     if (fshtResult <= 0)
-      qDebug()<<Q_FUNC_INFO<<"OVL fshTrace failure!";
+      qDebug()<<Q_FUNC_INFO<<"OVL fshOVCoords failure!";
     else
       m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, ovlshaderbuf);
     
@@ -275,7 +277,7 @@ void DrawQWidget::initCollectAndCompileShader()
   if (m_ShaderProgram.link())
   {
     static const char* vd_corresponding_array[] = { "texData", "texPalette", "texGround", "countGround", "countPortions",
-                                      "viewdimm_a", "viewdimm_b", "scaling_a", "scaling_b", "databounds", "palrange", 
+                                      "viewdimm_a", "viewdimm_b", "scaler_a", "scaler_b", "databounds", "palrange", 
                                       "viewturn" };
     
     Q_ASSERT(_SF_COUNT == sizeof(vd_corresponding_array)/sizeof(const char*));
@@ -592,8 +594,8 @@ void DrawQWidget::paintGL()
     {
       if ((loc = m_locations[SF_DIMM_A]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixDimmA);
       if ((loc = m_locations[SF_DIMM_B]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixDimmB);
-      if ((loc = m_locations[SF_CHNL_SCALING_A]) != -1) m_ShaderProgram.setUniformValue(loc, m_scalingA);
-      if ((loc = m_locations[SF_CHNL_SCALING_B]) != -1) m_ShaderProgram.setUniformValue(loc, m_scalingB);
+      if ((loc = m_locations[SF_CHNL_scaler_a]) != -1) m_ShaderProgram.setUniformValue(loc, m_scalingA);
+      if ((loc = m_locations[SF_CHNL_scaler_b]) != -1) m_ShaderProgram.setUniformValue(loc, m_scalingB);
     }
     
     if (havePendOn(PC_PARAMS, bitmaskPendingChanges))
@@ -622,7 +624,7 @@ void DrawQWidget::paintGL()
           if ((loc = m_overlays[i].outloc) != -1)
             m_ShaderProgram.setUniformValue(loc, QVector4D(m_overlays[i].povl->isVisible()? m_overlays[i].povl->getOpacity() : 1.0f, 
                                                            m_overlays[i].povl->getThickness(), 
-                                                           m_overlays[i].povl->getSlice(), 0.0f));
+                                                           m_overlays[i].povl->getSliceLL(), m_overlays[i].povl->getSliceHL()));
           
           for (unsigned int j=0; j<m_overlays[i].uf_count; j++)
           {
@@ -666,6 +668,32 @@ void DrawQWidget::paintGL()
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
                 m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
+                break;
+              }
+              case DT_2D3F:
+              {
+                {
+                  glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
+                  const dmtype_2d_t* pimage = (const dmtype_2d_t*)data;
+                  
+                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                  glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+                  glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+                  
+                  glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+                  glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+                  glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+                  glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+                  
+                  GLint   gl_internalFormat = GL_RGB32F;
+                  GLenum  gl_format = GL_RGB;
+                  GLenum  gl_texture_type = GL_FLOAT;
+                  glTexImage2D(  GL_TEXTURE_2D, 0, gl_internalFormat, pimage->w, pimage->len, 0, gl_format, gl_texture_type, pimage->data);
+                  m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
+                }
                 break;
               }
               case DT_TEXTURE:
@@ -748,21 +776,21 @@ void DrawQWidget::paintGL()
       {
       case DVA_LEFT:
         if (m_matrixSwitchAB)
-          glViewport(0 + m_cttrLeft, c_height - sizeA() - m_cttrTop, sizeB()/* + m_cttrLeft + m_cttrRight*/, sizeA()/* + m_cttrBottom*/);
+          glViewport(0 + m_cttrLeft, c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
         else
-          glViewport(0 + m_cttrLeft, c_height - sizeB() - m_cttrTop, sizeA()/* + m_cttrLeft + m_cttrRight*/, sizeB()/* + m_cttrBottom*/);
+          glViewport(0 + m_cttrLeft, c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
         break;
       case DVA_CENTER:
         if (m_matrixSwitchAB)
-          glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - sizeB())/2, c_height - sizeA() - m_cttrTop, sizeB()/* + m_cttrLeft + m_cttrRight*/, sizeA()/* + m_cttrBottom*/);
+          glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - (int)sizeB())/2, c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
         else
-          glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - sizeA())/2, c_height - sizeB() - m_cttrTop, sizeA()/* + m_cttrLeft + m_cttrRight*/, sizeB()/* + m_cttrBottom*/);
+          glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - (int)sizeA())/2, c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
         break;
       case DVA_RIGHT:
         if (m_matrixSwitchAB)
-          glViewport(c_width - m_cttrRight - sizeB(), c_height - sizeA() - m_cttrTop, sizeB()/* + m_cttrLeft + m_cttrRight*/, sizeA()/* + m_cttrBottom*/);
+          glViewport(c_width - m_cttrRight - (int)sizeB(), c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
         else
-          glViewport(c_width - m_cttrRight - sizeA(), c_height - sizeB() - m_cttrTop, sizeA()/* + m_cttrLeft + m_cttrRight*/, sizeB()/* + m_cttrBottom*/);
+          glViewport(c_width - m_cttrRight - (int)sizeA(), c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
         break;
       default:
         break;
@@ -814,21 +842,21 @@ void DrawQWidget::resizeGL(int w, int h)
     {
     case DVA_LEFT:
       if (m_matrixSwitchAB)
-        glViewport(0 + m_cttrLeft, c_height - sizeA() - m_cttrTop, sizeB()/* + m_cttrLeft + m_cttrRight*/, sizeA()/* + m_cttrBottom*/);
+        glViewport(0 + m_cttrLeft, c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
       else
-        glViewport(0 + m_cttrLeft, c_height - sizeB() - m_cttrTop, sizeA()/* + m_cttrLeft + m_cttrRight*/, sizeB()/* + m_cttrBottom*/);
+        glViewport(0 + m_cttrLeft, c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
       break;
     case DVA_CENTER:
       if (m_matrixSwitchAB)
-        glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - sizeB())/2, c_height - sizeA() - m_cttrTop, sizeB()/* + m_cttrLeft + m_cttrRight*/, sizeA()/* + m_cttrBottom*/);
+        glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - (int)sizeB())/2, c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
       else
-        glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - sizeA())/2, c_height - sizeB() - m_cttrTop, sizeA()/* + m_cttrLeft + m_cttrRight*/, sizeB()/* + m_cttrBottom*/);
+        glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - (int)sizeA())/2, c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
       break;
     case DVA_RIGHT:
       if (m_matrixSwitchAB)
-        glViewport(c_width - m_cttrRight - sizeB(), c_height - sizeA() - m_cttrTop, sizeB()/* + m_cttrLeft + m_cttrRight*/, sizeA()/* + m_cttrBottom*/);
+        glViewport(c_width - m_cttrRight - (int)sizeB(), c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
       else
-        glViewport(c_width - m_cttrRight - sizeA(), c_height - sizeB() - m_cttrTop, sizeA()/* + m_cttrLeft + m_cttrRight*/, sizeB()/* + m_cttrBottom*/);
+        glViewport(c_width - m_cttrRight - (int)sizeA(), c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
       break;
     }
   }
@@ -1152,7 +1180,7 @@ void DrawQWidget::slot_setMirroredHorz(){ setMirroredHorz(); }
 void DrawQWidget::slot_setMirroredVert(){ setMirroredVert(); }
 void DrawQWidget::slot_setPortionsCount(int count){  setPortionsCount(count); }
 
-void DrawQWidget::slot_ovlReplace(int idx, DrawOverlay* ovl){ ovlReplace(idx, ovl, false); }
+void DrawQWidget::slot_ovlReplace(int idx, DrawOverlay* ovl){ ovlReplace(idx, ovl, OO_SAME, false); }
 
 void DrawQWidget::slot_enableAutoUpdate(bool enabled){  banAutoUpdate(!enabled); }
 void DrawQWidget::slot_disableAutoUpdate(bool disabled){  banAutoUpdate(disabled); }

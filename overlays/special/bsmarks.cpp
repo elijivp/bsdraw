@@ -5,6 +5,7 @@
 #include "bsmarks.h"
 
 #include "../../core/sheigen/bsshgentrace.h"
+#include <memory.h>
 
 OMarkDashs::OMarkDashs(unsigned int maxmarks, COORDINATION cn, float areaPos, COORDINATION featcn, float marksize, const IPalette *ipal, bool discrete): DrawOverlay_ColorThroughPalette(ipal, discrete), 
   OVLCoordsStatic(cn, 0.0f, areaPos),
@@ -32,11 +33,10 @@ OMarkDashs::~OMarkDashs()
   delete []m_marks;
 }
 
-int OMarkDashs::fshTrace(int overlay, bool rotated, char *to) const
+int OMarkDashs::fshOVCoords(int overlay, bool switchedab, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
-  ocg.param_pass(); // Kostyl
   {
     ocg.goto_normed();
     ocg.var_fixed("marksize", m_marksize);
@@ -49,7 +49,7 @@ int OMarkDashs::fshTrace(int overlay, bool rotated, char *to) const
     {
       ocg.push("if (mark[0] > 0.001){");
       {
-        ocg.push("inormed.x = icoords.x - floor(mark[1]*ibounds.x + 0.49);");
+        ocg.push("inormed.x = icoords.x - floor(mark[1]*ov_ibounds.x + 0.49);");
         ocg.var_static(DT_1F, "oldr = result[0]");
         ocg.trace_linevert_b("marksize", nullptr);
         ocg.push("mixwell = mixwell*sign(oldr) + (1-sign(oldr))*sign(result[0])*mark[0];");
@@ -58,7 +58,7 @@ int OMarkDashs::fshTrace(int overlay, bool rotated, char *to) const
     }
     ocg.param_for_end();
   }
-  ocg.push("inormed.x = ibounds.x/2;");
+  ocg.push("inormed.x = ov_ibounds.x/2;");
   ocg.goto_func_end(false);
   return ocg.written();
 }
@@ -95,11 +95,10 @@ OCluster::~OCluster()
   delete []m_items;
 }
 
-int OCluster::fshTrace(int overlay, bool rotated, char *to) const
+int OCluster::fshOVCoords(int overlay, bool switchedab, char *to) const
 {   
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
-  ocg.param_pass(); // Kostyl
   {
     ocg.goto_normed();
     ocg.var_fixed("fsize", m_figsize);
@@ -121,13 +120,13 @@ int OCluster::fshTrace(int overlay, bool rotated, char *to) const
       ocg.push("float bd=100000;");
       ocg.param_for_arr_begin("fig0", "arrlen");
 //        ocg.push("float dd = distance(coords.ba, fig0.xy)/fig0[2];");
-        ocg.push("float dd = distance(icoords.xy, fig0.xy*ibounds.xy)/fig0[2];");
+        ocg.push("float dd = distance(icoords.xy, fig0.xy*ov_ibounds.xy)/fig0[2];");
         ocg.push("fig = mix(fig, fig0, step(dd, bd));");
         ocg.push("bd = mix(bd, dd, step(dd, bd));");
       ocg.param_for_end();
     }
     
-      ocg.push("inormed = icoords - ivec2(fig[0]*ibounds.x + 0.49, fig[1]*ibounds.y + 0.49);");
+      ocg.push("inormed = icoords - ivec2(fig[0]*ov_ibounds.x + 0.49, fig[1]*ov_ibounds.y + 0.49);");
       ocg.push("int fig3type = int(fig[3]/10.0);");
       ocg.var_static(DT_2I, "ifigdimms = ivec2(fsize*fig[2], fsize*fig[2]);");
       
@@ -185,7 +184,7 @@ int OCluster::fshTrace(int overlay, bool rotated, char *to) const
   {
     ocg.push("result[0] = fig[3] - fig3type*10.0;");
   }
-  ocg.push("inormed.x = ibounds.x/2;");
+  ocg.push("inormed.x = ov_ibounds.x/2;");
   ocg.goto_func_end(false);
   return ocg.written();
 }
@@ -211,3 +210,212 @@ void OCluster::updateFinished()
 {
   _DrawOverlay::updateParameter(false, true);
 }
+
+
+
+
+/******************************************************************************************************************/
+/******************************************************************************************************************/
+/******************************************************************************************************************/
+
+
+OTrassBase3F::OTrassBase3F(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe): DrawOverlay_ColorThroughPalette(ipal, discrete),
+  trass_limit(trasslimit), tlines_total(linestotal), tlines_frame(linesframe), tline_current(linestotal-1)
+{
+  tlines_texture = new float[TPS*trass_limit * (tlines_total + tlines_frame)];
+  memset(tlines_texture, 0, sizeof(float)*TPS*trass_limit * (tlines_total + tlines_frame));
+  dm_trass.w = trass_limit;
+  dm_trass.len = tlines_frame;
+  dm_trass.data = &tlines_texture[(TPS*trass_limit)*(tlines_total-1)];
+  appendUniform(DT_2D3F, &dm_trass);
+}
+
+OTrassBase3F::~OTrassBase3F()
+{
+  delete []tlines_texture;
+}
+
+void OTrassBase3F::appendTrassline(const trasspoint_t tps[], bool update)
+{
+  tline_current--;
+  if (tline_current < 0)
+    tline_current = tlines_total - 1;
+  memcpy(&tlines_texture[TPS*trass_limit*tline_current], tps, sizeof(float)*TPS*trass_limit);
+  if (tline_current < tlines_frame)
+    memcpy(&tlines_texture[TPS*trass_limit*(tlines_total + tline_current)], tps, sizeof(float)*TPS*trass_limit);
+  
+  dm_trass.data = &tlines_texture[TPS*trass_limit*tline_current];
+  updateParameter(false, update);
+}
+
+void OTrassBase3F::appendEmptyline(bool update)
+{
+  tline_current--;
+  if (tline_current < 0)
+    tline_current = tlines_total - 1;
+  memset(&tlines_texture[TPS*trass_limit*tline_current], 0, sizeof(float)*TPS*trass_limit);
+  if (tline_current < tlines_frame)
+    memset(&tlines_texture[TPS*trass_limit*(tlines_total + tline_current)], 0, sizeof(float)*TPS*trass_limit);
+  
+  dm_trass.data = &tlines_texture[TPS*trass_limit*tline_current];
+  updateParameter(false, update);
+}
+
+void OTrassBase3F::clearTrasses(bool update)
+{
+  memset(tlines_texture, 0, sizeof(float)*TPS*trass_limit * (tlines_total + tlines_frame));
+  tline_current = tlines_total - 1;
+  updateParameter(false, update);
+}
+
+/******************************************************************************************************************/
+
+
+
+OTrass::OTrass(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe):
+  OTrassBase3F(trasslimit, linestotal, ipal, discrete, linesframe)
+{
+}
+
+int OTrass::fshOVCoords(int overlay, bool /*switchedab*/, char* to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.goto_normed();
+    ocg.var_fixed("line", (int)trass_limit);
+    ocg.var_fixed("frame", (int)tlines_frame);
+    
+    ocg.push("float ty=float(inormed.y)/float(frame);");
+    ocg.push("vec3 niph=vec3(0.0);"
+             "float dist=9999;"
+             );
+    ocg.push("for (int i=0; i<line; i++){"
+               "float tx = i/float(line-1);"
+               "vec3 iph = texture("); ocg.param_get(); ocg.push(", vec2(tx, ty)).rgb;"
+               "float dd = abs(float(inormed.x) - iph[1]*ov_ibounds.x);"
+               "float good = (1.0 - step(iph[0], 0.0))*step(dd, dist);"
+               "niph = mix(niph, iph, good);"
+               "dist = mix(dist, dd, good);"
+             "}"
+             );
+    ocg.push("result[0] = niph[0];"
+//             "result[1] = 1.0;"
+             "int nix = int(niph[1]*ov_ibounds.x);"
+             "mixwell = step(float(abs(nix - inormed.x)), 0.0);"
+             "mixwell = (1.0 - step(niph[0], 0.0))*mix(mixwell, 0.25, step(float(abs(nix - inormed.x)), niph[2]*ov_ibounds.x)*step(mixwell, 0.0));"
+             );
+  }
+  ocg.push("inormed.x = ov_ibounds.x/2;");
+  ocg.goto_func_end(false);
+  return ocg.written();
+}
+
+/******************************************************************************************************************/
+/******************************************************************************************************************/
+/******************************************************************************************************************/
+
+
+
+OTrassSelectable::OTrassSelectable(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe): 
+  OTrassBase3F(trasslimit, linestotal, ipal, discrete, linesframe), selectidx(-1)
+{
+  appendUniform(DT_1I, &selectidx);
+}
+
+void OTrassSelectable::select(int trassidx, bool update)
+{
+  selectidx = trassidx;
+  updateParameter(false, update);
+}
+
+int OTrassSelectable::fshOVCoords(int overlay, bool /*switchedab*/, char* to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.goto_normed();
+    ocg.var_fixed("line", (int)trass_limit);
+    ocg.var_fixed("frame", (int)tlines_frame);
+    
+    ocg.push("float ty=float(inormed.y)/float(frame);");
+    ocg.push("vec3 niph=vec3(0.0);"
+             "float dist=9999;"
+             "float idx=-1.0;"
+             );
+    ocg.push("for (int i=0; i<line; i++){"
+               "float tx = i/float(line-1);"
+               "vec3 iph = texture("); ocg.param_get(); ocg.push(", vec2(tx, ty)).rgb;"
+               "float dd = abs(float(inormed.x) - iph[1]*ov_ibounds.x);"
+               "float good = (1.0 - step(iph[0], 0.0))*step(dd, dist);"
+               "niph = mix(niph, iph, good);"
+               "dist = mix(dist, dd, good);"
+               "idx = mix(idx, float(i), good);"
+             "}"
+             );
+    
+    int invpathwidth = 4;
+    ocg.var_fixed("ipw", float(invpathwidth));
+    
+    ocg.param_alias("selected");
+//    ocg.push(
+//              "int nix = int(niph[1]*ov_ibounds.x);"
+//              "vec3 tms = vec3(step(float(abs(nix - inormed.x)), 0.0), step(float(abs(nix - inormed.x)), ipw), step(float(abs(nix - inormed.x)), niph[2]*ov_ibounds.x));"
+//              "result[0] = mix(niph[0], 1.0, step(idx, float(selected))*step(float(selected),idx));"
+////              "result[1] = mix( mix(0.0, 1.0, max(step(float(abs(nix - inormed.x)), ipw), step(idx, float(selected))*step(float(selected),idx))), 0.0, mixwell);"
+//              "result[1] = mix(tms[1], 0.0, tms[0]);"
+////              "mixwell = (1.0 - step(niph[0], 0.0))*mix(mixwell, 0.25, *step(mixwell, 0.0));"
+//              "mixwell = (1.0 - step(niph[0], 0.0))*max(tms[0], tms[1]);"
+//             );
+    
+    ocg.push(
+              "int nix = int(niph[1]*ov_ibounds.x);"
+              "vec2 tms = vec2(step(float(abs(nix - inormed.x)), 0.0), 0.0);"
+              "tms[1] = clamp((4.0 - abs(nix - inormed.x))/ipw, 0.0, 1.0) - tms[0];"
+              "result[0] = mix(0.0, mix(0.01, mix(niph[0], 1.0, step(idx, float(selected))*step(float(selected),idx)) , tms[0]), tms[0] + tms[1] );"
+              "result[1] = mix(0.0, 0.35, 1.0 - step(tms[1], 0.0));"
+              "mixwell = (1.0 - step(niph[0], 0.0))*(tms[0] + tms[1]);"
+             );
+    
+//    ocg.push("result[0] = niph[0];"
+//             "result[1] = step(idx, float(selected))*step(float(selected),idx);"
+//             "int nix = int(niph[1]*ov_ibounds.x);"
+//             "mixwell = step(float(abs(nix - inormed.x)), 0.0);"
+//             "mixwell = (1.0 - step(niph[0], 0.0))*mix(mixwell, 0.25, step(float(abs(nix - inormed.x)), niph[2]*ov_ibounds.x)*step(mixwell, 0.0));"
+//             );
+  }
+  ocg.push("inormed.x = ov_ibounds.x/2;");
+  ocg.goto_func_end(false);
+  return ocg.written();
+}
+
+
+/*
+void OTrassSelectable::appendTrassline(const trass2point_t tps[])
+{
+  tline_current--;
+  if (tline_current < 0)
+    tline_current = tlines_total - 1;
+  for (int i=0; i<trass_limit; i++)
+  {
+    tlines_texture[TPS*trass_limit*tline_current + 0] = tps[i].intensity == 0? 0 : tps[i].intensity == 1? 0.5f : 1.0f;
+    tlines_texture[TPS*trass_limit*tline_current + 1] = tps[i].position;
+    tlines_texture[TPS*trass_limit*tline_current + 2] = tps[i].halfstrob;
+//    memcpy(&tlines_texture[TPS*trass_limit*tline_current], tps, sizeof(float)*TPS*trass_limit);
+  }
+  if (tline_current < tlines_frame)
+  {
+    for (int i=0; i<trass_limit; i++)
+    {
+      tlines_texture[TPS*trass_limit*(tlines_total + tline_current) + 0] = tps[i].intensity == 0? 0 : tps[i].intensity == 1? 0.5f : 1.0f;
+      tlines_texture[TPS*trass_limit*(tlines_total + tline_current) + 1] = tps[i].position;
+      tlines_texture[TPS*trass_limit*(tlines_total + tline_current) + 2] = tps[i].halfstrob;
+    }
+//    memcpy(&tlines_texture[TPS*trass_limit*(tlines_total + tline_current)], tps, sizeof(float)*TPS*trass_limit);
+  }
+  
+  dm_trass.data = &tlines_texture[TPS*trass_limit*tline_current];
+  updateParameter(false, true);
+}
+
+*/

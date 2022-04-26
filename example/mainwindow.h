@@ -103,7 +103,8 @@ private slots:
 private slots:  
   void    changeOVL(int sigid);
   void    changeOVLOpacity(int op);
-  void    changeOVLSlice(int op);
+  void    changeOVLSliceLL(int op);
+  void    changeOVLSliceHL(int op);
   void    changeOVLWeight(int op);
   void    changeOVLForm(int op);
   void    changeOVLFeatures(int sigid);

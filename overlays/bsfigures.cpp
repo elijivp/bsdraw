@@ -18,9 +18,9 @@ OFPoint::OFPoint(OVLCoordsStatic* pcoords, float offset_x, float offset_y, const
   r = kls.r;  g = kls.g;  b = kls.b;
 }
 
-int   OFPoint::fshTrace(int overlay, bool rotated, char* to) const
+int   OFPoint::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -46,9 +46,9 @@ OFCircle::OFCircle(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, 
 {
 }
 
-int   OFCircle::fshTrace(int overlay, bool rotated, char* to) const
+int   OFCircle::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -88,9 +88,9 @@ OFSquare::OFSquare(float fillopacity, OVLCoordsStatic* pcoords, float offset_x, 
 {
 }
 
-int OFSquare::fshTrace(int overlay, bool rotated, char *to) const
+int OFSquare::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -128,9 +128,9 @@ OFSquareCC::OFSquareCC(float fillopacity, OVLCoordsStatic* pcoords, float offset
 {
 }
 
-int OFSquareCC::fshTrace(int overlay, bool rotated, char *to) const
+int OFSquareCC::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -168,9 +168,9 @@ OFRhombCC::OFRhombCC(float fillopacity, OVLCoordsStatic* pcoords, float offset_x
 {
 }
 
-int OFRhombCC::fshTrace(int overlay, bool rotated, char *to) const
+int OFRhombCC::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -198,9 +198,9 @@ OFTriangle::OFTriangle(ORIENT orientation, float fillopacity, OVLCoordsStatic *p
   
 }
 
-int OFTriangle::fshTrace(int overlay, bool rotated, char *to) const
+int OFTriangle::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -255,9 +255,9 @@ OFLine::OFLine(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float e
 {
 }
 
-int   OFLine::fshTrace(int overlay, bool rotated, char* to) const
+int   OFLine::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   {
     ocg.goto_normed();
@@ -335,9 +335,9 @@ OFRay::OFRay(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float sta
   
 }
 
-int   OFRay::fshTrace(int overlay, bool rotated, char* to) const
+int   OFRay::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   {
 //    ocg.goto_normed();
@@ -381,9 +381,9 @@ OFArrow::OFArrow(OVLCoordsStatic* pcoords, float offset_arrow_x, float offset_ar
 {
 }
 
-int   OFArrow::fshTrace(int overlay, bool rotated, char* to) const
+int   OFArrow::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   
   ocg.var_fixed("endpoint", m_param1, m_param2);
@@ -435,9 +435,9 @@ OFCross::OFCross(OVLCoordsStatic *pcoords, float offset_x, float offset_y, COORD
 {
 }
 
-int OFCross::fshTrace(int overlay, bool rotated, char *to) const
+int OFCross::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -468,9 +468,9 @@ OFAngle::OFAngle(OFAngle::ORIENT orient, OVLCoordsStatic* pcoords, float offset_
 {
 }
 
-int   OFAngle::fshTrace(int overlay, bool rotated, char* to) const
+int   OFAngle::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -509,9 +509,9 @@ OFVisir::OFVisir(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COORD
 {
 }
 
-int   OFVisir::fshTrace(int overlay, bool rotated, char* to) const
+int   OFVisir::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -558,9 +558,9 @@ OFFactor::OFFactor(OVLCoordsStatic* pcoords, float offset_x, float offset_y, COO
 {
 }
 
-int   OFFactor::fshTrace(int overlay, bool rotated, char* to) const
+int   OFFactor::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -593,9 +593,9 @@ OFPointrun::OFPointrun(OVLCoordsStatic* pcoords, float offset_x, float offset_y,
 {
 }
 
-int   OFPointrun::fshTrace(int overlay, bool rotated, char* to) const
+int   OFPointrun::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -646,9 +646,9 @@ OFSubjectif::OFSubjectif(OVLCoordsStatic* pcoords, float offset_x, float offset_
   m_gap = gap_w;
 }
 
-int   OFSubjectif::fshTrace(int overlay, bool rotated, char* to) const
+int   OFSubjectif::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -688,9 +688,9 @@ OFObjectif::OFObjectif(OVLCoordsStatic* pcoords, float offset_x, float offset_y,
   m_gap[1] = gap_h;
 }
 
-int   OFObjectif::fshTrace(int overlay, bool rotated, char* to) const
+int   OFObjectif::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -726,9 +726,9 @@ OFDouble::OFDouble(bool horz, OVLCoordsStatic* pcoords, float center, COORDINATI
 {
 }
 
-int OFDouble::fshTrace(int overlay, bool rotated, char *to) const
+int OFDouble::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();

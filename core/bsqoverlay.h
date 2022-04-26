@@ -26,9 +26,10 @@ public slots:
   void      setOpacity(float opacity);
   void      setThickness(float thickness){  m_povl->setThickness(thickness); }
   void      setSlice(float slice){  m_povl->setSlice(slice); }
+  void      setSlice(float slice_ll, float slice_hl){  m_povl->setSlice(slice_ll, slice_hl); }
   
   void      setOTS(const ovlbasics_t& ob){ m_povl->setOTS(ob); }
-  void      setOTS(float opacity, float thickness, float slice){ m_povl->setOTS(opacity, thickness, slice); }
+  void      setOTS(float opacity, float thickness, float slice_ll, float slice_hl){ m_povl->setOTS(opacity, thickness, slice_ll, slice_hl); }
   
   void      setVisible(bool v);
   
@@ -41,7 +42,8 @@ public:
   float     getOpacity() const { return m_povl->getOpacity(); }
   bool      opaque() const {  return m_povl->opaque(); }
   float     getThickness() const { return m_povl->getThickness(); }
-  float     getSlice() const { return m_povl->getSlice(); }
+  float     getSliceLL() const { return m_povl->getSliceLL(); }
+  float     getSliceHL() const { return m_povl->getSliceHL(); }
   bool      isVisible() const { return m_povl->isVisible(); }
 };
 

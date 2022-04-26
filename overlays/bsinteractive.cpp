@@ -18,16 +18,16 @@ _OActiveBase::_OActiveBase(bool linkToScaledCenter): DrawOverlay_ColorForegoing(
 _OActiveBase::_OActiveBase(COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter): DrawOverlay_ColorForegoing(0, true),
   OVLCoordsDynamic(cn, default_x, default_y), OVLDimmsOff(), m_linked(linkToScaledCenter) {}
 
-int   _OActiveBase::fshTrace(int overlay, bool rotated, char* to) const
+int   _OActiveBase::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
 //  if (m_linked)
-//    ocg.push("ioffset = ivec2(ioffset/iscaling)*iscaling + iscaling/2;");
+//    ocg.push("ioffset = ivec2(ioffset/ov_iscaler)*ov_iscaler + ov_iscaler/2;");
   if (m_linked)
     ocg.push(
-              "ioffset = clamp(ioffset, ivec2(0,0), ibounds-ivec2(1,1));"     /// autoclamp
-              "ioffset = ivec2(ioffset/iscaling)*iscaling + iscaling/2;"
+              "ioffset = clamp(ioffset, ivec2(0,0), ov_ibounds-ivec2(1,1));"     /// autoclamp
+              "ioffset = ivec2(ioffset/ov_iscaler)*ov_iscaler + ov_iscaler/2;"
              );
 //  ocg.goto_normed();
   ocg.goto_func_end(false);
@@ -42,9 +42,9 @@ int   _OActiveBase::fshTrace(int overlay, bool rotated, char* to) const
 OActivePointer::OActivePointer(COORDINATION cn, float center_x, float center_y): DrawOverlay_ColorForegoing(),
   OVLCoordsDynamic(cn, center_x, center_y), OVLDimmsOff(){}
 
-int   OActivePointer::fshTrace(int overlay, bool rotated, char* to) const
+int   OActivePointer::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   ocg.goto_normed();
   ocg.goto_func_end(false);
@@ -255,15 +255,15 @@ void OActiveRandom::update()
   updateParameter(false, true);
 }
 
-int   OActiveRandom::fshTrace(int overlay, bool rotated, char* to) const
+int   OActiveRandom::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   ocg.goto_normed();
   ocg.param_alias("myseed");
   ocg.push("float r1 = fract(sin(dot(myseed.xy, vec2(12.9898, 78.233)))*43758.5453123);");
   ocg.push("vec2 randomed = vec2(r1, fract(sin(dot(vec2(myseed.x, r1), vec2(12.9898, 78.233)))*43758.5453123));");
-  ocg.push("ioffset = ivec2(randomed*ibounds);");
+  ocg.push("ioffset = ivec2(randomed*ov_ibounds);");
   ocg.goto_func_end(false);
   return ocg.written();
 }
@@ -280,9 +280,9 @@ int   OActiveRandom::fshTrace(int overlay, bool rotated, char* to) const
 //{
 //}
 
-//int   Interactive1DMaxMin::fshTrace(int overlay, bool rotated, char* to) const
+//int   Interactive1DMaxMin::fshOVCoords(int overlay, bool switchedab, char* to) const
 //{
-//  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to, FshTraceGenerator::OINC_GETVALUE | FshTraceGenerator::OINC_BOUNDS);
+//  FshTraceGenerator ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE | FshTraceGenerator::OINC_BOUNDS);
 //  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
 //  {
 //    {
@@ -327,9 +327,9 @@ OActiveCell::OActiveCell(int rows, int columns, const linestyle_t& linestyle, in
   appendUniform(DT_2F, m_selfloat);
 }
 
-int         OActiveCell::fshTrace(int overlay, bool rotated, char* to) const
+int         OActiveCell::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to, 0);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to, 0);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   
   ocg.goto_normed();
@@ -337,10 +337,10 @@ int         OActiveCell::fshTrace(int overlay, bool rotated, char* to) const
   ocg.var_fixed("cr", m_columns, m_rows);
   ocg.var_fixed("mgn", m_margin);
   
-  ocg.push( "vec2   cellsizepix = vec2(float(ibounds.x) / cr.x, float(ibounds.y) / cr.y);");
+  ocg.push( "vec2   cellsizepix = vec2(float(ov_ibounds.x) / cr.x, float(ov_ibounds.y) / cr.y);");
   
   ocg.param_alias("click");
-  ocg.push( "ivec2  optiid = ivec2((click.x*ibounds.x) / cellsizepix.x, (click.y*ibounds.y) / cellsizepix.y);");
+  ocg.push( "ivec2  optiid = ivec2((click.x*ov_ibounds.x) / cellsizepix.x, (click.y*ov_ibounds.y) / cellsizepix.y);");
   
   ocg.push( "ioffset = ivec2(cellsizepix.x*optiid.x + mgn, cellsizepix.y*optiid.y + mgn);");
   ocg.push( "inormed = icoords - ioffset;");

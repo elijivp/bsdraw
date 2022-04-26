@@ -33,23 +33,23 @@ public:
     fmg.cintvar("allocatedPortions", (int)allocatedPortions);
 
     fmg.push("vec3 mpi = vec3(3.14159265359, 1.57079632679, 6.28318530718);");
-    fmg.push("vec2 datacoords = (relcoords - vec2(0.5, 0.5))*2;");
+    fmg.push("vec2 datacoords = (abc_coords - vec2(0.5, 0.5))*2;");
     
     fmg.push("vec4 lenarcscal = vec4(length(datacoords), mpi[1] + atan(datacoords.x, datacoords.y) + mpi[2]*(1.0-step(0.0, datacoords.x))*(1.0 - step(0.0, datacoords.y)), 0.0, 0.0);"
              "lenarcscal[1] = mod(lenarcscal[1] + viewturn*mpi[2], mpi[2]);"
-             "dbounds.x = (mpi[2]*lenarcscal[0]*dbounds_noscaled.y*iscaling.y);"
+             "dbounds.x = (mpi[2]*lenarcscal[0]*dbounds_noscaled.y*ab_iscaler.y);"
              );
     
     fmg.push("lenarcscal[2] = max(dbounds.x/dbounds_noscaled.x, 1.0);"
-             "lenarcscal[3] = lenarcscal[1]*lenarcscal[0]*dbounds.y*iscaling.y;"
+             "lenarcscal[3] = lenarcscal[1]*lenarcscal[0]*dbounds.y*ab_iscaler.y;"
              "lenarcscal[3] = lenarcscal[3] - floor(lenarcscal[3]/lenarcscal[2])*lenarcscal[2];"
 //             "float tempo = 0.0*min(abs(datacoords.x/datacoords.y), abs(datacoords.y/datacoords.x));"
 //             "float tempo = 0.5*max(0.0, 1 - tan((mpi[1]/2.0 - abs(atan(datacoords.x, datacoords.y)))) );"
 //             "float tempo = 0.5*1.0/(1.0 + 2*tan(abs(mpi[1]/2.0 - abs(atan(datacoords.x, datacoords.y)))) );"
              "float tempo = 0.0;"
              
-             "immod = ivec2( int( lenarcscal[3]*(1.0 + tempo) ), int(mod(lenarcscal[0]*dbounds.y, float(iscaling.y))) );"
-             "imrect = ivec4(immod.x, immod.y, lenarcscal[2]-1, iscaling.y-1);"
+             "immod = ivec2( int( lenarcscal[3]*(1.0 + tempo) ), int(mod(lenarcscal[0]*dbounds.y, float(ab_iscaler.y))) );"
+             "imrect = ivec4(immod.x, immod.y, lenarcscal[2]-1, ab_iscaler.y-1);"
              );
 
     
@@ -62,7 +62,7 @@ public:
     {
       fmg.value2D("float value", "datacoords");
       fmg.push("value = palrange[0] + (palrange[1] - palrange[0])*value;");
-      fmg.push("ovMix = max(ovMix, value);");
+      fmg.push("dvalue = max(dvalue, value);");
       
       if ( splitPortions == SP_NONE )
         fmg.push( "result = mix(result, result + texture(texPalette, vec2(value, float(i)/(allocatedPortions-1) )).rgb, lenarcscal[2]);"

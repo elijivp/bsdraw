@@ -16,7 +16,7 @@ protected:
     float   tcolor;
     float   pos;
   }                 *m_marks;
-  virtual int fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
 private:
   dmtype_arr_t      m_dm_coords;
   COORDINATION      m_featcn;
@@ -48,7 +48,7 @@ protected:
   bool              m_crossable;
   unsigned int      m_total;
   clusteritem_t*    m_items;
-  virtual int fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
 private:
   dmtype_arr_t      m_dm_coords;
   dmtype_arr_t      m_dm_form;
@@ -75,6 +75,57 @@ public:
   void  updateFinished();
 public:
   unsigned  int count() const { return m_total; }
+};
+
+
+
+struct trasspoint_t
+{
+  float   intensity;    // 0 is off
+  float   position;
+  float   halfstrob;
+};
+
+class OTrassBase3F: public DrawOverlay_ColorThroughPalette, public OVLCoordsOff, public OVLDimmsOff
+{
+protected:
+  enum { TPS=3 };
+  const unsigned int  trass_limit;
+  const unsigned int  tlines_total;
+  const unsigned int  tlines_frame;
+  int           tline_current;
+  float*        tlines_texture;
+  
+  dmtype_2d_t   dm_trass;
+public:
+  void  appendTrassline(const trasspoint_t tps[], bool update=true);
+  void  appendEmptyline(bool update=true);
+  void  clearTrasses(bool update=true);
+public:
+  OTrassBase3F(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe=2048);
+  ~OTrassBase3F();
+};
+
+
+class OTrass: public OTrassBase3F
+{
+public:
+  OTrass(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe=2048);
+protected:
+  virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
+};
+
+
+class OTrassSelectable: public OTrassBase3F
+{
+protected:
+  int     selectidx;
+public:
+  OTrassSelectable(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe=2048);
+  void    select(int trassidx, bool update=true); // from 0
+  int     selected() const { return selectidx; }
+protected:
+  virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 

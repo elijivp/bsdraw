@@ -32,7 +32,7 @@ protected:
   bool          m_zeroreg;
   COORDINATION  m_additcn;
 protected:
-  int fshTrace(int overlay, bool rotated, char *to) const;
+  int fshOVCoords(int overlay, bool switchedab, char *to) const;
 };
 
 /// Circular grid
@@ -46,7 +46,7 @@ protected:
   int           m_maxsteps;
   float         m_border;
 protected:
-  int fshTrace(int overlay, bool rotated, char *to) const;
+  int fshOVCoords(int overlay, bool switchedab, char *to) const;
 };
 
 /// Dekart grid
@@ -59,7 +59,7 @@ protected:
   float         m_limits[4];
   int           m_riskheight;
 protected:
-  int fshTrace(int overlay, bool rotated, char *to) const;
+  int fshOVCoords(int overlay, bool switchedab, char *to) const;
 };
 
 
@@ -71,7 +71,7 @@ protected:
 public:
   OGridCells(int rows, int columns, const linestyle_t& linestyle);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 

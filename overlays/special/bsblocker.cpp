@@ -28,9 +28,9 @@ void    OBlocker::setUnlocked(bool unlocked)
   updateParameter(false, true);
 }
 
-int OBlocker::fshTrace(int overlay, bool rotated, char *to) const
+int OBlocker::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.param_alias("blockstate");
@@ -96,9 +96,9 @@ void    OBlockerDots::setUnlocked(bool unlocked)
   }
 }
 
-int OBlockerDots::fshTrace(int overlay, bool rotated, char *to) const
+int OBlockerDots::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();

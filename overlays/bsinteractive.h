@@ -18,7 +18,7 @@ public:
   _OActiveBase(bool linkToScaledCenter=false);
   _OActiveBase(COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter=false);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
   virtual IOverlayReactor*  reactor() { return this; }
 };
 
@@ -30,7 +30,7 @@ class OActivePointer: public DrawOverlay_ColorForegoing, public OVLCoordsDynamic
 public:
   OActivePointer(COORDINATION cn, float center_x, float center_y);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 ////
@@ -105,7 +105,7 @@ public:
   OActiveRandom();
   void  update();
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
   unsigned int m_ctr;
   float   m_seed[2];
 };
@@ -117,7 +117,7 @@ protected:
 //  Interactive1DMaxMin(POINTERTYPE vt);
 //  ~Interactive1DMaxMin();
 //protected:
-//  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+//  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 //  POINTERTYPE   m_pointerType;
 //};
 
@@ -141,7 +141,7 @@ public:
   int           moveCellColumn(int dc, bool update=true){ m_selcolumn += dc; m_selfloat[0] = m_selcolumn/float(m_columns); updateParameter(false, update);  return m_selcolumn;   }
   int           moveCellRow(int dr, bool update=true){ m_selrow += dr; m_selfloat[1] = m_selrow/float(m_rows); updateParameter(false, update);  return m_selrow;   }
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
   virtual IOverlayReactor*  reactor() { return this; }
   virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool*);
 };

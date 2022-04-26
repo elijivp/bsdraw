@@ -11,12 +11,8 @@ static const char* glsl_types[] = { "float", "vec2", "vec3", "vec4",
                                     "float", "vec2", "vec3", "vec4", 
                                     "int",  "ivec2", "ivec3", "ivec4", 
 //                                    "vec2", "vec3", "vec4", 
-                                    "sampler2D", "int", "ivec2", "ivec3", "ivec4",
-                                    "sampler2D", "sampler2D",
-                                    
-                                    /// Special types
-                                    "_HC_typecounter", "sampler2D", 
-                                    
+                                    "int", "ivec2", "ivec3", "ivec4",
+                                    "sampler2D", "sampler2D", "sampler2D", "sampler2D"
                                      };
 
 #define SHNL "\n"

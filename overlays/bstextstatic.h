@@ -22,26 +22,16 @@ struct otextopts_t
   text(statictext), flags(alignflags), mnLeft(left), mnRight(right), mnTop(top), mnBottom(bottom) {}
 };
 
-//struct ofontopts_t
-//{
-//  unsigned int fontSize;
-//  const QFont& font;
-//  ofontopts_t(unsigned int fs): fontSize(fs), font(nullptr) {}
-//  ofontopts_t(const QFont& f): fontSize(0), font(f) {}
-//};
-
 class OITextStatic
 {
 protected:
   DrawOverlayUpdater m_ovllink;
   dmtype_image_t  dmti;
   QImage*         m_pImage;
-  OVL_ORIENTATION m_orient;
-  
-  OITextStatic(DrawOverlay* ovllink, const char* text, unsigned int fontSize, OVL_ORIENTATION orient);
-  OITextStatic(DrawOverlay* ovllink, const char* text, const QFont& font, OVL_ORIENTATION orient);
-  OITextStatic(DrawOverlay* ovllink, const otextopts_t& text, unsigned int fontSize, OVL_ORIENTATION orient);
-  OITextStatic(DrawOverlay* ovllink, const otextopts_t& text, const QFont& font, OVL_ORIENTATION orient);
+  OITextStatic(DrawOverlay* ovllink, const char* text, unsigned int fontSize);
+  OITextStatic(DrawOverlay* ovllink, const char* text, const QFont& font);
+  OITextStatic(DrawOverlay* ovllink, const otextopts_t& text, unsigned int fontSize);
+  OITextStatic(DrawOverlay* ovllink, const otextopts_t& text, const QFont& font);
 public:
   virtual       ~OITextStatic();
 public:
@@ -55,25 +45,19 @@ class OTextTraced: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, publ
 {
 public:
   OTextTraced(const char* text, COORDINATION cn, float xpos, float ypos,
-              unsigned int fontSize=12, OVL_ORIENTATION orient=OO_INHERITED, 
-              bool rectangled=false, const linestyle_t& kls = linestyle_solid(1,1,1));
+              unsigned int fontSize=12, bool rectangled=false, const linestyle_t& kls = linestyle_solid(1,1,1));
   OTextTraced(const char* text, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-              unsigned int fontSize=12, OVL_ORIENTATION orient=OO_INHERITED, 
-              bool rectangled=false, const linestyle_t& kls = linestyle_solid(1,1,1));
+              unsigned int fontSize=12, bool rectangled=false, const linestyle_t& kls = linestyle_solid(1,1,1));
   OTextTraced(const char* text, COORDINATION cn, float xpos, float ypos,
-              const QFont&, OVL_ORIENTATION orient=OO_INHERITED,
-              bool rectangled=false, const linestyle_t& kls = linestyle_solid(1,1,1));
+              const QFont&, bool rectangled=false, const linestyle_t& kls = linestyle_solid(1,1,1));
   OTextTraced(const char* text, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-              const QFont&, OVL_ORIENTATION orient=OO_INHERITED,
-              bool rectangled=false, const linestyle_t& kls = linestyle_solid(1,1,1));
+              const QFont&, bool rectangled=false, const linestyle_t& kls = linestyle_solid(1,1,1));
   OTextTraced(const otextopts_t&, COORDINATION cn, float xpos, float ypos,
-              const QFont&, OVL_ORIENTATION orient=OO_INHERITED,
-              bool rectangled=false, const linestyle_t& kls = linestyle_solid(1,1,1));
+              const QFont&, bool rectangled=false, const linestyle_t& kls = linestyle_solid(1,1,1));
   OTextTraced(const otextopts_t&, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-              const QFont&, OVL_ORIENTATION orient=OO_INHERITED,
-              bool rectangled=false, const linestyle_t& kls = linestyle_solid(1,1,1));
+              const QFont&, bool rectangled=false, const linestyle_t& kls = linestyle_solid(1,1,1));
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
   bool m_rectangled;
 };
 
@@ -81,32 +65,24 @@ class OTextColored: public DrawOverlay_ColorForegoing, public OVLCoordsDynamic, 
 {
 public:
   OTextColored(const char* text, COORDINATION cn, float xpos, float ypos,
-               unsigned int fontSize=12, OVL_ORIENTATION orient=OO_INHERITED, 
-               int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
+               unsigned int fontSize=12, int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
   OTextColored(const char* text, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-               unsigned int fontSize=12, OVL_ORIENTATION orient=OO_INHERITED, 
-               int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
+               unsigned int fontSize=12, int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
   OTextColored(const char* text, COORDINATION cn, float xpos, float ypos,
-               const QFont&, OVL_ORIENTATION orient=OO_INHERITED,
-               int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
+               const QFont&, int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
   OTextColored(const char* text, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-               const QFont&, OVL_ORIENTATION orient=OO_INHERITED,
-               int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
+               const QFont&, int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
   
   OTextColored(const otextopts_t&, COORDINATION cn, float xpos, float ypos,
-               unsigned int fontSize=12, OVL_ORIENTATION orient=OO_INHERITED,
-               int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
+               unsigned int fontSize=12, int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
   OTextColored(const otextopts_t&, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-               unsigned int fontSize=12, OVL_ORIENTATION orient=OO_INHERITED,
-               int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
+               unsigned int fontSize=12, int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
   OTextColored(const otextopts_t&, COORDINATION cn, float xpos, float ypos,
-               const QFont&, OVL_ORIENTATION orient=OO_INHERITED,
-               int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
+               const QFont&, int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
   OTextColored(const otextopts_t&, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-               const QFont&, OVL_ORIENTATION orient=OO_INHERITED,
-               int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
+               const QFont&, int argbTextColor=0x00000000, int argbBackColor=0x00FFFFFF, int argbBorderColor=0x00FFFFFF);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
   int m_argbTextColor, m_argbBackColor, m_argbBorderColor;
 };
 
@@ -115,25 +91,19 @@ class OTextPaletted: public DrawOverlay_ColorThroughPalette, public OVLCoordsDyn
 {
 public:
   OTextPaletted(const char* text, COORDINATION cn, float xpos, float ypos,
-                unsigned int fontSize, OVL_ORIENTATION orient,
-                bool rectangled, const IPalette* ipal, bool discrete=false);
+                unsigned int fontSize, bool rectangled, const IPalette* ipal, bool discrete=false);
   OTextPaletted(const char* text, OVLCoordsStatic* pcoords, float offset_x, float offset_y,
-                unsigned int fontSize, OVL_ORIENTATION orient,
-                bool rectangled, const IPalette* ipal, bool discrete=false);
+                unsigned int fontSize,                 bool rectangled, const IPalette* ipal, bool discrete=false);
   OTextPaletted(const char* text, COORDINATION cn, float xpos, float ypos,
-                const QFont&, OVL_ORIENTATION orient,
-                bool rectangled, const IPalette* ipal, bool discrete=false);
+                const QFont&, bool rectangled, const IPalette* ipal, bool discrete=false);
   OTextPaletted(const char* text, OVLCoordsStatic* pcoords, float offset_x, float offset_y, 
-                const QFont&, OVL_ORIENTATION orient,
-                bool rectangled, const IPalette* ipal, bool discrete=false);
+                const QFont&, bool rectangled, const IPalette* ipal, bool discrete=false);
   OTextPaletted(const otextopts_t&, COORDINATION cn, float xpos, float ypos,
-                const QFont&, OVL_ORIENTATION orient,
-                bool rectangled, const IPalette* ipal, bool discrete=false);
+                const QFont&, bool rectangled, const IPalette* ipal, bool discrete=false);
   OTextPaletted(const otextopts_t&, OVLCoordsStatic* pcoords, float offset_x, float offset_y, 
-                const QFont&, OVL_ORIENTATION orient,
-                bool rectangled, const IPalette* ipal, bool discrete=false);
+                const QFont&, bool rectangled, const IPalette* ipal, bool discrete=false);
 protected:
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
   bool m_rectangled;
 };
 

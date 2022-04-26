@@ -45,7 +45,7 @@ protected:
   dmtype_sampler_t  m_kpdc;
   dmtype_palette_t  m_dm_palette;
 protected:
-  virtual int fshTrace(int overlay, bool rotated, char* to) const;
+  virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
   virtual int fshColor(int overlay, char *to) const;
   virtual IOverlayReactor*  reactor() { return this; }
   bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool*);

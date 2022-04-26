@@ -30,13 +30,13 @@ public:
               "uniform highp int       countGround;" );
     fmg.main_begin(FshMainGenerator::INIT_BYVALUE, m_bckclr, orient, fsp);
     
-    fmg.push(   "vec4 pixsdp = texture(texGround, relcoords).rgba;" );
+    fmg.push(   "vec4 pixsdp = texture(texGround, abc_coords).rgba;" );
     
     if (m_mode == MODE_NONE)
     {
       fmg.push(   "result = mix(result, pixsdp.bgr, pixsdp.a);"
 //                  "float value = texture(texData, vec2(domain, 0.0)).r;"  // domain /float(countGround-1)
-//                  "ovMix = max(ovMix, value);"
+//                  "dvalue = max(dvalue, value);"
 //                  "post_mask[0] = mix(1.0, post_mask[0], step( value , post_mask[1]));"
                   );
     }
@@ -50,7 +50,7 @@ public:
                   "result = mix(mix(result, pixsdp.bgr, pixsdp.a), mmc, 1.0 - step(marker, 0.0));"
   //                "result = pixsdp.bgr;"
   //                "mixwell = pixsdp.a;"
-                  "ovMix = max(ovMix, value);"
+                  "dvalue = max(dvalue, value);"
 //                  "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));"
                   
   

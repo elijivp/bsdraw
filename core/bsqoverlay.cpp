@@ -37,7 +37,7 @@ void MQOverlay::hide()
 DrawOverlay* MQOverlay::replace(DrawOverlay* ovl)
 {
   DrawOverlay* tmp = m_povl;
-  m_povl->eject(ovl, false);
+  m_povl->eject(ovl, OO_SAME, false);
   m_povl = ovl;
   return tmp;
 }

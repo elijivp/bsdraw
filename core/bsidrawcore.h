@@ -31,19 +31,6 @@ enum  ORIENTATION       { OR_LRBT=0,  OR_RLBT,  OR_LRTB,  OR_RLTB,    // order f
                           OR_TBLR,    OR_BTLR,  OR_TBRL,  OR_BTRL 
                         };
 
-enum  DRAWVIEWALIGN     { DVA_LEFT=0,  DVA_CENTER,  DVA_RIGHT
-                        };
-
-enum  SPLITPORTIONS     { SP_NONE=0,
-                          SP_COLUMN_TB      =0x10001,    SP_ROW_LR       =0x10101,  SP_COLUMN_BT    =0x0001,  SP_ROW_RL     =0x0101, 
-                          SP_COLUMNS_TB_2   =0x10002,    SP_ROWS_LR_2    =0x10102,  SP_COLUMNS_BT_2 =0x0002,  SP_ROWS_RL_2  =0x0102,
-                          SP_COLUMNS_TB_3   =0x10003,    SP_ROWS_LR_3    =0x10103,  SP_COLUMNS_BT_3 =0x0003,  SP_ROWS_RL_3  =0x0103,
-                          SP_COLUMNS_TB_4   =0x10004,    SP_ROWS_LR_4    =0x10104,  SP_COLUMNS_BT_4 =0x0004,  SP_ROWS_RL_4  =0x0104,
-                          SP_COLUMNS_TB_5   =0x10005,    SP_ROWS_LR_5    =0x10105,  SP_COLUMNS_BT_5 =0x0005,  SP_ROWS_RL_5  =0x0105,
-                          SP_COLUMNS_TB_6   =0x10006,    SP_ROWS_LR_6    =0x10106,  SP_COLUMNS_BT_6 =0x0006,  SP_ROWS_RL_6  =0x0106,
-                          SP_COLUMNS_TB_7   =0x10007,    SP_ROWS_LR_7    =0x10107,  SP_COLUMNS_BT_7 =0x0007,  SP_ROWS_RL_7  =0x0107,
-                          SP_COLUMNS_TB_8   =0x10008,    SP_ROWS_LR_8    =0x10108,  SP_COLUMNS_BT_8 =0x0008,  SP_ROWS_RL_8  =0x0108
-                        };
 
 inline bool orientationMirroredHorz(ORIENTATION ort)
 {
@@ -62,6 +49,35 @@ inline bool orientationTransposed(ORIENTATION ort)
   const bool mv[] = { false, false, false, false, true, true, true, true };
   return mv[ort];
 }
+
+enum  OVL_ORIENTATION   { OO_INHERITED=0,     // default
+                          OO_INHERITED_MIRROR_HORZ,
+                          OO_INHERITED_MIRROR_VERT,
+                          OO_INHERITED_MIRROR_BOTH,
+                          OO_AREA_LRBT, OO_AREA_RLBT, OO_AREA_LRTB, OO_AREA_RLTB, OO_AREA_TBLR, OO_AREA_BTLR, OO_AREA_TBRL, OO_AREA_BTRL,
+                          OO_AREAOR,
+                          OO_AREAOR_MIRROR_HORZ,
+                          OO_AREAOR_MIRROR_VERT,
+                          OO_AREAOR_MIRROR_BOTH,
+                          OO_SAME // special orient when ovl replaced by another
+                        };
+
+enum  DRAWVIEWALIGN     { DVA_LEFT=0,  DVA_CENTER,  DVA_RIGHT
+                        };
+
+enum  SPLITPORTIONS     { SP_NONE=0,
+                          SP_COLUMN_TB      =0x10001,    SP_ROW_LR       =0x10101,  SP_COLUMN_BT    =0x0001,  SP_ROW_RL     =0x0101, 
+                          SP_COLUMNS_TB_2   =0x10002,    SP_ROWS_LR_2    =0x10102,  SP_COLUMNS_BT_2 =0x0002,  SP_ROWS_RL_2  =0x0102,
+                          SP_COLUMNS_TB_3   =0x10003,    SP_ROWS_LR_3    =0x10103,  SP_COLUMNS_BT_3 =0x0003,  SP_ROWS_RL_3  =0x0103,
+                          SP_COLUMNS_TB_4   =0x10004,    SP_ROWS_LR_4    =0x10104,  SP_COLUMNS_BT_4 =0x0004,  SP_ROWS_RL_4  =0x0104,
+                          SP_COLUMNS_TB_5   =0x10005,    SP_ROWS_LR_5    =0x10105,  SP_COLUMNS_BT_5 =0x0005,  SP_ROWS_RL_5  =0x0105,
+                          SP_COLUMNS_TB_6   =0x10006,    SP_ROWS_LR_6    =0x10106,  SP_COLUMNS_BT_6 =0x0006,  SP_ROWS_RL_6  =0x0106,
+                          SP_COLUMNS_TB_7   =0x10007,    SP_ROWS_LR_7    =0x10107,  SP_COLUMNS_BT_7 =0x0007,  SP_ROWS_RL_7  =0x0107,
+                          SP_COLUMNS_TB_8   =0x10008,    SP_ROWS_LR_8    =0x10108,  SP_COLUMNS_BT_8 =0x0008,  SP_ROWS_RL_8  =0x0108
+                        };
+
+
+
 
 
 
@@ -102,11 +118,11 @@ enum  DTYPE       /// Trace/simple shader datatypes
               DT_1F, DT_2F, DT_3F, DT_4F, 
               DT_ARR,   DT_ARR2,  DT_ARR3, DT_ARR4, 
               DT_ARRI, DT_ARRI2, DT_ARRI3, DT_ARRI4, 
-              DT_SAMP4, DT_1I, DT_2I, DT_3I, DT_4I,
-              DT_TEXTURE, DT_PALETTE
+              DT_1I, DT_2I, DT_3I, DT_4I,
+              DT_SAMP4, DT_2D3F, DT_TEXTURE, DT_PALETTE    // >= DT_SAMP4 are textures
 };
 
-inline bool dtIsTexture(DTYPE dtype) { return dtype == DT_SAMP4 || dtype == DT_TEXTURE || dtype == DT_PALETTE; }
+inline bool dtIsTexture(DTYPE dtype) { return dtype >= DT_SAMP4; }
 
 struct dmtype_t
 {
@@ -114,16 +130,22 @@ struct dmtype_t
   const void*   dataptr;
 };
 
-struct dmtype_sampler_t
-{
-  unsigned int  count;
-  float*        data;
-};
-
 struct dmtype_arr_t
 {
   unsigned int  count;
   const void*   data;
+};
+
+struct dmtype_sampler_t
+{
+  unsigned int  count;
+  const float*  data;
+};
+
+struct dmtype_2d_t
+{
+  unsigned int  w, len;
+  const float*  data;
 };
 
 struct dmtype_image_t
@@ -163,7 +185,7 @@ protected:
   friend class _DrawOverlay;
   IDrawOverlayFriendly(){}  // no vdestructor, closed constructor
   virtual void overlayUpdate(bool internal, bool noupdate)=0;
-  virtual void innerOverlayReplace(int ovlid, DrawOverlay* ovl, bool owner)=0;
+  virtual void innerOverlayReplace(int ovlid, DrawOverlay* ovl, OVL_ORIENTATION orient, bool owner)=0;
   virtual void innerOverlayRemove(int ovlid)=0;
 };
 class _DrawOverlay
@@ -173,6 +195,7 @@ public:
 private:
   dmtype_t          m_uniforms[MAXUNIFORMS];
   unsigned int      m_uniformsCount;
+  unsigned int      m_uniformsCCdelim;  // color <-> coords uniform delimiter
 private:
   struct  _ioverlay_repaintable_t
   {
@@ -184,7 +207,7 @@ private:
   unsigned int      m_pinger_reinit;
   unsigned int      m_pinger_update;
 public:
-  _DrawOverlay(): m_uniformsCount(0), m_drawersCount(0), m_pinger_reinit(0), m_pinger_update(0) {}
+  _DrawOverlay(): m_uniformsCount(0), m_uniformsCCdelim(0), m_drawersCount(0), m_pinger_reinit(0), m_pinger_update(0) {}
   virtual ~_DrawOverlay()
   {
     for (unsigned int i=0; i<m_drawersCount; i++)
@@ -195,15 +218,17 @@ public:
   struct    uniforms_t
   {
     unsigned int    count;
+    unsigned int    ccdelim;
     const dmtype_t* arr;
   };
-  uniforms_t  uniforms() const {  uniforms_t result = { m_uniformsCount, m_uniforms }; return result;  }
+  uniforms_t  uniforms() const {  uniforms_t result = { m_uniformsCount, m_uniformsCCdelim, m_uniforms }; return result;  }
 protected:
-  void appendUniform(DTYPE type, const void* value)
+  void appendUniform(DTYPE type, const void* value, bool preuniform=false)
   {
     m_uniforms[m_uniformsCount].type = type;
     m_uniforms[m_uniformsCount].dataptr = value;
     m_uniformsCount++;
+    if (preuniform) m_uniformsCCdelim++;
   }
 protected:
   void updateParameter(bool reinit, bool update)
@@ -218,10 +243,10 @@ protected:
   void            increasePingerReinit() { m_pinger_reinit++; }
   void            increasePingerUpdate() { m_pinger_update++; }
 public:
-  void  eject(DrawOverlay* ovl, bool owner)
+  void  eject(DrawOverlay* ovl, OVL_ORIENTATION orient=OO_SAME, bool owner=true)
   {
     for (unsigned int i=0; i<m_drawersCount; i++)
-      m_drawers[i].repaintable->innerOverlayReplace(m_drawers[i].idoverlay, ovl, owner); // this method calls assign for ovl
+      m_drawers[i].repaintable->innerOverlayReplace(m_drawers[i].idoverlay, ovl, orient, owner); // this method calls assign for ovl
     m_drawersCount = 0;
   }
   void  eject()
@@ -266,7 +291,7 @@ private:
   }
 protected:    /// EXTERNAL interface
   friend class DrawQWidget;
-  virtual int   fshTrace(int overlay, bool rotated, char* to) const =0;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const =0;
   virtual int   fshColor(int overlay, char* to) const =0;
 };
 
@@ -450,7 +475,8 @@ struct ovlbasics_t
 {
   float   opacity;
   float   thickness;
-  float   slice;
+  float   slice_ll;
+  float   slice_hl;
 };
 
 class DrawOverlay: virtual public _DrawOverlay
@@ -463,7 +489,8 @@ protected:
   {
     m_ots.opacity = 0.0f;
     m_ots.thickness = 0.0f;
-    m_ots.slice = 1.0f;
+    m_ots.slice_ll = -1e+8f;
+    m_ots.slice_hl =  1e+8f;
   }
 public:
   void  setOpacity(float opacity, bool update=true){ m_ots.opacity = opacity; updateParameter(false, update); }  /// 1.0f for invisible
@@ -471,14 +498,19 @@ public:
   bool  opaque() const {  return m_ots.opacity >= 1.0f; }
   void  setThickness(float thickness, bool update=true){ m_ots.thickness = thickness; updateParameter(false, update); }
   float getThickness() const { return m_ots.thickness; }
-  void  setSlice(float value, bool update=true) { m_ots.slice = value; updateParameter(false, update); }
-  float getSlice() const { return m_ots.slice; }
+  void  setSlice(float level_low, float level_high, bool update=true) { m_ots.slice_ll = level_low; m_ots.slice_hl = level_high; updateParameter(false, update); }
+  void  setSlice(float level_high, bool update=true) { m_ots.slice_hl = level_high; updateParameter(false, update); }
+  void  setSliceLL(float level, bool update=true) { m_ots.slice_ll = level; updateParameter(false, update); }
+  void  setSliceHL(float level, bool update=true) { m_ots.slice_hl = level; updateParameter(false, update); }
+  float getSliceLL() const { return m_ots.slice_ll; }
+  float getSliceHL() const { return m_ots.slice_hl; }
 public:
   void  setVisible(bool visible, bool update=true){ m_visible = visible;  updateParameter(false, update); }
   bool  isVisible() const { return m_visible; }
 public:
   void  setOTS(const ovlbasics_t& ob, bool update=true){ m_ots = ob; updateParameter(false, update); }
-  void  setOTS(float opacity, float thickness, float slice, bool update=true){ m_ots.opacity = opacity; m_ots.thickness = thickness; m_ots.slice = slice; updateParameter(false, update); }
+  void  setOTS(float opacity, float thickness, float slice_low, float slice_high, bool update=true)
+  { m_ots.opacity = opacity; m_ots.thickness = thickness; m_ots.slice_ll = slice_low; m_ots.slice_hl = slice_high; updateParameter(false, update); }
 protected:
   friend class DrawCore;
   virtual IOverlayReactor*  reactor() { return nullptr; }
@@ -500,7 +532,8 @@ public:
 
 struct ovlfraginfo_t
 {
-  int   link;
+  int               link;
+  OVL_ORIENTATION   orient;
 };
 
 class ISheiGenerator

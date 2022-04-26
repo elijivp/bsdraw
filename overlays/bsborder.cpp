@@ -12,9 +12,9 @@ OBorder::OBorder(const linestyle_t &kls, int lineset): DrawOverlay_ColorTraced(k
 {
 }
 
-int OBorder::fshTrace(int overlay, bool rotated, char *to) const
+int OBorder::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -22,7 +22,7 @@ int OBorder::fshTrace(int overlay, bool rotated, char *to) const
       ocg.trace_linehorz_l(nullptr, nullptr, nullptr, nullptr);
     if (m_lineset & OBLINE_LEFT)
       ocg.trace_linevert_b(nullptr, nullptr, nullptr, nullptr);
-    ocg.push("inormed = icoords - ibounds + ivec2(1,1);");
+    ocg.push("inormed = icoords - ov_ibounds + ivec2(1,1);");
     if (m_lineset & OBLINE_TOP)
       ocg.trace_linehorz_r(nullptr, nullptr, nullptr, nullptr);
     if (m_lineset & OBLINE_RIGHT)
@@ -46,15 +46,15 @@ OShadow::OShadow(int pxwidth_left, int pxwidth_top, int pxwidth_right, int pxwid
   m_weight(weight), m_color(clr)
 {
   m_lineset = 0;
-  m_pxwidth[0] = pxwidth_left;      if (pxwidth_left > 0)  m_lineset |= OBLINE_LEFT;
-  m_pxwidth[1] = pxwidth_top;       if (pxwidth_top > 0)  m_lineset |= OBLINE_TOP;
-  m_pxwidth[2] = pxwidth_right;     if (pxwidth_right > 0)  m_lineset |= OBLINE_RIGHT;
-  m_pxwidth[3] = pxwidth_bottom;    if (pxwidth_bottom > 0)  m_lineset |= OBLINE_BOTTOM;
+  m_pxwidth[0] = pxwidth_left-1;      if (pxwidth_left > 0)  m_lineset |= OBLINE_LEFT;
+  m_pxwidth[1] = pxwidth_top-1;       if (pxwidth_top > 0)  m_lineset |= OBLINE_TOP;
+  m_pxwidth[2] = pxwidth_right-1;     if (pxwidth_right > 0)  m_lineset |= OBLINE_RIGHT;
+  m_pxwidth[3] = pxwidth_bottom-1;    if (pxwidth_bottom > 0)  m_lineset |= OBLINE_BOTTOM;
 }
 
-int OShadow::fshTrace(int overlay, bool rotated, char *to) const
+int OShadow::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.var_const_fixed("weight", m_weight);
@@ -64,8 +64,8 @@ int OShadow::fshTrace(int overlay, bool rotated, char *to) const
       ocg.goto_normed();
       
       const char* dds[] = { "inormed.x",
-                            "ibounds.y - 1 - inormed.y",
-                            "ibounds.x - 1 - inormed.x",
+                            "ov_ibounds.y - 1 - inormed.y",
+                            "ov_ibounds.x - 1 - inormed.x",
                             "inormed.y",
                           };
       ocg.push("ivec2 dd = ivec2(9999, 0);");
@@ -77,9 +77,9 @@ int OShadow::fshTrace(int overlay, bool rotated, char *to) const
           ocg.push(dds[i]);
           ocg.push(", ");
           ocg.push(m_pxwidth[i]);
-          ocg.push("), step(");
+          ocg.push("), step(float(");
           ocg.push(dds[i]);
-          ocg.push(", dd[0]));");
+          ocg.push("), float(dd[0])));");
         }
       }
   //    ocg.push("int dd = inormed.x")
@@ -111,24 +111,24 @@ OBorderSelected::OBorderSelected(unsigned int widthpixels, int default_selection
 {
 }
 
-int OBorderSelected::fshTrace(int overlay, bool rotated, char *to) const
+int OBorderSelected::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed_empty();
     ocg.param_alias("selected");
 //    ocg.var_const_fixed("border", (int)m_width);
 //    ocg.push( "for (int i=0; i<2; i++){"
-//                "result += (1.0 - step(float(border), float(icoords[i])))*insider(icoords[1-i], ivec2(0, ibounds[1-i]));"
-//                "result += step(float(ibounds[i] - border), float(icoords[i]))*insider(icoords[1-i], ivec2(0, ibounds[1-i]));"
+//                "result += (1.0 - step(float(border), float(icoords[i])))*insider(icoords[1-i], ivec2(0, ov_ibounds[1-i]));"
+//                "result += step(float(ov_ibounds[i] - border), float(icoords[i]))*insider(icoords[1-i], ivec2(0, ov_ibounds[1-i]));"
 //              "}"
 //              "result[0] = result[0]*step(float(selected), float(ispcell[0]))*step(float(ispcell[0]), float(selected));"
 //          );
     ocg.var_fixed("border", (int)m_width);
     ocg.push("border = int(border/2.0 + 0.5);");
     ocg.push( 
-                "result.xy += vec2(step(ibounds.y-border, icoords.y), icoords.x);"
+                "result.xy += vec2(step(ov_ibounds.y-border, icoords.y), icoords.x);"
                 "result.xy += vec2(step(icoords.y, border - 1), icoords.x);"
                 "result.xy = result.xy*step(float(selected), float(ispcell[0]))*step(float(ispcell[0]), float(selected));"
           );
@@ -142,9 +142,9 @@ ORowSelected::ORowSelected(unsigned int widthpixels, int default_selection, cons
 {
 }
 
-int ORowSelected::fshTrace(int overlay, bool rotated, char* to) const
+int ORowSelected::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed_empty();
@@ -152,8 +152,8 @@ int ORowSelected::fshTrace(int overlay, bool rotated, char* to) const
     ocg.var_fixed("border", (int)m_width);
     ocg.push("border = int(border/2.0 + 0.5);");
     ocg.push( 
-                "result.xy += vec2(step(iscaling.x*selected-border-1, icoords.x)*step(icoords.x, iscaling.x*selected-1), icoords.y);"
-                "result.xy += vec2(step(iscaling.x*selected + iscaling.x , icoords.x)*step(icoords.x, iscaling.x*selected + iscaling.x + border ), icoords.y);"
+                "result.xy += vec2(step(ov_iscaler.x*selected-border-1, icoords.x)*step(icoords.x, ov_iscaler.x*selected-1), icoords.y);"
+                "result.xy += vec2(step(ov_iscaler.x*selected + ov_iscaler.x , icoords.x)*step(icoords.x, ov_iscaler.x*selected + ov_iscaler.x + border ), icoords.y);"
           );
   }  
   ocg.goto_func_end(true);
@@ -165,9 +165,9 @@ OColumnSelected::OColumnSelected(unsigned int widthpixels, int default_selection
 {
 }
 
-int OColumnSelected::fshTrace(int overlay, bool rotated, char* to) const
+int OColumnSelected::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed_empty();
@@ -175,8 +175,8 @@ int OColumnSelected::fshTrace(int overlay, bool rotated, char* to) const
     ocg.var_fixed("border", (int)m_width);
     ocg.push("border = int(border/2.0 + 0.5);");
     ocg.push( 
-                "result.xy += vec2(step(iscaling.y*selected-border-1, icoords.y)*step(icoords.y, iscaling.y*selected-1), icoords.x);"
-                "result.xy += vec2(step(iscaling.y*selected + iscaling.y , icoords.y)*step(icoords.y, iscaling.y*selected + iscaling.y + border ), icoords.x);"
+                "result.xy += vec2(step(ov_iscaler.y*selected-border-1, icoords.y)*step(icoords.y, ov_iscaler.y*selected-1), icoords.x);"
+                "result.xy += vec2(step(ov_iscaler.y*selected + ov_iscaler.y , icoords.y)*step(icoords.y, ov_iscaler.y*selected + ov_iscaler.y + border ), icoords.x);"
           );
   }  
   ocg.goto_func_end(true);
@@ -188,9 +188,9 @@ OColumnsSelected::OColumnsSelected(unsigned int widthpixels, int default_selecti
 {
 }
 
-int OColumnsSelected::fshTrace(int overlay, bool rotated, char* to) const
+int OColumnsSelected::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed_empty();
@@ -203,12 +203,12 @@ int OColumnsSelected::fshTrace(int overlay, bool rotated, char* to) const
               );
     if (cyclic)
     {
-      ocg.push("pos_l = pos_l + int(1.0 - step(0.0, float(pos_l)))*viewdimm_b;");
-      ocg.push("pos_r = int(-1.0*step(float(viewdimm_b), float(pos_r)))*viewdimm_b + pos_r;");
+      ocg.push("pos_l = pos_l + int(1.0 - step(0.0, float(pos_l)))*ov_indimms.y;");
+      ocg.push("pos_r = int(-1.0*step(float(ov_indimms.y), float(pos_r)))*ov_indimms.y + pos_r;");
     }
     ocg.push( 
-              "result.xy += vec2(step(iscaling.y*pos_l-border-1, icoords.y)*step(icoords.y, iscaling.y*pos_l-1), icoords.x);"
-              "result.xy += vec2(step(iscaling.y*pos_r + 1, icoords.y)*step(icoords.y, iscaling.y*pos_r + border + 1), icoords.x);"
+              "result.xy += vec2(step(ov_iscaler.y*pos_l-border-1, icoords.y)*step(icoords.y, ov_iscaler.y*pos_l-1), icoords.x);"
+              "result.xy += vec2(step(ov_iscaler.y*pos_r + 1, icoords.y)*step(icoords.y, ov_iscaler.y*pos_r + border + 1), icoords.x);"
             );
   }  
   ocg.goto_func_end(true);
@@ -226,9 +226,9 @@ OToons::OToons(COORDINATION cr, float diameter, float border, const linestyle_t 
 {
 }
 
-int OToons::fshTrace(int overlay, bool rotated, char *to) const
+int OToons::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -239,7 +239,7 @@ int OToons::fshTrace(int overlay, bool rotated, char *to) const
               "vec3  r2 = vec3((diameter - border) * (diameter - border), diameter*diameter, (diameter + border) * (diameter + border));"
               "float mixwell_before = smoothstep(r2[0], r2[1], d2)*(1 - step(r2[1], d2));"
               "float mixwell_aftere = (step(r2[1], d2));"
-              "float fmax = max(ibounds.x, ibounds.y);"
+              "float fmax = max(ov_ibounds.x, ov_ibounds.y);"
               "result += vec3(clamp(mixwell_before + mixwell_aftere, 0.0, 1.0), (sqrt(d2) - diameter)/(fmax - diameter), fmax - diameter);"
               );
   }

@@ -19,9 +19,9 @@ OPTFill::OPTFill(const linestyle_t& kls): DrawOverlay_ColorForegoing(),
 }
   
 
-int OPTFill::fshTrace(int overlay, bool rotated, char *to) const
+int OPTFill::fshOVCoords(int overlay, bool switchedab, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   ocg.goto_normed();
   ocg.var_fixed("clr", m_fill.r, m_fill.g, m_fill.b);
@@ -50,9 +50,9 @@ ODropPoints::ODropPoints(unsigned int ptlimit, COORDINATION, float, const linest
 }
   
 
-int ODropPoints::fshTrace(int overlay, bool rotated, char *to) const
+int ODropPoints::fshOVCoords(int overlay, bool switchedab, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     int ptpixing = ocg.add_movecs_pixing(CR_RELATIVE);
@@ -105,9 +105,9 @@ OPolyLine::OPolyLine(unsigned int countPointsMax, const linestyle_t& kls): DrawO
   appendUniform(DT_1I, &ptCount);
 }
 
-int OPolyLine::fshTrace(int overlay, bool rotated, char *to) const
+int OPolyLine::fshOVCoords(int overlay, bool switchedab, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     int ptpixing = ocg.add_movecs_pixing(CR_RELATIVE);
@@ -292,9 +292,9 @@ OHighlight::OHighlight(const linestyle_t& kls, bool moveable, COORDINATION cr, f
 {
 }
 
-int OHighlight::fshTrace(int overlay, bool rotated, char *to) const
+int OHighlight::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     int cw = ocg.add_movecs_pixing(m_cr);
@@ -320,9 +320,9 @@ OSelector::OSelector(const linestyle_t& kls, float alpha, bool moveable): OSelec
 {
 }
 
-int OSelector::fshTrace(int overlay, bool rotated, char *to) const
+int OSelector::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     {
@@ -338,9 +338,9 @@ OSelectorCirc::OSelectorCirc(const linestyle_t& kls, float alpha, bool moveable)
 {
 }
 
-int OSelectorCirc::fshTrace(int overlay, bool rotated, char *to) const
+int OSelectorCirc::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     {
@@ -361,15 +361,15 @@ OSelectorBand::OSelectorBand(const linestyle_t& kls, float alpha, bool moveable)
 {
 }
 
-int OSelectorBand::fshTrace(int overlay, bool rotated, char *to) const
+int OSelectorBand::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     {
       ocg.push("ioffset[1] = 0;");
       ocg.goto_normed();
-      ocg.push("idimms2[1] = ibounds.y;");
+      ocg.push("idimms2[1] = ov_ibounds.y;");
       ocg.trace_rect_xywh("idimms2", m_alpha);
     }
   }
@@ -422,9 +422,9 @@ OSegment::OSegment(const linestyle_t& kls, COORDINATION cr, float gap, float siz
 {
 }
 
-int OSegment::fshTrace(int overlay, bool rotated, char* to) const
+int OSegment::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, rotated, to);
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     int cw = ocg.add_movecs_pixing(m_cr);

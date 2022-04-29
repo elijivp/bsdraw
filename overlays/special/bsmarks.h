@@ -85,8 +85,10 @@ struct trasspoint_t
   float   position;
   float   halfstrob;
 };
+class FshTraceGenerator;
 
-class OTrassBase3F: public DrawOverlay_ColorThroughPalette, public OVLCoordsOff, public OVLDimmsOff
+
+class OTrass: public DrawOverlay_ColorThroughPalette, public OVLCoordsOff, public OVLDimmsOff
 {
 protected:
   enum { TPS=3 };
@@ -95,28 +97,32 @@ protected:
   const unsigned int  tlines_frame;
   int           tline_current;
   float*        tlines_texture;
+  bool          vv_locked;
+  int           vv_repeatcounter, vv_tline_repeated;
+protected:
+  int           trail_width_px;
+  float         trail_lineary;
   
   dmtype_2d_t   dm_trass;
+private:
+  void  _nladded(bool update);
 public:
   void  appendTrassline(const trasspoint_t tps[], bool update=true);
   void  appendEmptyline(bool update=true);
+  void  repeatTrassline(bool interpolate=true, bool update=true);
   void  clearTrasses(bool update=true);
-public:
-  OTrassBase3F(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe=2048);
-  ~OTrassBase3F();
-};
-
-
-class OTrass: public OTrassBase3F
-{
+  void  scroll(int offset, bool lock=true, bool update=true);
 public:
   OTrass(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe=2048);
+  ~OTrass();
+  void  setTrail(int pxwidth, float lineary, bool update=true);
 protected:
-  virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
+protected:
+  virtual void  finalizeOVCoords(class FshTraceGenerator& ocg) const;
 };
 
-
-class OTrassSelectable: public OTrassBase3F
+class OTrassSelectable: public OTrass
 {
 protected:
   int     selectidx;
@@ -125,7 +131,7 @@ public:
   void    select(int trassidx, bool update=true); // from 0
   int     selected() const { return selectidx; }
 protected:
-  virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
+  virtual void  finalizeOVCoords(class FshTraceGenerator& ocg) const;
 };
 
 

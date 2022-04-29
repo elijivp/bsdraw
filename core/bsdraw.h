@@ -693,6 +693,12 @@ public:
     if (m_overlays[ovl].povl == &m_overlaySingleEmpty)  return nullptr;
     return m_overlays[ovl].povl;
   }
+  DrawOverlay* ovlLast() const
+  {
+    if (m_overlaysCount == 0)
+      return nullptr;
+    return m_overlays[m_overlaysCount - 1].povl;
+  }
   DrawOverlay* ovlPopBack()
   {
     DrawOverlay* result = nullptr;

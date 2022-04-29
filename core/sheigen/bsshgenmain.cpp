@@ -216,6 +216,7 @@ FshMainGenerator::FshMainGenerator(char *deststring, unsigned int allocatedPorti
 
 void FshMainGenerator::_main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const DPostmask& fsp)
 {
+  m_orient = orient;
   static const char fsh_main[] =  "void main()" SHNL
                                   "{" SHNL
                                     "float mixwell = 1.0;" SHNL
@@ -320,7 +321,6 @@ void FshMainGenerator::_main_begin(int initback, unsigned int backcolor, ORIENTA
 
 void FshMainGenerator::main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const DPostmask& fsp)
 {
-  m_orient = orient;
   _main_begin(initback, backcolor, orient, fsp);
   
 //  m_offset += msprintf(&m_to[m_offset],     "ivec2  immod = ivec2( int(mod(fcoords.x, float(ab_iscaler.x))), int(mod(fcoords.y, float(ab_iscaler.y))));" SHNL

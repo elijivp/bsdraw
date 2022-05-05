@@ -221,7 +221,7 @@ void OCluster::updateFinished()
 
 OTrass::OTrass(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe): DrawOverlay_ColorThroughPalette(ipal, discrete),
   trass_limit(trasslimit), tlines_total(linestotal), tlines_frame(linesframe), tline_current(linestotal-1),
-  vv_locked(false), vv_repeatcounter(0), vv_tline_repeated(0)
+  vv_locked(false), vv_repeatcounter(0), vv_tline_repeated(0), vv_maxdistinterp(0.5f)
 {
   tlines_texture = new float[TPS*trass_limit * (tlines_total + tlines_frame)];
   memset(tlines_texture, 0, sizeof(float)*TPS*trass_limit * (tlines_total + tlines_frame));
@@ -229,11 +229,14 @@ OTrass::OTrass(unsigned int trasslimit, unsigned int linestotal, const IPalette*
   dm_trass.len = tlines_frame;
   dm_trass.data = &tlines_texture[(TPS*trass_limit)*(tlines_total-1)];
   appendUniform(DT_2D3F, &dm_trass);
+//  vv_markups = new int[trass_limit];
+//  memset(vv_markups, 0, sizeof(int)*trasslimit);
 }
 
 OTrass::~OTrass()
 {
-  delete []tlines_texture;
+//  delete []tlines_texture;
+//  delete []vv_markups;
 }
 
 void OTrass::setTrail(int pxwidth, float lineary, bool update)
@@ -243,23 +246,22 @@ void OTrass::setTrail(int pxwidth, float lineary, bool update)
   updateParameter(true, update);
 }
 
+void OTrass::setMaxInterpDistance(float mid)
+{
+  vv_maxdistinterp = mid;
+}
+
 void OTrass::_nladded(bool update)
 {
   if (vv_repeatcounter)
   {
     if (vv_repeatcounter < 30)
     {
-      const float* tline_origin = &tlines_texture[TPS*trass_limit*vv_tline_repeated];
-      const float* tline_update = &tlines_texture[TPS*trass_limit*tline_current];
-//    for (int i=0; i<vv_repeatcounter; i++)
-//    {
-//      int tline_backwalk = (tline_current + 1 + i) % tlines_total;
-//      int ik = vv_repeatcounter - 1 - i + 1;
-//      for (int j=0; j<trass_limit; j++)
-//      {
-//        tlines_texture[TPS*trass_limit*tline_backwalk + TPS*j + 1] += (tline_update[TPS*j + 1] - tline_origin[TPS*j + 1])*ik/(vv_repeatcounter+1);
-//      }
-//    }
+      float* tline_origin_specmod = &tlines_texture[TPS*trass_limit*vv_tline_repeated];
+      const float* tline_origin = tline_origin_specmod;
+      float* tline_update_specmod = &tlines_texture[TPS*trass_limit*tline_current];
+      const float* tline_update = tline_update_specmod;
+      
       int backwalk[30];
       for (int i=0; i<vv_repeatcounter; i++)
         backwalk[i] = (tline_current + 1 + i) % tlines_total;
@@ -267,6 +269,14 @@ void OTrass::_nladded(bool update)
       for (int j=0; j<trass_limit; j++)
       {
         if (tline_origin[TPS*j + 0] <= 0.0f || tline_update[TPS*j + 0] <= 0.0f)
+        {
+          if (tline_origin[TPS*j + 0] < 0.0f)
+            tline_origin_specmod[TPS*j + 0] = -tline_origin_specmod[TPS*j + 0];
+          if (tline_update[TPS*j + 0] < 0.0f)
+            tline_update_specmod[TPS*j + 0] = -tline_update_specmod[TPS*j + 0];
+          continue;
+        }
+        if (tline_update[TPS*j + 1] - tline_origin[TPS*j + 1] > vv_maxdistinterp || tline_update[TPS*j + 1] - tline_origin[TPS*j + 1] < -vv_maxdistinterp)
           continue;
         for (int i=0; i<vv_repeatcounter; i++)
         {
@@ -275,6 +285,7 @@ void OTrass::_nladded(bool update)
       }
     }
     vv_repeatcounter = 0;
+//    memset(vv_markups, 0, sizeof(int)*trass_limit);
   }
   
   if (vv_locked == false)
@@ -379,7 +390,7 @@ int OTrass::fshOVCoords(int overlay, bool /*switchedab*/, char* to) const
     ocg.push(
              "int ipos = int(niph[1]*ov_ibounds.x);"
              "vec3 tms = vec3(step(float(abs(ipos - inormed.x)), 0.0), 0.0, 0.0);"
-             "tms[1] = clamp((trw - abs(ipos - inormed.x))/float(trw), 0.0, 1.0);"
+             "tms[1] = clamp((1+trw - abs(ipos - inormed.x))/float(1+trw), 0.0, 1.0);"
              "tms[2] = tms[1]*(1.0 / (1 + 6.2*abs(trl)*(1.0 - tms[1])) );"
              "tms[2] = mix(2.0*tms[1] - tms[2], tms[2], step(0.0, trl));"
              "tms[1] = clamp(tms[2], 0.0, 1.0) - tms[0];"

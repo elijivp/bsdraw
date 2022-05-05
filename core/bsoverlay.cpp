@@ -18,6 +18,12 @@ int DrawOverlay_ColorForegoing::fshColor(int overlay, char* to) const
   return ocg.written();
 }
 
+void DrawOverlay_ColorDomestic::setColor(color3f_t color, bool update)
+{
+  m_color = color;
+  updateParameter(true, update);
+}
+
 int DrawOverlay_ColorDomestic::fshColor(int overlay, char* to) const
 {
   FshColorGenerator ocg(overlay, to);

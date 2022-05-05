@@ -23,12 +23,15 @@ protected:
 class OShadow: public DrawOverlay_ColorDomestic, public OVLCoordsOff, public OVLDimmsOff
 {
   int     m_pxwidth[4];
-  float   m_weight;
+  float   m_curver;
   int     m_lineset;
   color3f_t m_color;
 public:
-  OShadow(int lineset, unsigned int pxwidth=2, float weight=0.75f, const color3f_t& c3f=color3f_black());
-  OShadow(int pxwidth_left, int pxwidth_top, int pxwidth_right, int pxwidth_bottom, float weight=0.75f, const color3f_t& c3f=color3f_black());
+  OShadow(int lineset, unsigned int pxwidth=2, float curver=0.75f, const color3f_t& c3f=color3f_black());
+  OShadow(int pxwidth_left, int pxwidth_top, int pxwidth_right, int pxwidth_bottom, float curver=0.75f, const color3f_t& c3f=color3f_black());
+public:
+  void  setCurver(float curver, bool update=true);  // recomp
+  float curver() const { return m_curver; }
 protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };

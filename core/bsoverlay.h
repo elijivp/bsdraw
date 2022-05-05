@@ -26,6 +26,8 @@ class DrawOverlay_ColorDomestic: public DrawOverlay
   color3f_t         m_color;
 public:
   DrawOverlay_ColorDomestic(const color3f_t& color, bool visible=true): DrawOverlay(visible), m_color(color){}
+  void  setColor(color3f_t color, bool update=true);
+  color3f_t color() const { return m_color; }
 protected:
   virtual int fshColor(int overlay, char *to) const;
 };

@@ -75,4 +75,16 @@ protected:
 };
 
 
+/// 
+class OChannelSeparator: public DrawOverlay_ColorDomestic, public OVLCoordsOff, public OVLDimmsOff
+{
+  float   m_curver;
+  int     m_count;
+public:
+  OChannelSeparator(color3f_t color, float curver, int channels);
+protected:
+  int fshOVCoords(int overlay, bool switchedab, char *to) const;
+};
+
+
 #endif // GRID_H

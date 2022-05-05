@@ -35,15 +35,15 @@ int OBorder::fshOVCoords(int overlay, bool switchedab, char *to) const
 /*******************************************************************************************************************************************************/
 
 
-OShadow::OShadow(int lineset, unsigned int pxwidth, float weight, const color3f_t &clr): DrawOverlay_ColorDomestic(clr), OVLCoordsOff(), OVLDimmsOff(), 
-  m_weight(weight), m_lineset(pxwidth == 0? 0 : lineset), m_color(clr)
+OShadow::OShadow(int lineset, unsigned int pxwidth, float curver, const color3f_t &clr): DrawOverlay_ColorDomestic(clr), OVLCoordsOff(), OVLDimmsOff(), 
+  m_curver(curver), m_lineset(pxwidth == 0? 0 : lineset), m_color(clr)
 {
   for (int i=0; i<4; i++)
     m_pxwidth[i] = (int)pxwidth - 1;
 }
 
-OShadow::OShadow(int pxwidth_left, int pxwidth_top, int pxwidth_right, int pxwidth_bottom, float weight, const color3f_t& clr): DrawOverlay_ColorDomestic(clr), OVLCoordsOff(), OVLDimmsOff(), 
-  m_weight(weight), m_color(clr)
+OShadow::OShadow(int pxwidth_left, int pxwidth_top, int pxwidth_right, int pxwidth_bottom, float curver, const color3f_t& clr): DrawOverlay_ColorDomestic(clr), OVLCoordsOff(), OVLDimmsOff(), 
+  m_curver(curver), m_color(clr)
 {
   m_lineset = 0;
   m_pxwidth[0] = pxwidth_left-1;      if (pxwidth_left > 0)  m_lineset |= OBLINE_LEFT;
@@ -52,12 +52,18 @@ OShadow::OShadow(int pxwidth_left, int pxwidth_top, int pxwidth_right, int pxwid
   m_pxwidth[3] = pxwidth_bottom-1;    if (pxwidth_bottom > 0)  m_lineset |= OBLINE_BOTTOM;
 }
 
+void OShadow::setCurver(float curver, bool update)
+{
+  m_curver = curver;
+  updateParameter(true, update);
+}
+
 int OShadow::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
   FshTraceGenerator ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
-    ocg.var_const_fixed("weight", m_weight);
+    ocg.var_const_fixed("weight", m_curver);
     
     if (m_lineset)
     {
@@ -81,11 +87,13 @@ int OShadow::fshOVCoords(int overlay, bool switchedab, char *to) const
           ocg.push(dds[i]);
           ocg.push("), float(dd[0])));");
         }
-      }
-  //    ocg.push("int dd = inormed.x")
-      ocg.push("mixwell = clamp(1.0 + dd[1] - dd[0], 0.0, 1.0 + dd[1])/(1.0 + dd[1]);");
-      ocg.push("mixwell = 1.22 - 1.22 / (1 + 4.5*mixwell);");
-      ocg.push("mixwell = clamp(weight*(mixwell*mixwell*mixwell), 0.0, 1.0)*step(0.0, mixwell);");
+      }      
+//      ocg.push("mixwell = clamp(1.0 + dd[1] - dd[0], 0.0, 1.0 + dd[1])/(1.0 + dd[1]);");
+//      ocg.push("mixwell = 1.22 - 1.22 / (1 + 4.5*mixwell);");
+//      ocg.push("mixwell = clamp(weight*(mixwell*mixwell*mixwell), 0.0, 1.0)*step(0.0, mixwell);");
+      
+      ocg.construct_trail_vec2("dd[1]", "weight", "dd[0]", "tms");
+      ocg.push("mixwell = tms[1];");
     }
   }  
   ocg.goto_func_end(false);

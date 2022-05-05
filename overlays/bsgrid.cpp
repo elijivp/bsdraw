@@ -321,3 +321,32 @@ int         OGridCells::fshOVCoords(int overlay, bool switchedab, char* to) cons
   ocg.goto_func_end(true);
   return ocg.written();
 }
+
+/********************************************/
+
+OChannelSeparator::OChannelSeparator(color3f_t color, float curver, int channels):  DrawOverlay_ColorDomestic (color),
+  m_curver(curver), m_count(channels)
+{
+}
+
+int OChannelSeparator::fshOVCoords(int overlay, bool switchedab, char* to) const
+{
+  FshTraceGenerator  ocg(this->uniforms(), overlay, to, 0);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  ocg.goto_normed();
+  ocg.var_fixed("chns", m_count);
+  ocg.var_fixed("weight", m_curver);
+  
+//  ocg.var_static(DT_1F, "crossed = inormed.x/float(ov_ibounds.x-1)");
+//  ocg.var_static(DT_1F, "chnstep = float(ov_ibounds.x-1)/chns");
+//  ocg.push( "int optiid = int(crossed/chnstep + sign(crossed)*0.49);"
+//            "int pxoffset = int(chnstep*optiid);" );
+  
+  ocg.var_static(DT_1F, "chnstep = float(ov_ibounds.x-1)/chns");
+  ocg.var_static(DT_1I, "pxoffset = int(int((inormed.x + chnstep/2)/chnstep)*chnstep);");
+  ocg.construct_trail_vec2("chnstep/2", "weight", "inormed.x - pxoffset", "tms");
+  ocg.push("mixwell = tms[0];");
+  
+  ocg.goto_func_end(false);
+  return ocg.written();
+}

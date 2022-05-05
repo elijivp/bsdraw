@@ -81,7 +81,7 @@ public:
 
 struct trasspoint_t
 {
-  float   intensity;    // 0 is off
+  float   intensity;    // 0 is off   // use -intensity for mark slot as not for interpolate
   float   position;
   float   halfstrob;
 };
@@ -99,6 +99,7 @@ protected:
   float*        tlines_texture;
   bool          vv_locked;
   int           vv_repeatcounter, vv_tline_repeated;
+  float         vv_maxdistinterp;
 protected:
   int           trail_width_px;
   float         trail_lineary;
@@ -107,7 +108,7 @@ protected:
 private:
   void  _nladded(bool update);
 public:
-  void  appendTrassline(const trasspoint_t tps[], bool update=true);
+  void  appendTrassline(const trasspoint_t tps[], bool update=true);    // use -intensity for mark slot as not for interpolate
   void  appendEmptyline(bool update=true);
   void  repeatTrassline(bool interpolate=true, bool update=true);
   void  clearTrasses(bool update=true);
@@ -116,6 +117,7 @@ public:
   OTrass(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe=2048);
   ~OTrass();
   void  setTrail(int pxwidth, float lineary, bool update=true);
+  void  setMaxInterpDistance(float mid);
 protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 protected:

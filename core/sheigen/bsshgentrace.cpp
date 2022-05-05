@@ -461,6 +461,30 @@ void FshTraceGenerator::ban_trace(bool ban)
     m_offset += msprintf(&m_to[m_offset], "_tracepass = vec2(1.0, 1.0);");
 }
 
+void FshTraceGenerator::construct_trail_vec2(int pxwidth, float curver, const char* pxdistance_int, const char* result_vec2)
+{
+   m_offset += msprintf(&m_to[m_offset], 
+           "vec2 %1 = vec2(abs(%s), 0.0);" SHNL
+           "%1[1] = clamp((1+%d - %1[0])/float(1+%d), 0.0, 1.0);" SHNL
+           "%1[0] = %1[1]*(1.0 / (1 + 6.2*abs(%F)*(1.0 - %1[1])) );" SHNL
+           "%1[1] = mix(2.0*%1[1] - %1[0], %1[0], step(0.0, %F));" SHNL
+           "%1[0] = clamp(%1[1], 0.0, 1.0);" SHNL,
+           result_vec2, pxdistance_int, pxwidth, pxwidth, curver, curver
+        );
+}
+
+void FshTraceGenerator::construct_trail_vec2(const char*  pxwidth, const char*  curver, const char* pxdistance_int, const char* result_vec2)
+{
+   m_offset += msprintf(&m_to[m_offset], 
+           "vec2 %1 = vec2(abs(%s), 0.0);" SHNL
+           "%1[1] = clamp((1+%3 - %1[0])/float(1+%3), 0.0, 1.0);" SHNL
+           "%1[0] = %1[1]*(1.0 / (1 + 6.2*abs(%4)*(1.0 - %1[1])) );" SHNL
+           "%1[1] = mix(2.0*%1[1] - %1[0], %1[0], step(0.0, %4));" SHNL
+           "%1[0] = clamp(%1[1], 0.0, 1.0);" SHNL,
+           result_vec2, pxdistance_int, pxwidth, curver
+        );
+}
+
 
 
 

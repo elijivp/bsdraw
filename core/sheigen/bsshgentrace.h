@@ -168,6 +168,9 @@ public:           /// PLACES  from inormed
 
 public:
   void  ban_trace(bool);
+public:
+  void  construct_trail_vec2(int trail_width_px, float curver, const char* pxdistance_int, const char* result_vec2_clamped_nonclamped="tms");
+  void  construct_trail_vec2(const char* trail_width, const char* curver, const char* pxdistance_int, const char* result_vec2_clamped_nonclamped="tms");
 public:           /// TRACES  from inormed
   void  trace_triangle_cc(const char *side, int direction, float fillcoeff=0.0f);   /// 0 - UP, 1 - DOWN
   void  simplemix_triangle_cc(const char *side, int direction, float fillcoeff=0.0f);   /// 0 - UP, 1 - DOWN

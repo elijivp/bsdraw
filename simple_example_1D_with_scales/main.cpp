@@ -24,8 +24,8 @@ int main(int argc, char *argv[])
   
   DrawBars* pDB = new DrawBars(pDraw, DrawBars::CP_FROM_DRAWPALETTE);
   pDB->addContour(AT_TOP, 0);   // horizontal line, serving as a delimiter, if you need it
-  pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED_POW2, 0, 1000.0f, 20, 36);
-  pDB->addScaleDrawGraphB(AT_LEFT, DBMODE_STRETCHED_POW2, 20, 20);
+  pDB->addScaleNativeOwnbounds(AT_TOP, 0, 0, 1000.0f, 50.0f, 0.0f, 20, 50);
+  pDB->addScaleSymmetricOwnbounds(AT_LEFT, 0, 0.0f, 10.0f, 20, 32);
   pDB->show();  // resize me :)
   
   return a.exec();

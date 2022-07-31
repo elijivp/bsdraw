@@ -10,14 +10,14 @@
 #include "../core/bsoverlay.h"
 
 /// Standard regular grid
-class OGridRegular: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
+class OGridRegular: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
   enum REGULAR  {  REGULAR_HORZ, REGULAR_VERT };
-  OGridRegular(REGULAR  go, COORDINATION cn, float startchannel, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, bool showGridAtZero=false);
-  OGridRegular(REGULAR  go, COORDINATION cn, float startchannel, COORDINATION cnstep, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, bool showGridAtZero=false);
+  OGridRegular(REGULAR  go, COORDINATION cn, float startchannel, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, bool showBorderGrids=false);
+  OGridRegular(REGULAR  go, COORDINATION cn, float startchannel, COORDINATION cnstep, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, bool showBorderGrids=false);
   /// bounded regular variant
-  OGridRegular(float start, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, bool showGridAtZero=false);
+  OGridRegular(float start, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, bool showBorderGrids=false);
   enum RISK     {  RISK_HORZ, RISK_VERT };
   OGridRegular(RISK     gr, COORDINATION cn, float startchannel, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps=-1);  
   OGridRegular(RISK     gr, COORDINATION cn, float startchannel, COORDINATION cnstep, float stepsize, float mark_centeroffset, bool absolute_height, float risk_height, const linestyle_t& linestyle, int maxsteps=-1);  
@@ -29,14 +29,14 @@ protected:
   float         m_specheight;
   bool          m_babsheight;
   int           m_maxsteps;
-  bool          m_zeroreg;
+  bool          m_bordergrids;
   COORDINATION  m_additcn;
 protected:
   int fshOVCoords(int overlay, bool switchedab, char *to) const;
 };
 
 /// Circular grid
-class OGridCircular: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
+class OGridCircular: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
   OGridCircular(COORDINATION cn, float center_x, float center_y, COORDINATION featcn, float stepsize, const linestyle_t& linestyle, int maxsteps=-1, float border=1.5f);
@@ -50,7 +50,7 @@ protected:
 };
 
 /// Dekart grid
-class OGridDecart: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
+class OGridDecart: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
   OGridDecart(COORDINATION cn, float center_x, float center_y, float step_x, float step_y, int absolute_risk_height, float limit_x_left=-1, float limit_x_right=-1, float limit_y_top=-1, float limit_y_bottom=-1, const linestyle_t& linestyle=linestyle_white(1,0,0));
@@ -64,7 +64,7 @@ protected:
 
 
 // Cells
-class OGridCells: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLDimmsOff
+class OGridCells: public Ovldraw_ColorTraced, public OVLCoordsOff, public OVLDimmsOff
 {
 protected:
   int             m_rows, m_columns;
@@ -76,7 +76,7 @@ protected:
 
 
 /// 
-class OChannelSeparator: public DrawOverlay_ColorDomestic, public OVLCoordsOff, public OVLDimmsOff
+class OChannelSeparator: public Ovldraw_ColorDomestic, public OVLCoordsOff, public OVLDimmsOff
 {
   float   m_curver;
   int     m_count;

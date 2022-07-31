@@ -8,7 +8,9 @@
 /// Created By: Elijah Vlasov
 #include "bsqdraw.h"
 
-#include "../palettes/bsipalette.h"
+#include "../palettes/bspalettes_std.h"
+
+
 
 #if QT_VERSION >= 0x050000
 #include <QApplication>
@@ -20,12 +22,12 @@
 
 extern int msprintf(char* to, const char* format, ...);
 
-int DrawOverlayEmpty::fshOVCoords(int overlay, bool /*switchedab*/, char* to) const
+int OvldrawEmpty::fshOVCoords(int overlay, bool /*switchedab*/, char* to) const
 {
   return msprintf(to, "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition){ return vec4(0.0,0.0,0.0,0.0); }\n", overlay);
 }
 
-int DrawOverlayEmpty::fshColor(int overlay, char* to) const
+int OvldrawEmpty::fshColor(int overlay, char* to) const
 {
   return msprintf(to, "vec3 overlayColor%d(in vec4 overcolor, in vec3 undercolor) { return undercolor; }\n", overlay);
 }
@@ -59,6 +61,11 @@ DrawQWidget::DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int
   m_viewTurn(0),
   m_texOvlCount(0)
 {
+  m_ppal = &palette_creature;
+  m_ppaldiscretise = palette_creature.paletteDiscretion();
+  m_bitmaskPendingChanges |= PC_PALETTE;
+  
+  
   for (int i=0; i<_SF_COUNT; i++)
     m_locations[i] = -1;
   
@@ -225,8 +232,9 @@ void DrawQWidget::initCollectAndCompileShader()
       
       ovlsinfo[i].orient = m_overlays[i].orient;
     }
-    unsigned int fsh_written = m_pcsh->shfragment_store(m_allocatedPortions, m_postMask, m_orient, m_splitPortions, 
-                                                        m_impulsedata, m_overlaysCount, ovlsinfo, m_fshmem);
+    unsigned int fsh_written = m_pcsh->shfragment_store(m_allocatedPortions, m_orient, m_splitPortions, 
+                                                        m_impulsedata, m_overpattern, 
+                                                        m_overlaysCount, ovlsinfo, m_fshmem);
     
 //    qDebug()<<m_pcsh->shaderName()<<" fragment size "<<fsh_written<<" (had"<<m_fshalloc<<")";
     Q_ASSERT(fsh_written <= m_fshalloc);
@@ -245,6 +253,7 @@ void DrawQWidget::initCollectAndCompileShader()
     fout.write((const char*)m_fshmem);
     fout.write((const char*)"\n\n\n\n");
 #endif
+//    qDebug()<<m_fshmem;
   
   char  ovlshaderbuf[8192*2];
   for (unsigned int i=0; i<m_overlaysCount; i++)
@@ -296,7 +305,7 @@ void DrawQWidget::initCollectAndCompileShader()
       {
         fastpaced_settings(_tempvd, i+1);
         m_overlays[i].outloc = m_ShaderProgram.uniformLocation(_tempvd);                  /// ! cannot hide by upcount
-        _DrawOverlay::uniforms_t  uf = m_overlays[i].povl->uniforms();
+        _Ovldraw::uniforms_t  uf = m_overlays[i].povl->uniforms();
         for (unsigned int j=0; j<uf.count; j++)
         {
           fastpaced_opm(_tempvd, i+1, j);
@@ -1018,12 +1027,12 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
   {
     ct.fx_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y);
     ct.fy_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x);
-    ct.fx_rel= singleDimmHeight <=1 ? 0 : float(int(ct.fx_ovl) % singleDimmHeight) / (singleDimmHeight - 1);
-    ct.fy_rel= singleDimmWidth <= 1? 0 : float(int(ct.fy_ovl) % singleDimmWidth) / (singleDimmWidth - 1);
-    ct.fx_ovl = singleDimmHeight <=1 ? 0 : float(int(ct.fx_ovl) % singleDimmHeight) / singleDimmHeight;
-    ct.fy_ovl = singleDimmWidth <= 1? 0 : float(int(ct.fy_ovl) % singleDimmWidth) / singleDimmWidth;
-//    fx = float(int(fx) % singleDimmHeight) / singleDimmHeight;
-//    fy = float(int(fy) % singleDimmWidth) / singleDimmWidth;
+    ct.fx_rel = singleDimmHeight <=1 ? 0 : float(int(ct.fx_ovl) % singleDimmHeight) / (singleDimmHeight - 1);
+    ct.fy_rel = singleDimmWidth <= 1? 0 : float(int(ct.fy_ovl) % singleDimmWidth) / (singleDimmWidth - 1);
+//    ct.fx_ovl = singleDimmHeight <=1 ? 0 : float(int(ct.fx_ovl) % singleDimmHeight) / singleDimmHeight;
+//    ct.fy_ovl = singleDimmWidth <= 1? 0 : float(int(ct.fy_ovl) % singleDimmWidth) / singleDimmWidth;
+    ct.fx_ovl = ct.fx_rel;
+    ct.fy_ovl = ct.fy_rel;
   }
   else
   {
@@ -1031,11 +1040,10 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
     ct.fy_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y);
     ct.fx_rel = singleDimmWidth <= 1? 0 : float(int(ct.fx_ovl) % singleDimmWidth) / (singleDimmWidth - 1);
     ct.fy_rel = singleDimmHeight <= 1? 0 : float(int(ct.fy_ovl) % singleDimmHeight) / (singleDimmHeight - 1);
-    ct.fx_ovl = singleDimmWidth <= 1? 0 : float(int(ct.fx_ovl) % singleDimmWidth) / singleDimmWidth;
-    ct.fy_ovl = singleDimmHeight <= 1? 0 : float(int(ct.fy_ovl) % singleDimmHeight) / singleDimmHeight;
-//    fx = float(int(fx) % singleDimmWidth) / singleDimmWidth;
-//    fy = float(int(fy) % singleDimmHeight) / singleDimmHeight;
-    
+//    ct.fx_ovl = singleDimmWidth <= 1? 0 : float(int(ct.fx_ovl) % singleDimmWidth) / singleDimmWidth;
+//    ct.fy_ovl = singleDimmHeight <= 1? 0 : float(int(ct.fy_ovl) % singleDimmHeight) / singleDimmHeight;
+    ct.fx_ovl = ct.fx_rel;
+    ct.fy_ovl = ct.fy_rel;
   }
   
   bool doStop = false, doUpdate = false;
@@ -1180,7 +1188,7 @@ void DrawQWidget::slot_setMirroredHorz(){ setMirroredHorz(); }
 void DrawQWidget::slot_setMirroredVert(){ setMirroredVert(); }
 void DrawQWidget::slot_setPortionsCount(int count){  setPortionsCount(count); }
 
-void DrawQWidget::slot_ovlReplace(int idx, DrawOverlay* ovl){ ovlReplace(idx, ovl, OO_SAME, false); }
+void DrawQWidget::slot_ovlReplace(int idx, Ovldraw* ovl){ ovlReplace(idx, ovl, OO_SAME, false); }
 
 void DrawQWidget::slot_enableAutoUpdate(bool enabled){  banAutoUpdate(!enabled); }
 void DrawQWidget::slot_disableAutoUpdate(bool disabled){  banAutoUpdate(disabled); }

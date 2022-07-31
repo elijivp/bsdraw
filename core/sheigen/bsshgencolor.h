@@ -1,5 +1,5 @@
-#ifndef FSHCOLORGENERATOR_H
-#define FSHCOLORGENERATOR_H
+#ifndef FSHOVCOLORCONSTRUCTOR_H
+#define FSHOVCOLORCONSTRUCTOR_H
 
 /// This file is a part of shader-code-generation subsystem
 /// You dont need to use classes from this file directly
@@ -7,7 +7,7 @@
 
 #include "../bsoverlay.h"
 
-class FshColorGenerator
+class FshOVColorConstructor
 {
   int                                 m_overlay;
   unsigned int                        loc_uniformsCount;
@@ -19,8 +19,8 @@ private:
 
   int                                 m_paramsctr;
 public:
-  FshColorGenerator(int overlay, char *deststring, int ovlctr=0);
-  FshColorGenerator(const _DrawOverlay::uniforms_t& ufms, int overlay, char *deststring, int ovlctr=0);
+  FshOVColorConstructor(int overlay, char *deststring, int ovlctr=0);
+  FshOVColorConstructor(const _Ovldraw::uniforms_t& ufms, int overlay, char *deststring, int ovlctr=0);
   unsigned int  written() const { return (unsigned int)m_offset; }
 public:
   void  goto_func_begin();
@@ -43,4 +43,4 @@ public:
   void  goto_func_end();
 };
 
-#endif // FSHCOLORGENERATOR_H
+#endif // FSHOVCOLORCONSTRUCTOR_H

@@ -6,7 +6,7 @@
 
 #include <QMainWindow>
 
-#define REGTEST(A) A,
+#define REGTEST(TEST) TEST,
 enum  tests_t {
 #include "tests.h"
 };
@@ -23,11 +23,12 @@ public:
   explicit MainWindow(tests_t testnumber, QWidget *parent = 0);
   ~MainWindow();
 private:
-  DrawQWidget**  draws;
+  QWidget*              wdgArea;
+  DrawQWidget**         draws;
   const int             MW_TEST;
   unsigned int          SAMPLES;
   int                   DSAMPLES; // for omp cycles
-  unsigned int          MAXLINES;
+  unsigned int          LINES;
   unsigned int          PORTIONS;
   int                   RND;
   
@@ -35,6 +36,11 @@ private:
   float*                testbuf1D;
   
   unsigned int          drawscount;
+  
+  class QAbstractButton*  menuBtns[32];
+  class QWidget*          menuWdgs[32];
+  int                     menucount;
+  
   float *               randomer;
   unsigned int          active_ovl;
   int                   ovl_visir, ovl_marks, ovl_figures, ovl_snowflake;
@@ -68,6 +74,7 @@ private:
                         };
   int     sigtype;
   float   sig_k, sig_b;
+  float   portion_delta;
 private:
   enum    OSS           { COS_OFF, COS_DEKART, COS_GRIDS, COS_GRIDSAXES, COS_CIRCULAR, 
                           COS_DROPLINES, COS_BRUSH, COS_CLUSTER, COS_FOLLOWERS, 
@@ -76,9 +83,12 @@ private:
                           COS_SPRITEALPHA, COS_FOREGROUND, COS_BACKGROUND,
                           COS_SHADOW1, COS_SHADOW2, COS_SHADOW3
                         };
+protected:
+  virtual void    resizeEvent(QResizeEvent* ev);
 signals:
   void    remitBounds(float);
 private slots:
+  void    changeMenu();
   void    changeMargins(int value);
   void    changePaletteSTD(int palid);
   void    changePaletteADV(int palid);
@@ -86,12 +96,14 @@ private slots:
   void    changePaletteDiscretion(bool);
   void    changeDataTextureInterpolation(bool);
   void    changeFloats(int edid);
+  void    changeOrientation(int value);
   void    changeSpeedData(int sigid);
-  void    changeSpeedData_Once();
   void    changeSpeedUpdate(int sigid);
   void    changeSpeedUpdate_Once();
   void    changeFeatures(int sigid);
   void    changePostmask(int sigid);
+  void    changePostmaskThreshold(double);
+  void    changeImpulse(int v);
   void    changeInterpolation(int sigid);
   void    changeBans(bool banned);
   void    changePalrangeStart(int);
@@ -119,6 +131,7 @@ private slots:
   
   void    changeMarkData(int);
   void    changeClusterPalette();
+  void    screenshot();
 public slots:
   void    generateData();
   void    updateAllDraws();

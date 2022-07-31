@@ -11,7 +11,7 @@
 
 #include "../core/bsoverlay.h"
 
-class _OActiveBase: public DrawOverlay_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsOff, public IOverlayReactor
+class _OActiveBase: public Ovldraw_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsOff, public IOverlayReactor
 {
   bool  m_linked;
 public:
@@ -25,7 +25,7 @@ protected:
 
 ////
 
-class OActivePointer: public DrawOverlay_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsOff
+class OActivePointer: public Ovldraw_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
   OActivePointer(COORDINATION cn, float center_x, float center_y);
@@ -92,14 +92,56 @@ protected:
   IOverlayReactor*  m_iop3;
 };
 
+class OActiveCursorCarrierL4: public OActiveCursorL
+{
+public:
+  OActiveCursorCarrierL4(IOverlayReactor* iop, IOverlayReactor* iop2, IOverlayReactor* iop3, IOverlayReactor* iop4, bool linkToScaledCenter=false);
+  OActiveCursorCarrierL4(IOverlayReactor* iop, IOverlayReactor* iop2, IOverlayReactor* iop3, IOverlayReactor* iop4, COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter=false);
+protected:
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool*);
+  IOverlayReactor*  m_iop;
+  IOverlayReactor*  m_iop2;
+  IOverlayReactor*  m_iop3;
+  IOverlayReactor*  m_iop4;
+};
 
 typedef OActiveCursorCarrierL OActiveCursorCarrier;
 typedef OActiveCursorCarrierL2 OActiveCursorCarrier2;
 typedef OActiveCursorCarrierL3 OActiveCursorCarrier3;
+typedef OActiveCursorCarrierL4 OActiveCursorCarrier4;
 
 //////////////////////////////////
 
-class OActiveRandom: public DrawOverlay_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsOff
+
+class OActiveCursorCarrierR: public OActiveCursorR
+{
+public:
+  OActiveCursorCarrierR(IOverlayReactor* iop, bool linkToScaledCenter=false);
+  OActiveCursorCarrierR(IOverlayReactor* iop, COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter=false);
+protected:
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool*);
+  IOverlayReactor*  m_iop;
+};
+
+class OActiveCursorCarrierR2: public OActiveCursorR
+{
+public:
+  OActiveCursorCarrierR2(IOverlayReactor* iop, IOverlayReactor* iop2, bool linkToScaledCenter=false);
+  OActiveCursorCarrierR2(IOverlayReactor* iop, IOverlayReactor* iop2, COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter=false);
+protected:
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool*);
+  IOverlayReactor*  m_iop;
+  IOverlayReactor*  m_iop2;
+};
+
+
+
+
+
+
+//////////////////////////////////
+
+class OActiveRandom: public Ovldraw_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
   OActiveRandom();
@@ -110,7 +152,7 @@ protected:
   float   m_seed[2];
 };
 
-//class Interactive1DMaxMin: public DrawOverlay_ColorForegoing, public OVLCoordsOff, public OVLDimmsOff
+//class Interactive1DMaxMin: public Ovldraw_ColorForegoing, public OVLCoordsOff, public OVLDimmsOff
 //{
 //public:
 //  enum POINTERTYPE {  PT_MAX_H, PT_MIN_H, PT_MAX_V, PT_MIN_V  };
@@ -123,7 +165,7 @@ protected:
 
 ///////////////////////////////////////
 
-class OActiveCell: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
+class OActiveCell: public Ovldraw_ColorTraced, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
 {
 protected:
   int             m_rows, m_columns;

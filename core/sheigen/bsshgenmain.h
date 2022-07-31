@@ -1,5 +1,5 @@
-#ifndef FSHMAINGENERATOR_H
-#define FSHMAINGENERATOR_H
+#ifndef FSHDRAWCONSTRUCTOR_H
+#define FSHDRAWCONSTRUCTOR_H
 
 /// This file is a part of shader-code-generation subsystem
 /// You dont need to use classes from this file directly
@@ -21,7 +21,7 @@ public:
   unsigned int operator()(char* to);
 };
 
-class FshMainGenerator
+class FshDrawConstructor
 {
   const char*                         m_writebase;
   char* const                         m_to;
@@ -40,10 +40,10 @@ class FshMainGenerator
 public:
   static unsigned int basePendingSize(const impulsedata_t& imp, unsigned int ovlscount);
 public:
-  FshMainGenerator(char* deststring, unsigned int allocatedPortions, SPLITPORTIONS splitPortions, const impulsedata_t& imp, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]);
+  FshDrawConstructor(char* deststring, unsigned int allocatedPortions, SPLITPORTIONS splitPortions, const impulsedata_t& imp, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]);
   unsigned int  written() const { return (unsigned int)m_offset; }
 private:
-  void  _main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const DPostmask &fsp); /// initresult: 0-none, 1-by zero, 2-by backcolor
+  void  _main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp); /// initresult: 0-none, 1-by zero, 2-by backcolor
 public:
   enum  { 
     INITBACK_BYZERO,
@@ -53,11 +53,12 @@ public:
     INIT_BYVALUE,
     INIT_BYPALETTE
         };
-  void  main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const DPostmask &fsp); /// initresult: 0-none, 1-by zero, 2-by backcolor
-  void  main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const DPostmask &fsp, unsigned int dboundsA, unsigned int dboundsB); /// initresult: 0-none, 1-by zero, 2-by backcolor
-  void  main_end(const DPostmask &fsp);
+  void  main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp); /// initresult: 0-none, 1-by zero, 2-by backcolor
+  void  main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp, unsigned int dboundsA, unsigned int dboundsB); /// initresult: 0-none, 1-by zero, 2-by backcolor
+  void  main_end(const overpattern_t& fsp);
 public:
   void  push(const char* text);
+  void  pushin(const char* text); // guaranteed no SHNL at the end
 public:
   void  ccolor(const char* name, unsigned int value);
   void  cfloatvar(const char* name, float value);
@@ -69,4 +70,4 @@ public:
 private:
 };
 
-#endif // FSHMAINGENERATOR_H
+#endif // FSHDRAWCONSTRUCTOR_H

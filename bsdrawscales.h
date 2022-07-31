@@ -144,8 +144,9 @@ enum   // Draw Bars Flags
   
   DBF_LABELAREA_FULLBAR =     0x200,    // label use neighboor bars
   
-  DBF_MARKS_DONTROUND =       0x400,    // mark placement rounding algorithm: dont round marks
-  DBF_MARKS_DONTROUND1 =      0x800,    // mark placement rounding algorithm: dont round marks and add 1
+  DBF_MARKS_ROUNDING_OFF =        0,    // mark placement rounding algorithm: dont round marks, default
+  DBF_MARKS_ROUNDING_ON =     0x400,    // mark placement rounding algorithm: qRound mark position
+  DBF_MARKS_ROUNDING_OFF_INC =0x800,    // mark placement rounding algorithm: dont round marks and add 1
   
   DBF_POSTFIX_TO_PREFIX =     0x1000,   // 
   DBF_DOCKTO_PREVMARK =       0x2000,   // for NM attach each label to previous mark
@@ -204,6 +205,7 @@ public:
 public:
   DrawQWidget*        getDraw();
   const DrawQWidget*  getDraw() const;
+  QRect               getDrawGeometry() const;
   DrawQWidget*        replaceDraw(DrawQWidget*);
 public:
   int                 barSize(ATTACHED_TO atto) const;

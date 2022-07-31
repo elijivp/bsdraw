@@ -9,7 +9,7 @@
 #include <memory.h>
 
 OSprites::OSprites(QImage *image, IMAGECONVERT icvt, float sizemultiplier, unsigned int count, COLOR_SPRITE cr, CENTER_BY cb): 
-  DrawOverlay(true),
+  Ovldraw(true),
   OVLQImage(image, icvt, false), 
   m_sm(sizemultiplier), m_countmax(count), m_cb(cb), m_cr(cr), m_countactive(0)
 {
@@ -24,7 +24,7 @@ OSprites::OSprites(QImage *image, IMAGECONVERT icvt, float sizemultiplier, unsig
 }
 
 OSprites::OSprites(QImage* image, OVLQImage::IMAGECONVERT icvt, float sizemultiplier, unsigned int count, const IPalette* ipal, bool discrete, CENTER_BY cb):
-  DrawOverlay(true),
+  Ovldraw(true),
   OVLQImage(image, icvt, false), 
   m_sm(sizemultiplier), m_countmax(count), m_cb(cb), m_cr(-1), m_countactive(0)
 {
@@ -49,7 +49,7 @@ OSprites::~OSprites()
 
 int OSprites::fshOVCoords(int overlay, bool switchedab, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_RANDOM);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_RANDOM);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.var_const_fixed("countmax", (int)m_countmax);
@@ -102,18 +102,18 @@ int OSprites::fshOVCoords(int overlay, bool switchedab, char *to) const
 
 int OSprites::fshColor(int overlay, char* to) const
 {
-  FshColorGenerator ocg(overlay, to, 3);
+  FshOVColorConstructor ocg(overlay, to, 3);
   ocg.goto_func_begin();
   ocg.push("result = in_variant.rgb;"
            "mixwell = in_variant.a;");
   ocg.goto_func_end();
 //  if (m_cr == -1)
 //  {
-//    ocg.goto_func_begin(FshColorGenerator::CGV_TEXTURED);
+//    ocg.goto_func_begin(FshOVColorConstructor::CGV_TEXTURED);
 ////    ocg.push("mixwell = trace[0];");
 //  }
 //  else
-//    ocg.goto_func_begin(FshColorGenerator::CGV_COLORED);
+//    ocg.goto_func_begin(FshOVColorConstructor::CGV_COLORED);
 //  ocg.goto_func_end();
   return ocg.written();
 }
@@ -140,7 +140,7 @@ void OSprites::setPalette(const IPalette* ipal, bool discrete)
 {
   m_dm_palette.ppal = ipal;
   m_dm_palette.discrete = discrete;
-  _DrawOverlay::updateParameter(false, true); 
+  _Ovldraw::updateParameter(false, true); 
 }
 
 void  OSprites::setKPDC(unsigned int idx, float x, float y){ ((kpdc_t*)m_kpdc.data)[idx].x = x; ((kpdc_t*)m_kpdc.data)[idx].y = y; }
@@ -159,7 +159,7 @@ void  OSprites::setKPDC(unsigned int idx, float x, float y, float zoom, float co
 
 void OSprites::updateKPDC()
 {
-  _DrawOverlay::updateParameter(false, true);
+  _Ovldraw::updateParameter(false, true);
 }
 
 const kpdc_t& OSprites::at(int idx) const
@@ -174,7 +174,7 @@ void OSprites::setActiveCount(unsigned int count)
     if (count != m_countactive)
     {
       m_countactive = count;
-//      _DrawOverlay::updateParameter(false, true);
+//      _Ovldraw::updateParameter(false, true);
     }
   }
 }

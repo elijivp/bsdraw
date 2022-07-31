@@ -9,7 +9,7 @@
 
 #include "../core/bsoverlay.h"
 
-class OFPoint: public DrawOverlay_ColorForegoing, public OVLCoordsDynamic, public OVLDimms1Static
+class OFPoint: public Ovldraw_ColorForegoing, public OVLCoordsDynamic, public OVLDimms1Static
 {
   float r,g,b;
 public:
@@ -19,7 +19,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OFCircle: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimms1Static
+class OFCircle: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimms1Static
 {
 protected:
   float  m_fillcoeff;
@@ -31,7 +31,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OFSquare: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimms1Static
+class OFSquare: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimms1Static
 {
 protected:
   float  m_fillcoeff;
@@ -42,7 +42,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OFSquareCC: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimms1Static
+class OFSquareCC: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimms1Static
 {
 protected:
   float  m_fillcoeff;
@@ -53,7 +53,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OFRhombCC: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimms1Static
+class OFRhombCC: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimms1Static
 {
 protected:
   float  m_fillcoeff;
@@ -65,7 +65,7 @@ protected:
 };
 
 
-class OFTriangle: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimms1Static
+class OFTriangle: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimms1Static
 {
 public:
   enum  ORIENT { ORIENT_UP, ORIENT_DOWN };
@@ -79,7 +79,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OFLine: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
+class OFLine: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
 protected:
@@ -98,7 +98,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OFRay: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
+class OFRay: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
 {
 public:
 protected:
@@ -115,7 +115,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OFArrow: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
+class OFArrow: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
 {
 protected:
   int           m_at;
@@ -128,7 +128,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OFCross: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimms1Static
+class OFCross: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimms1Static
 {
 protected:
   float         m_gap;
@@ -139,7 +139,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OFAngle: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimms2Static
+class OFAngle: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimms2Static
 {
 protected:
   int     m_orient;
@@ -151,7 +151,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OFVisir: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimms2Static
+class OFVisir: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimms2Static
 {
 protected:
   float         m_gap;
@@ -162,7 +162,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OFFactor: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimms2Static
+class OFFactor: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimms2Static
 {
 protected:
   float         m_gap;
@@ -173,7 +173,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OFPointrun: public DrawOverlay_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsOff
+class OFPointrun: public Ovldraw_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsOff
 {
 protected:
   COORDINATION  m_cr;
@@ -186,7 +186,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OFSubjectif: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimms2Static
+class OFSubjectif: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimms2Static
 {
 protected:
   float         m_gap;
@@ -197,7 +197,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OFObjectif: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimms2Static
+class OFObjectif: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimms2Static
 {
 protected:
   float         m_gap[2];
@@ -209,7 +209,7 @@ protected:
 };
 
 
-class OFDouble: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimms2Dynamic
+class OFDouble: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimms2Dynamic
 {
 protected:
   bool          m_horz;
@@ -222,7 +222,7 @@ protected:
 };
 
 
-//class OFLevels: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
+//class OFLevels: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
 //{
 //public:
 //protected:

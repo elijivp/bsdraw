@@ -45,10 +45,10 @@ inline  void  _bsdraw_update_bnd(const float k, const float b, bounds_t* bnd)
 
 //#########################
 
-class DrawOverlayEmpty: public DrawOverlay
+class OvldrawEmpty: public Ovldraw
 {
 public:
-  DrawOverlayEmpty(): DrawOverlay(true){}
+  OvldrawEmpty(): Ovldraw(true){}
   virtual int  fshOVCoords(int, bool, char*) const;
   virtual int  fshColor(int, char*) const;
 };
@@ -78,7 +78,7 @@ inline unsigned int length(const dcsizecd_t& s){ return s.dimm*s.scaling*s.split
 //#########################
 
 
-class DrawCore: public IDrawOverlayFriendly
+class DrawCore: public IOvldrawFriendly
 {
 protected:
   enum  DATAASTEXTURE  {  DATEX_2D, DATEX_15D, DATEX_1D, DATEX_DD, DATEX_POLAR };
@@ -132,7 +132,7 @@ protected:
   int                   m_bitmaskUpdateBan;
   int                   m_bitmaskPendingChanges;
 protected:
-  DPostmask             m_postMask;
+  overpattern_t           m_overpattern;
 public:
                     /// Redraw control. Which actions will cause repaint
   enum  REDRAWBY        { RD_BYDATA, RD_BYSETTINGS, RD_BYOVL_ADDREMOVE, RD_BYOVL_ACTIONS };   // special now used on overlays removing
@@ -179,7 +179,7 @@ protected:
   
   struct overlays_t
   {
-    DrawOverlay*          povl;
+    Ovldraw*          povl;
     OVL_ORIENTATION       orient;
     IOverlayReactor*      prct;
     unsigned int          ponger_reinit;
@@ -188,7 +188,7 @@ protected:
     unsigned int          uf_count;
     uniform_located_t     uf_arr[OVLUFLIMIT];
     msstruct_t            olinks;
-    void      _reinit(DrawOverlay* p, OVL_ORIENTATION o, unsigned int ufcount)
+    void      _reinit(Ovldraw* p, OVL_ORIENTATION o, unsigned int ufcount)
     {
       povl = p;
       orient = o;
@@ -207,7 +207,7 @@ protected:
   unsigned int          m_overlaysCount;
   DrawEventReactor*           m_proactive;
   bool                  m_proactiveOwner;
-  DrawOverlayEmpty      m_overlaySingleEmpty;
+  OvldrawEmpty      m_overlaySingleEmpty;
 public:
   DrawCore(DATAASTEXTURE datex, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): m_datex(datex), 
                                                         m_portionSize(0), m_allocatedPortions(portions), 
@@ -221,7 +221,7 @@ public:
                                                         m_ppal(nullptr), m_ppaldiscretise(false), m_doclearbackground(true), m_clearsource(CS_WIDGET), 
                                                         m_groundType(GND_NONE), m_groundData(nullptr), m_groundDataFastFree(true),
                                                         m_groundMipMapping(false), m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
-                                                        m_postMask(DPostmask::empty()),
+                                                        m_overpattern(overpattern_off()),
                                                         m_overlaysCount(0), m_proactive(nullptr), m_proactiveOwner(true)
   {
     _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);
@@ -571,11 +571,31 @@ public:
       m_impulsedata.coeff[i] = coeffs[i];
     setImpulse(idt);
   }
+  void  setImpulseCoeffA(float coeff_left, float coeff_central, float coeff_right, bool noscaled=false, bool cycled=false)
+  {
+    impulsedata_t idt = { noscaled? impulsedata_t::IR_A_COEFF_NOSCALED : impulsedata_t::IR_A_COEFF, 3, 1, cycled? 1 : 0, {coeff_left, coeff_central, coeff_right} };
+    setImpulse(idt);
+  }
+  void  setImpulseCoeffA(float coeff_left2, float coeff_left1, float coeff_central, float coeff_right1, float coeff_right2, bool noscaled=false, bool cycled=false)
+  {
+    impulsedata_t idt = { noscaled? impulsedata_t::IR_A_COEFF_NOSCALED : impulsedata_t::IR_A_COEFF, 5, 2, cycled? 1 : 0, {coeff_left2, coeff_left1, coeff_central, coeff_right1, coeff_right2} };
+    setImpulse(idt);
+  }
   void  setImpulseCoeffB(int count, const float coeffs[], int central, bool noscaled=false, bool cycled=false)
   {
     impulsedata_t idt = { noscaled? impulsedata_t::IR_B_COEFF_NOSCALED : impulsedata_t::IR_B_COEFF, count, central, cycled? 1 : 0, {} };
     for (int i=0; i<count; i++)
       m_impulsedata.coeff[i] = coeffs[i];
+    setImpulse(idt);
+  }
+  void  setImpulseCoeffB(float coeff_left, float coeff_central, float coeff_right, bool noscaled=false, bool cycled=false)
+  {
+    impulsedata_t idt = { noscaled? impulsedata_t::IR_B_COEFF_NOSCALED : impulsedata_t::IR_B_COEFF, 3, 1, cycled? 1 : 0, {coeff_left, coeff_central, coeff_right} };
+    setImpulse(idt);
+  }
+  void  setImpulseCoeffB(float coeff_left2, float coeff_left1, float coeff_central, float coeff_right1, float coeff_right2, bool noscaled=false, bool cycled=false)
+  {
+    impulsedata_t idt = { noscaled? impulsedata_t::IR_B_COEFF_NOSCALED : impulsedata_t::IR_B_COEFF, 5, 2, cycled? 1 : 0, {coeff_left2, coeff_left1, coeff_central, coeff_right1, coeff_right2} };
     setImpulse(idt);
   }
   void  setImpulseBordersA(int minscaling, int bordersize, bool fixed=true)
@@ -630,7 +650,7 @@ public:
   }
 public:
   /// 3. Overlays
-  int             ovlPushBack(DrawOverlay* povl, OVL_ORIENTATION orient=OO_INHERITED, bool owner=true)
+  int             ovlPushBack(Ovldraw* povl, OVL_ORIENTATION orient=OO_INHERITED, bool owner=true)
   {
     if (m_overlaysCount == OVLLIMIT) return -1;
     _ovlSet(m_overlaysCount, povl, orient, owner, false, 0);
@@ -638,7 +658,7 @@ public:
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ++m_overlaysCount;
   }
-  int             ovlPushBack(DrawOverlay* povl, int ovlroot, OVL_ORIENTATION orient=OO_INHERITED, bool owner=true)
+  int             ovlPushBack(Ovldraw* povl, int ovlroot, OVL_ORIENTATION orient=OO_INHERITED, bool owner=true)
   {
     if (m_overlaysCount == OVLLIMIT || ovlroot <= 0 || ovlroot > (int)m_overlaysCount) return -1;
     _ovlSet(m_overlaysCount, povl, orient, owner, true, ovlroot-1);
@@ -646,7 +666,7 @@ public:
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ++m_overlaysCount;
   }
-  int             ovlReplace(int ovl, DrawOverlay* povl, OVL_ORIENTATION orient=OO_SAME, bool owner=true, DrawOverlay** old=nullptr)
+  int             ovlReplace(int ovl, Ovldraw* povl, OVL_ORIENTATION orient=OO_SAME, bool owner=true, Ovldraw** old=nullptr)
   {
     ovl--;
     OVL_ORIENTATION c_orient = orient == OO_SAME? m_overlays[ovl].orient : orient;
@@ -657,7 +677,7 @@ public:
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ovl + 1;
   }
-  int             ovlReplace(int ovl, DrawOverlay* povl, int ovlroot, OVL_ORIENTATION orient=OO_SAME, bool owner=true, DrawOverlay** old=nullptr)
+  int             ovlReplace(int ovl, Ovldraw* povl, int ovlroot, OVL_ORIENTATION orient=OO_SAME, bool owner=true, Ovldraw** old=nullptr)
   {
     ovl--;
     OVL_ORIENTATION c_orient = orient == OO_SAME? m_overlays[ovl].orient : orient;
@@ -673,10 +693,10 @@ public:
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
     return ovl + 1;
   }
-  DrawOverlay*       ovlRemove(int ovl)
+  Ovldraw*       ovlRemove(int ovl)
   {
     ovl--;
-    DrawOverlay* result = nullptr;
+    Ovldraw* result = nullptr;
     if (_ovlRemove(ovl, &result) == false)
       return nullptr;
     m_bitmaskPendingChanges |= PC_INIT;
@@ -686,22 +706,22 @@ public:
         m_overlaysCount--;
     return result;
   }
-  DrawOverlay* ovlGet(int ovl) const
+  Ovldraw* ovlGet(int ovl) const
   {
     ovl -= 1;
     if (ovl < 0 || (unsigned int)ovl >= m_overlaysCount) return nullptr;
     if (m_overlays[ovl].povl == &m_overlaySingleEmpty)  return nullptr;
     return m_overlays[ovl].povl;
   }
-  DrawOverlay* ovlLast() const
+  Ovldraw* ovlLast() const
   {
     if (m_overlaysCount == 0)
       return nullptr;
     return m_overlays[m_overlaysCount - 1].povl;
   }
-  DrawOverlay* ovlPopBack()
+  Ovldraw* ovlPopBack()
   {
-    DrawOverlay* result = nullptr;
+    Ovldraw* result = nullptr;
     if (_ovlRemove((int)m_overlaysCount - 1, &result))
     {
       m_overlaysCount--;
@@ -717,7 +737,7 @@ public:
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
   }
 private:
-  void _ovlSet(int idx, DrawOverlay* povl, OVL_ORIENTATION orient, bool owner, bool doRoot, int rootidx)
+  void _ovlSet(int idx, Ovldraw* povl, OVL_ORIENTATION orient, bool owner, bool doRoot, int rootidx)
   {
     if (povl == nullptr){   povl = &m_overlaySingleEmpty;  owner = false; }
     povl->increasePingerReinit();
@@ -735,10 +755,10 @@ private:
           delete m_overlays[i].povl;
     m_overlaysCount = 0;
   }
-  bool  _ovlRemove(int idx, DrawOverlay** old)
+  bool  _ovlRemove(int idx, Ovldraw** old)
   {
     if (idx < 0 || idx >= (int)m_overlaysCount) return false;
-    DrawOverlay* removable = m_overlays[idx].povl;
+    Ovldraw* removable = m_overlays[idx].povl;
     if (removable == &m_overlaySingleEmpty)
       removable = nullptr;
     else
@@ -754,14 +774,14 @@ private:
     return true;
   }
 public:
-  /// 4. Optimized/Native posteffect methods
-  void            setPostMask(const DPostmask& fsp)
+  /// 4. Optimized/Native posteffect methods on scaling
+  void            setOverpattern(const overpattern_t& fsp)
   {
-    m_postMask = fsp;
+    m_overpattern = fsp;
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
-  DPostmask    postMask() const { return m_postMask; }
+  const overpattern_t& overpattern() const { return m_overpattern; }
 protected:
   virtual void            overlayUpdate(bool reinit, bool pendonly)
   {
@@ -769,7 +789,7 @@ protected:
     if (pendonly) return;
     if (!autoUpdateBanned(RD_BYOVL_ACTIONS))  callWidgetUpdate();
   }
-  virtual void            innerOverlayReplace(int ovlid, DrawOverlay* novl, OVL_ORIENTATION orient, bool owner)
+  virtual void            innerOverlayReplace(int ovlid, Ovldraw* novl, OVL_ORIENTATION orient, bool owner)
   {
     m_overlays[ovlid]._reinit(novl, orient == OO_SAME? m_overlays[ovlid].orient : orient, novl->uniforms().count);  ///_setdriven derived
     if (novl != &m_overlaySingleEmpty)

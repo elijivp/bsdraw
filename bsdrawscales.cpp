@@ -1034,6 +1034,7 @@ MarginLabel::~MarginLabel(){}
 
 class MarginSingle: public MarginElementCached, public MarginCallback
 {
+  int             round;
   int             mlenmaxi, mwid;
 protected:
   bool            relative;
@@ -1042,8 +1043,8 @@ protected:
   float           pos_origin;
   float           pos_mark;
 public:
-  MarginSingle(int _marklen, float pos, bool _relative):
-    mlenmaxi(_marklen), mwid(_marklen? 1 : 0), 
+  MarginSingle(int rounding, int _marklen, float pos, bool _relative):
+    round(rounding), mlenmaxi(_marklen), mwid(_marklen? 1 : 0), 
     relative(_relative), c_LL(0.0f), c_HL(1.0f), c_MOD(0.0f),
     pos_origin(pos)
   {
@@ -1065,31 +1066,63 @@ public:
 protected:
   void _update_single_area(const uarea_t& area)
   {
-    int dimm_main = area.segm_main-1;
-    if (BAR_VERT[area.atto])
+    const int dimm_main = area.segm_main-1;
+    float pm = BAR_VERT[area.atto] ^ area.mirrored? 1.0f - pos_mark : pos_mark;
+    int offs = area.segm_pre + (round == 0? qRound(dimm_main*pm) : round == 1? int(dimm_main*pm) : int(dimm_main*pm) + 1);
+    
+    switch (area.atto)
     {
-      int offs = area.mirrored? area.segm_pre + dimm_main*pos_mark:
-                                area.segm_pre + dimm_main*(1.0f - pos_mark);
-      int l1 = area.atto_begin;
-      int l2 = area.atto_begin + (area.atto == AT_LEFT? -(mlenmaxi-1) : (mlenmaxi-1));
-      mark.anchor = QPoint(l1, offs);
-      if (area.atto == AT_LEFT)
-        mark.rect.setCoords(l2, offs, l1, offs);
-      else
-        mark.rect.setCoords(l1, offs, l2, offs);
+    case AT_LEFT:
+      {
+        mark.anchor = QPoint(area.atto_begin, offs);
+        mark.rect.setCoords(area.atto_begin - (mlenmaxi-1), offs, area.atto_begin, offs);
+        break;
+      }
+    case AT_RIGHT:
+      {
+        mark.anchor = QPoint(area.atto_begin, offs);
+        mark.rect.setCoords(area.atto_begin, offs, area.atto_begin + (mlenmaxi-1), offs);
+        break;
+      }
+    case AT_TOP:
+      {
+        mark.anchor = QPoint(offs, area.atto_begin);
+        mark.rect.setCoords(offs, area.atto_begin - (mlenmaxi-1), offs, area.atto_begin);
+        break;
+      }
+    case AT_BOTTOM:
+      {
+        mark.anchor = QPoint(offs, area.atto_begin);
+        mark.rect.setCoords(offs, area.atto_begin, offs, area.atto_begin + (mlenmaxi-1));
+        break;
+      }
     }
-    else
-    {
-      int offs = area.mirrored? area.segm_pre + dimm_main*(1.0f - pos_mark):
-                                area.segm_pre + dimm_main*pos_mark;
-      int l1 = area.atto_begin;
-      int l2 = area.atto_begin + (area.atto == AT_TOP? -(mlenmaxi-1) : (mlenmaxi-1));
-      mark.anchor = QPoint(offs, l1);
-      if (area.atto == AT_TOP)
-        mark.rect.setCoords(offs, l2, offs, l1);
-      else
-        mark.rect.setCoords(offs, l1, offs, l2);
-    }
+//    if (BAR_VERT[area.atto])
+//    {
+//      float r = round == 0? qRound(i*d3) : round == 1? int(i*d3) : int(i*d3) + 1;
+//      int offs = area.segm_pre + (;
+//      int offs = area.mirrored? area.segm_pre + dimm_main*pos_mark:
+//                                area.segm_pre + dimm_main*(1.0f - pos_mark);
+//      int l1 = area.atto_begin;
+//      int l2 = area.atto_begin + (area.atto == AT_LEFT? -(mlenmaxi-1) : (mlenmaxi-1));
+//      mark.anchor = QPoint(l1, offs);
+//      if (area.atto == AT_LEFT)
+//        mark.rect.setCoords(l2, offs, l1, offs);
+//      else
+//        mark.rect.setCoords(l1, offs, l2, offs);
+//    }
+//    else
+//    {
+//      int offs = area.mirrored? area.segm_pre + dimm_main*(1.0f - pos_mark):
+//                                area.segm_pre + dimm_main*pos_mark;
+//      int l1 = area.atto_begin;
+//      int l2 = area.atto_begin + (area.atto == AT_TOP? -(mlenmaxi-1) : (mlenmaxi-1));
+//      mark.anchor = QPoint(offs, l1);
+//      if (area.atto == AT_TOP)
+//        mark.rect.setCoords(offs, l2, offs, l1);
+//      else
+//        mark.rect.setCoords(offs, l1, offs, l2);
+//    }
   }
   virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
   {
@@ -1155,15 +1188,15 @@ class MarginPointer: public MarginSingle, public MarginTextformat
   float           c_value;
   bool            f_assigned;
 public:
-  MarginPointer(int _marklen, float pos, bool _relative, ORIENTATION _orient, bool textinner, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/):
-    MarginSingle(_marklen, pos, _relative),
+  MarginPointer(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, bool textinner, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/):
+    MarginSingle(rounding, _marklen, pos, _relative),
     orient(_orient), textInnerPlaced(textinner), alignment(align), c_value(-1.0f), f_assigned(false)
   {
     _update_pointer_pos(pos_mark);
     pointer.visible = 1;
   }
-  MarginPointer(int _marklen, float pos, bool _relative, ORIENTATION _orient, bool textinner, const QFont& fnt, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/): 
-    MarginSingle(_marklen, pos, _relative), MarginTextformat(fnt),
+  MarginPointer(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, bool textinner, const QFont& fnt, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/): 
+    MarginSingle(rounding, _marklen, pos, _relative), MarginTextformat(fnt),
     orient(_orient), textInnerPlaced(textinner), alignment(align), c_value(-1.0f),  f_assigned(false)
   {
     _update_pointer_pos(pos_mark);
@@ -1518,6 +1551,7 @@ protected:
             if (countMaxiNoted < 3)
               break;
           }
+//          qDebug()<<over_step[0];
         }
       }
       else
@@ -1714,13 +1748,20 @@ protected:
     
     if (mod != 0.0f)
     {
+      float pv = LL;
       for (int i=0; i<total; i++)
       {
         float v = LL + i*bndstep;
         v -= int(v/mod)*mod;
+        if (i == total-1 && pv > v)
+        {
+          if (v < mod/120.0f)
+            v += mod;
+        }
         if (postfixLimited())
           turnPostfixByPosition(i, total);
         assignText(&texts[i], redact(v), m_fontReplaced, m_font);
+        pv = v;
       }
     }
     else
@@ -1846,6 +1887,11 @@ protected:
     {
       LL -= int(LL/mod)*mod;
       HL -= int(HL/mod)*mod;
+      if (HL <= LL)
+      {
+        if (HL < mod/120.0f)
+          HL += mod;
+      }
     }
     for (int i=0; i<2; i++)
     {
@@ -2055,13 +2101,21 @@ protected:
     MarginTextformat::numformatUpdate(LL, HL);
     if (mod != 0.0f)
     {
+      float pv = LL;
       for (int i=0; i<total; i++)
       {
         if (postfixLimited())
           turnPostfixByPosition(i, total);
         float v = LL + i*bndstep;
         v -= int(v/mod)*mod;
+        if (i == total-1 && pv > v)
+        {
+          if (v < mod/120.0f)
+            v += mod;
+//          v = pv + bndstep;
+        }
         assignText(&texts[i], redact(v), m_fontReplaced, m_font);
+        pv = v;
       }
     }
     else
@@ -2302,7 +2356,7 @@ protected:
   int           pixSpace;
   int           miniPerMaxi;
   int           divalgo;
-  int           round; // 0 - default rounding, 1 - no round, 2 - no round and +1 for all except first and last
+  int           round; // 0 - rounding, 1 - no round, 2 - no round and +1 for all except first and last
   int           c_multiplier;
 protected:
   bool          textInnerPlaced;
@@ -2411,6 +2465,13 @@ protected:
   }
 private:
   float modcast(float v){ return v - int(v/cachedRdata().rel_fixed.MOD)*cachedRdata().rel_fixed.MOD; }
+  float modcast2(float v, float pv)
+  {
+    float result = v - int(v/cachedRdata().rel_fixed.MOD)*cachedRdata().rel_fixed.MOD;
+    if (result < pv && result < oddbase + cachedRdata().rel_fixed.MOD/120.0f)
+      result += cachedRdata().rel_fixed.MOD;
+    return result;
+  }
   void  recalculate(const uarea_t& area)
   {
     const int countMaxiTotal = countMaxiNoted + countMaxiHided;
@@ -2476,14 +2537,18 @@ private:
     }
     
     int m=0;
-    float pxStep=0;  // multiplied true bnd-offset by odd
+    float fpxStep=0;  // multiplied true bnd-offset by odd
     int pxBegin=0;
-    int pxFirst=0;  // dimm-offset by odd
-    int pxLast=0;
+    float fpxFirst=0;  // dimm-offset by odd
+    float fpxLast=0;
     int pxEnd=0;
     {
-      pxBegin = MVORIG? area.segm_pre : area.segm_pre + area.segm_main - 1;
-      pxEnd = MVORIG? area.segm_pre + area.segm_main - 1 : area.segm_pre;
+      float mover = LL;
+      const int dimm_main = area.segm_main - 1;
+//      pxBegin = MVORIG? area.segm_pre : area.segm_pre + area.segm_main - 1;
+//      pxEnd = MVORIG? area.segm_pre + area.segm_main - 1 : area.segm_pre;
+      pxBegin = MVORIG? area.segm_pre : area.segm_pre + dimm_main;
+      pxEnd = MVORIG? area.segm_pre + dimm_main : area.segm_pre;
       
       ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, pxBegin) : QPoint(pxBegin, l1);
       if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, pxBegin, l1, pxBegin);
@@ -2496,7 +2561,7 @@ private:
       if (doChangeLabel)
       {
         turnPostfixByPosition(0, countMaxiTotal);
-        assignText(&texts[m], redact(isMOD? modcast(LL): LL), m_fontReplaced, m_font);
+        assignText(&texts[m], redact(isMOD? modcast(mover): mover), m_fontReplaced, m_font);
       }
       texts[m].pos_update_fn(&texts[m]);
       texts[m].visible = 1;
@@ -2508,15 +2573,18 @@ private:
           turnPostfixByPosition(1, countMaxiTotal);
         }
         float odd1 = multiplier*odd;
-        float mover = (LL - oddbase) - int((LL - oddbase)/odd1)*odd1;     // bnd-offset by odd
+        mover = (LL - oddbase) - int((LL - oddbase)/odd1)*odd1;     // bnd-offset by odd
         if (mover < 0)
           mover = LL - (odd1 + mover) + odd1;
         else
           mover = LL - mover + odd1;
         
-        int dlen0 = (mover - LL)/(HL - LL)*area.segm_main;
-        pxFirst = pxBegin + (MVORIG? dlen0 : -dlen0);
-        pxStep = (MVORIG? odd1 : -odd1)/(HL-LL)*area.segm_main;
+//        int dlen0 = (mover - LL)/(HL - LL)*area.segm_main;
+//        fpxFirst = pxBegin + (MVORIG? dlen0 : -dlen0);
+//        fpxStep = (MVORIG? odd1 : -odd1)/(HL-LL)*area.segm_main;
+        
+        fpxFirst = pxBegin + (MVORIG? mover - LL : -(mover - LL))/(HL - LL)*dimm_main;
+        fpxStep = (MVORIG? odd1 : -odd1)/(HL-LL)*dimm_main;
         
 #define FAST_ASSIGN_TEXT \
           texts[m].pos_mark = ua_marks[m].anchor; \
@@ -2531,10 +2599,15 @@ private:
           while (mover < HL)
           {
             Q_ASSERT(m + 2 <= countMaxiTotal);
-            float pos1 = (m - 1)*pxStep;
-            pxLast = pxFirst + (round == 0 ? qRound(pos1) : round == 1? int(pos1) : int(pos1) + 1);
-            ua_marks[m].anchor = QPoint(l1, pxLast);
-            ua_marks[m].rect.setCoords(l2, pxLast, l1, pxLast);
+            float pos1 = (m - 1)*fpxStep;
+            switch (round)
+            {
+            case 0: fpxLast = qRound(fpxFirst + pos1); break;
+            case 1: fpxLast = int(fpxFirst + pos1); break;
+            case 2: fpxLast = int(fpxFirst + pos1) + 1; break;
+            }
+            ua_marks[m].anchor = QPoint(l1, fpxLast);
+            ua_marks[m].rect.setCoords(l2, fpxLast, l1, fpxLast);
             FAST_ASSIGN_TEXT
             mover += odd1;
             m++;
@@ -2545,10 +2618,15 @@ private:
           while (mover < HL)
           {
             Q_ASSERT(m + 2 <= countMaxiTotal);
-            float pos1 = (m - 1)*pxStep;
-            pxLast = pxFirst + (round == 0 ? qRound(pos1) : round == 1? int(pos1) : int(pos1) + 1);
-            ua_marks[m].anchor = QPoint(l1, pxLast);
-            ua_marks[m].rect.setCoords(l1, pxLast, l2, pxLast);
+            float pos1 = (m - 1)*fpxStep;
+            switch (round)
+            {
+            case 0: fpxLast = qRound(fpxFirst + pos1); break;
+            case 1: fpxLast = int(fpxFirst + pos1); break;
+            case 2: fpxLast = int(fpxFirst + pos1) + 1; break;
+            }
+            ua_marks[m].anchor = QPoint(l1, fpxLast);
+            ua_marks[m].rect.setCoords(l1, fpxLast, l2, fpxLast);
             FAST_ASSIGN_TEXT
             mover += odd1;
             m++;
@@ -2559,10 +2637,15 @@ private:
           while (mover < HL)
           {
             Q_ASSERT(m + 2 <= countMaxiTotal);
-            float pos1 = (m - 1)*pxStep;
-            pxLast = pxFirst + (round == 0 ? qRound(pos1) : round == 1? int(pos1) : int(pos1) + 1);
-            ua_marks[m].anchor = QPoint(pxLast, l1);
-            ua_marks[m].rect.setCoords(pxLast, l2, pxLast, l1);
+            float pos1 = (m - 1)*fpxStep;
+            switch (round)
+            {
+            case 0: fpxLast = qRound(fpxFirst + pos1); break;
+            case 1: fpxLast = int(fpxFirst + pos1); break;
+            case 2: fpxLast = int(fpxFirst + pos1) + 1; break;
+            }
+            ua_marks[m].anchor = QPoint(fpxLast, l1);
+            ua_marks[m].rect.setCoords(fpxLast, l2, fpxLast, l1);
             FAST_ASSIGN_TEXT
             mover += odd1;
             m++;
@@ -2573,10 +2656,15 @@ private:
           while (mover < HL)
           {
             Q_ASSERT(m + 2 <= countMaxiTotal);
-            float pos1 = (m - 1)*pxStep;
-            pxLast = pxFirst + (round == 0 ? qRound(pos1) : round == 1? int(pos1) : int(pos1) + 1);
-            ua_marks[m].anchor = QPoint(pxLast, l1);
-            ua_marks[m].rect.setCoords(pxLast, l1, pxLast, l2);
+            float pos1 = (m - 1)*fpxStep;
+            switch (round)
+            {
+            case 0: fpxLast = qRound(fpxFirst + pos1); break;
+            case 1: fpxLast = int(fpxFirst + pos1); break;
+            case 2: fpxLast = int(fpxFirst + pos1) + 1; break;
+            }
+            ua_marks[m].anchor = QPoint(fpxLast, l1);
+            ua_marks[m].rect.setCoords(fpxLast, l1, fpxLast, l2);
             FAST_ASSIGN_TEXT
             mover += odd1;
             m++;
@@ -2627,9 +2715,9 @@ private:
         if (m > 1)
         {
 //          if (texts[m-1].visible)
-//            texts[m-1].visible = (MVORIG ? (pxEnd - pxLast) : -(pxEnd - pxLast)) > (BAR_VERT[area.atto] ? texts[m-1].uin_locsize.height() : texts[m-1].uin_locsize.width())? 1 : 0;
+//            texts[m-1].visible = (MVORIG ? (pxEnd - fpxLast) : -(pxEnd - fpxLast)) > (BAR_VERT[area.atto] ? texts[m-1].uin_locsize.height() : texts[m-1].uin_locsize.width())? 1 : 0;
           if (texts[m-1].visible)
-            texts[m-1].visible = (MVORIG ? (pxEnd - pxLast) : -(pxEnd - pxLast)) > pixSpace? 1 : 0;
+            texts[m-1].visible = (MVORIG ? (pxEnd - fpxLast) : -(pxEnd - fpxLast)) > pixSpace? 1 : 0;
         }
       }
       
@@ -2644,7 +2732,7 @@ private:
       if (doChangeLabel)
       {
         turnPostfixByPosition(countMaxiTotal-1, countMaxiTotal);
-        assignText(&texts[m], redact(isMOD? modcast(HL): HL), m_fontReplaced, m_font);
+        assignText(&texts[m], redact(isMOD? modcast2(HL, mover): HL), m_fontReplaced, m_font);
       }
       texts[m].pos_update_fn(&texts[m]);
       texts[m].visible = 1;
@@ -2670,31 +2758,34 @@ private:
 //    }
 //    rearrange(BAR_VERT[area.atto], area.mirrored, texts, countMaxiNoted);
     
-    if (miniPerMaxi && qAbs(pxStep)/(miniPerMaxi+1) > 5 && m > 2)
+    if (miniPerMaxi && qAbs(fpxStep)/(miniPerMaxi+1) > 5 && m > 2)
     {
       countMini = m;
       l2 = area.atto_begin + (area.atto == AT_LEFT || area.atto == AT_TOP? -(mlenmini-1) : (mlenmini-1));
-      float step2 = pxStep/(miniPerMaxi+1);
+      float step2 = fpxStep/(miniPerMaxi+1);
       
-      int pxMini = pxFirst, oddplus = 0, ncount=(m-2-1)*(miniPerMaxi + 1);
+      float pxMini = fpxFirst;
+      int   oddplus = 0, ncount=(m-2-1)*(miniPerMaxi + 1);
 //        if (MVORIG)
       {
-        if ((pxFirst - pxBegin + 1) / step2 >= 2)
+        if ((fpxFirst - pxBegin + 1) / step2 >= 2)
         {
-          pxMini -= int((pxFirst - pxBegin) / step2) * step2;
-          oddplus = (pxFirst - pxBegin) / step2;
+          pxMini -= int((fpxFirst - pxBegin) / step2) * step2;
+          oddplus = (fpxFirst - pxBegin) / step2;
           ncount += oddplus;
         }
-        if ((pxEnd - pxLast + 1) / step2 >= 2)
+        if ((pxEnd - fpxLast + 1) / step2 >= 2)
         {
-          ncount += (pxEnd - pxLast + 1) / step2;
+          ncount += (pxEnd - fpxLast + 1) / step2;
         }
       }
       for (int i=0; i<ncount; i++)
       {
         if ((i - oddplus) % (miniPerMaxi+1) == 0)
           continue;
-        int offs = pxMini + (round == 0 ? qRound(i*step2) : round == 1? int(i*step2) : int(i*step2) + 1);
+        int offs = int  ( round == 0  ? qRound(pxMini + i*step2) : 
+                          round == 1  ? pxMini + i*step2 : 
+                                        pxMini + (i*step2) + 1  );
 //        ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, offs) : QPoint(offs, l1);
         if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, offs, l1, offs);
         else if (area.atto == AT_RIGHT)   ua_marks[m].rect.setCoords(l1, offs, l2, offs);
@@ -3140,6 +3231,11 @@ const DrawQWidget*  DrawBars::getDraw() const
   return pDraw;
 }
 
+QRect DrawBars::getDrawGeometry() const
+{
+  return QRect(pImpl->c_margins.left() + pImpl->ttr[AT_LEFT].c_size, pImpl->c_margins.top() + pImpl->ttr[AT_TOP].c_size, pDraw->width(), pDraw->height());
+}
+
 DrawQWidget*  DrawBars::replaceDraw(DrawQWidget* newdraw)
 {
   DrawQWidget* old = pDraw;
@@ -3214,6 +3310,9 @@ inline int countMaxNumbers(int marksLimit)
 
 #define   EXTRACT_MIRALG(f)  ((f >> 1) & 0x3)
 
+#define DB_ROUNDING(flags)  (flags & DBF_MARKS_ROUNDING_ON? 0 : flags & DBF_MARKS_ROUNDING_OFF_INC? 2 : 1)
+#define DB_NATIVE(flags)  ((flags & 0xF00000) == DBF_NATIVE_DIV_10 ? 2: (flags & 0xF00000) == DBF_NATIVE_DIV_15_5_3 ? 1: 0)
+
 MEWLabel* DrawBars::addLabel(ATTACHED_TO atto, int flags, QString text, Qt::Alignment align, Qt::Orientation orient)
 {
   MarginLabel*  pmarg = new MarginLabel(text, this->font(), flags & DBF_LABELAREA_FULLBAR, align, orient);
@@ -3254,7 +3353,7 @@ MEWSpace*DrawBars::addContour(ATTACHED_TO atto, int space, QColor color, bool ma
 
 MEWPointer* DrawBars::addPointerRelativeOwnbounds(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen, float MOD, const char* postfix)
 {
-  MarginPointer*  pmarg = new MarginPointer(marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
+  MarginPointer*  pmarg = new MarginPointer(DB_ROUNDING(flags), marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   MARG_OPTS_TEXT
   pmarg->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL), MOD));
   return (MEWPointer*)addMarginElement(atto, pmarg, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
@@ -3262,7 +3361,7 @@ MEWPointer* DrawBars::addPointerRelativeOwnbounds(ATTACHED_TO atto, int flags, f
 
 MEWPointer*DrawBars::addPointerAbsoluteOwnbounds(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen, float MOD, const char* postfix)
 {
-  MarginPointer*  pmarg = new MarginPointer(marklen, pos, true, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
+  MarginPointer*  pmarg = new MarginPointer(DB_ROUNDING(flags), marklen, pos, true, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   MARG_OPTS_TEXT
   pmarg->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL), MOD));
   return (MEWPointer*)addMarginElement(atto, pmarg, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
@@ -3270,7 +3369,7 @@ MEWPointer*DrawBars::addPointerAbsoluteOwnbounds(ATTACHED_TO atto, int flags, fl
 
 MEWPointer* DrawBars::addPointerRelativeDrawbounds(ATTACHED_TO atto, int flags, float pos, int marklen, float MOD, const char* postfix)
 {
-  MarginPointer*  pmarg = new MarginPointer(marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
+  MarginPointer*  pmarg = new MarginPointer(DB_ROUNDING(flags), marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   MARG_OPTS_TEXT
   pmarg->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(pDraw->bounds(), MOD));
   pImpl->elemsBoundDepended.push_back(pmarg);
@@ -3279,7 +3378,7 @@ MEWPointer* DrawBars::addPointerRelativeDrawbounds(ATTACHED_TO atto, int flags, 
 
 MEWPointer*DrawBars::addPointerAbsoluteDrawbounds(ATTACHED_TO atto, int flags, float pos, int marklen, float MOD, const char* postfix)
 {
-  MarginPointer*  pmarg = new MarginPointer(marklen, pos, true, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
+  MarginPointer*  pmarg = new MarginPointer(DB_ROUNDING(flags), marklen, pos, true, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   MARG_OPTS_TEXT
   pmarg->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(pDraw->bounds(), MOD));
   pImpl->elemsBoundDepended.push_back(pmarg);
@@ -3288,15 +3387,14 @@ MEWPointer*DrawBars::addPointerAbsoluteDrawbounds(ATTACHED_TO atto, int flags, f
 
 MEWPointer* DrawBars::addEPointer01Auto(ATTACHED_TO atto, int flags, float pos, int marklen, const char* postfix)
 {
-  MarginPointer*  pmarg = new MarginPointer(marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
+  MarginPointer*  pmarg = new MarginPointer(DB_ROUNDING(flags), marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   MARG_OPTS_TEXT
   int sizeDimm = BAR_VERT[atto]? int(pDraw->sizeDataVert() + 1) : int(pDraw->sizeDataHorz() + 1);
   pmarg->bdContentUpdate(RF_SETENUMERATE, relatedopts_t(sizeDimm-1, flags & DBF_ENUMERATE_FROMZERO? 0 : 1, -1)); // ?????
   return (MEWPointer*)addMarginElement(atto, pmarg, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
 }
 
-#define DB_ROUNDING(flags)  (flags & DBF_MARKS_DONTROUND? 1 : flags & DBF_MARKS_DONTROUND1? 2 : 0)
-#define DB_NATIVE(flags)  ((flags & 0xF00000) == DBF_NATIVE_DIV_10 ? 2: (flags & 0xF00000) == DBF_NATIVE_DIV_15_5_3 ? 1: 0)
+////////////////////////////
 
 MEWScale* DrawBars::addScalePixstepEmpty(ATTACHED_TO atto, int flags, int marksLimit, int minSpacing, int miniPerMaxi)
 {

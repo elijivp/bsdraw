@@ -8,7 +8,7 @@
 /// #include "bsdrawintensity.h"
 /// #include "palettes/bspalettes_std.h"
 /// 
-/// DrawIntensity* draw = new DrawIntensity(SAMPLES, MAXLINES, 1);
+/// DrawIntensity* draw = new DrawIntensity(SAMPLES, LINES, 1);
 /// draw->setDataPalette(&paletteBkGrWh);
 /// ...
 /// draw->setData(some_float_data);

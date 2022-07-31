@@ -7,7 +7,7 @@
 #include "../../core/sheigen/bsshgentrace.h"
 #include <memory.h>
 
-OMarkDashs::OMarkDashs(unsigned int maxmarks, COORDINATION cn, float areaPos, COORDINATION featcn, float marksize, const IPalette *ipal, bool discrete): DrawOverlay_ColorThroughPalette(ipal, discrete), 
+OMarkDashs::OMarkDashs(unsigned int maxmarks, COORDINATION cn, float areaPos, COORDINATION featcn, float marksize, const IPalette *ipal, bool discrete): Ovldraw_ColorThroughPalette(ipal, discrete), 
   OVLCoordsStatic(cn, 0.0f, areaPos),
   OVLDimmsOff(),
   m_maxmarks(maxmarks), m_featcn(featcn), m_marksize(marksize)
@@ -35,15 +35,15 @@ OMarkDashs::~OMarkDashs()
 
 int OMarkDashs::fshOVCoords(int overlay, bool switchedab, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.var_fixed("marksize", m_marksize);
     int fc = 0;
     if (m_featcn != CR_SAME)
-      fc = ocg.add_movecs_pixing(m_featcn);
-    ocg.movecs_pix_y("marksize", fc);
+      fc = ocg.register_xyscaler_pixel(m_featcn);
+    ocg.xyscale_y_pixel("marksize", fc);
     
     ocg.param_for_arr_begin("mark");
     {
@@ -69,7 +69,7 @@ int OMarkDashs::fshOVCoords(int overlay, bool switchedab, char *to) const
 /***********************************************************************************************************************************/
 
 OCluster::OCluster(bool crossable, unsigned int maxfigures, COORDINATION featcn, float figsize, const IPalette* ipal, bool discrete, float figopacity): 
-  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsStatic(CR_RELATIVE, 0.5f, 0.5f), OVLDimmsOff(),
+  Ovldraw_ColorThroughPalette(ipal, discrete), OVLCoordsStatic(CR_RELATIVE, 0.5f, 0.5f), OVLDimmsOff(),
   m_crossable(crossable), m_total(maxfigures), m_featcn(featcn), m_figsize(figsize), m_figopc(figopacity)
 {
   m_items = new clusteritem_t[m_total];
@@ -97,15 +97,15 @@ OCluster::~OCluster()
 
 int OCluster::fshOVCoords(int overlay, bool switchedab, char *to) const
 {   
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.var_fixed("fsize", m_figsize);
     int fc = 0;
     if (m_featcn != CR_SAME)
-      fc = ocg.add_movecs_pixing(m_featcn);
-    ocg.movecs_pix_x("fsize", fc);
+      fc = ocg.register_xyscaler_pixel(m_featcn);
+    ocg.xyscale_x_pixel("fsize", fc);
     
 //    ocg.var_fixed("opacity", m_figopc);
     
@@ -208,7 +208,7 @@ void  OCluster::updateItem(unsigned int idx, float x, float y, float color, FFOR
 
 void OCluster::updateFinished()
 {
-  _DrawOverlay::updateParameter(false, true);
+  _Ovldraw::updateParameter(false, true);
 }
 
 
@@ -218,10 +218,9 @@ void OCluster::updateFinished()
 /******************************************************************************************************************/
 /******************************************************************************************************************/
 
-
-OTrass::OTrass(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe): DrawOverlay_ColorThroughPalette(ipal, discrete),
-  trass_limit(trasslimit), tlines_total(linestotal), tlines_frame(linesframe), tline_current(linestotal-1),
-  vv_locked(false), vv_repeatcounter(0), vv_tline_repeated(0), vv_maxdistinterp(0.5f)
+OTrass::OTrass(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe): Ovldraw_ColorThroughPalette(ipal, discrete),
+  trass_limit(trasslimit), tlines_total(linestotal), tlines_frame(linesframe), tline_current(linestotal-1), tline_skroll(0),
+  vv_repeatcounter(0), vv_tline_repeated(0), vv_maxdistinterp(0.5f)
 {
   tlines_texture = new float[TPS*trass_limit * (tlines_total + tlines_frame)];
   memset(tlines_texture, 0, sizeof(float)*TPS*trass_limit * (tlines_total + tlines_frame));
@@ -288,11 +287,13 @@ void OTrass::_nladded(bool update)
 //    memset(vv_markups, 0, sizeof(int)*trass_limit);
   }
   
-  if (vv_locked == false)
-  {
-    dm_trass.data = &tlines_texture[TPS*trass_limit*tline_current];
-    updateParameter(false, update);
-  }
+  _nlup(update);
+}
+
+void OTrass::_nlup(bool update)
+{
+  dm_trass.data = &tlines_texture[TPS*trass_limit*((tline_current + tline_skroll)%tlines_total) ];
+  updateParameter(false, update);
 }
 
 void OTrass::appendTrassline(const trasspoint_t tps[], bool update)
@@ -329,11 +330,15 @@ void OTrass::repeatTrassline(bool interpolate, bool update)
   if (tline_current < tlines_frame)
     memcpy(&tlines_texture[TPS*trass_limit*(tlines_total + tline_current)], &tlines_texture[TPS*trass_limit*vv_tline_repeated], sizeof(float)*TPS*trass_limit);
   
-  if (vv_locked == false)
-  {
-    dm_trass.data = &tlines_texture[TPS*trass_limit*tline_current];
-    updateParameter(false, update);
-  }
+  _nlup(update);
+}
+
+void OTrass::skipLines(int count, bool update)
+{
+  vv_repeatcounter = 0;
+  tline_current -= count;
+  if (tline_current < 0) tline_current += tlines_total;
+  _nlup(update);
 }
 
 void OTrass::clearTrasses(bool update)
@@ -343,16 +348,17 @@ void OTrass::clearTrasses(bool update)
   updateParameter(false, update);
 }
 
-void OTrass::scroll(int offset, bool lock, bool update)
+void OTrass::scroll(int offset, bool update)
 {
-  vv_locked = lock;
-  int nlc = tline_current + offset;
-  if (nlc < 0)
-    nlc = 0;
-  else if (nlc > tlines_total)
-    nlc = nlc % tlines_total;
-  dm_trass.data = &tlines_texture[TPS*trass_limit*nlc];
-  updateParameter(false, update);
+  if (offset < 0)
+    offset = 0;
+  tline_skroll = offset;
+  _nlup(update);
+}
+
+void OTrass::update()
+{
+  _nlup(true);
 }
 
 /******************************************************************************************************************/
@@ -360,7 +366,7 @@ void OTrass::scroll(int offset, bool lock, bool update)
 
 int OTrass::fshOVCoords(int overlay, bool /*switchedab*/, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -405,7 +411,7 @@ int OTrass::fshOVCoords(int overlay, bool /*switchedab*/, char* to) const
   return ocg.written();
 }
 
-void OTrass::finalizeOVCoords(FshTraceGenerator& ocg) const
+void OTrass::finalizeOVCoords(FshOVCoordsConstructor& ocg) const
 {
   ocg.push(  "result[0] = niph[0];"
 //           "mixwell = step(float(abs(ipos - inormed.x)), 0.0);"
@@ -431,7 +437,7 @@ void OTrassSelectable::select(int trassidx, bool update)
   updateParameter(false, update);
 }
 
-void OTrassSelectable::finalizeOVCoords(FshTraceGenerator& ocg) const
+void OTrassSelectable::finalizeOVCoords(FshOVCoordsConstructor& ocg) const
 {
   ocg.param_alias("selected");
 //    ocg.push(
@@ -465,7 +471,7 @@ void OTrassSelectable::finalizeOVCoords(FshTraceGenerator& ocg) const
 /*
 int OTrassSelectable::fshOVCoords(int overlay, bool , char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();

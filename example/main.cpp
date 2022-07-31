@@ -19,7 +19,9 @@
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)7
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)22
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)14
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)38
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)41
+
+#define ONLY_OVERVIEWS
 
 
 #ifndef MW_TEST_NOCHOOSE_DEFAULT
@@ -50,7 +52,7 @@ int main(int argc, char *argv[])
 #ifdef MW_TEST_NOCHOOSE_DEFAULT
   MW_TEST = MW_TEST_NOCHOOSE_DEFAULT;
 #else
-#define REGTEST(A) #A,
+#define REGTEST(TEST) #TEST,
   const char* testnames[] = {
   #include "tests.h"
   };
@@ -63,6 +65,10 @@ int main(int argc, char *argv[])
     QString tname(testnames[i]);
     tname = tname.replace('_', " ");
     tests<<QString::number(i) + ". " + tname;
+#ifdef ONLY_OVERVIEWS
+    if (i == 15)
+      break;
+#endif
   }
   QString prepend = "You can change GLSL version\nby changing BSGLSLVER in .pro file *\n\n";
 //  QString result = QInputDialog::getItem(nullptr, "bsdraw", prepend + "Choose test:", tests, 1, false, &ok);

@@ -34,12 +34,12 @@ protected:
 
 
 
-class DrawOverlay_Image: public DrawOverlay_ColorForegoing, public OVLQImage
+class Ovldraw_Image: public Ovldraw_ColorForegoing, public OVLQImage
 {
 protected:
   bool            m_banalpha;
 public:
-  DrawOverlay_Image(QImage* image, IMAGECONVERT icvt, bool detach=false): 
+  Ovldraw_Image(QImage* image, IMAGECONVERT icvt, bool detach=false): 
     OVLQImage(image, icvt, detach), m_banalpha(false){}
 public:
   void            banAlphaChannel(bool ban, bool update=true);
@@ -50,7 +50,7 @@ public:
 };
 
 
-class OImageOriginal: public DrawOverlay_Image, public OVLCoordsDynamic, public OVLDimms2Dynamic
+class OImageOriginal: public Ovldraw_Image, public OVLCoordsDynamic, public OVLDimms2Dynamic
 {
 protected:
 public:
@@ -64,7 +64,7 @@ protected:
   int             m_anchor;
 };
 
-class OImageStretched: public DrawOverlay_Image, public OVLCoordsStatic, public OVLDimms2Dynamic
+class OImageStretched: public Ovldraw_Image, public OVLCoordsStatic, public OVLDimms2Dynamic
 {
 public:
   OImageStretched(QImage* image, IMAGECONVERT icvt, COORDINATION cn=CR_RELATIVE, float x=0.0f, float y=0.0f, float mult_w=1.0f, float mult_h=1.0f);

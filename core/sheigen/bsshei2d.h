@@ -19,17 +19,18 @@ public:
   virtual int           portionMeshType() const { return PMT_PSEUDO2D; }
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
-  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 600 + FshMainGenerator::basePendingSize(imp, ovlscount); }
-  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, ORIENTATION orient, 
-                                         SPLITPORTIONS splitPortions, const impulsedata_t& imp, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
+  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 600 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
+  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
+                                         const impulsedata_t& imp, const overpattern_t& fsp, 
+                                         unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
-    FshMainGenerator fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
+    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
 
     if (dsup != DS_NONE)
       fmg.push( "uniform highp sampler2D texGround;"
                 "uniform highp int       countGround;" );
 
-    fmg.main_begin(FshMainGenerator::INITBACK_BYPALETTE, 0, orient, fsp); //FshMainGenerator::INITBACK_BYZERO
+    fmg.main_begin(FshDrawConstructor::INITBACK_BYPALETTE, 0, orient, fsp); //FshDrawConstructor::INITBACK_BYZERO
     fmg.cintvar("allocatedPortions", (int)allocatedPortions);
     fmg.push( splitPortions == SP_NONE? "for (int i=0; i<countPortions; i++)" : "int i = explicitPortion;" );
     fmg.push( "{" );
@@ -52,6 +53,9 @@ public:
       
       if ( splitPortions == SP_NONE )
         fmg.push("result = result + texture(texPalette, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );
+      else if (splitPortions & SPFLAG_COLORSPLIT)
+        fmg.push("result = result + texture(texPalette, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" );
+//        fmg.push("result.rgb = mix(texture(texPalette, vec2(value, float(i)/(allocatedPortions-1))).rgb, result.rgb, step(countPortions, float(explicitPortion)));" );
       else
         fmg.push("result.rgb = mix(texture(texPalette, vec2(value, 0.0)).rgb, result.rgb, step(countPortions, float(explicitPortion)));" );
       

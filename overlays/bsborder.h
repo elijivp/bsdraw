@@ -11,7 +11,7 @@
 
 enum  { OBLINE_LEFT=1, OBLINE_TOP=2, OBLINE_RIGHT=4, OBLINE_BOTTOM=8 };
 
-class OBorder: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLDimmsOff
+class OBorder: public Ovldraw_ColorTraced, public OVLCoordsOff, public OVLDimmsOff
 {
   unsigned int  m_lineset;
 public:
@@ -20,7 +20,7 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
-class OShadow: public DrawOverlay_ColorDomestic, public OVLCoordsOff, public OVLDimmsOff
+class OShadow: public Ovldraw_ColorDomestic, public OVLCoordsOff, public OVLDimmsOff
 {
   int     m_pxwidth[4];
   float   m_curver;
@@ -37,7 +37,7 @@ protected:
 };
 
 
-class _OSelected: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLDimmsOff
+class _OSelected: public Ovldraw_ColorTraced, public OVLCoordsOff, public OVLDimmsOff
 {
 protected:
   int  m_selected;
@@ -83,7 +83,7 @@ protected:
 };
 
 
-class OToons: public DrawOverlay_ColorTraced, public OVLCoordsStatic, public OVLDimms1Static
+class OToons: public Ovldraw_ColorTraced, public OVLCoordsStatic, public OVLDimms1Static
 {
   float         m_radius2, m_border;
   bool          m_banclicks;

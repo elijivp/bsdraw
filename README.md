@@ -4,7 +4,7 @@ Source code for 4 principal types of graphs, drawed by fragment and vertex shade
 * Technology: Qt widgets, inherits QOpenGLWidget class.
 * Shaders: generated and compiled after initializeGl stage.
 * Compatibility: tested on qt4.8, qt5.5, qt5.12 (win/linux). GLSL version 1.30+
-* Features: fast, const size, cross-platform, universal.
+* Features: fast, cross-platform, universal.
 * Note: main define called BSGLSLVER prepends each shader with string "#version %BSGLSLVER%". 
 All shaders in bsdraw are compatible with glsl 130, but by default BSGLSLVER is not set. So
 if you have any issues, add DEFINES+=BSGLSLVER=130 in your .pro file.
@@ -226,4 +226,4 @@ bsdraw/overlays/bsimage.cpp & .h
     
 #### Future:
 * texture atlas for text
-* axes with text marking
+

@@ -25,13 +25,13 @@ struct otextopts_t
 class OITextStatic
 {
 protected:
-  DrawOverlayUpdater m_ovllink;
+  OvldrawUpdater m_ovllink;
   dmtype_image_t  dmti;
   QImage*         m_pImage;
-  OITextStatic(DrawOverlay* ovllink, const char* text, unsigned int fontSize);
-  OITextStatic(DrawOverlay* ovllink, const char* text, const QFont& font);
-  OITextStatic(DrawOverlay* ovllink, const otextopts_t& text, unsigned int fontSize);
-  OITextStatic(DrawOverlay* ovllink, const otextopts_t& text, const QFont& font);
+  OITextStatic(Ovldraw* ovllink, const char* text, unsigned int fontSize);
+  OITextStatic(Ovldraw* ovllink, const char* text, const QFont& font);
+  OITextStatic(Ovldraw* ovllink, const otextopts_t& text, unsigned int fontSize);
+  OITextStatic(Ovldraw* ovllink, const otextopts_t& text, const QFont& font);
 public:
   virtual       ~OITextStatic();
 public:
@@ -41,7 +41,7 @@ protected:
   void          innerSetText(const otextopts_t& ot, const QFont& font);
 };
 
-class OTextTraced: public DrawOverlay_ColorTraced, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
+class OTextTraced: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
 {
 public:
   OTextTraced(const char* text, COORDINATION cn, float xpos, float ypos,
@@ -61,7 +61,7 @@ protected:
   bool m_rectangled;
 };
 
-class OTextColored: public DrawOverlay_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
+class OTextColored: public Ovldraw_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
 {
 public:
   OTextColored(const char* text, COORDINATION cn, float xpos, float ypos,
@@ -87,7 +87,7 @@ protected:
 };
 
 
-class OTextPaletted: public DrawOverlay_ColorThroughPalette, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
+class OTextPaletted: public Ovldraw_ColorThroughPalette, public OVLCoordsDynamic, public OVLDimmsStatic, public OITextStatic
 {
 public:
   OTextPaletted(const char* text, COORDINATION cn, float xpos, float ypos,

@@ -30,7 +30,7 @@ void    OBlocker::setUnlocked(bool unlocked)
 
 int OBlocker::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.param_alias("blockstate");
@@ -98,7 +98,7 @@ void    OBlockerDots::setUnlocked(bool unlocked)
 
 int OBlockerDots::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -126,4 +126,50 @@ bool OBlockerDots::overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t
 //    }
 //  }
   return false;
+}
+
+/*******************************************/
+
+
+OBlockerShirm::OBlockerShirm(float start, int setup, unsigned int colorLine, float mixLine, unsigned int colorBack, float mixBack):
+  Ovldraw_ColorForegoing(), OVLCoordsDynamic(CR_RELATIVE, start, start), OVLDimmsOff(),
+  m_setup(setup), m_mixline(mixLine), m_mixback(mixBack)
+{
+  bsintTocolor3f(colorLine, m_clrline);
+  bsintTocolor3f(colorBack, m_clrback);
+}
+
+int OBlockerShirm::fshOVCoords(int overlay, bool, char* to) const
+{
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.goto_normed();
+    ocg.var_const_fixed("clrline", m_clrline[0], m_clrline[1], m_clrline[2] );
+    ocg.var_const_fixed("clrback", m_clrback[0], m_clrback[1], m_clrback[2] );
+    ocg.var_const_fixed("mixline", m_mixline);  ocg.var_const_fixed("mixback", m_mixback);
+    
+    ocg.push("float onLine=0, onBack=0;");
+    if (m_setup == OBS_HORZ2LEFT)
+      ocg.push("onLine = step(0.0, float(inormed.x))*step(float(inormed.x), 0.0);"
+               "onBack = step(float(inormed.x), 0.0);"
+               );
+    else if (m_setup == OBS_HORZ2RIGHT)
+      ocg.push("onLine = step(0.0, float(inormed.x))*step(float(inormed.x), 0.0);"
+               "onBack = step(1.0, float(inormed.x));"
+               );
+    else if (m_setup == OBS_VERT2TOP)
+      ocg.push("onLine = step(0.0, float(inormed.y))*step(float(inormed.y), 0.0);"
+               "onBack = step(float(inormed.y), 0.0);"
+               );
+    else if (m_setup == OBS_VERT2BOT)
+      ocg.push("onLine = step(0.0, float(inormed.y))*step(float(inormed.y), 0.0);"
+               "onBack = step(1.0, float(inormed.y));"
+               );
+    
+    ocg.push( "result = mix(result, mix(clrback, clrline, onLine), onLine + onBack);" );
+    ocg.push( "mixwell = mix(mixwell, mix(mixback, mixline, onLine), onLine + onBack);" );
+  }
+  ocg.goto_func_end(false);
+  return ocg.written();
 }

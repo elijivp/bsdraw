@@ -22,8 +22,8 @@ int main(int argc, char *argv[])
   pDraw->setData(arr_random);     // default draw bounds are 0..1. default data is 0.
   
   DrawBars* pDB = new DrawBars(pDraw, DrawBars::CP_FROM_DRAWPALETTE);
-  pDB->addScaleEnumerator(AT_TOP, DBMODE_STRETCHED | DBF_ENUMERATE_SHOWLAST, COUNT_SAMPLES+1, 20);
-  pDB->addScaleEnumerator(AT_LEFT, DBMODE_STATIC | DBF_DOCKTO_PREVMARK, COUNT_ROWS+1, 14);
+  pDB->addEScalePixstepOwnbounds(AT_TOP, DBF_ENUMERATE_SHOWLAST, COUNT_SAMPLES+1, 20);
+  pDB->addEScaleRollingOwnbounds(AT_LEFT, DBF_DOCKTO_PREVMARK, 200, 8);
   pDB->show();
   
   return a.exec();

@@ -15,7 +15,7 @@ public:
   virtual int           portionMeshType() const { return PMT_PSEUDO2D; }
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
-  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 750 + FshMainGenerator::basePendingSize(imp, ovlscount); }
+  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 750 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
 };
 
 #ifndef SHNL
@@ -52,12 +52,12 @@ public:
   }
   ~SheiGeneratorHint_Graph();
 public:
-  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, 
-                                         ORIENTATION orient, SPLITPORTIONS splitPortions, const impulsedata_t& imp,
+  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
+                                         const impulsedata_t& imp, const overpattern_t& fsp,
                                          unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
-    FshMainGenerator fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
-    fmg.main_begin(FshMainGenerator::INIT_BYVALUE, m_bckclr, orient, fsp);
+    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
+    fmg.main_begin(FshDrawConstructor::INIT_BYVALUE, m_bckclr, orient, fsp);
     fmg.push("ivec2 icoords = ivec2(abc_coords*(ab_ibounds));" SHNL);
     
     if (m_automargin)
@@ -102,7 +102,7 @@ public:
 //      }
 //    }
     
-    if (m_allocatedPortions > 1)
+    if (m_allocatedPortions > 1 && (splitPortions & SPFLAG_COLORSPLIT) == 0)
     {
       fmg.cintvar("allocatedPortions", (int)m_allocatedPortions);
       switch (m_cpolicy)
@@ -215,12 +215,12 @@ public:
   }
   ~SheiGeneratorHint_Intensity();
 public:
-  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, 
-                                         ORIENTATION orient, SPLITPORTIONS splitPortions, const impulsedata_t& imp,
+  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
+                                         const impulsedata_t& imp, const overpattern_t& fsp,
                                          unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
-    FshMainGenerator fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
-    fmg.main_begin(FshMainGenerator::INIT_BYVALUE, m_bckclr, orient, fsp);
+    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
+    fmg.main_begin(FshDrawConstructor::INIT_BYVALUE, m_bckclr, orient, fsp);
     fmg.push( "ivec2 icoords = ivec2(abc_coords*(ab_ibounds));" SHNL);
     
     fmg.cfloatvar("portionColor", m_value);

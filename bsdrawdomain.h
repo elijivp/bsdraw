@@ -6,14 +6,14 @@
 /// each will be paitned on color, corresponding with 1D-array data
 /// 
 /// Example:
-/// DrawDomain* draw = new DrawDomain(SAMPLES, MAXLINES, 1, false, OR_LRBT, true);
+/// DrawDomain* draw = new DrawDomain(SAMPLES, LINES, 1, false, OR_LRBT, true);
 /// {
 ///   DIDomain& ddm = *draw->domain();
 ///   for (int j=0; j<SAMPLES; j++)
 ///   {
 ///     ddm.start();
-///     for (int r=0; r<MAXLINES/2; r++)
-///       ddm.includePixel(int(MAXLINES/2 + sin(j/(2.0*M_PI*8))*MAXLINES/4 - MAXLINES/4 + r), j);
+///     for (int r=0; r<LINES/2; r++)
+///       ddm.includePixel(int(LINES/2 + sin(j/(2.0*M_PI*8))*LINES/4 - LINES/4 + r), j);
 ///     ddm.finish();
 ///   }
 /// }

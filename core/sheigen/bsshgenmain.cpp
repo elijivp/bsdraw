@@ -82,10 +82,10 @@ int msprintf(char* to, const char* format, ...)
             value = -value;
           }
           
-          nums[0] = (int)value;
+          nums[0] = int(value);
           int arrsizes[] = {  1000000, 100000, 10000, 1000, 100, 10, 1, 0  };
           int arridx = *fp == 'f' ? 0 : 3;
-          nums[1] = (nums[0] < 0? -1 : 1)*(value - nums[0])*arrsizes[arridx] + 0.49;
+          nums[1] = int((nums[0] < 0? -1 : 1)*(value - nums[0])*arrsizes[arridx] + 0.499);
           if (nums[1] == 0)
             nums[2] = 0;
           else
@@ -165,7 +165,7 @@ unsigned int VshMainGenerator2D::operator()(char *to)
 
 /***********************************************************/
 
-unsigned int FshMainGenerator::basePendingSize(const impulsedata_t& imp, unsigned int ovlscount)
+unsigned int FshDrawConstructor::basePendingSize(const impulsedata_t& imp, unsigned int ovlscount)
 {
   unsigned int base = 2300 + ovlscount*1000;
   if (imp.type == impulsedata_t::IR_OFF)
@@ -183,7 +183,7 @@ unsigned int FshMainGenerator::basePendingSize(const impulsedata_t& imp, unsigne
   return base;
 }
 
-FshMainGenerator::FshMainGenerator(char *deststring, unsigned int allocatedPortions, SPLITPORTIONS splitPortions, const impulsedata_t& imp, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]): 
+FshDrawConstructor::FshDrawConstructor(char *deststring, unsigned int allocatedPortions, SPLITPORTIONS splitPortions, const impulsedata_t& imp, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]): 
   m_writebase(deststring), m_to(deststring), m_allocatedPortions(allocatedPortions), m_offset(0), m_splitPortions(splitPortions), m_impulsegen(imp), m_ovlscount(ovlscount), m_ovls(ovlsinfo)
 {
 #ifdef BSGLSLVER
@@ -214,7 +214,7 @@ FshMainGenerator::FshMainGenerator(char *deststring, unsigned int allocatedPorti
 
 
 
-void FshMainGenerator::_main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const DPostmask& fsp)
+void FshDrawConstructor::_main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp)
 {
   m_orient = orient;
   static const char fsh_main[] =  "void main()" SHNL
@@ -319,7 +319,7 @@ void FshMainGenerator::_main_begin(int initback, unsigned int backcolor, ORIENTA
                                                               /// ppban, threshold, weight, inarea 
 }
 
-void FshMainGenerator::main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const DPostmask& fsp)
+void FshDrawConstructor::main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp)
 {
   _main_begin(initback, backcolor, orient, fsp);
   
@@ -333,7 +333,7 @@ void FshMainGenerator::main_begin(int initback, unsigned int backcolor, ORIENTAT
   m_datamapped = DM_OFF;
 }
 
-void FshMainGenerator::main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const DPostmask& fsp, unsigned int dboundsA, unsigned int dboundsB)
+void FshDrawConstructor::main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp, unsigned int dboundsA, unsigned int dboundsB)
 {
   _main_begin(initback, backcolor, orient, fsp);
   m_offset += msprintf(&m_to[m_offset],     "ivec2  dbounds_noscaled = ivec2(%d, %d);" SHNL
@@ -344,83 +344,83 @@ void FshMainGenerator::main_begin(int initback, unsigned int backcolor, ORIENTAT
   m_datamapped = DM_ON;
 }
 
-void FshMainGenerator::main_end(const DPostmask &fsp)
-{  
-  if (fsp.over != PO_OFF)
+void FshDrawConstructor::main_end(const overpattern_t& fsp)
+{
+  m_offset += msprintf(&m_to[m_offset], "" SHNL);
+  if (fsp.algo != overpattern_t::OALG_OFF)
   {
     const char* dmasks[] = {  
                                   "float ppb_in = sign(step(imrect.x, post_mask[2]) + step(imrect.y, post_mask[2])"
-                                          " + step(imrect[2] - imrect.x, post_mask[2]) + step(imrect[3] - imrect.y, post_mask[2]));", // PM_CONTOUR
-                                  "float ppb_in = step(imrect.x, post_mask[2]);", // PM_LINELEFT
-                                  "float ppb_in = step(imrect[2] - imrect.x, post_mask[2]);", // PM_LINERIGHT
-                                  "float ppb_in = sign(step(imrect.x, post_mask[2]) + step(imrect[2] - imrect.x, post_mask[2]));",   // PM_LINELEFTRIGHT
+                                          " + step(imrect[2] - imrect.x, post_mask[2]) + step(imrect[3] - imrect.y, post_mask[2]));", // OP_CONTOUR
+                                  "float ppb_in = step(imrect.x, post_mask[2]);", // OP_LINELEFT
+                                  "float ppb_in = step(imrect[2] - imrect.x, post_mask[2]);", // OP_LINERIGHT
+                                  "float ppb_in = sign(step(imrect.x, post_mask[2]) + step(imrect[2] - imrect.x, post_mask[2]));",   // OP_LINELEFTRIGHT
       
-                                  "float ppb_in = step(imrect.y, post_mask[2]);", // PM_LINEBOTTOM
-                                  "float ppb_in = step(imrect[3] - imrect.y, post_mask[2]);", // PM_LINETOP
-                                  "float ppb_in = sign(step(imrect.y, post_mask[2]) + step(imrect[3] - imrect.y, post_mask[2]));",   // PM_LINEBOTTOMTOP
+                                  "float ppb_in = step(imrect.y, post_mask[2]);", // OP_LINEBOTTOM
+                                  "float ppb_in = step(imrect[3] - imrect.y, post_mask[2]);", // OP_LINETOP
+                                  "float ppb_in = sign(step(imrect.y, post_mask[2]) + step(imrect[3] - imrect.y, post_mask[2]));",   // OP_LINEBOTTOMTOP
       
-                                  "float ppb_in = sign(step(imrect.x, post_mask[2])+step(imrect.y, post_mask[2]));", //  PM_LINELEFTBOTTOM
-                                  "float ppb_in = sign(step(imrect[2] - imrect.x, post_mask[2])+step(imrect.y, post_mask[2]));", //  PM_LINERIGHTBOTTOM
-                                  "float ppb_in = sign(step(imrect.x, post_mask[2])+step(imrect[3] - imrect.y, post_mask[2]));", //  PM_LINELEFTTOP
-                                  "float ppb_in = sign(step(imrect[2] - imrect.x, post_mask[2])+step(imrect[3] - imrect.y, post_mask[2]));", // PM_LINERIGHTTOP 
+                                  "float ppb_in = sign(step(imrect.x, post_mask[2])+step(imrect.y, post_mask[2]));", //  OP_LINELEFTBOTTOM
+                                  "float ppb_in = sign(step(imrect[2] - imrect.x, post_mask[2])+step(imrect.y, post_mask[2]));", //  OP_LINERIGHTBOTTOM
+                                  "float ppb_in = sign(step(imrect.x, post_mask[2])+step(imrect[3] - imrect.y, post_mask[2]));", //  OP_LINELEFTTOP
+                                  "float ppb_in = sign(step(imrect[2] - imrect.x, post_mask[2])+step(imrect[3] - imrect.y, post_mask[2]));", // OP_LINERIGHTTOP 
                                   "vec2 _ppb_pos = vec2(abs(0.5 - float(imrect.x)/imrect[2]), abs(0.5 - float(imrect.y)/imrect[3]));"
                                     "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
-                                    "float ppb_in = smoothstep(0.25*0.25, (0.66 - post_mask[2]*0.05)*(0.66 - post_mask[2]*0.05), _ppb_d2);", // PM_CIRCLESMOOTH
+                                    "float ppb_in = smoothstep(0.25*0.25, (0.66 - post_mask[2]*0.05)*(0.66 - post_mask[2]*0.05), _ppb_d2);", // OP_CIRCLESMOOTH
                                   "vec2 _ppb_pos = vec2(abs(0.5 - float(imrect.x)/imrect[2]), abs(0.5 - float(imrect.y)/imrect[3]));"
                                     "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
-                                    "float ppb_in = smoothstep(0.4*0.4, (0.6 - post_mask[2]*0.02)*(0.6 - post_mask[2]*0.02), _ppb_d2);", // PM_CIRCLEBORDERED
-                                  "float ppb_in = step(abs(imrect.x-imrect[2]/2), post_mask[2])*step(abs(imrect.y-imrect[3]/2), post_mask[2]);", // PM_DOT
-                                  "float ppb_in = step(imrect.x, post_mask[2])*step(imrect.y, post_mask[2]);", // PM_DOTLEFTBOTTOM
+                                    "float ppb_in = smoothstep(0.4*0.4, (0.6 - post_mask[2]*0.02)*(0.6 - post_mask[2]*0.02), _ppb_d2);", // OP_CIRCLEBORDERED
+                                  "float ppb_in = step(abs(imrect.x-imrect[2]/2), post_mask[2])*step(abs(imrect.y-imrect[3]/2), post_mask[2]);", // OP_DOT
+                                  "float ppb_in = step(imrect.x, post_mask[2])*step(imrect.y, post_mask[2]);", // OP_DOTLEFTBOTTOM
                                   "float ppb_in = sign( "
                                                         "step(imrect.x, post_mask[2])*step(imrect.y, post_mask[2]) + "
                                                         "step(imrect[2]-imrect.x, post_mask[2])*step(imrect.y, post_mask[2]) + "
                                                         "step(imrect.x, post_mask[2])*step(imrect[3]-imrect.y, post_mask[2]) + "
-                                                        "step(imrect[2]-imrect.x, post_mask[2])*step(imrect[3]-imrect.y, post_mask[2]));", // PM_DOTCONTOUR
-                                  "float ppb_in = step(mod(abs(imrect.x - imrect.y), post_mask[2] + sign(post_mask[2])*2.0), 0.0);", // PM_SHTRICHL
-                                  "float ppb_in = step(mod(abs(imrect.x - imrect[3] + imrect.y), post_mask[2] + sign(post_mask[2])*2.0), 0.0);", // PM_SHTRICHR
-                                  "float ppb_in = step(mod(float(imrect.x), 4.0),0.0)*step(mod(float(imrect.y), 4.0), 0.0) + mod(float(imrect.x),2.0)*mod(float(imrect.y),2.0);", // PM_CROSS
-                                  "float ppb_in = step(mod(abs(imrect.x - imrect.y), (post_mask[2] + 1.0)*2.0), 0.0);", // PM_GRID
-                                  "float ppb_in = step(mod(abs(imrect.x - imrect.y), 2.0 + post_mask[2]) + mod(abs(imrect.x - imrect[3] - 1 + imrect.y), 2.0 + post_mask[2]), 0.0);", // PM_FILL
-                                  "float ppb_in = step(mod(abs(imrect.x - imrect.y) + abs(imrect.x - imrect[3] + 1 + imrect.y), 3.0 + post_mask[2]), 0.0);", // PM_SQUARES
+                                                        "step(imrect[2]-imrect.x, post_mask[2])*step(imrect[3]-imrect.y, post_mask[2]));", // OP_DOTCONTOUR
+                                  "float ppb_in = step(mod(abs(imrect.x - imrect.y), post_mask[2] + sign(post_mask[2])*2.0), 0.0);", // OP_SHTRICHL
+                                  "float ppb_in = step(mod(abs(imrect.x - imrect[3] + imrect.y), post_mask[2] + sign(post_mask[2])*2.0), 0.0);", // OP_SHTRICHR
+                                  "float ppb_in = step(mod(float(imrect.x), 4.0),0.0)*step(mod(float(imrect.y), 4.0), 0.0) + mod(float(imrect.x),2.0)*mod(float(imrect.y),2.0);", // OP_CROSS
+                                  "float ppb_in = step(mod(abs(imrect.x - imrect.y), (post_mask[2] + 1.0)*2.0), 0.0);", // OP_GRID
+                                  "float ppb_in = step(mod(abs(imrect.x - imrect.y), 2.0 + post_mask[2]) + mod(abs(imrect.x - imrect[3] - 1 + imrect.y), 2.0 + post_mask[2]), 0.0);", // OP_FILL
+                                  "float ppb_in = step(mod(abs(imrect.x - imrect.y) + abs(imrect.x - imrect[3] + 1 + imrect.y), 3.0 + post_mask[2]), 0.0);", // OP_SQUARES
       
 //                                  "vec2 _ppb_pos = vec2(float(imrect[3])/imrect[2], float(imrect[2])/imrect[3]);"
                                   "vec2 _ppb_pos = vec2(float(imrect[2])/imrect[3], float(imrect[3])/imrect[2]);"
                                   "_ppb_pos = vec2(max(_ppb_pos.x, 1.0), max(_ppb_pos.y, 1.0));"
                                   "_ppb_pos = _ppb_pos*vec2(abs(0.5 - float(imrect.x)/imrect[2]), abs(0.5 - float(imrect.y)/imrect[3]));"
                                     "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
-                                    "float ppb_in = smoothstep(0.25*0.25, (0.66 - post_mask[2]*0.05)*(0.66 - post_mask[2]*0.05), _ppb_d2);", // PM_CIRCLESMOOTH
+                                    "float ppb_in = smoothstep(0.25*0.25, (0.66 - post_mask[2]*0.05)*(0.66 - post_mask[2]*0.05), _ppb_d2);", // OP_CIRCLESMOOTH
                                       
 //                                  "vec2 _ppb_pos = vec2(float(imrect[3])/imrect[2], float(imrect[2])/imrect[3]);"
                                   "vec2 _ppb_pos = vec2(float(imrect[2])/imrect[3], float(imrect[3])/imrect[2]);"
                                   "_ppb_pos = vec2(max(_ppb_pos.x, 1.0), max(_ppb_pos.y, 1.0));"
                                   "_ppb_pos = _ppb_pos*vec2(abs(0.5 - float(imrect.x)/imrect[2]), abs(0.5 - float(imrect.y)/imrect[3]));"
                                     "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
-                                    "float ppb_in = smoothstep(0.4*0.4, (0.6 - post_mask[2]*0.02)*(0.6 - post_mask[2]*0.02), _ppb_d2);", // PM_CIRCLEBORDERED
+                                    "float ppb_in = smoothstep(0.4*0.4, (0.6 - post_mask[2]*0.02)*(0.6 - post_mask[2]*0.02), _ppb_d2);", // OP_CIRCLEBORDERED
       
     };
     
     if (fsp.mask < sizeof(dmasks) / sizeof(const char*))
     {
-      m_offset += msprintf(&m_to[m_offset],   "%s" SHNL, dmasks[fsp.mask]);
+      m_offset += msprintf(&m_to[m_offset], "%s" SHNL, dmasks[fsp.mask]);
       
       
-      if (fsp.colorManual == -1)
+      if (fsp.colorByPalette)
       {
-        if (fsp.colorPalette == 0.0f)
+        if (fsp.color.r == 0.0f)
           m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = backcolor;" SHNL);
         else
-          m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = texture(texPalette, vec2(%F, 0.0)).rgb;" SHNL, fsp.colorPalette);
+          m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = texture(texPalette, vec2(%F, 0.0)).rgb;" SHNL, fsp.color.r);
       }
       else
       {
-        float rgb[3];
-        bsintTocolor3f(fsp.colorManual, rgb);
-        m_offset += msprintf(&m_to[m_offset],   "vec3   ppb_color = vec3(%F,%F,%F);" SHNL, rgb[2], rgb[1], rgb[0]);
+        m_offset += msprintf(&m_to[m_offset],   "vec3   ppb_color = vec3(%F,%F,%F);" SHNL, fsp.color.r, fsp.color.g, fsp.color.b);
       }
       m_offset += msprintf(&m_to[m_offset],     "result = mix(result, ppb_color, ppb_in * %s );" SHNL,
-                           fsp.over == PO_SIGNAL?  "post_mask[0]" : 
-                           fsp.over == PO_EMPTY?   "(1.0 - post_mask[0])" : 
-                           fsp.over == PO_ALL?     "1.0" : "0.0"
+                           fsp.algo == overpattern_t::OALG_THRS_PLUS?   "post_mask[0]" : 
+                           fsp.algo == overpattern_t::OALG_THRS_MINUS?  "(1.0 - post_mask[0])" : 
+                           fsp.algo == overpattern_t::OALG_ANY?         "1.0" : 
+                                                                        "0.0"
                                           );
     }
   } // if mask
@@ -498,13 +498,24 @@ void FshMainGenerator::main_end(const DPostmask &fsp)
   m_to[m_offset++] = '\0';
 }
 
-void FshMainGenerator::push(const char *text)
+void FshDrawConstructor::push(const char* text)
+{
+  while (*text != '\0')
+    m_to[m_offset++] = *text++;
+#ifdef AUTOSHNL
+  text = SHNL;
+  while (*text != '\0')
+    m_to[m_offset++] = *text++;
+#endif
+}
+
+void FshDrawConstructor::pushin(const char* text)
 {
   while (*text != '\0')
     m_to[m_offset++] = *text++;
 }
 
-void FshMainGenerator::ccolor(const char *name, unsigned int value)
+void FshDrawConstructor::ccolor(const char *name, unsigned int value)
 {
   float clr[3];
   for (int i=0; i<3; i++)
@@ -513,16 +524,16 @@ void FshMainGenerator::ccolor(const char *name, unsigned int value)
 }
 
 
-void FshMainGenerator::cfloatvar(const char *name, float value){  m_offset += msprintf(&m_to[m_offset], "const float %s = %f;" SHNL, name, value);  }
-void FshMainGenerator::cfloatvar(const char *name, float value1, float value2){  m_offset += msprintf(&m_to[m_offset], "const vec2 %s = vec2(%f, %f);" SHNL, name, value1, value2);  }
-void FshMainGenerator::cintvar(const char *name, int value){  m_offset += msprintf(&m_to[m_offset], "const int %s = %d;" SHNL, name, value);  }
-void FshMainGenerator::cintvar(const char *name, int value1, int value2){  m_offset += msprintf(&m_to[m_offset], "const ivec2 %s = ivec2(%d, %d);" SHNL, name, value1, value2);  }
+void FshDrawConstructor::cfloatvar(const char *name, float value){  m_offset += msprintf(&m_to[m_offset], "const float %s = %f;" SHNL, name, value);  }
+void FshDrawConstructor::cfloatvar(const char *name, float value1, float value2){  m_offset += msprintf(&m_to[m_offset], "const vec2 %s = vec2(%f, %f);" SHNL, name, value1, value2);  }
+void FshDrawConstructor::cintvar(const char *name, int value){  m_offset += msprintf(&m_to[m_offset], "const int %s = %d;" SHNL, name, value);  }
+void FshDrawConstructor::cintvar(const char *name, int value1, int value2){  m_offset += msprintf(&m_to[m_offset], "const ivec2 %s = ivec2(%d, %d);" SHNL, name, value1, value2);  }
 
 //#include <QDebug>
 
 
 
-void FshMainGenerator::value2D(const char* varname, const char* coordsname, const char* portionname)
+void FshDrawConstructor::value2D(const char* varname, const char* coordsname, const char* portionname)
 {
   if (m_impulsegen.type == impulsedata_t::IR_OFF)
   {

@@ -7,7 +7,7 @@
 /// Example:
 /// #include "specdraws/bsdrawempty.h"
 /// 
-/// DrawEmpty* draw = new DrawEmpty(SAMPLES, MAXLINES, 0x00FFFFFF);
+/// DrawEmpty* draw = new DrawEmpty(SAMPLES, LINES, 0x00FFFFFF);
 /// 
 /// Created By: Elijah Vlasov
 

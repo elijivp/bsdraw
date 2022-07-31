@@ -82,18 +82,18 @@ bool  OVLQImage::assignImage(QImage* image, IMAGECONVERT icvt, bool detach)
 
 
 
-void DrawOverlay_Image::banAlphaChannel(bool ban, bool update)
+void Ovldraw_Image::banAlphaChannel(bool ban, bool update)
 {
   m_banalpha = ban;
   updateParameter(true, update);
 }
 
-void DrawOverlay_Image::reUpdate()
+void Ovldraw_Image::reUpdate()
 {
   updateParameter(false, true);
 }
 
-bool  DrawOverlay_Image::setImage(QImage* image, OVLQImage::IMAGECONVERT icvt, bool detach, bool update)
+bool  Ovldraw_Image::setImage(QImage* image, OVLQImage::IMAGECONVERT icvt, bool detach, bool update)
 {
   bool result = assignImage(image, icvt, detach);
 //  updateParameter(true, update);
@@ -105,7 +105,7 @@ bool  DrawOverlay_Image::setImage(QImage* image, OVLQImage::IMAGECONVERT icvt, b
 /////////////////////////////////////////////////////////
 
 OImageOriginal::OImageOriginal(QImage* image, IMAGECONVERT icvt, COORDINATION cn, float x, float y, float mult_w, float mult_h): 
-  DrawOverlay_Image(image, icvt, g_bs_detach_image), OVLCoordsDynamic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f),
+  Ovldraw_Image(image, icvt, g_bs_detach_image), OVLCoordsDynamic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f),
   m_anchor(0)
 {
   m_sides.w = m_dmti.w*mult_w;
@@ -114,7 +114,7 @@ OImageOriginal::OImageOriginal(QImage* image, IMAGECONVERT icvt, COORDINATION cn
 }
 
 OImageOriginal::OImageOriginal(QImage *image, IMAGECONVERT icvt, OVLCoordsStatic *pcoords, float offset_x, float offset_y, float mult_w, float mult_h):
-  DrawOverlay_Image(image, icvt, g_bs_detach_image), OVLCoordsDynamic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f),
+  Ovldraw_Image(image, icvt, g_bs_detach_image), OVLCoordsDynamic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f),
   m_anchor(0)
 {
   m_sides.w = m_dmti.w*mult_w;
@@ -123,7 +123,7 @@ OImageOriginal::OImageOriginal(QImage *image, IMAGECONVERT icvt, OVLCoordsStatic
 }
 
 OImageOriginal::OImageOriginal(QImage* image, OVLQImage::IMAGECONVERT icvt, int anchor, float mult_w, float mult_h):
-  DrawOverlay_Image(image, icvt, g_bs_detach_image), OVLCoordsDynamic(CR_RELATIVE, 0.0f, 0.0f), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f),
+  Ovldraw_Image(image, icvt, g_bs_detach_image), OVLCoordsDynamic(CR_RELATIVE, 0.0f, 0.0f), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f),
   m_anchor(1)
 {
   m_sides.w = m_dmti.w*mult_w;
@@ -133,7 +133,7 @@ OImageOriginal::OImageOriginal(QImage* image, OVLQImage::IMAGECONVERT icvt, int 
 
 int OImageOriginal::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -158,7 +158,7 @@ int OImageOriginal::fshOVCoords(int overlay, bool switchedab, char *to) const
 
 
 OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, COORDINATION cn, float x, float y, float mult_w, float mult_h):
-  DrawOverlay_Image(image, icvt, g_bs_detach_image), OVLCoordsStatic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+  Ovldraw_Image(image, icvt, g_bs_detach_image), OVLCoordsStatic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
@@ -166,7 +166,7 @@ OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, COORDINATION 
 }
 
 OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, OVLCoordsStatic *pcoords, float offset_x, float offset_y, float mult_w, float mult_h):
-  DrawOverlay_Image(image, icvt, g_bs_detach_image), OVLCoordsStatic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
+  Ovldraw_Image(image, icvt, g_bs_detach_image), OVLCoordsStatic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
@@ -175,7 +175,7 @@ OImageStretched::OImageStretched(QImage *image, IMAGECONVERT icvt, OVLCoordsStat
 
 int OImageStretched::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();

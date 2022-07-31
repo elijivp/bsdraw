@@ -79,8 +79,8 @@ MainWindow::MainWindow(QWidget *parent)
     DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/8, COUNT_PORTIONS, graphopts_t::goHistogramCrossMax(), coloropts_t::copts(CP_PAINTED_SYMMETRIC, 1.0f, 0.2f));
     pDraw->setScalingLimitsHorz(8);
     pDraw->setScalingLimitsVert(8);
-//    pDraw->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINETOP, 1, 1.0f,1.0f,1.0f));
-    pDraw->setPostMask(DPostmask::postmask(PO_ALL, PM_CONTOUR, 0, 0x00333333, 0.0f));
+//    pDraw->setOverpattern(DPostmask::postmask(PO_SIGNAL, OP_LINETOP, 1, 1.0f,1.0f,1.0f));
+    pDraw->setOverpattern(overpattern_any(OP_CONTOUR, 0x00333333));
     pDraw->setDataPalette(&palette_gnu_latte);
     pDraw->setData(arr_peaks);
     pLayout->addWidget(pDraw);
@@ -103,8 +103,7 @@ MainWindow::MainWindow(QWidget *parent)
   {
     /// 2 row 2 column
     DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goDots(), coloropts_t::copts(CP_REPAINTED, 1.0f, 0.5f));
-//    pDraw->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINERIGHTBOTTOM, 0, 0.6f,0.6f,0.6f));
-    pDraw->setPostMask(DPostmask::postmask(PO_EMPTY, PM_DOT, 0, 0.6f,0.6f,0.6f));
+    pDraw->setOverpattern(overpattern_thrs_minus(OP_DOT, 0.0f, color3f(0.6f,0.6f,0.6f)));
     pDraw->setScalingLimitsSynced(4);
     pDraw->setDataPalette(&palette_gnu_latte);
     pDraw->setData(arr_random);
@@ -113,7 +112,7 @@ MainWindow::MainWindow(QWidget *parent)
   {
     /// 3 row 2 column
     DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goDots());
-    pDraw->setPostMask(DPostmask::postmask(PO_EMPTY, PM_LINEBOTTOM, 0, 0.2f,0.2f,0.2f));
+    pDraw->setOverpattern(overpattern_thrs_minus(OP_LINEBOTTOM, 0.0f, color3f(0.2f,0.2f,0.2f)));
     pDraw->setScalingLimitsHorz(4);
     pDraw->setScalingLimitsVert(4);
     pDraw->setDataPalette(&palette_gnu_latte);
@@ -125,8 +124,7 @@ MainWindow::MainWindow(QWidget *parent)
     DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goHistogramCrossMin());
     pDraw->setScalingLimitsHorz(4);
     pDraw->setScalingLimitsVert(3);
-//    pDraw->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINETOP, 1, 1.0f,1.0f,1.0f));
-    pDraw->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_CONTOUR, 0, 0x00333333, 0.0f));
+    pDraw->setOverpattern(overpattern_thrs_plus(OP_CONTOUR, 0.0f, 0x00333333, 0));
     pDraw->setDataPalette(&palette_gnu_latte);
     pDraw->setData(arr_peaks);
     pLayout->addWidget(pDraw);
@@ -151,9 +149,8 @@ MainWindow::MainWindow(QWidget *parent)
   }
   {
     /// 3 row 3 column
-//    DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goHistogramCrossMax(0.0f, DE_CENTER), DrawGraph::CP_MONO, 0.5f, 1.0f);
     DrawQWidget* pDraw = new DrawGraph(COUNT_SAMPLES/4, COUNT_PORTIONS, graphopts_t::goHistogramCrossMax(PR_SUMMARY, DE_NONE), coloropts_t::copts(CP_MONO, 0.5f, 1.0f));
-    pDraw->setPostMask(DPostmask::postmask(PO_SIGNAL, PM_LINELEFTBOTTOM, 0, 0.0f));
+    pDraw->setOverpattern(overpattern_thrs_plus(OP_LINELEFTBOTTOM, 0.0f, 0x0));
     pDraw->setScalingLimitsVert(5);
     pDraw->setDataPalette(&palette_gnu_latte);
     pDraw->setData(arr_peaks);

@@ -9,7 +9,7 @@
 /// Example:
 /// #include "specdraws/bsdrawsdpicture.h"
 /// 
-/// DrawSDPicture* draw = new DrawSDPicture(SAMPLES, MAXLINES, "path_to_picture.png");
+/// DrawSDPicture* draw = new DrawSDPicture(SAMPLES, LINES, "path_to_picture.png");
 /// ...
 /// draw->setData(some_float_data);
 /// 

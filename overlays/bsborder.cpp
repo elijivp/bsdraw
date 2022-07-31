@@ -8,13 +8,13 @@
 #include "../core/sheigen/bsshgencolor.h"
 
 
-OBorder::OBorder(const linestyle_t &kls, int lineset): DrawOverlay_ColorTraced(kls), OVLDimmsOff(), m_lineset(lineset)
+OBorder::OBorder(const linestyle_t &kls, int lineset): Ovldraw_ColorTraced(kls), OVLDimmsOff(), m_lineset(lineset)
 {
 }
 
 int OBorder::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
@@ -35,14 +35,14 @@ int OBorder::fshOVCoords(int overlay, bool switchedab, char *to) const
 /*******************************************************************************************************************************************************/
 
 
-OShadow::OShadow(int lineset, unsigned int pxwidth, float curver, const color3f_t &clr): DrawOverlay_ColorDomestic(clr), OVLCoordsOff(), OVLDimmsOff(), 
+OShadow::OShadow(int lineset, unsigned int pxwidth, float curver, const color3f_t &clr): Ovldraw_ColorDomestic(clr), OVLCoordsOff(), OVLDimmsOff(), 
   m_curver(curver), m_lineset(pxwidth == 0? 0 : lineset), m_color(clr)
 {
   for (int i=0; i<4; i++)
     m_pxwidth[i] = (int)pxwidth - 1;
 }
 
-OShadow::OShadow(int pxwidth_left, int pxwidth_top, int pxwidth_right, int pxwidth_bottom, float curver, const color3f_t& clr): DrawOverlay_ColorDomestic(clr), OVLCoordsOff(), OVLDimmsOff(), 
+OShadow::OShadow(int pxwidth_left, int pxwidth_top, int pxwidth_right, int pxwidth_bottom, float curver, const color3f_t& clr): Ovldraw_ColorDomestic(clr), OVLCoordsOff(), OVLDimmsOff(), 
   m_curver(curver), m_color(clr)
 {
   m_lineset = 0;
@@ -60,7 +60,7 @@ void OShadow::setCurver(float curver, bool update)
 
 int OShadow::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.var_const_fixed("weight", m_curver);
@@ -102,7 +102,7 @@ int OShadow::fshOVCoords(int overlay, bool switchedab, char *to) const
 
 /*******************************************************************************************************************************************************/
 
-_OSelected::_OSelected(unsigned int widthpixels, int default_selection, const linestyle_t& kls): DrawOverlay_ColorTraced(kls), OVLDimmsOff(),
+_OSelected::_OSelected(unsigned int widthpixels, int default_selection, const linestyle_t& kls): Ovldraw_ColorTraced(kls), OVLDimmsOff(),
   m_selected(default_selection), m_width(widthpixels)
 {
   appendUniform(DT_1I, &m_selected);
@@ -121,7 +121,7 @@ OBorderSelected::OBorderSelected(unsigned int widthpixels, int default_selection
 
 int OBorderSelected::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed_empty();
@@ -136,9 +136,9 @@ int OBorderSelected::fshOVCoords(int overlay, bool switchedab, char *to) const
     ocg.var_fixed("border", (int)m_width);
     ocg.push("border = int(border/2.0 + 0.5);");
     ocg.push( 
-                "result.xy += vec2(step(ov_ibounds.y-border, icoords.y), icoords.x);"
-                "result.xy += vec2(step(icoords.y, border - 1), icoords.x);"
-                "result.xy = result.xy*step(float(selected), float(ispcell[0]))*step(float(ispcell[0]), float(selected));"
+                "result.xy += vec2(step(float(ov_ibounds.y-border-icoords.y),0.0), icoords.x);"
+                "result.xy += vec2(step(float(icoords.y-border+1), 0.0), icoords.x);"
+                "result.xy = result.xy*step(float(selected - ispcell[0]), 0.0)*step(float(ispcell[0] - selected), 0.0);"
           );
   }  
   ocg.goto_func_end(true);
@@ -152,7 +152,7 @@ ORowSelected::ORowSelected(unsigned int widthpixels, int default_selection, cons
 
 int ORowSelected::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed_empty();
@@ -160,8 +160,12 @@ int ORowSelected::fshOVCoords(int overlay, bool switchedab, char* to) const
     ocg.var_fixed("border", (int)m_width);
     ocg.push("border = int(border/2.0 + 0.5);");
     ocg.push( 
-                "result.xy += vec2(step(ov_iscaler.x*selected-border-1, icoords.x)*step(icoords.x, ov_iscaler.x*selected-1), icoords.y);"
-                "result.xy += vec2(step(ov_iscaler.x*selected + ov_iscaler.x , icoords.x)*step(icoords.x, ov_iscaler.x*selected + ov_iscaler.x + border ), icoords.y);"
+//                "result.xy += vec2(step(ov_iscaler.x*selected-border-1, icoords.x)*step(icoords.x, ov_iscaler.x*selected-1), icoords.y);"
+//                "result.xy += vec2(step(ov_iscaler.x*selected + ov_iscaler.x , icoords.x)*step(icoords.x, ov_iscaler.x*selected + ov_iscaler.x + border ), icoords.y);"
+//            "result.xy += vec2(step(float(ov_iscaler.x*selected-border), float(icoords.x))*step(float(icoords.x), float(ov_iscaler.x*selected)), icoords.y);"
+//            "result.xy += vec2(step(float(ov_iscaler.x*selected+ov_iscaler.x-1), float(icoords.x))*step(float(icoords.x), float(ov_iscaler.x*selected+ov_iscaler.x+border-1)), icoords.y);"
+          "result.xy += vec2(step(float(ov_iscaler.x*selected-border-icoords.x), 0.0)*step(float(icoords.x-ov_iscaler.x*selected), 0.0), icoords.y);"
+          "result.xy += vec2(step(float(ov_iscaler.x*selected+ov_iscaler.x-1-icoords.x), 0.0)*step(float(icoords.x-ov_iscaler.x*selected-ov_iscaler.x-border+1), 0.0), icoords.y);"
           );
   }  
   ocg.goto_func_end(true);
@@ -175,7 +179,7 @@ OColumnSelected::OColumnSelected(unsigned int widthpixels, int default_selection
 
 int OColumnSelected::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed_empty();
@@ -183,8 +187,12 @@ int OColumnSelected::fshOVCoords(int overlay, bool switchedab, char* to) const
     ocg.var_fixed("border", (int)m_width);
     ocg.push("border = int(border/2.0 + 0.5);");
     ocg.push( 
-                "result.xy += vec2(step(ov_iscaler.y*selected-border-1, icoords.y)*step(icoords.y, ov_iscaler.y*selected-1), icoords.x);"
-                "result.xy += vec2(step(ov_iscaler.y*selected + ov_iscaler.y , icoords.y)*step(icoords.y, ov_iscaler.y*selected + ov_iscaler.y + border ), icoords.x);"
+//                "result.xy += vec2(step(ov_iscaler.y*selected-border-1, icoords.y)*step(icoords.y, ov_iscaler.y*selected-1), icoords.x);"
+//                "result.xy += vec2(step(ov_iscaler.y*selected + ov_iscaler.y , icoords.y)*step(icoords.y, ov_iscaler.y*selected + ov_iscaler.y + border ), icoords.x);"
+//          "result.xy += vec2(step(ov_iscaler.y*selected-border, icoords.y)*step(icoords.y, ov_iscaler.y*selected), icoords.x);"
+//          "result.xy += vec2(step(ov_iscaler.y*selected+ov_iscaler.y-1, icoords.y)*step(icoords.y, ov_iscaler.y*selected+ov_iscaler.y+border-1), icoords.x);"
+          "result.xy += vec2(step(float(ov_iscaler.y*selected-border-icoords.y),0.0)*step(float(icoords.y-ov_iscaler.y*selected), 0.0), icoords.x);"
+          "result.xy += vec2(step(float(ov_iscaler.y*selected+ov_iscaler.y-1-icoords.y),0.0)*step(float(icoords.y-ov_iscaler.y*selected-ov_iscaler.y-border+1), 0.0), icoords.x);"
           );
   }  
   ocg.goto_func_end(true);
@@ -198,7 +206,7 @@ OColumnsSelected::OColumnsSelected(unsigned int widthpixels, int default_selecti
 
 int OColumnsSelected::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed_empty();
@@ -215,8 +223,8 @@ int OColumnsSelected::fshOVCoords(int overlay, bool switchedab, char* to) const
       ocg.push("pos_r = int(-1.0*step(float(ov_indimms.y), float(pos_r)))*ov_indimms.y + pos_r;");
     }
     ocg.push( 
-              "result.xy += vec2(step(ov_iscaler.y*pos_l-border-1, icoords.y)*step(icoords.y, ov_iscaler.y*pos_l-1), icoords.x);"
-              "result.xy += vec2(step(ov_iscaler.y*pos_r + 1, icoords.y)*step(icoords.y, ov_iscaler.y*pos_r + border + 1), icoords.x);"
+              "result.xy += vec2(step(float(ov_iscaler.y*pos_l-border-1-icoords.y),0.0)*step(float(icoords.y-ov_iscaler.y*pos_l+1), 0.0), icoords.x);"
+              "result.xy += vec2(step(float(ov_iscaler.y*pos_r+1-icoords.y), 0.0)*step(float(icoords.y-ov_iscaler.y*pos_r - border - 1), 0.0), icoords.x);"
             );
   }  
   ocg.goto_func_end(true);
@@ -227,7 +235,7 @@ int OColumnsSelected::fshOVCoords(int overlay, bool switchedab, char* to) const
 
 /*******************************************************************************************************************************************************/
 
-OToons::OToons(COORDINATION cr, float diameter, float border, const linestyle_t &kls, bool banclikcks): DrawOverlay_ColorTraced(kls),
+OToons::OToons(COORDINATION cr, float diameter, float border, const linestyle_t &kls, bool banclikcks): Ovldraw_ColorTraced(kls),
   OVLCoordsStatic(CR_RELATIVE, 0.5f, 0.5f),
   OVLDimms1Static(cr, diameter/2.0f),
   m_radius2(diameter*diameter/4.0f), m_border(border), m_banclicks(banclikcks)
@@ -236,14 +244,14 @@ OToons::OToons(COORDINATION cr, float diameter, float border, const linestyle_t 
 
 int OToons::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
     ocg.push( "int diameter = idimms1;" );
     ocg.var_const_fixed("border", m_border);
     
-    ocg.push( "float d2 = inormed.x*inormed.x + inormed.y*inormed.y;" //floor(dot(inormed, inormed) + 0.49);" // TODO: test
+    ocg.push( "float d2 = inormed.x*inormed.x + inormed.y*inormed.y;"
               "vec3  r2 = vec3((diameter - border) * (diameter - border), diameter*diameter, (diameter + border) * (diameter + border));"
               "float mixwell_before = smoothstep(r2[0], r2[1], d2)*(1 - step(r2[1], d2));"
               "float mixwell_aftere = (step(r2[1], d2));"

@@ -14,7 +14,7 @@ struct kpdc_t
   float   color;
 };
 
-class OSprites: public DrawOverlay, public OVLQImage, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
+class OSprites: public Ovldraw, public OVLQImage, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
 {
 public:
   enum  CENTER_BY { CB_LEFTTOP, CB_CENTER };

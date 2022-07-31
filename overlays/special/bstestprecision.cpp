@@ -6,7 +6,7 @@
 
 //#include <QDebug>
 
-OTestPrecision::OTestPrecision(): DrawOverlay_ColorForegoing(),
+OTestPrecision::OTestPrecision(): Ovldraw_ColorForegoing(),
   OVLCoordsOff(), OVLDimmsOff()
 {
 //  appendUniform(DT_1I, &m_blockstate);
@@ -14,10 +14,10 @@ OTestPrecision::OTestPrecision(): DrawOverlay_ColorForegoing(),
 
 int OTestPrecision::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
-//    int rel = ocg.add_movecs_pixing(CR_ABSOLUTE_NOSCALED);
+//    int rel = ocg.register_xyscaler_pixel(CR_ABSOLUTE_NOSCALED);
 //    float pts[][2] = {  {0.0, 0.0}, {}  }
     int pts[][2] = {  {0, 0}, {0, 2}, {2, 0}, {1,1}, {2,2}  };
     for (unsigned int i=0; i<sizeof(pts)/sizeof(pts[0]); i++)
@@ -25,7 +25,7 @@ int OTestPrecision::fshOVCoords(int overlay, bool switchedab, char *to) const
       ocg.push("{");
       {
         ocg.var_fixed("newpoint", pts[i][0], pts[i][1]);
-//        ocg.movecs_pix("newpoint", rel);
+//        ocg.xyscale_xy_pixel("newpoint", rel);
         ocg.push("ivec2 inormed = icoords - newpoint;");
         ocg.push( "result = vec3(0.8, 0.8, 0.8);" );
         ocg.push( "mixwell = mix(mixwell, 1.0, step(length(vec2(inormed)), 0.0));" );

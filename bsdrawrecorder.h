@@ -8,7 +8,7 @@
 /// #include "bsdrawrecorder.h"
 /// #include "palettes/bspalettes_std.h"
 /// 
-/// DrawRecorder* draw = new DrawRecorder(SAMPLES, MAXLINES, 1000, 1);
+/// DrawRecorder* draw = new DrawRecorder(SAMPLES, LINES, 1000, 1);
 /// draw->setDataPalette(&paletteBkGrWh);
 /// ...
 /// draw->setData(some_float_data);

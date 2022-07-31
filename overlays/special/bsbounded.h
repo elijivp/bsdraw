@@ -7,7 +7,7 @@
 
 #include "../../core/bsoverlay.h"
 
-class OLevel: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLDimmsOff
+class OLevel: public Ovldraw_ColorTraced, public OVLCoordsOff, public OVLDimmsOff
 {
   float   m_value;
 public:
@@ -17,7 +17,7 @@ protected:
 };
 
 
-class OLevelVariable: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLDimmsOff
+class OLevelVariable: public Ovldraw_ColorTraced, public OVLCoordsOff, public OVLDimmsOff
 {
   float   m_value;
 public:
@@ -32,8 +32,8 @@ protected:
 //////////////////////
 
 
-
-class ORecLine: public DrawOverlay_ColorTraced, public OVLCoordsOff, public OVLDimmsOff
+// recorder automovable line
+class ORecLine: public Ovldraw_ColorTraced, public OVLCoordsOff, public OVLDimmsOff
 {
   enum  { TOTAL = 33, LAST = 32 };
   int           ctr;
@@ -50,7 +50,7 @@ protected:
 
 //////////////////////
 
-class _OLevelSet: public DrawOverlay, public OVLCoordsOff, public OVLDimmsOff
+class _OLevelSet: public Ovldraw, public OVLCoordsOff, public OVLDimmsOff
 {
 protected:
   struct    line_t

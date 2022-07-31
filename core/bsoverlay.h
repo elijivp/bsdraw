@@ -10,22 +10,22 @@
 
 
 /// Shader takes color and mixwell from fshOVCoords result: in_variant[0..4] = [r g b mixwell]
-class DrawOverlay_ColorForegoing: public DrawOverlay
+class Ovldraw_ColorForegoing: public Ovldraw
 {
   int   m_inversive;
 public:
-  DrawOverlay_ColorForegoing(int inversive_algo=0, bool visible=true): DrawOverlay(visible), m_inversive(inversive_algo){}
+  Ovldraw_ColorForegoing(int inversive_algo=0, bool visible=true): Ovldraw(visible), m_inversive(inversive_algo){}
 protected:
   virtual int fshColor(int overlay, char *to) const;
 };
 
 
 /// Shader takes only mixwell from fshOVCoords result: in_variant[0..4] = [- - - mixwell]
-class DrawOverlay_ColorDomestic: public DrawOverlay
+class Ovldraw_ColorDomestic: public Ovldraw
 {
   color3f_t         m_color;
 public:
-  DrawOverlay_ColorDomestic(const color3f_t& color, bool visible=true): DrawOverlay(visible), m_color(color){}
+  Ovldraw_ColorDomestic(const color3f_t& color, bool visible=true): Ovldraw(visible), m_color(color){}
   void  setColor(color3f_t color, bool update=true);
   color3f_t color() const { return m_color; }
 protected:
@@ -33,12 +33,12 @@ protected:
 };
 
 /// Shader takes outsideline, path position and mixwell from fshOVCoords result: in_variant[0..4] = [ols path - mixwell]
-class DrawOverlay_ColorTraced: public DrawOverlay
+class Ovldraw_ColorTraced: public Ovldraw
 {
 protected:
   linestyle_t       m_linestyle;
 public:
-  DrawOverlay_ColorTraced(const linestyle_t& linestyle, bool visible=true): DrawOverlay(visible), m_linestyle(linestyle){}
+  Ovldraw_ColorTraced(const linestyle_t& linestyle, bool visible=true): Ovldraw(visible), m_linestyle(linestyle){}
   void              setLineStyle(const linestyle_t& linestyle, bool update=true){  m_linestyle = linestyle; updateParameter(true, update); }
   linestyle_t       getLineStyle() const {  return m_linestyle;  }
 protected:
@@ -46,12 +46,12 @@ protected:
 };
 
 /// Shader takes nondirect color and mixwell from fshOVCoords result: in_variant[0..4] = [ptr_to_color inversation - mixwell]
-class DrawOverlay_ColorThroughPalette: public DrawOverlay
+class Ovldraw_ColorThroughPalette: public Ovldraw
 {
 private:
   dmtype_palette_t    m_dm_palette;
 public:
-  DrawOverlay_ColorThroughPalette(const IPalette* ipal, bool discrete, bool visible=true):  DrawOverlay(visible)
+  Ovldraw_ColorThroughPalette(const IPalette* ipal, bool discrete, bool visible=true):  Ovldraw(visible)
   {
     m_dm_palette.ppal = ipal;
     m_dm_palette.discrete = discrete;
@@ -61,7 +61,7 @@ public:
   {
     m_dm_palette.ppal = ipal;
     m_dm_palette.discrete = discrete;
-    _DrawOverlay::updateParameter(true, true); 
+    _Ovldraw::updateParameter(true, true); 
   }
 protected:
   virtual int fshColor(int overlay, char *to) const;
@@ -124,7 +124,7 @@ public:
   typedef   OVLCoordsStatic   coords_type_t;
 };
 
-class OVLCoordsDynamic: public OVLCoordsStatic, virtual protected _DrawOverlay
+class OVLCoordsDynamic: public OVLCoordsStatic, virtual protected _Ovldraw
 {
 public:
   OVLCoordsDynamic(COORDINATION cn, float x, float y): OVLCoordsStatic(cn, x, y) {  appendUniform(DT_2F, (const void*)&m_coords); }
@@ -161,7 +161,7 @@ public:
   typedef OVLDimms1Static   dimms_type_t;
 };
 
-class OVLDimms1Dynamic: public OVLDimms1Static, virtual protected _DrawOverlay
+class OVLDimms1Dynamic: public OVLDimms1Static, virtual protected _Ovldraw
 {
 public:
   void          setSide(float side, bool update=true) { m_side = side; updateParameter(false, update); }
@@ -185,7 +185,7 @@ public:
   typedef OVLDimms2Static   dimms_type_t;
 };
 
-class OVLDimms2Dynamic: public OVLDimms2Static, virtual protected _DrawOverlay
+class OVLDimms2Dynamic: public OVLDimms2Static, virtual protected _Ovldraw
 {
 public:
   OVLDimms2Dynamic(COORDINATION cn, float width, float height): OVLDimms2Static(cn, width, height){ appendUniform(DT_2F, (const void*)&m_sides); }
@@ -212,7 +212,7 @@ public:
   }
   typedef OVLDimmsStatic     dimms_type_t;
 };
-class OVLDimmsDynamic: virtual protected _DrawOverlay
+class OVLDimmsDynamic: virtual protected _Ovldraw
 {
 protected:
   COORDINATION  m_cn;
@@ -234,7 +234,7 @@ public:
 
 /////////
 
-class OVLCoordsDimmsLinked: virtual protected _DrawOverlay
+class OVLCoordsDimmsLinked: virtual protected _Ovldraw
 {
 protected:
   COORDINATION  m_cn;
@@ -272,7 +272,7 @@ public:
 
 /////////
 
-//class OVLDimms22Linked: virtual protected _DrawOverlay
+//class OVLDimms22Linked: virtual protected _Ovldraw
 //{
 //protected:
 //  COORDINATION  m_cn;

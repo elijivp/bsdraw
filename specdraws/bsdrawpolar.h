@@ -9,7 +9,7 @@
 /// Example:
 /// #include "specdraws/bsdrawsdpicture.h"
 /// 
-/// DrawPolar* draw = new DrawPolar(SAMPLES, MAXLINES, PORTIONS);
+/// DrawPolar* draw = new DrawPolar(SAMPLES, LINES, PORTIONS);
 /// ...
 /// draw->setData(some_float_data);
 /// 

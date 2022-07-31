@@ -8,7 +8,7 @@
 
 #include "../core/sheigen/bsshgentrace.h"
 
-static void make_contour_constants(FshTraceGenerator* ocg, unsigned char checkmask)
+static void make_contour_constants(FshOVCoordsConstructor* ocg, unsigned char checkmask)
 {
   const char cc[] = 
                     "ivec2 inoscaled = ivec2(floor(coords * ov_indimms));"
@@ -38,15 +38,38 @@ static void make_contour_constants(FshTraceGenerator* ocg, unsigned char checkma
 }
 
 
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+OConst::OConst(color3f_t color): m_color(color)
+{
+}
+
+int OConst::fshOVCoords(int overlay, bool switchedab, char *to) const
+{
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_GETVALUE);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.var_const_fixed("clr", m_color.r, m_color.g, m_color.b);
+    ocg.push( "result = clr;" );
+    ocg.push( "mixwell = 1.0;" );
+  }
+  ocg.goto_func_end(false);
+  return ocg.written();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 OContour::OContour(float from, float to, const linestyle_t &kls, bool noscaled_contour, unsigned char checkmask): 
-  DrawOverlay_ColorTraced(kls), OVLCoordsOff(), OVLDimmsOff(),
+  Ovldraw_ColorTraced(kls), OVLCoordsOff(), OVLDimmsOff(),
   m_from(from), m_to(to), m_noscaled_contour(noscaled_contour), m_checkmask(checkmask)
 {
 }
 
 int OContour::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_GETVALUE);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     if (m_checkmask)
@@ -82,14 +105,14 @@ int OContour::fshOVCoords(int overlay, bool switchedab, char *to) const
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 OContourPal::OContourPal(float from, float to, const IPalette* ipal, bool discrete, bool noscaled_contour, unsigned char checkmask): 
-  DrawOverlay_ColorThroughPalette(ipal, discrete), OVLCoordsOff(), OVLDimmsOff(),
+  Ovldraw_ColorThroughPalette(ipal, discrete), OVLCoordsOff(), OVLDimmsOff(),
   m_from(from), m_to(to), m_noscaled_contour(noscaled_contour), m_checkmask(checkmask)
 {
 }
 
 int OContourPal::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_GETVALUE);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     if (m_checkmask)
@@ -127,13 +150,13 @@ OCover::OCover(float from, float to, float r, float g, float b, COVER_OTHER_PORT
 {
 }
 
-OCover::OCover(float from, float to, int inversive_algo, COVER_OTHER_PORTIONS cop): DrawOverlay_ColorForegoing(inversive_algo), m_from(from), m_to(to), m_cover_r(0.0f), m_cover_g(0.0f), m_cover_b(0.0f), m_cop(cop)
+OCover::OCover(float from, float to, int inversive_algo, COVER_OTHER_PORTIONS cop): Ovldraw_ColorForegoing(inversive_algo), m_from(from), m_to(to), m_cover_r(0.0f), m_cover_g(0.0f), m_cover_b(0.0f), m_cop(cop)
 {
 }
 
 int OCover::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_GETVALUE);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.var_const_fixed("bnd", m_from, m_to);
@@ -170,14 +193,14 @@ OSlice::OSlice(float cover, float r, float g, float b): m_cover(cover), m_slice_
 {
 }
 
-OSlice::OSlice(float cover, int inversive_algo): DrawOverlay_ColorForegoing(inversive_algo), 
+OSlice::OSlice(float cover, int inversive_algo): Ovldraw_ColorForegoing(inversive_algo), 
   m_cover(cover), m_slice_r(0.0f), m_slice_g(0.0f), m_slice_b(0.0f)
 {
 }
 
 int OSlice::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_GETVALUE);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_GETVALUE);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.var_const_fixed("clr", m_slice_r, m_slice_g, m_slice_b);
@@ -193,3 +216,4 @@ int OSlice::fshOVCoords(int overlay, bool switchedab, char *to) const
   ocg.goto_func_end(false);
   return ocg.written();
 }
+

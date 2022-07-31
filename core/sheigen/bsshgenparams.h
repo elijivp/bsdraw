@@ -15,7 +15,9 @@ static const char* glsl_types[] = { "float", "vec2", "vec3", "vec4",
                                     "sampler2D", "sampler2D", "sampler2D", "sampler2D"
                                      };
 
+#ifndef SHNL
 #define SHNL "\n"
+#endif
 
 extern int msprintf(char* to, const char* format, ...);
 

@@ -1,10 +1,10 @@
 /// This file contains QObject'based wrapper for bsdraw Overlays
-/// It appends slot mechanic for DrawOverlay subclasses
+/// It appends slot mechanic for Ovldraw subclasses
 /// Created By: Elijah Vlasov
 #include "bsqoverlay.h"
 
 
-MQOverlay::MQOverlay(DrawOverlay* ovl, bool owner, QObject* parent): QObject(parent), m_povl(ovl), m_owner(owner)
+MQOverlay::MQOverlay(Ovldraw* ovl, bool owner, QObject* parent): QObject(parent), m_povl(ovl), m_owner(owner)
 {
 }
 
@@ -34,9 +34,9 @@ void MQOverlay::hide()
   setVisible(false);
 }
 
-DrawOverlay* MQOverlay::replace(DrawOverlay* ovl)
+Ovldraw* MQOverlay::replace(Ovldraw* ovl)
 {
-  DrawOverlay* tmp = m_povl;
+  Ovldraw* tmp = m_povl;
   m_povl->eject(ovl, OO_SAME, false);
   m_povl = ovl;
   return tmp;
@@ -51,7 +51,7 @@ void MQOverlay::remove()
 }
 
 
-MQOverlayLined::MQOverlayLined(DrawOverlay* ovl, bool owner, QObject* parent): MQOverlay(ovl, owner, parent)
+MQOverlayLined::MQOverlayLined(Ovldraw* ovl, bool owner, QObject* parent): MQOverlay(ovl, owner, parent)
 {
 }
 
@@ -61,7 +61,7 @@ MQOverlayLined::MQOverlayLined(DrawOverlay* ovl, bool owner, QObject* parent): M
 
 
 
-//MQOverlaySwap::MQOverlaySwap(DrawOverlay* ovlPrimary, DrawOverlay* ovlSecondary, bool owner, QObject* parent): 
+//MQOverlaySwap::MQOverlaySwap(Ovldraw* ovlPrimary, Ovldraw* ovlSecondary, bool owner, QObject* parent): 
 //  QObject(parent), m_povlPrimary(ovlPrimary), m_povlSecondary(ovlSecondary), m_owner(owner)
 //{
 //  c_opacity = m_povl->getOpacity();

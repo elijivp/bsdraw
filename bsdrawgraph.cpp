@@ -27,13 +27,14 @@ public:
   virtual int           portionMeshType() const{  return PMT_FORCE1D; }
   virtual unsigned int  shvertex_pendingSize() const { return VshMainGenerator1D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const { return VshMainGenerator1D()(to); }
-  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 5000 + FshMainGenerator::basePendingSize(imp, ovlscount); }
-  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, const DPostmask& fsp, 
-                                         ORIENTATION orient, SPLITPORTIONS splitGraphs, const impulsedata_t& imp,
+  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 5000 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
+  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, 
+                                         ORIENTATION orient, SPLITPORTIONS splitGraphs,
+                                         const impulsedata_t& imp, const overpattern_t& fsp,
                                          unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
-    FshMainGenerator fmg(to, allocatedPortions, splitGraphs, imp, ovlscount, ovlsinfo);
-    fmg.main_begin( coloropts.backcolor != 0xFFFFFFFF? FshMainGenerator::INIT_BYVALUE : FshMainGenerator::INIT_BYPALETTE, 
+    FshDrawConstructor fmg(to, allocatedPortions, splitGraphs, imp, ovlscount, ovlsinfo);
+    fmg.main_begin( coloropts.backcolor != 0xFFFFFFFF? FshDrawConstructor::INIT_BYVALUE : FshDrawConstructor::INIT_BYPALETTE, 
                     coloropts.backcolor, orient, fsp);
     fmg.push("mixwell = 0.0;");
     
@@ -486,19 +487,20 @@ public:
         
         fmg.push(   "for (int j=-dist_limit; j<=dist_limit; j++)" SHNL
                     "{" SHNL
-                      "float reltoval = float(demoded_x + j)/ab_indimms.x;" SHNL
-                      "float NVALCLR = getValue1D(i, reltoval);" SHNL
-//                      "float fdist_weight = (dotsize - distance(fcoords, vec2( floor(reltoval*ab_fbounds.x) - demoded_offs + hscx, floor(NVALCLR*(ab_ibounds.y-1)))) ) / float(dotsize);" SHNL
-//                      "float fdist_weight = (dotsize - distance(abc_coords*ab_fbounds, vec2( floor(reltoval*ab_fbounds.x) - demoded_offs + hscx, floor(NVALCLR*(ab_ibounds.y-1)))) ) / float(dotsize);" SHNL
-                      "float fdist_weight = 1.0 - distance(abc_coords*ab_fbounds, vec2( floor(reltoval*ab_fbounds.x) - demoded_offs + hscx, floor(NVALCLR*(ab_ibounds.y-1)))) / float(dotsize);" SHNL
+                      "float o_fx = float(demoded_x + j)/ab_indimms.x;" SHNL
+                      "float o_VALCLR = getValue1D(i, o_fx);" SHNL
+//                      "float fdist_weight = (dotsize - distance(fcoords, vec2( floor(o_fx*ab_fbounds.x) - demoded_offs + hscx, floor(o_VALCLR*(ab_ibounds.y-1)))) ) / float(dotsize);" SHNL
+//                      "float fdist_weight = (dotsize - distance(abc_coords*ab_fbounds, vec2( floor(o_fx*ab_fbounds.x) - demoded_offs + hscx, floor(o_VALCLR*(ab_ibounds.y-1)))) ) / float(dotsize);" SHNL
+//                      "float fdist_weight = 1.0 - distance(abc_coords*ab_fbounds, vec2( floor(o_fx*ab_fbounds.x) - demoded_offs + hscx, floor(o_VALCLR*(ab_ibounds.y-1)))) / float(dotsize);" SHNL
+                      "float fdist_weight = 1.0 - distance(abc_coords*ab_fbounds, vec2( o_fx*ab_fbounds.x - demoded_offs + hscx, floor(o_VALCLR*(ab_ibounds.y-1)))) / float(dotsize);" SHNL
                       "fdist_weight = min(fdist_weight*(1.0 + dotsmooth), 1.0);" SHNL
-                      "VALCLR = mix(NVALCLR, VALCLR, step(fdist_weight, mixwellp));" SHNL // calc before new mixwellp
+                      "VALCLR = mix(o_VALCLR, VALCLR, step(fdist_weight, mixwellp));" SHNL // calc before new mixwellp
                       "mixwellp = mix(fdist_weight, mixwellp, step(fdist_weight, mixwellp));" SHNL
                     "}" SHNL                    
                   "}" SHNL);
       }
       
-      if (allocatedPortions > 1)
+      if (allocatedPortions > 1 && (splitGraphs & SPFLAG_COLORSPLIT) == 0)
       {
         fmg.cintvar("allocatedPortions", (int)allocatedPortions);
         switch (coloropts.cpolicy)
@@ -627,6 +629,47 @@ unsigned int DrawGraph::colorBack() const
   if (bc == 0xFFFFFFFF)
     return DrawQWidget::colorBack();
   return bc;
+}
+
+////////////////////////////////////////////////////////////////
+
+void DrawGraphDyport::reConstructorEx(unsigned int samples)
+{
+  m_matrixDimmA = samples;
+  m_portionSize = samples;
+}
+
+DrawGraphDyport::DrawGraphDyport(unsigned int minsamples, unsigned int maxsamples, unsigned int graphs, const coloropts_t& copts, SPLITPORTIONS splitGraphs):
+  DrawGraph(maxsamples, graphs, copts, splitGraphs), m_minsamples(minsamples), m_maxsamples(maxsamples)
+{
+  reConstructorEx(minsamples);
+}
+
+DrawGraphDyport::DrawGraphDyport(unsigned int minsamples, unsigned int maxsamples, unsigned int graphs, const graphopts_t& graphopts, const coloropts_t& copts, SPLITPORTIONS splitGraphs):
+  DrawGraph(maxsamples, graphs, graphopts, copts, splitGraphs), m_minsamples(minsamples), m_maxsamples(maxsamples)
+{
+  reConstructorEx(minsamples);
+}
+
+void DrawGraphDyport::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
+{
+  *scalingA = m_scalingA;
+  *scalingB = m_scalingB;
+  *matrixDimmA = sizeA / m_scalingA;
+  if (*matrixDimmA > m_maxsamples)      *matrixDimmA = m_maxsamples;
+  else if (*matrixDimmA < m_minsamples) *matrixDimmA = m_minsamples;
+  *matrixDimmB = sizeB / *scalingB;
+  if (*matrixDimmB == 0)
+    *matrixDimmB = 1;
+}
+
+int DrawGraphDyport::sizeAndScaleChanged(bool changedDimmA, bool /*changedDimmB*/)
+{
+  if (changedDimmA)
+  {
+    m_portionSize = sizeDataA();
+  }
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -860,3 +903,4 @@ void DrawGraphMoveEx::scrollRelativeTo(int pp)
   fillMatrix();
   DrawQWidget::vmanUpData();
 }
+

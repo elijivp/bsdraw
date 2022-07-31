@@ -2,7 +2,7 @@
 #define BSQOVERLAY_H
 
 /// This file contains QObject'based wrapper for bsdraw Overlays
-/// It appends slot mechanic for DrawOverlay subclasses
+/// It appends slot mechanic for Ovldraw subclasses
 /// Created By: Elijah Vlasov
 
 #include <QObject>
@@ -13,20 +13,22 @@ class MQOverlay: public QObject
 {
   Q_OBJECT
 protected:  
-  DrawOverlay*     m_povl;
+  Ovldraw*     m_povl;
   bool          m_owner;
 public:
-  MQOverlay(DrawOverlay* ovl, bool owner=false, QObject* parent=nullptr);
+  MQOverlay(Ovldraw* ovl, bool owner=false, QObject* parent=nullptr);
   ~MQOverlay();
-  DrawOverlay* overlay() { return m_povl; }
-  const DrawOverlay* overlay() const { return m_povl; }
-  DrawOverlay* operator*() { return m_povl; }
-  const DrawOverlay* operator*() const { return m_povl; }
+  Ovldraw* overlay() { return m_povl; }
+  const Ovldraw* overlay() const { return m_povl; }
+  Ovldraw* operator*() { return m_povl; }
+  const Ovldraw* operator*() const { return m_povl; }
 public slots:
   void      setOpacity(float opacity);
   void      setThickness(float thickness){  m_povl->setThickness(thickness); }
   void      setSlice(float slice){  m_povl->setSlice(slice); }
   void      setSlice(float slice_ll, float slice_hl){  m_povl->setSlice(slice_ll, slice_hl); }
+  void      setSliceLL(float slice_ll){  m_povl->setSliceLL(slice_ll); }
+  void      setSliceHL(float slice_hl){  m_povl->setSliceHL(slice_hl); }
   
   void      setOTS(const ovlbasics_t& ob){ m_povl->setOTS(ob); }
   void      setOTS(float opacity, float thickness, float slice_ll, float slice_hl){ m_povl->setOTS(opacity, thickness, slice_ll, slice_hl); }
@@ -36,7 +38,7 @@ public slots:
   void      show();
   void      hide();
   
-  DrawOverlay* replace(DrawOverlay* ovl);
+  Ovldraw* replace(Ovldraw* ovl);
   void      remove();
 public:
   float     getOpacity() const { return m_povl->getOpacity(); }
@@ -51,7 +53,7 @@ class MQOverlayLined: public MQOverlay
 {
   Q_OBJECT
 public:
-  MQOverlayLined(DrawOverlay* ovl, bool owner=false, QObject* parent=nullptr);
+  MQOverlayLined(Ovldraw* ovl, bool owner=false, QObject* parent=nullptr);
 //public slots:
 //  void      setLineColor(unsigned int clr);
 };
@@ -61,14 +63,14 @@ public:
 //{
 //  Q_OBJECT
 //protected:  
-//  DrawOverlay*  m_povlPrimary, *m_povlSecondary;
+//  Ovldraw*  m_povlPrimary, *m_povlSecondary;
 //  bool          m_owner;
 //public:
-//  MQOverlaySwap(DrawOverlay* ovlPrimary, DrawOverlay* ovlSecondary, bool owner=false, QObject* parent=nullptr);
+//  MQOverlaySwap(Ovldraw* ovlPrimary, Ovldraw* ovlSecondary, bool owner=false, QObject* parent=nullptr);
 //  ~MQOverlaySwap();
-//  DrawOverlay* overlayPrimary() const { return m_povlPrimary; }
-//  DrawOverlay* overlaySecondary() const { return m_povlSecondary; }
-//  DrawOverlay* overlay(bool primary) const { return primary? m_povlPrimary : m_povlSecondary; }
+//  Ovldraw* overlayPrimary() const { return m_povlPrimary; }
+//  Ovldraw* overlaySecondary() const { return m_povlSecondary; }
+//  Ovldraw* overlay(bool primary) const { return primary? m_povlPrimary : m_povlSecondary; }
 //public slots:
 //  void show(bool);
 //  void hide(bool);
@@ -111,7 +113,7 @@ signals:
 
 
 
-//class OQClicker: public QObject, public DrawOverlayProactive
+//class OQClicker: public QObject, public OvldrawProactive
 //{
 //  Q_OBJECT
 //public:

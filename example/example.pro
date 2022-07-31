@@ -35,7 +35,6 @@ unix:{
 
 SOURCES += main.cpp\
     ../specdraws/bsdrawpolar.cpp \
-    mainwindow.cpp \
     ../core/bsoverlay.cpp \
     ../bsdrawgraph.cpp \
     ../bsdrawintensity.cpp \
@@ -65,7 +64,8 @@ SOURCES += main.cpp\
     ../core/bsqoverlay.cpp \
     ../overlays/special/bsbounded.cpp \
     ../palettes/QPaletteExtractor.cpp \
-    ../specdraws/bsdrawhint.cpp
+    ../specdraws/bsdrawhint.cpp \
+    mainwindow.cpp
 
 HEADERS  += \
     ../specdraws/bsdrawpolar.h \
@@ -221,4 +221,5 @@ HEADERS  += \
     ../core/bsgraphopts.h
 
 RESOURCES += \
-    ../palettes/QPaletteBox.qrc
+    ../palettes/QPaletteBox.qrc \
+    resources.qrc

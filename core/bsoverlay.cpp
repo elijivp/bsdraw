@@ -6,9 +6,9 @@
 #include "sheigen/bsshgencolor.h"
 
 
-int DrawOverlay_ColorForegoing::fshColor(int overlay, char* to) const
+int Ovldraw_ColorForegoing::fshColor(int overlay, char* to) const
 {
-  FshColorGenerator ocg(overlay, to);
+  FshOVColorConstructor ocg(overlay, to);
   ocg.goto_func_begin();
   ocg.push("result = in_variant.rgb;"
            "mixwell = in_variant[3];");
@@ -18,15 +18,15 @@ int DrawOverlay_ColorForegoing::fshColor(int overlay, char* to) const
   return ocg.written();
 }
 
-void DrawOverlay_ColorDomestic::setColor(color3f_t color, bool update)
+void Ovldraw_ColorDomestic::setColor(color3f_t color, bool update)
 {
   m_color = color;
   updateParameter(true, update);
 }
 
-int DrawOverlay_ColorDomestic::fshColor(int overlay, char* to) const
+int Ovldraw_ColorDomestic::fshColor(int overlay, char* to) const
 {
-  FshColorGenerator ocg(overlay, to);
+  FshOVColorConstructor ocg(overlay, to);
   ocg.goto_func_begin();
   ocg.push("mixwell = in_variant[3];");
   ocg.brushResult(m_color);
@@ -34,9 +34,9 @@ int DrawOverlay_ColorDomestic::fshColor(int overlay, char* to) const
   return ocg.written();
 }
 
-int DrawOverlay_ColorTraced::fshColor(int overlay, char* to) const
+int Ovldraw_ColorTraced::fshColor(int overlay, char* to) const
 {
-  FshColorGenerator ocg(overlay, to);
+  FshOVColorConstructor ocg(overlay, to);
   ocg.goto_func_begin();
   {
     ocg.mixwell_by_traced(m_linestyle);
@@ -46,9 +46,9 @@ int DrawOverlay_ColorTraced::fshColor(int overlay, char* to) const
   return ocg.written();
 }
 
-int DrawOverlay_ColorThroughPalette::fshColor(int overlay, char* to) const
+int Ovldraw_ColorThroughPalette::fshColor(int overlay, char* to) const
 {
-  FshColorGenerator ocg(uniforms(), overlay, to, 0);
+  FshOVColorConstructor ocg(uniforms(), overlay, to, 0);
   ocg.goto_func_begin();
   ocg.push("result = texture("); ocg.param_get(); ocg.push(", vec2(in_variant[0], 0.0)).rgb;");
 //  ocg.push("result = mix(result, vec3(0.5,0.5,0.5) - step(0.5, undercolor) + undercolor, in_variant[1]);");

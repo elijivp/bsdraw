@@ -13,7 +13,7 @@
 #include <math.h>
 #include <memory.h>
 
-OPTFill::OPTFill(const linestyle_t& kls): DrawOverlay_ColorForegoing(),
+OPTFill::OPTFill(const linestyle_t& kls): Ovldraw_ColorForegoing(),
   OVLCoordsDynamic(CR_RELATIVE, 0.0f, 0.0f), OVLDimmsOff(), m_fill(kls)
 {
 }
@@ -21,7 +21,7 @@ OPTFill::OPTFill(const linestyle_t& kls): DrawOverlay_ColorForegoing(),
 
 int OPTFill::fshOVCoords(int overlay, bool switchedab, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   ocg.goto_normed();
   ocg.var_fixed("clr", m_fill.r, m_fill.g, m_fill.b);
@@ -35,7 +35,7 @@ int OPTFill::fshOVCoords(int overlay, bool switchedab, char *to) const
 
 
 
-ODropPoints::ODropPoints(unsigned int ptlimit, COORDINATION, float, const linestyle_t& kls): DrawOverlay_ColorTraced(kls),
+ODropPoints::ODropPoints(unsigned int ptlimit, COORDINATION, float, const linestyle_t& kls): Ovldraw_ColorTraced(kls),
   OVLCoordsOff(), OVLDimmsOff(), ptCountMax(ptlimit)
 {
   ptdrops = new ovlcoords_t[ptCountMax];
@@ -52,10 +52,10 @@ ODropPoints::ODropPoints(unsigned int ptlimit, COORDINATION, float, const linest
 
 int ODropPoints::fshOVCoords(int overlay, bool switchedab, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
-    int ptpixing = ocg.add_movecs_pixing(CR_RELATIVE);
+    int ptpixing = ocg.register_xyscaler_pixel(CR_RELATIVE);
     
     ocg.param_for_rarr_begin("point");
     {
@@ -93,7 +93,7 @@ bool ODropPoints::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstr
 
 /******************/
 
-OPolyLine::OPolyLine(unsigned int countPointsMax, const linestyle_t& kls): DrawOverlay_ColorTraced(kls),
+OPolyLine::OPolyLine(unsigned int countPointsMax, const linestyle_t& kls): Ovldraw_ColorTraced(kls),
   OVLCoordsStatic(CR_RELATIVE, 0.0f, 0.0f), OVLDimmsOff(), ptCountMax(countPointsMax)//, c_x(-10000), c_y(-10000)
 {
   ptdrops = new ovlcoords_t[ptCountMax];
@@ -107,16 +107,16 @@ OPolyLine::OPolyLine(unsigned int countPointsMax, const linestyle_t& kls): DrawO
 
 int OPolyLine::fshOVCoords(int overlay, bool switchedab, char *to) const
 { 
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
-    int ptpixing = ocg.add_movecs_pixing(CR_RELATIVE);
+    int ptpixing = ocg.register_xyscaler_pixel(CR_RELATIVE);
     
     ocg.param_for_oarr_begin("point", "nextpoint");
     {
       ocg.goto_normed("point.xy", ptpixing, true);
       ocg.var_static(DT_2F, "point_temp=nextpoint");
-      ocg.movecs_pix("nextpoint", ptpixing);
+      ocg.xyscale_xy_pixel("nextpoint", ptpixing);
       ocg.push("nextpoint = nextpoint - ioffset;");
       ocg.trace_line_from_normed_to("nextpoint");
       ocg.push("point = point_temp;");
@@ -220,7 +220,7 @@ bool OBrush::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 OSelectorReaction::OSelectorReaction(const linestyle_t &kls, float alpha, bool moveable, bool saveneg): 
-  DrawOverlay_ColorTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f),
+  Ovldraw_ColorTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f),
   m_alpha(alpha), m_phase(-1), m_move(moveable), m_neg(saveneg), m_dxy(0.0f, 0.0f)
 {
   if (alpha > 0.0f)
@@ -294,16 +294,16 @@ OHighlight::OHighlight(const linestyle_t& kls, bool moveable, COORDINATION cr, f
 
 int OHighlight::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
-    int cw = ocg.add_movecs_pixing(m_cr);
+    int cw = ocg.register_xyscaler_pixel(m_cr);
     ocg.var_fixed("gap", (float)m_gap);
-    ocg.movecs_pix_x("gap", cw);
+    ocg.xyscale_x_pixel("gap", cw);
     if (m_limit > 0)
     {
       ocg.var_fixed("limit", (float)m_limit);
-      ocg.movecs_pix_x("limit", cw);
+      ocg.xyscale_x_pixel("limit", cw);
     }
     
     ocg.goto_normed();
@@ -322,7 +322,7 @@ OSelector::OSelector(const linestyle_t& kls, float alpha, bool moveable): OSelec
 
 int OSelector::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     {
@@ -340,7 +340,7 @@ OSelectorCirc::OSelectorCirc(const linestyle_t& kls, float alpha, bool moveable)
 
 int OSelectorCirc::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     {
@@ -363,7 +363,7 @@ OSelectorBand::OSelectorBand(const linestyle_t& kls, float alpha, bool moveable)
 
 int OSelectorBand::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     {
@@ -383,7 +383,7 @@ int OSelectorBand::fshOVCoords(int overlay, bool switchedab, char *to) const
 
 
 OSegmentReaction::OSegmentReaction(const linestyle_t &kls): 
-  DrawOverlay_ColorTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f), m_phase(-1)
+  Ovldraw_ColorTraced(kls), OVLCoordsDimmsLinked(CR_RELATIVE, 0.0f, 0.0f, 0.0f, 0.0f), m_phase(-1)
 {
 }
 
@@ -424,14 +424,14 @@ OSegment::OSegment(const linestyle_t& kls, COORDINATION cr, float gap, float siz
 
 int OSegment::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
-    int cw = ocg.add_movecs_pixing(m_cr);
+    int cw = ocg.register_xyscaler_pixel(m_cr);
     ocg.var_fixed("gap", (float)m_gap);
-    ocg.movecs_pix_x("gap", cw);
+    ocg.xyscale_x_pixel("gap", cw);
     ocg.var_fixed("size", (float)m_size);
-    ocg.movecs_pix_x("size", cw);
+    ocg.xyscale_x_pixel("size", cw);
     
     ocg.goto_normed();
     ocg.trace_2linehorz_c("size", "gap");

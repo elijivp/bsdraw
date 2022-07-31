@@ -1,5 +1,5 @@
-#ifndef BSSHGENTRACE
-#define BSSHGENTRACE
+#ifndef FSHOVCOORDSCONSTRUCTOR_H
+#define FSHOVCOORDSCONSTRUCTOR_H
 
 /// This file is a part of shader-code-generation subsystem
 /// You dont need to use classes from this file directly
@@ -33,7 +33,7 @@ template <> inline void _bs_unzip_dimms(const OVLDimmsDynamic* d, _bs_unzip_t* r
 template <> inline void _bs_unzip_dimms(const OVLCoordsDimmsLinked* d, _bs_unzip_t* rslt){ rslt->type = 7; rslt->cr = d->getCoordination(); }
 
 
-class FshTraceGenerator
+class FshOVCoordsConstructor
 {
   int                                 m_overlay;
   const char*                         m_writebase;
@@ -52,7 +52,7 @@ class FshTraceGenerator
 public:
   enum  OCG_INCLUDE_BITS  {  OINC_NONE=0, OINC_GETVALUE=1, OINC_RANDOM=2, OINC_DATABOUNDS=4 /*, OINC_PORTIONS=4*/ };
 public:
-  FshTraceGenerator(const _DrawOverlay::uniforms_t& ufms, int overlay, char* deststring, int ocg_include_bits = 0);
+  FshOVCoordsConstructor(const _Ovldraw::uniforms_t& ufms, int overlay, char* deststring, int ocg_include_bits = 0);
   int  written() const { return m_offset; }
 private:
   void  _gtb();
@@ -75,8 +75,8 @@ public:
     }
   }
 public:
-  int   add_movecs_pixing(COORDINATION con);
-  int   add_movecs_rel(COORDINATION con);
+  int   register_xyscaler_pixel(COORDINATION con);
+  int   register_xyscaler_01(COORDINATION con);
 public:
   void  math_pi();
 public:
@@ -141,16 +141,13 @@ public:
   void  var_static(const char* name, const char* value);
   void  var_const_static(DTYPE type, const char* name_eq_value);
   
-  void  movecs_pix_x(const char* name, int resc_idx);
-  void  movecs_pix_y(const char* name, int resc_idx);
-  void  movecs_pix(const char* name, int resc_idx);
+  void  xyscale_x_pixel(const char* name, int resc_idx);
+  void  xyscale_y_pixel(const char* name, int resc_idx);
+  void  xyscale_xy_pixel(const char* name, int resc_idx);
   
-  void  push_cs_rel_x(const char* name, int resc_idx);
-  void  push_cs_rel_y(const char* name, int resc_idx);
-  void  push_cs_rel(const char* name, int resc_idx);
-  void  pop_cs_rel_x(const char* name);
-  void  pop_cs_rel_y(const char* name);
-  void  pop_cs_rel(const char* name);
+  void  xyscale_x_01(const char* name, int resc_idx);
+  void  xyscale_y_01(const char* name, int resc_idx);
+  void  xyscale_xy_01(const char* name, int resc_idx);
 public:
   void  push(const char* sztext);
   void  push(const char* text, unsigned int len);
@@ -160,12 +157,7 @@ public:
   void  inside_begin1(const char* limrad1);
   void  inside_begin2(const char* limits2);
   void  inside_end();
-
-public:           /// PLACES  from inormed
-//  void  place_rect_lb(const char* rdimms, const char* inside_name);
-//  void  place_rect_cc(const char* r2dimms, const char* inside_name);
-//  void  place_line(const char* ABC, const char* border, const char* inside_name);
-
+  
 public:
   void  ban_trace(bool);
 public:
@@ -216,5 +208,4 @@ public:
   void  goto_func_end(bool traced);
 };
 
-#endif // BSSHGENTRACE
-
+#endif // FSHOVCOORDSCONSTRUCTOR_H

@@ -7,7 +7,7 @@
 
 #include "../../core/bsoverlay.h"
 
-class OBlocker: public DrawOverlay_ColorForegoing, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
+class OBlocker: public Ovldraw_ColorForegoing, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
 {
   int     m_blockstate;
   float   m_clr[3];
@@ -23,7 +23,7 @@ protected:
   virtual bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop);
 };
 
-class OBlockerDots: public DrawOverlay_ColorForegoing, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
+class OBlockerDots: public Ovldraw_ColorForegoing, public OVLCoordsOff, public OVLDimmsOff, public IOverlayReactor
 {
   int     m_mod[2];
   float   m_mixdot, m_mixback;
@@ -36,6 +36,19 @@ protected:
   virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
   virtual IOverlayReactor*  reactor() { return this; }
   virtual bool overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool* doStop);
+};
+
+
+class OBlockerShirm: public Ovldraw_ColorForegoing, public OVLCoordsDynamic, public OVLDimmsOff
+{
+  int     m_setup;
+  float   m_mixline, m_mixback;
+  float   m_clrline[3], m_clrback[3];
+public:
+  enum  { OBS_HORZ2RIGHT, OBS_HORZ2LEFT, OBS_VERT2TOP, OBS_VERT2BOT };
+  OBlockerShirm(float start, int setup, unsigned int colorLine=0x00FFFFFF, float mixLine=0.1f, unsigned int colorBack=0x00000000, float mixBack=0.9f);
+protected:
+  virtual int fshOVCoords(int overlay, bool /*switchedab*/, char* to) const;
 };
 
 

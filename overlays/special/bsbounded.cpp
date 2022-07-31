@@ -6,11 +6,11 @@
 #include "../../core/sheigen/bsshgencolor.h"
 
 OLevel::OLevel(float value, const linestyle_t& linestyle): 
-  DrawOverlay_ColorTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(), m_value(value){}
+  Ovldraw_ColorTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(), m_value(value){}
 
 int OLevel::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_DATABOUNDS); //databounds
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_DATABOUNDS); //databounds
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   ocg.goto_normed();
   {
@@ -26,7 +26,7 @@ int OLevel::fshOVCoords(int overlay, bool switchedab, char *to) const
 //////////////////////////////////////////////////////////////////////////////////
 
 OLevelVariable::OLevelVariable(float value, const linestyle_t& linestyle): 
-  DrawOverlay_ColorTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(), m_value(value)
+  Ovldraw_ColorTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(), m_value(value)
 {
   appendUniform(DT_1F, &m_value);
 }
@@ -39,7 +39,7 @@ void OLevelVariable::setLevel(float v, bool update)
 
 int OLevelVariable::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_DATABOUNDS); //databounds
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_DATABOUNDS); //databounds
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   ocg.goto_normed();
   {
@@ -56,7 +56,7 @@ int OLevelVariable::fshOVCoords(int overlay, bool switchedab, char *to) const
 
 
 
-ORecLine::ORecLine(const linestyle_t& linestyle): DrawOverlay_ColorTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(),
+ORecLine::ORecLine(const linestyle_t& linestyle): Ovldraw_ColorTraced(linestyle), OVLCoordsOff(), OVLDimmsOff(),
   ctr(0)
 {
   for (int i=0; i<TOTAL; i++)
@@ -81,7 +81,7 @@ void ORecLine::increment(bool activate, bool update)
 
 int ORecLine::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_DATABOUNDS); //databounds
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_DATABOUNDS); //databounds
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
 //  ocg.goto_normed();
   {
@@ -112,7 +112,7 @@ int ORecLine::fshOVCoords(int overlay, bool switchedab, char* to) const
 
 
 _OLevelSet::_OLevelSet(unsigned int maxcount, linestyle_t* pkls, line_t* poffsets, COORDINATION cn, bool isstatic, float margin1, float margin2): 
-  DrawOverlay(true), m_activecount(0), m_cn(cn), m_static(isstatic), m_mr1(margin1), m_mr2(margin2), 
+  Ovldraw(true), m_activecount(0), m_cn(cn), m_static(isstatic), m_mr1(margin1), m_mr2(margin2), 
   m_lt(LT_HORZ), m_kls(pkls), m_data(poffsets)
 {
   for (int i=0; i<maxcount; i++)
@@ -196,7 +196,7 @@ void _OLevelSet::clear(bool update)
 
 int _OLevelSet::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshTraceGenerator  ocg(this->uniforms(), overlay, to, FshTraceGenerator::OINC_DATABOUNDS);
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_DATABOUNDS);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, nullptr);
   {
     ocg.param_alias("count");
@@ -206,16 +206,16 @@ int _OLevelSet::fshOVCoords(int overlay, bool switchedab, char* to) const
     
     ocg.var_fixed("cs_mr1", m_mr1);
     ocg.var_fixed("cs_mr2", m_mr2);
-    int fc = ocg.add_movecs_pixing(m_cn);
+    int fc = ocg.register_xyscaler_pixel(m_cn);
     if (m_lt == LT_HORZ)//_BYLEFT || m_lt == LT_HORZ_BYRIGHT)
     {
-      ocg.movecs_pix_x("cs_mr1", fc);
-      ocg.movecs_pix_x("cs_mr2", fc);
+      ocg.xyscale_x_pixel("cs_mr1", fc);
+      ocg.xyscale_x_pixel("cs_mr2", fc);
     }
     else
     {
-      ocg.movecs_pix_y("cs_mr1", fc);
-      ocg.movecs_pix_y("cs_mr2", fc);
+      ocg.xyscale_y_pixel("cs_mr1", fc);
+      ocg.xyscale_y_pixel("cs_mr2", fc);
     }
     
     ocg.var_array_ff_empty("oc", dtarr.count);
@@ -232,12 +232,12 @@ int _OLevelSet::fshOVCoords(int overlay, bool switchedab, char* to) const
       
       if (m_lt == LT_HORZ) //_BYLEFT || m_lt == LT_HORZ_BYRIGHT)
       {
-        ocg.movecs_pix_y("oc[i][1]", fc);
+        ocg.xyscale_y_pixel("oc[i][1]", fc);
         ocg.push("float rs = oc[i][1] - float(icoords.y);");
       }
       else
       {
-        ocg.movecs_pix_x("oc[i][1]", fc);
+        ocg.xyscale_x_pixel("oc[i][1]", fc);
         ocg.push("float rs = oc[i][1] - float(icoords.x);");
       }
       ocg.push("float cup = step(1.0, oc[i][0]) * step(abs(rs), abs(loffs));");
@@ -266,7 +266,7 @@ int _OLevelSet::fshOVCoords(int overlay, bool switchedab, char* to) const
 
 int _OLevelSet::fshColor(int overlay, char* to) const
 {
-  FshColorGenerator ocg(overlay, to);
+  FshOVColorConstructor ocg(overlay, to);
   ocg.goto_func_begin();
   {
     const char* prefix = "if (in_variant[2] == ";

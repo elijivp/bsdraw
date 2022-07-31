@@ -9,8 +9,28 @@
 
 #include "bsshgenparams.h"
 
+//#define _PLUS_049 " + 0.4999"
+//#define _MINUS_049 " - 0.4999"
+//#define _PLUS_VEC2049 " + vec2(0.4999)"
+//#define _PLUS_VEC4049 " + vec4(0.4999)"
 
-FshTraceGenerator::FshTraceGenerator(const _DrawOverlay::uniforms_t &ufms, int overlay, char *deststring, int ocg_include_bits): 
+//#define _PLUS_049 " + 0.499"
+//#define _MINUS_049 " - 0.499"
+//#define _PLUS_VEC2049 " + vec2(0.499)"
+//#define _PLUS_VEC4049 " + vec4(0.499)"
+
+//#define _PLUS_049 " + 0.49"
+//#define _MINUS_049 " - 0.49"
+//#define _PLUS_VEC2049 " + vec2(0.49)"
+//#define _PLUS_VEC4049 " + vec4(0.49)"
+
+#define _PLUS_049 
+#define _MINUS_049 
+#define _PLUS_VEC2049 
+#define _PLUS_VEC4049 
+
+
+FshOVCoordsConstructor::FshOVCoordsConstructor(const _Ovldraw::uniforms_t &ufms, int overlay, char *deststring, int ocg_include_bits): 
   m_overlay(overlay), m_writebase(deststring), m_to(deststring), m_offset(0), 
   m_pixingsctr(0), m_relingsctr(0), m_maths(0), m_paramsctr(0), m_prmmemoryiter(0)
 {
@@ -43,7 +63,7 @@ FshTraceGenerator::FshTraceGenerator(const _DrawOverlay::uniforms_t &ufms, int o
   m_offset += msexpandParams(&m_to[m_offset], m_overlay, loc_uniformsCount, loc_uniforms);
 }
 
-void FshTraceGenerator::_gtb()
+void FshOVCoordsConstructor::_gtb()
 { 
   m_offset += msprintf(&m_to[m_offset], "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition){" SHNL, 
                        m_overlay);
@@ -56,19 +76,17 @@ void FshTraceGenerator::_gtb()
   memcpy(&m_to[m_offset], _vars, sizeof(_vars)-1); m_offset += sizeof(_vars) - 1;
 }
 
-void FshTraceGenerator::_gtb_coords(const _bs_unzip_t &bsu)
+void FshOVCoordsConstructor::_gtb_coords(const _bs_unzip_t &bsu)
 {
   if (bsu.type)
   {
-    int coordspixing = add_movecs_pixing(bsu.cr);
+    int coordspixing = register_xyscaler_pixel(bsu.cr);
     m_offset += msprintf(&m_to[m_offset], "ivec2 ioffset = ivec2(");
     if (bsu.type == 1)
       m_offset += msprintf(&m_to[m_offset], "vec2(%f, %f)", bsu.ffs[0], bsu.ffs[1]);
     else if (bsu.type >= 2)
       m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr++);
-//    m_offset += msprintf(&m_to[m_offset],  " * movecs_pixing%d) + vec2(0.49,0.49)));" SHNL, coordspixing);    /// ??2
-    m_offset += msprintf(&m_to[m_offset],  " * movecs_pixing%d + vec2(0.49));" SHNL, coordspixing);
-//    m_offset += msprintf(&m_to[m_offset],  " * movecs_pixing%d);" SHNL, coordspixing);
+    m_offset += msprintf(&m_to[m_offset],  " * xyscaler_px_%d" _PLUS_VEC2049 ");" SHNL, coordspixing);
   }
   else
     m_offset += msprintf(&m_to[m_offset],  "ivec2 ioffset = ivec2(0,0);\n");
@@ -76,17 +94,17 @@ void FshTraceGenerator::_gtb_coords(const _bs_unzip_t &bsu)
   m_offset += msprintf(&m_to[m_offset],  "ioffset = ioffset + mastercoords;" SHNL);
 }
 
-void FshTraceGenerator::_gtb_dimms(const _bs_unzip_t &bsu)
+void FshOVCoordsConstructor::_gtb_dimms(const _bs_unzip_t &bsu)
 {
   if (bsu.type)
   {
-    int dimmpixing = add_movecs_pixing(bsu.cr);
+    int dimmpixing = register_xyscaler_pixel(bsu.cr);
     
     if (bsu.type == 1 || bsu.type == 2)
     {
       if (bsu.cr <= CR_XREL_YABS)               /// CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,   (SCALED variants)
       {
-        m_offset += msprintf(&m_to[m_offset], "_fvar = mix(movecs_pixing%d.x, movecs_pixing%d.y, step(float(movecs_pixing%d.y), float(movecs_pixing%d.x)));" SHNL, dimmpixing,dimmpixing,dimmpixing,dimmpixing);
+        m_offset += msprintf(&m_to[m_offset], "_fvar = mix(xyscaler_px_%d.x, xyscaler_px_%d.y, step(float(xyscaler_px_%d.y), float(xyscaler_px_%d.x)));" SHNL, dimmpixing,dimmpixing,dimmpixing,dimmpixing);
       }
       else if (bsu.cr >= CR_XABS_YABS_NOSCALED_SCALED)   /// all NOSCALED_SCALED or SCALED_NOSCALED variants
       {
@@ -95,7 +113,7 @@ void FshTraceGenerator::_gtb_dimms(const _bs_unzip_t &bsu)
                                   'y', 'x', 
                                   'y', 'x'
                                };
-        m_offset += msprintf(&m_to[m_offset], "_fvar = movecs_pixing%d.%c;" SHNL, dimmpixing, endings[bsu.cr - CR_XABS_YABS_NOSCALED_SCALED]);
+        m_offset += msprintf(&m_to[m_offset], "_fvar = xyscaler_px_%d.%c;" SHNL, dimmpixing, endings[bsu.cr - CR_XABS_YABS_NOSCALED_SCALED]);
       }
       else                                      /// last NOSCALED variants
         m_offset += msprintf(&m_to[m_offset], "_fvar = 1;" SHNL);
@@ -105,7 +123,7 @@ void FshTraceGenerator::_gtb_dimms(const _bs_unzip_t &bsu)
         m_offset += msprintf(&m_to[m_offset], "%f", bsu.ffs[0]);
       else if (bsu.type == 2)
         m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr++);
-      m_offset += msprintf(&m_to[m_offset],  " * _fvar + 0.49));" SHNL, dimmpixing);
+      m_offset += msprintf(&m_to[m_offset],  " * _fvar" _PLUS_049 "));" SHNL, dimmpixing);
     }
     else if (bsu.type == 3 || bsu.type == 4)
     {
@@ -114,7 +132,7 @@ void FshTraceGenerator::_gtb_dimms(const _bs_unzip_t &bsu)
         m_offset += msprintf(&m_to[m_offset], "vec2(%f, %f)", bsu.ffs[0], bsu.ffs[1]);
       else if (bsu.type == 4)
         m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr++);
-      m_offset += msprintf(&m_to[m_offset],  " * vec2(movecs_pixing%d.x, movecs_pixing%d.y) + vec2(0.49,0.49)));" SHNL, dimmpixing,dimmpixing);
+      m_offset += msprintf(&m_to[m_offset],  " * vec2(xyscaler_px_%d.x, xyscaler_px_%d.y) " _PLUS_VEC2049 "));" SHNL, dimmpixing,dimmpixing);
     }
     else if (bsu.type == 5 || bsu.type == 6)
     {
@@ -127,87 +145,156 @@ void FshTraceGenerator::_gtb_dimms(const _bs_unzip_t &bsu)
       {
         m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr++);
       }
-      m_offset += msprintf(&m_to[m_offset],  " * vec4(movecs_pixing%d.x, movecs_pixing%d.y, movecs_pixing%d.x, movecs_pixing%d.y)) + vec4(0.49,0.49,0.49,0.49)));" SHNL, dimmpixing,dimmpixing,dimmpixing,dimmpixing);
+      m_offset += msprintf(&m_to[m_offset],  " * vec4(xyscaler_px_%d.x, xyscaler_px_%d.y, xyscaler_px_%d.x, xyscaler_px_%d.y)) " _PLUS_VEC4049 "));" SHNL, dimmpixing,dimmpixing,dimmpixing,dimmpixing);
     }
     else if (bsu.type == 7)
     {
-      m_offset += msprintf(&m_to[m_offset],  "ivec2 idimms2 = ivec2(floor(opm%D_%D * vec2(movecs_pixing%d.x, movecs_pixing%d.y) + vec2(0.49,0.49)));" SHNL, m_overlay, m_paramsctr++, dimmpixing, dimmpixing);
+      m_offset += msprintf(&m_to[m_offset],  "ivec2 idimms2 = ivec2(floor(opm%D_%D * vec2(xyscaler_px_%d.x, xyscaler_px_%d.y) " _PLUS_VEC2049 "));" SHNL, m_overlay, m_paramsctr++, dimmpixing, dimmpixing);
     }
   }
 }
 
 
-void FshTraceGenerator::math_pi()
+void FshOVCoordsConstructor::math_pi()
 {
   static const char _overmath[] = "const float PI = 3.1415926;" SHNL;
   memcpy(&m_to[m_offset], _overmath, sizeof(_overmath)-1); m_offset += sizeof(_overmath) - 1;
   m_maths |= (1 << (int)MM_PI);
 }
 
-int FshTraceGenerator::add_movecs_pixing(COORDINATION con)
+#if 0
+
+int FshOVCoordsConstructor::register_xyscaler_pixel(COORDINATION con)
 {
   if (con == CR_SAME) return -1;
   static const char* coordination[] = {  /// CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
-                                         "ivec2 movecs_pixing%d = ov_iscaler;" SHNL,
-                                         "ivec2 movecs_pixing%d = ov_ibounds;" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(ov_iscaler.x, ov_ibounds.y);" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(ov_ibounds.x, ov_iscaler.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ov_iscaler;" SHNL,
+                                         "ivec2 xyscaler_px_%d = ov_ibounds;" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_iscaler.x, ov_ibounds.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_ibounds.x, ov_iscaler.y);" SHNL,
                                          
                                          ///  CR_ABSOLUTE_NOSCALED, CR_RELATIVE_NOSCALED, CR_XABS_YREL_NOSCALED, CR_XREL_YABS_NOSCALED
-                                         "ivec2 movecs_pixing%d = ivec2(1, 1);" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(ov_indimms.x, ov_indimms.y);" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(1, ov_indimms.y);" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(ov_indimms.x, 1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(1, 1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x, ov_indimms.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(1, ov_indimms.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x, 1);" SHNL,
                                          
                                          ///  CR_XABS_YABS_NOSCALED_SCALED, CR_XABS_YABS_SCALED_NOSCALED, CR_XREL_YREL_NOSCALED_SCALED, CR_XREL_YREL_SCALED_NOSCALED, 
-                                         "ivec2 movecs_pixing%d = ivec2(1, ov_iscaler.y);" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(ov_iscaler.x, 1);" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(ov_indimms.x, ov_ibounds.y);" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(ov_ibounds.x, ov_indimms.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(1, ov_iscaler.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_iscaler.x, 1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x, ov_ibounds.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_ibounds.x, ov_indimms.y);" SHNL,
                                          
                                          /// CR_XABS_YREL_NOSCALED_SCALED, CR_XABS_YREL_SCALED_NOSCALED, CR_XREL_YABS_NOSCALED_SCALED, CR_XREL_YABS_SCALED_NOSCALED,
-                                         "ivec2 movecs_pixing%d = ivec2(1, ov_ibounds.y);" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(ov_iscaler.x, ov_indimms.y);" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(ov_ibounds.x, 1);" SHNL,
-                                         "ivec2 movecs_pixing%d = ivec2(ov_indimms.x, ov_iscaler.y);" SHNL
+                                         "ivec2 xyscaler_px_%d = ivec2(1, ov_ibounds.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_iscaler.x, ov_indimms.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_ibounds.x, 1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x, ov_iscaler.y);" SHNL
                                       } ;
   m_offset += msprintf(&m_to[m_offset], coordination[(int)con], m_pixingsctr);
   return m_pixingsctr++;
 }
 
-int FshTraceGenerator::add_movecs_rel(COORDINATION con)
+int FshOVCoordsConstructor::register_xyscaler_01(COORDINATION con)
 {
   if (con == CR_SAME) return -1;
   static const char* coordination[] = {  /// CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
-//                                         "vec2 movecs_rel_%d = vec2(ov_indimms.x-1, ov_indimms.y-1);" SHNL,   // ntf!
-                                         "vec2 movecs_rel_%d = vec2(ov_indimms.x, ov_indimms.y);" SHNL,   // ntf!
-                                         "vec2 movecs_rel_%d = vec2(1.0, 1.0);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(ov_indimms.x, 1);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(1, ov_indimms.y);" SHNL,
+//                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x-1, ov_indimms.y-1);" SHNL,   // ntf!
+                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x, ov_indimms.y);" SHNL,   // ntf!
+                                         "vec2 xyscaler_01_%d = vec2(1.0, 1.0);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x, 1);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(1, ov_indimms.y);" SHNL,
                                          
                                          ///  CR_ABSOLUTE_NOSCALED, CR_RELATIVE_NOSCALED, CR_XABS_YREL_NOSCALED, CR_XREL_YABS_NOSCALED
-                                         "vec2 movecs_rel_%d = vec2(ov_ibounds);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(ov_iscaler.x, ov_iscaler.y);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(ov_ibounds.x, ov_iscaler.y);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(ov_iscaler.x, ov_ibounds.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, ov_iscaler.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds.x, ov_iscaler.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, ov_ibounds.y);" SHNL,
                                          
                                          ///  CR_XABS_YABS_NOSCALED_SCALED, CR_XABS_YABS_SCALED_NOSCALED, CR_XREL_YREL_NOSCALED_SCALED, CR_XREL_YREL_SCALED_NOSCALED, 
-                                         "vec2 movecs_rel_%d = vec2(ov_indimms.x, ov_ibounds.y);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(ov_ibounds.x, ov_indimms.y);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(1, ov_iscaler.y);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(ov_iscaler.x, 1);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x, ov_ibounds.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds.x, ov_indimms.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(1, ov_iscaler.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, 1);" SHNL,
                                          
                                          /// CR_XABS_YREL_NOSCALED_SCALED, CR_XABS_YREL_SCALED_NOSCALED, CR_XREL_YABS_NOSCALED_SCALED, CR_XREL_YABS_SCALED_NOSCALED,
-                                         "vec2 movecs_rel_%d = vec2(ov_ibounds.x, 1);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(ov_indimms.x, ov_iscaler.y);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(1, ov_ibounds.y);" SHNL,
-                                         "vec2 movecs_rel_%d = vec2(ov_iscaler.x, ov_indimms.y);" SHNL
+                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds.x, 1);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x, ov_iscaler.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(1, ov_ibounds.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, ov_indimms.y);" SHNL
                                       } ;
   m_offset += msprintf(&m_to[m_offset], coordination[(int)con], m_relingsctr);
   return m_relingsctr++;
 }
 
-void FshTraceGenerator::param_alias(const char *name, int memslot)
+#else
+
+
+int FshOVCoordsConstructor::register_xyscaler_pixel(COORDINATION con)
+{
+  if (con == CR_SAME) return -1;
+  static const char* coordination[] = {  /// CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
+                                         "ivec2 xyscaler_px_%d = ov_iscaler;" SHNL,
+                                         "ivec2 xyscaler_px_%d = ov_ibounds - ivec2(1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_iscaler.x, ov_ibounds.y-1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_ibounds.x-1, ov_iscaler.y);" SHNL,
+                                         
+                                         ///  CR_ABSOLUTE_NOSCALED, CR_RELATIVE_NOSCALED, CR_XABS_YREL_NOSCALED, CR_XREL_YABS_NOSCALED
+                                         "ivec2 xyscaler_px_%d = ivec2(1, 1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x-1, ov_indimms.y-1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(1, ov_indimms.y-1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x-1, 1);" SHNL,
+                                         
+                                         ///  CR_XABS_YABS_NOSCALED_SCALED, CR_XABS_YABS_SCALED_NOSCALED, CR_XREL_YREL_NOSCALED_SCALED, CR_XREL_YREL_SCALED_NOSCALED, 
+                                         "ivec2 xyscaler_px_%d = ivec2(1, ov_iscaler.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_iscaler.x, 1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x-1, ov_ibounds.y-1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_ibounds.x-1, ov_indimms.y-1);" SHNL,
+                                         
+                                         /// CR_XABS_YREL_NOSCALED_SCALED, CR_XABS_YREL_SCALED_NOSCALED, CR_XREL_YABS_NOSCALED_SCALED, CR_XREL_YABS_SCALED_NOSCALED,
+                                         "ivec2 xyscaler_px_%d = ivec2(1, ov_ibounds.y-1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_iscaler.x, ov_indimms.y-1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_ibounds.x-1, 1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x-1, ov_iscaler.y);" SHNL
+                                      } ;
+  m_offset += msprintf(&m_to[m_offset], coordination[(int)con], m_pixingsctr);
+  return m_pixingsctr++;
+}
+
+int FshOVCoordsConstructor::register_xyscaler_01(COORDINATION con)
+{
+  if (con == CR_SAME) return -1;
+  static const char* coordination[] = {  /// CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
+                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x-1, ov_indimms.y-1);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(1.0, 1.0);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x-1, 1);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(1, ov_indimms.y-1);" SHNL,
+                                         
+                                         ///  CR_ABSOLUTE_NOSCALED, CR_RELATIVE_NOSCALED, CR_XABS_YREL_NOSCALED, CR_XREL_YABS_NOSCALED
+                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds - ivec2(1));" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, ov_iscaler.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds.x-1, ov_iscaler.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, ov_ibounds.y-1);" SHNL,
+                                         
+                                         ///  CR_XABS_YABS_NOSCALED_SCALED, CR_XABS_YABS_SCALED_NOSCALED, CR_XREL_YREL_NOSCALED_SCALED, CR_XREL_YREL_SCALED_NOSCALED, 
+                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x-1, ov_ibounds.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds.x-1, ov_indimms.y-1);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(1, ov_iscaler.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, 1);" SHNL,
+                                         
+                                         /// CR_XABS_YREL_NOSCALED_SCALED, CR_XABS_YREL_SCALED_NOSCALED, CR_XREL_YABS_NOSCALED_SCALED, CR_XREL_YABS_SCALED_NOSCALED,
+                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds.x-1, 1);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x-1, ov_iscaler.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(1, ov_ibounds.y-1);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, ov_indimms.y-1);" SHNL
+                                      } ;
+  m_offset += msprintf(&m_to[m_offset], coordination[(int)con], m_relingsctr);
+  return m_relingsctr++;
+}
+
+#endif
+
+void FshOVCoordsConstructor::param_alias(const char *name, int memslot)
 {
   if (memslot == -1)
   {
@@ -218,35 +305,35 @@ void FshTraceGenerator::param_alias(const char *name, int memslot)
     m_offset += msprintf(&m_to[m_offset], "%s %s = opm%D_%D;" SHNL, glsl_types[loc_uniforms[m_prmmemory[memslot]].type], name, m_overlay, m_prmmemory[memslot]);
 }
 
-int FshTraceGenerator::param_push()
+int FshOVCoordsConstructor::param_push()
 {
   int memslot = m_prmmemoryiter;
   m_prmmemory[m_prmmemoryiter++] = m_paramsctr++;
   return memslot;
 }
 
-void FshTraceGenerator::param_get()
+void FshOVCoordsConstructor::param_get()
 {
   m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr);
   m_paramsctr++;
 }
 
-void FshTraceGenerator::param_mem(int memslot)
+void FshOVCoordsConstructor::param_mem(int memslot)
 {
   m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_prmmemory[memslot]);
 }
 
-void FshTraceGenerator::param_pass()
+void FshOVCoordsConstructor::param_pass()
 {
   m_paramsctr++;
 }
 
-void FshTraceGenerator::param_peek()
+void FshOVCoordsConstructor::param_peek()
 {
   m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr);
 }
 
-void FshTraceGenerator::param_for_arr_begin(const char *name, const char *arrlengthname, const char* additname)
+void FshOVCoordsConstructor::param_for_arr_begin(const char *name, const char *arrlengthname, const char* additname)
 {
   m_offset += msprintf(&m_to[m_offset],   "int %s = int(opm%D_%D.length());" SHNL
                                           "for (int i=0; i<%s; i++){" SHNL
@@ -261,7 +348,7 @@ void FshTraceGenerator::param_for_arr_begin(const char *name, const char *arrlen
   }
 }
 
-void FshTraceGenerator::param_for_rarr_begin(const char *name)  // DT_ARR, DT_1I, DT_1I
+void FshOVCoordsConstructor::param_for_rarr_begin(const char *name)  // DT_ARR, DT_1I, DT_1I
 {
   m_offset += msprintf(&m_to[m_offset],  "ivec2 rarr_rnds = ivec2(opm%D_%D,opm%D_%D);" SHNL
                       "int rarr_len = opm%D_%D.length();" SHNL
@@ -274,7 +361,7 @@ void FshTraceGenerator::param_for_rarr_begin(const char *name)  // DT_ARR, DT_1I
   m_paramsctr += 3;
 }
 
-void FshTraceGenerator::param_for_oarr_begin(const char *name_cur, const char *name_next, const char *arrlengthname)  // DT_ARR, DT_1I
+void FshOVCoordsConstructor::param_for_oarr_begin(const char *name_cur, const char *name_next, const char *arrlengthname)  // DT_ARR, DT_1I
 {
   m_offset += msprintf(&m_to[m_offset],  "%s %s = opm%D_%D[0]; %s %s; " SHNL, glsl_types[loc_uniforms[m_paramsctr].type], name_cur, m_overlay, m_paramsctr, glsl_types[loc_uniforms[m_paramsctr].type], name_next);
   m_offset += msprintf(&m_to[m_offset],  "int %s = opm%D_%D;" SHNL
@@ -285,7 +372,7 @@ void FshTraceGenerator::param_for_oarr_begin(const char *name_cur, const char *n
   m_paramsctr += 2;
 }
 
-void FshTraceGenerator::param_for_carr_begin(const char* name, const char* arrlengthname)
+void FshOVCoordsConstructor::param_for_carr_begin(const char* name, const char* arrlengthname)
 {
   m_offset += msprintf(&m_to[m_offset],   "int %s = opm%D_%D;" SHNL
                                           "for (int i=0; i<%s; i++){" SHNL
@@ -294,134 +381,128 @@ void FshTraceGenerator::param_for_carr_begin(const char* name, const char* arrle
   m_paramsctr += 2;
 }
 
-void FshTraceGenerator::param_for_end() {  m_offset += msprintf(&m_to[m_offset], "}");  }
+void FshOVCoordsConstructor::param_for_end() {  m_offset += msprintf(&m_to[m_offset], "}");  }
 
-void FshTraceGenerator::goto_normed()
+void FshOVCoordsConstructor::goto_normed()
 {
   m_offset += msprintf(&m_to[m_offset], "ivec2 inormed = icoords - ioffset;" SHNL);
 }
 
-void FshTraceGenerator::goto_normed(const char *someparam, int pixing, bool saveasoffset)
+void FshOVCoordsConstructor::goto_normed(const char *someparam, int pixing, bool saveasoffset)
 {
   if (saveasoffset)
   {
-    m_offset += msprintf(&m_to[m_offset], "ioffset = ivec2(floor((%s * movecs_pixing%d) + vec2(0.49,0.49)));" SHNL, someparam, pixing);
+    m_offset += msprintf(&m_to[m_offset], "ioffset = ivec2(floor((%s * xyscaler_px_%d) " _PLUS_VEC2049 "));" SHNL, someparam, pixing);
     m_offset += msprintf(&m_to[m_offset], "ivec2 inormed = icoords - ioffset;" SHNL);
   }
   else
-    m_offset += msprintf(&m_to[m_offset], "ivec2 inormed = icoords - ivec2(floor((%s * movecs_pixing%d) + vec2(0.49,0.49)));" SHNL, someparam, pixing);
+    m_offset += msprintf(&m_to[m_offset], "ivec2 inormed = icoords - ivec2(floor((%s * xyscaler_px_%d) " _PLUS_VEC2049 "));" SHNL, someparam, pixing);
 }
 
-void FshTraceGenerator::goto_normed_empty()
+void FshOVCoordsConstructor::goto_normed_empty()
 {
   m_offset += msprintf(&m_to[m_offset], "ivec2 inormed = ivec2(0,0);" SHNL);
 }
 
-void FshTraceGenerator::goto_normed_rotated(const char *angleRadName)
+void FshOVCoordsConstructor::goto_normed_rotated(const char *angleRadName)
 {
   m_offset += msprintf(&m_to[m_offset], "mat2 rotationMatrix = mat2 (cos(%s), -sin(%s), sin(%s), cos(%s));  inormed = inormed*rotationMatrix;" SHNL, angleRadName, angleRadName, angleRadName, angleRadName);
 }
 
-void FshTraceGenerator::var_fixed(const char *name, float value){  m_offset += msprintf(&m_to[m_offset], "float %s = %f;" SHNL, name, value); }
+void FshOVCoordsConstructor::var_fixed(const char *name, float value){  m_offset += msprintf(&m_to[m_offset], "float %s = %f;" SHNL, name, value); }
 
-void FshTraceGenerator::var_const_fixed(const char *name, float value){  m_offset += msprintf(&m_to[m_offset], "const float %s = %f;" SHNL, name, value); }
+void FshOVCoordsConstructor::var_const_fixed(const char *name, float value){  m_offset += msprintf(&m_to[m_offset], "const float %s = %f;" SHNL, name, value); }
 
-void FshTraceGenerator::var_inline(const char* name, float v){  m_offset += msprintf(&m_to[m_offset], name, v); }
+void FshOVCoordsConstructor::var_inline(const char* name, float v){  m_offset += msprintf(&m_to[m_offset], name, v); }
 
-void FshTraceGenerator::var_fixed(const char *name, int value){  m_offset += msprintf(&m_to[m_offset], "int %s = %d;" SHNL, name, value); }
+void FshOVCoordsConstructor::var_fixed(const char *name, int value){  m_offset += msprintf(&m_to[m_offset], "int %s = %d;" SHNL, name, value); }
 
-void FshTraceGenerator::var_const_fixed(const char *name, int value){  m_offset += msprintf(&m_to[m_offset], "const int %s = %d;" SHNL, name, value); }
+void FshOVCoordsConstructor::var_const_fixed(const char *name, int value){  m_offset += msprintf(&m_to[m_offset], "const int %s = %d;" SHNL, name, value); }
 
-void FshTraceGenerator::var_inline(const char* name, int v){  m_offset += msprintf(&m_to[m_offset], name, v); }
+void FshOVCoordsConstructor::var_inline(const char* name, int v){  m_offset += msprintf(&m_to[m_offset], name, v); }
 
-void FshTraceGenerator::var_fixed(const char *name, float v1, float v2){  m_offset += msprintf(&m_to[m_offset], "vec2 %s = vec2(%f, %f);" SHNL, name, v1, v2); }
+void FshOVCoordsConstructor::var_fixed(const char *name, float v1, float v2){  m_offset += msprintf(&m_to[m_offset], "vec2 %s = vec2(%f, %f);" SHNL, name, v1, v2); }
 
-void FshTraceGenerator::var_const_fixed(const char *name, float v1, float v2){  m_offset += msprintf(&m_to[m_offset], "const vec2 %s = vec2(%f, %f);" SHNL, name, v1, v2); }
+void FshOVCoordsConstructor::var_const_fixed(const char *name, float v1, float v2){  m_offset += msprintf(&m_to[m_offset], "const vec2 %s = vec2(%f, %f);" SHNL, name, v1, v2); }
 
-void FshTraceGenerator::var_inline(const char* name, float v1, float v2){  m_offset += msprintf(&m_to[m_offset], name, v1, v2); }
+void FshOVCoordsConstructor::var_inline(const char* name, float v1, float v2){  m_offset += msprintf(&m_to[m_offset], name, v1, v2); }
 
-void FshTraceGenerator::var_fixed(const char *name, int v1, int v2){  m_offset += msprintf(&m_to[m_offset], "ivec2 %s = ivec2(%d, %d);" SHNL, name, v1, v2); }
+void FshOVCoordsConstructor::var_fixed(const char *name, int v1, int v2){  m_offset += msprintf(&m_to[m_offset], "ivec2 %s = ivec2(%d, %d);" SHNL, name, v1, v2); }
 
-void FshTraceGenerator::var_const_fixed(const char *name, int v1, int v2){  m_offset += msprintf(&m_to[m_offset], "const ivec2 %s = ivec2(%d, %d);" SHNL, name, v1, v2); }
+void FshOVCoordsConstructor::var_const_fixed(const char *name, int v1, int v2){  m_offset += msprintf(&m_to[m_offset], "const ivec2 %s = ivec2(%d, %d);" SHNL, name, v1, v2); }
 
-void FshTraceGenerator::var_inline(const char* name, int v1, int v2){  m_offset += msprintf(&m_to[m_offset], name, v1, v2); }
+void FshOVCoordsConstructor::var_inline(const char* name, int v1, int v2){  m_offset += msprintf(&m_to[m_offset], name, v1, v2); }
 
-void FshTraceGenerator::var_fixed(const char *name, float v1, float v2, float v3){  m_offset += msprintf(&m_to[m_offset], "vec3 %s = vec3(%f, %f, %f);" SHNL, name, v1, v2, v3); }
+void FshOVCoordsConstructor::var_fixed(const char *name, float v1, float v2, float v3){  m_offset += msprintf(&m_to[m_offset], "vec3 %s = vec3(%f, %f, %f);" SHNL, name, v1, v2, v3); }
 
-void FshTraceGenerator::var_const_fixed(const char *name, float v1, float v2, float v3){  m_offset += msprintf(&m_to[m_offset], "const vec3 %s = vec3(%f, %f, %f);" SHNL, name, v1, v2, v3); }
+void FshOVCoordsConstructor::var_const_fixed(const char *name, float v1, float v2, float v3){  m_offset += msprintf(&m_to[m_offset], "const vec3 %s = vec3(%f, %f, %f);" SHNL, name, v1, v2, v3); }
 
-void FshTraceGenerator::var_inline(const char* name, float v1, float v2, float v3){  m_offset += msprintf(&m_to[m_offset], name, v1, v2, v3); }
+void FshOVCoordsConstructor::var_inline(const char* name, float v1, float v2, float v3){  m_offset += msprintf(&m_to[m_offset], name, v1, v2, v3); }
 
-void FshTraceGenerator::var_fixed(const char *name, int v1, int v2, int v3){  m_offset += msprintf(&m_to[m_offset], "ivec3 %s = ivec3(%d, %d, %d);" SHNL, name, v1, v2, v3); }
+void FshOVCoordsConstructor::var_fixed(const char *name, int v1, int v2, int v3){  m_offset += msprintf(&m_to[m_offset], "ivec3 %s = ivec3(%d, %d, %d);" SHNL, name, v1, v2, v3); }
 
-void FshTraceGenerator::var_const_fixed(const char *name, int v1, int v2, int v3){  m_offset += msprintf(&m_to[m_offset], "const ivec3 %s = ivec3(%d, %d, %d);" SHNL, name, v1, v2, v3); }
+void FshOVCoordsConstructor::var_const_fixed(const char *name, int v1, int v2, int v3){  m_offset += msprintf(&m_to[m_offset], "const ivec3 %s = ivec3(%d, %d, %d);" SHNL, name, v1, v2, v3); }
 
-void FshTraceGenerator::var_inline(const char* name, int v1, int v2, int v3){  m_offset += msprintf(&m_to[m_offset], name, v1, v2, v3); }
+void FshOVCoordsConstructor::var_inline(const char* name, int v1, int v2, int v3){  m_offset += msprintf(&m_to[m_offset], name, v1, v2, v3); }
 
-void FshTraceGenerator::var_fixed(const char *name, float v1, float v2, float v3, float v4){  m_offset += msprintf(&m_to[m_offset], "vec4 %s = vec4(%f, %f, %f, %f);" SHNL, name, v1, v2, v3, v4); }
+void FshOVCoordsConstructor::var_fixed(const char *name, float v1, float v2, float v3, float v4){  m_offset += msprintf(&m_to[m_offset], "vec4 %s = vec4(%f, %f, %f, %f);" SHNL, name, v1, v2, v3, v4); }
 
-void FshTraceGenerator::var_const_fixed(const char *name, float v1, float v2, float v3, float v4){  m_offset += msprintf(&m_to[m_offset], "const vec4 %s = vec4(%f, %f, %f, %f);" SHNL, name, v1, v2, v3, v4); }
-
-
-void FshTraceGenerator::var_fixed(const char *name, const color3f_t& v){  m_offset += msprintf(&m_to[m_offset], "vec3 %s = vec3(%f, %f, %f);" SHNL, name, v.r, v.g, v.b); }
-
-void FshTraceGenerator::var_const_fixed(const char *name, const color3f_t& v){  m_offset += msprintf(&m_to[m_offset], "const vec3 %s = vec3(%f, %f, %f);" SHNL, name, v.r, v.g, v.b); }
-
-void FshTraceGenerator::var_inline(const char* name, const color3f_t& v){  m_offset += msprintf(&m_to[m_offset], name, v.r, v.g, v.b); }
+void FshOVCoordsConstructor::var_const_fixed(const char *name, float v1, float v2, float v3, float v4){  m_offset += msprintf(&m_to[m_offset], "const vec4 %s = vec4(%f, %f, %f, %f);" SHNL, name, v1, v2, v3, v4); }
 
 
+void FshOVCoordsConstructor::var_fixed(const char *name, const color3f_t& v){  m_offset += msprintf(&m_to[m_offset], "vec3 %s = vec3(%f, %f, %f);" SHNL, name, v.r, v.g, v.b); }
 
-void FshTraceGenerator::var_array_f_empty(const char* name, int size){  m_offset += msprintf(&m_to[m_offset], "float %s[%d];" SHNL, name, size);   }
-void FshTraceGenerator::var_array_ff_empty(const char* name, int size){  m_offset += msprintf(&m_to[m_offset], "vec2 %s[%d];" SHNL, name, size);   }
-void FshTraceGenerator::var_array_fff_empty(const char* name, int size){  m_offset += msprintf(&m_to[m_offset], "vec3 %s[%d];" SHNL, name, size);   }
+void FshOVCoordsConstructor::var_const_fixed(const char *name, const color3f_t& v){  m_offset += msprintf(&m_to[m_offset], "const vec3 %s = vec3(%f, %f, %f);" SHNL, name, v.r, v.g, v.b); }
 
-void FshTraceGenerator::var_array(const char* name, float v1){  m_offset += msprintf(&m_to[m_offset], "float %s[1] = { %f };" SHNL, name, v1);   }
-
-void FshTraceGenerator::var_array(const char* name, float v1, float v2){  m_offset += msprintf(&m_to[m_offset], "float %s[2] = { %f, %f };" SHNL, name, v1, v2);   }
-
-void FshTraceGenerator::var_array(const char* name, float v1, float v2, float v3){  m_offset += msprintf(&m_to[m_offset], "float %s[3] = { %f, %f, %f };" SHNL, name, v1, v2, v3);   }
-
-void FshTraceGenerator::var_array(const char* name, float v1, float v2, float v3, float v4){  m_offset += msprintf(&m_to[m_offset], "float %s[4] = { %f, %f, %f, %f };" SHNL, name, v1, v2, v3, v4);   }
-
-void FshTraceGenerator::var_array(const char* name, float v1, float v2, float v3, float v4, float v5){  m_offset += msprintf(&m_to[m_offset], "float %s[5] = { %f, %f, %f, %f, %f };" SHNL, name, v1, v2, v3, v4, v5);   }
+void FshOVCoordsConstructor::var_inline(const char* name, const color3f_t& v){  m_offset += msprintf(&m_to[m_offset], name, v.r, v.g, v.b); }
 
 
 
+void FshOVCoordsConstructor::var_array_f_empty(const char* name, int size){  m_offset += msprintf(&m_to[m_offset], "float %s[%d];" SHNL, name, size);   }
+void FshOVCoordsConstructor::var_array_ff_empty(const char* name, int size){  m_offset += msprintf(&m_to[m_offset], "vec2 %s[%d];" SHNL, name, size);   }
+void FshOVCoordsConstructor::var_array_fff_empty(const char* name, int size){  m_offset += msprintf(&m_to[m_offset], "vec3 %s[%d];" SHNL, name, size);   }
 
-void FshTraceGenerator::var_static(DTYPE type, const char *name_eq_value){  m_offset += msprintf(&m_to[m_offset], "%s %s;" SHNL, glsl_types[(int)type], name_eq_value); }
+void FshOVCoordsConstructor::var_array(const char* name, float v1){  m_offset += msprintf(&m_to[m_offset], "float %s[1] = { %f };" SHNL, name, v1);   }
 
-void FshTraceGenerator::var_static(const char *name, const char *value){  m_offset += msprintf(&m_to[m_offset], "%s = %s;" SHNL, name, value); }
+void FshOVCoordsConstructor::var_array(const char* name, float v1, float v2){  m_offset += msprintf(&m_to[m_offset], "float %s[2] = { %f, %f };" SHNL, name, v1, v2);   }
 
-void FshTraceGenerator::var_const_static(DTYPE type, const char *name_eq_value){  m_offset += msprintf(&m_to[m_offset], "const %s %s;" SHNL, glsl_types[(int)type], name_eq_value); }
+void FshOVCoordsConstructor::var_array(const char* name, float v1, float v2, float v3){  m_offset += msprintf(&m_to[m_offset], "float %s[3] = { %f, %f, %f };" SHNL, name, v1, v2, v3);   }
+
+void FshOVCoordsConstructor::var_array(const char* name, float v1, float v2, float v3, float v4){  m_offset += msprintf(&m_to[m_offset], "float %s[4] = { %f, %f, %f, %f };" SHNL, name, v1, v2, v3, v4);   }
+
+void FshOVCoordsConstructor::var_array(const char* name, float v1, float v2, float v3, float v4, float v5){  m_offset += msprintf(&m_to[m_offset], "float %s[5] = { %f, %f, %f, %f, %f };" SHNL, name, v1, v2, v3, v4, v5);   }
 
 
 
 
-void FshTraceGenerator::movecs_pix_x(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor((%s*movecs_pixing%d.x) + 0.49);" SHNL, name, name, resc_idx); }
+void FshOVCoordsConstructor::var_static(DTYPE type, const char *name_eq_value){  m_offset += msprintf(&m_to[m_offset], "%s %s;" SHNL, glsl_types[(int)type], name_eq_value); }
 
-void FshTraceGenerator::movecs_pix_y(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor((%s*movecs_pixing%d.y) + 0.49);" SHNL, name, name, resc_idx); }
+void FshOVCoordsConstructor::var_static(const char *name, const char *value){  m_offset += msprintf(&m_to[m_offset], "%s = %s;" SHNL, name, value); }
 
-void FshTraceGenerator::movecs_pix(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor((%s*movecs_pixing%d) + 0.49);" SHNL, name, name, resc_idx); }
+void FshOVCoordsConstructor::var_const_static(DTYPE type, const char *name_eq_value){  m_offset += msprintf(&m_to[m_offset], "const %s %s;" SHNL, glsl_types[(int)type], name_eq_value); }
 
-void FshTraceGenerator::push_cs_rel_x(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = %s/movecs_rel_%d.x;" SHNL, name, name, resc_idx); }
 
-void FshTraceGenerator::push_cs_rel_y(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = %s/movecs_rel_%d.y;" SHNL, name, name, resc_idx); }
 
-void FshTraceGenerator::push_cs_rel(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = %s/movecs_rel_%d;" SHNL, name, name, resc_idx); }
 
-void FshTraceGenerator::pop_cs_rel_x(const char *name){  m_offset += msprintf(&m_to[m_offset], "%s = floor(%s*(ov_ibounds.x) + 0.49);" SHNL, name, name); }
+void FshOVCoordsConstructor::xyscale_x_pixel(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(float(%s*xyscaler_px_%d.x)" _PLUS_049 ");" SHNL, name, name, resc_idx); }
 
-void FshTraceGenerator::pop_cs_rel_y(const char *name){  m_offset += msprintf(&m_to[m_offset], "%s = floor(%s*(ov_ibounds.y) + 0.49);" SHNL, name, name); }
+void FshOVCoordsConstructor::xyscale_y_pixel(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(float(%s*xyscaler_px_%d.y)" _PLUS_049 ");" SHNL, name, name, resc_idx); }
 
-void FshTraceGenerator::pop_cs_rel(const char *name){  m_offset += msprintf(&m_to[m_offset], "%s = floor(%s*ov_ibounds + 0.49);" SHNL, name, name); }
+void FshOVCoordsConstructor::xyscale_xy_pixel(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(vec2(%s*xyscaler_px_%d)" _PLUS_049 ");" SHNL, name, name, resc_idx); }
 
-void FshTraceGenerator::push(const char *sztext)
+void FshOVCoordsConstructor::xyscale_x_01(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = %s/xyscaler_01_%d.x;" SHNL, name, name, resc_idx); }
+
+void FshOVCoordsConstructor::xyscale_y_01(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = %s/xyscaler_01_%d.y;" SHNL, name, name, resc_idx); }
+
+void FshOVCoordsConstructor::xyscale_xy_01(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = %s/xyscaler_01_%d;" SHNL, name, name, resc_idx); }
+
+void FshOVCoordsConstructor::push(const char *sztext)
 {
   while (*sztext != '\0')
     m_to[m_offset++] = *sztext++;
 }
 
-void FshTraceGenerator::push(const char* text, unsigned int len)
+void FshOVCoordsConstructor::push(const char* text, unsigned int len)
 {
   if (len > 0)
   {
@@ -430,30 +511,30 @@ void FshTraceGenerator::push(const char* text, unsigned int len)
   }
 }
 
-void FshTraceGenerator::push(int v){  m_offset += msprintf(&m_to[m_offset], "%d", v); }
+void FshOVCoordsConstructor::push(int v){  m_offset += msprintf(&m_to[m_offset], "%d", v); }
 
-void FshTraceGenerator::push(float v){  m_offset += msprintf(&m_to[m_offset], "%f", v); }
+void FshOVCoordsConstructor::push(float v){  m_offset += msprintf(&m_to[m_offset], "%f", v); }
 
 
-//void FshTraceGenerator::inside_begin1(const char *limrad1){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(-%s,float(inormed.x))*step(-%s,float(inormed.y))*(1-step(%s + 1.0, float(inormed.x)))*(1-step(%s + 1.0, float(inormed.y))));   if (inside != 0){" SHNL,
+//void FshOVCoordsConstructor::inside_begin1(const char *limrad1){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(-%s,float(inormed.x))*step(-%s,float(inormed.y))*(1-step(%s + 1.0, float(inormed.x)))*(1-step(%s + 1.0, float(inormed.y))));   if (inside != 0){" SHNL,
 //                                                                              limrad1, limrad1, limrad1, limrad1); }
 
-//void FshTraceGenerator::inside_begin2(const char *limits2){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1-step(%s[0], float(inormed.x)))*(1-step(%s[1], float(inormed.y))));   if (inside != 0){" SHNL, limits2, limits2); }
+//void FshOVCoordsConstructor::inside_begin2(const char *limits2){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*(1-step(%s[0], float(inormed.x)))*(1-step(%s[1], float(inormed.y))));   if (inside != 0){" SHNL, limits2, limits2); }
 
-//void FshTraceGenerator::inside_begin4(const char *limits4){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(%s[0],float(inormed.x))*step(%s[2],float(inormed.y))*(1-step(%s[1] + 1.0, float(inormed.x)))*(1-step(%s[3] + 1.0, float(inormed.y))));   if (inside != 0){" SHNL, 
+//void FshOVCoordsConstructor::inside_begin4(const char *limits4){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(%s[0],float(inormed.x))*step(%s[2],float(inormed.y))*(1-step(%s[1] + 1.0, float(inormed.x)))*(1-step(%s[3] + 1.0, float(inormed.y))));   if (inside != 0){" SHNL, 
 //                                                                              limits4, limits4, limits4, limits4); }
 
-void FshTraceGenerator::inside_begin1(const char *limrad1){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(-%s,float(inormed.x))*step(-%s,float(inormed.y))*step(float(inormed.x), %s + 1.0)*step(float(inormed.y), %s + 1.0));   if (inside != 0){" SHNL,
+void FshOVCoordsConstructor::inside_begin1(const char *limrad1){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(-%s,float(inormed.x))*step(-%s,float(inormed.y))*step(float(inormed.x), %s + 1.0)*step(float(inormed.y), %s + 1.0));   if (inside != 0){" SHNL,
                                                                               limrad1, limrad1, limrad1, limrad1); }
 
-void FshTraceGenerator::inside_begin2(const char *limits2){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*step(float(inormed.x), %s[0])*step(float(inormed.y), %s[1]));   if (inside != 0){" SHNL, limits2, limits2); }
+void FshOVCoordsConstructor::inside_begin2(const char *limits2){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*step(float(inormed.x), %s[0])*step(float(inormed.y), %s[1]));   if (inside != 0){" SHNL, limits2, limits2); }
 
-//void FshTraceGenerator::inside_begin4(const char *limits4){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(%s[0],float(inormed.x))*step(%s[2],float(inormed.y))*(1-step(%s[1] + 1.0, float(inormed.x)))*(1-step(%s[3] + 1.0, float(inormed.y))));   if (inside != 0){" SHNL, 
+//void FshOVCoordsConstructor::inside_begin4(const char *limits4){  m_offset += msprintf(&m_to[m_offset], "int inside = int(step(%s[0],float(inormed.x))*step(%s[2],float(inormed.y))*(1-step(%s[1] + 1.0, float(inormed.x)))*(1-step(%s[3] + 1.0, float(inormed.y))));   if (inside != 0){" SHNL, 
 //                                                                              limits4, limits4, limits4, limits4); }
 
-void FshTraceGenerator::inside_end(){ m_offset += msprintf(&m_to[m_offset], "}"); }
+void FshOVCoordsConstructor::inside_end(){ m_offset += msprintf(&m_to[m_offset], "}"); }
 
-void FshTraceGenerator::ban_trace(bool ban)
+void FshOVCoordsConstructor::ban_trace(bool ban)
 {
   if (ban)
     m_offset += msprintf(&m_to[m_offset], "_tracepass = vec2(1.0, 0.0);");
@@ -461,7 +542,7 @@ void FshTraceGenerator::ban_trace(bool ban)
     m_offset += msprintf(&m_to[m_offset], "_tracepass = vec2(1.0, 1.0);");
 }
 
-void FshTraceGenerator::construct_trail_vec2(int pxwidth, float curver, const char* pxdistance_int, const char* result_vec2)
+void FshOVCoordsConstructor::construct_trail_vec2(int pxwidth, float curver, const char* pxdistance_int, const char* result_vec2)
 {
    m_offset += msprintf(&m_to[m_offset], 
            "vec2 %1 = vec2(abs(%s), 0.0);" SHNL
@@ -473,7 +554,7 @@ void FshTraceGenerator::construct_trail_vec2(int pxwidth, float curver, const ch
         );
 }
 
-void FshTraceGenerator::construct_trail_vec2(const char*  pxwidth, const char*  curver, const char* pxdistance_int, const char* result_vec2)
+void FshOVCoordsConstructor::construct_trail_vec2(const char*  pxwidth, const char*  curver, const char* pxdistance_int, const char* result_vec2)
 {
    m_offset += msprintf(&m_to[m_offset], 
            "vec2 %1 = vec2(abs(%s), 0.0);" SHNL
@@ -491,13 +572,13 @@ void FshTraceGenerator::construct_trail_vec2(const char*  pxwidth, const char*  
 
 #define TRACE_MIX_MVAR_WITH_RESULT "result = mix(result, vec3(_mvar*_tracepass, 0.0), 1.0 - step(abs(_mvar[0]) - abs(result[0]), 0.0) );" SHNL
 
-void FshTraceGenerator::trace_triangle_cc(const char *side, int direction, float fillcoeff)
+void FshOVCoordsConstructor::trace_triangle_cc(const char *side, int direction, float fillcoeff)
 {
   char rd[48];    msprintf(rd, "(%s)", side);
   char rd_plus[48];     msprintf(rd_plus, "(0.707*%s)", side);
   char rd_minus[48];    msprintf(rd_minus, "(-0.707*%s)", side);
   
-  m_offset += msprintf(&m_to[m_offset],   "vec3 _tri = vec3(float(inormed.y) + %s + 0.49 - 1.0, 0.0, 0.0);" SHNL
+  m_offset += msprintf(&m_to[m_offset],   "vec3 _tri = vec3(float(inormed.y) + %s" _PLUS_049 " - 1.0, 0.0, 0.0);" SHNL
                                           "_tri[1] = %s;" SHNL, 
                       direction == 0 || direction == 2? rd_plus :
                       direction == 1 || direction == 3? rd_minus : "",
@@ -507,7 +588,7 @@ void FshTraceGenerator::trace_triangle_cc(const char *side, int direction, float
                                       );
   m_offset += msprintf(&m_to[m_offset],
                           "_tri[0] = 1.0 - (abs(_tri[0]))/(%s*0.866*2.0);"
-                          "_tri[2] = _tri[1]*_tri[0]*%s - 0.49;" SHNL    /// otrezok
+                          "_tri[2] = _tri[1]*_tri[0]*%s " _MINUS_049";" SHNL    /// otrezok
                           "_mvar[0] = (1.0+thick - clamp(float(abs(inormed.x) - int(_tri[2])), 0.0, 1.0+thick))/(1.0+thick) * (1.0-step(_tri[2], 0.1));" SHNL
                           "_tri[2] = step(float(abs(inormed.x)), _tri[2]-1.0);"
                           "_mvar[0] = mix(_mvar[0], %F, _tri[2]);" SHNL
@@ -521,13 +602,14 @@ void FshTraceGenerator::trace_triangle_cc(const char *side, int direction, float
                                                                     ""));
 }
 
-void FshTraceGenerator::simplemix_triangle_cc(const char* side, int direction, float fillcoeff)
+void FshOVCoordsConstructor::simplemix_triangle_cc(const char* side, int direction, float fillcoeff)
 {  
   if (direction == 0 || direction == 2)
   {
-    m_offset += msprintf(&m_to[m_offset], "float sg2 = -step(-%1, inormed.%2);" SHNL
+    m_offset += msprintf(&m_to[m_offset], "float sg2 = -step(float(-%1-inormed.%2), 0.0);" SHNL
                                           "sg2 = -(inormed.%2 + sg2*%1);" SHNL
-                                          "mixwell = step(abs(inormed.%3), sg2)*step(-%1/2, inormed.%2) - step(abs(inormed.%3), sg2-1)*step(-%1/2+1, inormed.%2)*%F;" SHNL
+                                          "mixwell = step(float(abs(inormed.%3)-sg2), 0.0)*step(float(-%1/2-inormed.%2),0.0) - "
+                                          "step(float(abs(inormed.%3)-sg2+1), 0.0)*step(float(-%1/2+1-inormed.%2), 0.0)*%F;" SHNL
                          , side, 
                          direction == 0? "y" : "x", 
                          direction == 0? "x" : "y", 
@@ -535,9 +617,10 @@ void FshTraceGenerator::simplemix_triangle_cc(const char* side, int direction, f
   }
   else if (direction == 1 || direction == 3)
   {
-    m_offset += msprintf(&m_to[m_offset], "float sg2 = step(-%1, inormed.%2);" SHNL
+    m_offset += msprintf(&m_to[m_offset], "float sg2 = step(float(-%1-inormed.%2), 0.0);" SHNL
                                           "sg2 = (inormed.%2 + sg2*%1);" SHNL
-                                          "mixwell = step(abs(inormed.%3), sg2)*step(inormed.%2, %1/2) - step(abs(inormed.%3), sg2-1)*step(inormed.%2, %1/2-1)*%F;" SHNL
+                                          "mixwell = step(float(abs(inormed.%3)-sg2), 0.0)*step(float(inormed.%2-%1/2), 0.0) - "
+                                                    "step(float(abs(inormed.%3)-sg2+1), 0.0)*step(float(inormed.%2-%1/2+1), 0.0)*%F;" SHNL
                          , side, 
                          direction == 1? "y" : "x", 
                          direction == 1? "x" : "y", 
@@ -546,7 +629,7 @@ void FshTraceGenerator::simplemix_triangle_cc(const char* side, int direction, f
 }
 
 
-void FshTraceGenerator::trace_rect_xywh(const char *wh, float fillcoeff, const char *crosslimit)
+void FshOVCoordsConstructor::trace_rect_xywh(const char *wh, float fillcoeff, const char *crosslimit)
 {
 //  char r0[48], r1[48], r01[64], r11[64]; msprintf(r0, "%s[0]", wh); msprintf(r1, "%s[1]", wh); msprintf(r01, "%s[0]-sign(%s[0])", wh,wh); msprintf(r11, "%s[1]-sign(%s[1])", wh,wh); 
   char r0[48], r1[48], r01[64], r11[64]; msprintf(r0, "%s[0]", wh); msprintf(r1, "%s[1]", wh); msprintf(r01, "(%s[0])", wh); msprintf(r11, "(%s[1])", wh); 
@@ -565,7 +648,7 @@ void FshTraceGenerator::trace_rect_xywh(const char *wh, float fillcoeff, const c
   }
 }
 
-void FshTraceGenerator::trace_rect_cc(const char *rdimms, float fillcoeff, const char *crosslimit)
+void FshOVCoordsConstructor::trace_rect_cc(const char *rdimms, float fillcoeff, const char *crosslimit)
 {   
 //  char r0[48], r1[48], r01[64], r11[64]; msprintf(r0, "%s[0]", rdimms); msprintf(r1, "%s[1]", rdimms); msprintf(r01, " (%s[0]-sign(%s[0]))", rdimms,rdimms); msprintf(r11, " (%s[1]-sign(%s[1]))", rdimms,rdimms); 
   char r0[48], r1[48], r01[64], r11[64]; msprintf(r0, "%s[0]", rdimms); msprintf(r1, " %s[1]", rdimms); msprintf(r01, " (%s[0])", rdimms); msprintf(r11, " (%s[1])", rdimms); 
@@ -580,25 +663,29 @@ void FshTraceGenerator::trace_rect_cc(const char *rdimms, float fillcoeff, const
   }
 }
 
-void FshTraceGenerator::trace_square_lb_begin(const char* aside) {  m_offset += msprintf(&m_to[m_offset], "vec2 _sqdimms = vec2(%s, %s);", aside, aside);  trace_rect_xywh("_sqdimms"); }
+void FshOVCoordsConstructor::trace_square_lb_begin(const char* aside) {  m_offset += msprintf(&m_to[m_offset], "vec2 _sqdimms = vec2(%s, %s);", aside, aside);  trace_rect_xywh("_sqdimms"); }
 
-void FshTraceGenerator::trace_square_lb_end(float fillcoeff) {  trace_rect_xywh("_sqdimms", fillcoeff); }
+void FshOVCoordsConstructor::trace_square_lb_end(float fillcoeff) {  trace_rect_xywh("_sqdimms", fillcoeff); }
 
-void FshTraceGenerator::trace_square_cc_begin(const char* halfside) {  m_offset += msprintf(&m_to[m_offset], "vec2 _sq2dimms = vec2(%s, %s);", halfside, halfside);  trace_rect_cc("_sq2dimms"); }
+void FshOVCoordsConstructor::trace_square_cc_begin(const char* halfside) {  m_offset += msprintf(&m_to[m_offset], "vec2 _sq2dimms = vec2(%s, %s);", halfside, halfside);  trace_rect_cc("_sq2dimms"); }
 
-void FshTraceGenerator::trace_square_cc_end(float fillcoeff) {  trace_rect_cc("_sq2dimms", fillcoeff); }
+void FshOVCoordsConstructor::trace_square_cc_end(float fillcoeff) {  trace_rect_cc("_sq2dimms", fillcoeff); }
 
-void FshTraceGenerator::simplemix_square_cc(const char* halfside, float fillcoeff)
+void FshOVCoordsConstructor::simplemix_square_cc(const char* halfside, float fillcoeff)
 {
-  m_offset += msprintf(&m_to[m_offset], "mixwell = step(int(abs(inormed.x)), %1)*step(%1, int(abs(inormed.x)))*step(int(abs(inormed.y)), %1-1) + "
-                                                  "step(int(abs(inormed.y)), %1)*step(%1, int(abs(inormed.y)))*step(int(abs(inormed.x)), %1) + "
-                                                  "(step(int(abs(inormed.x)), %1-1)*step(int(abs(inormed.y)), %1-1)) * %F;", halfside, fillcoeff);
+//  m_offset += msprintf(&m_to[m_offset], "mixwell = step(int(abs(inormed.x)), %1)*step(%1, int(abs(inormed.x)))*step(int(abs(inormed.y)), %1-1) + "
+//                                                  "step(int(abs(inormed.y)), %1)*step(%1, int(abs(inormed.y)))*step(int(abs(inormed.x)), %1) + "
+//                                                  "(step(int(abs(inormed.x)), %1-1)*step(int(abs(inormed.y)), %1-1)) * %F;", halfside, fillcoeff);
+  m_offset += msprintf(&m_to[m_offset], "mixwell = step(float(abs(inormed.x)-%1), 0.0)*step(float(%1-abs(inormed.x)), 0.0)*"
+                                                  "step(float(abs(inormed.y)-%1+1), 0.0) + " SHNL
+                                                  "step(float(abs(inormed.y)-%1), 0.0)*step(float(%1-abs(inormed.y)), 0.0)*step(float(abs(inormed.x)-%1), 0.0) + " SHNL
+                                                  "step(float(abs(inormed.x)-%1+1), 0.0)*step(float(abs(inormed.y)-%1+1), 0.0)*%F;" SHNL, halfside, fillcoeff);
 }
 
-void FshTraceGenerator::trace_rhomb_cc(const char* side2side, float fillcoeff)
+void FshOVCoordsConstructor::trace_rhomb_cc(const char* side2side, float fillcoeff)
 {   
-  m_offset += msprintf(&m_to[m_offset], "vec2 sg2 = vec2(1 - 2*step(0, inormed.x), 1 - 2*step(0, inormed.y));" SHNL
-                                        "sg2 = vec2(sg2[0]*(inormed.x - (-1 + 2*step(0, inormed.x))*%s), sg2[1]*inormed.y);" SHNL
+  m_offset += msprintf(&m_to[m_offset], "vec2 sg2 = vec2(1 - 2*step(0.0, float(inormed.x)), 1 - 2*step(0.0, float(inormed.y)));" SHNL
+                                        "sg2 = vec2(sg2[0]*(inormed.x - (-1 + 2*step(0.0, float(inormed.x)))*%s), sg2[1]*inormed.y);" SHNL
                                         "_mvar[0] = (1.0 + thick - clamp(abs(sg2[0] + sg2[1]), 0.0, 1.0 + thick))/(1.0 + thick);" SHNL
                        , side2side, side2side);
   
@@ -616,17 +703,17 @@ void FshTraceGenerator::trace_rhomb_cc(const char* side2side, float fillcoeff)
   }
 }
 
-void FshTraceGenerator::simplemix_rhomb_cc(const char* side2side, float fillcoeff)
+void FshOVCoordsConstructor::simplemix_rhomb_cc(const char* side2side, float fillcoeff)
 {
-  m_offset += msprintf(&m_to[m_offset], "float sg2 = 1 - 2*step(0, inormed.x);" SHNL
-                                        "sg2 = sg2*(inormed.x - (-1 + 2*step(0, inormed.x))*%s);" SHNL
-                                        "mixwell = step(abs(inormed.y), sg2)*step(sg2, abs(inormed.y)) + step(abs(inormed.y), sg2 - 1)*%F;" SHNL
+  m_offset += msprintf(&m_to[m_offset], "float sg2 = 1 - 2*step(0.0, float(inormed.x));" SHNL
+                                        "sg2 = sg2*(inormed.x - (-1 + 2*step(0.0, float(inormed.x)))*%s);" SHNL
+                                        "mixwell = step(float(abs(inormed.y)-sg2), 0.0)*step(float(sg2-abs(inormed.y)), 0.0) + step(float(abs(inormed.y)-sg2+1), 0.0)*%F;" SHNL
                        , side2side, fillcoeff);
 }
 
-void FshTraceGenerator::trace_circle_cc_begin(const char *radius, const char *border) { m_offset += msprintf(&m_to[m_offset], "vec4 _cd = vec4(%s-1, %s + thick, inormed.x*inormed.x + inormed.y*inormed.y, %s);", radius, border, border); }
+void FshOVCoordsConstructor::trace_circle_cc_begin(const char *radius, const char *border) { m_offset += msprintf(&m_to[m_offset], "vec4 _cd = vec4(%s-1, %s + thick, inormed.x*inormed.x + inormed.y*inormed.y, %s);", radius, border, border); }
 
-void FshTraceGenerator::trace_circle_cc_end(float fillcoeff/*, bool notraceinside*/)
+void FshOVCoordsConstructor::trace_circle_cc_end(float fillcoeff/*, bool notraceinside*/)
 {
   if ((m_maths & (1 << MM_PI)) == 0)  math_pi();
   if (fillcoeff > 0.0f)
@@ -653,7 +740,7 @@ void FshTraceGenerator::trace_circle_cc_end(float fillcoeff/*, bool notraceinsid
                          );
 }
 
-void FshTraceGenerator::simplemix_circle_cc(const char* radius, float fillcoeff)
+void FshOVCoordsConstructor::simplemix_circle_cc(const char* radius, float fillcoeff)
 {
   m_offset += msprintf(&m_to[m_offset], 
                                          "float sg = inormed.x*inormed.x + inormed.y*inormed.y;" SHNL
@@ -663,19 +750,19 @@ void FshTraceGenerator::simplemix_circle_cc(const char* radius, float fillcoeff)
                        , radius, fillcoeff);
 }
 
-void FshTraceGenerator::simplemix_cross_cc(const char* side, float fillcoeff)
+void FshOVCoordsConstructor::simplemix_cross_cc(const char* side, float fillcoeff)
 {
 //  if (fillcoeff > 0.9f)
 //    fillcoeff = 0.9f;
   if (fillcoeff < 0.5f)
     fillcoeff = 0.5f;
-  m_offset += msprintf(&m_to[m_offset], "float sc = abs(inormed.x) - abs(inormed.y);"
-                                        "mixwell = clamp(1.0 - sc*sc*%F, 0.0, 1.0)*step(abs(inormed.x), %s)*step(abs(inormed.y), %s);" SHNL
+  m_offset += msprintf(&m_to[m_offset], "float sc = abs(inormed.x) - abs(inormed.y);" SHNL
+                                        "mixwell = clamp(1.0 - sc*sc*%F, 0.0, 1.0)*step(float(abs(inormed.x)-%s), 0.0)*step(float(abs(inormed.y)-%s), 0.0);" SHNL
                        , 1.0f - fillcoeff, side, side);
 }
 
 //                                              crosslimit                                           offset                                                 
-#define TRACE_MAIN_CONDITION(idx)  "_mvar[0] = %s * (1.0+thick - clamp(abs(inormed["#idx"] - floor(%s + 0.49)), 0.0, 1.0+thick))/(1.0+thick);"
+#define TRACE_MAIN_CONDITION(idx)  "_mvar[0] = %s * (1.0+thick - clamp(abs(inormed["#idx"] - floor(float(%s)" _PLUS_049 ")), 0.0, 1.0+thick))/(1.0+thick);"
 
 #define TRACE_MVAR_INSIDER(a)        isize == nullptr? "_mvar[1] = "#a" - %s;" SHNL \
                                                         "_mvar[0] = _mvar[0] * step(0.0, _mvar[1]);" SHNL \
@@ -684,7 +771,7 @@ void FshTraceGenerator::simplemix_cross_cc(const char* side, float fillcoeff)
                                                        "_mvar[0] = _mvar[0] * step(0.0, _mvar[1]) * step(_mvar[1], %s);" SHNL
 
 
-void FshTraceGenerator::trace_2linehorz_c(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
+void FshOVCoordsConstructor::trace_2linehorz_c(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
 {
   m_offset += msprintf(&m_to[m_offset], TRACE_MAIN_CONDITION(1), icrosslimit == nullptr? "1.0" : icrosslimit, ioffset == nullptr? "0.0" : ioffset);
   m_offset += msprintf(&m_to[m_offset], TRACE_MVAR_INSIDER(abs(inormed[0])), igap == nullptr? "0" : igap, isize);
@@ -692,42 +779,42 @@ void FshTraceGenerator::trace_2linehorz_c(const char *isize, const char *igap, c
                       
 }
 
-void FshTraceGenerator::trace_2linevert_c(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
+void FshOVCoordsConstructor::trace_2linevert_c(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
 {
   m_offset += msprintf(&m_to[m_offset], TRACE_MAIN_CONDITION(0), icrosslimit == nullptr? "1.0" : icrosslimit, ioffset == nullptr? "0.0" : ioffset);
   m_offset += msprintf(&m_to[m_offset], TRACE_MVAR_INSIDER(abs(inormed[1])), igap == nullptr? "0" : igap, isize);
   m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
-void FshTraceGenerator::trace_linehorz_l(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
+void FshOVCoordsConstructor::trace_linehorz_l(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
 { 
   m_offset += msprintf(&m_to[m_offset], TRACE_MAIN_CONDITION(1), icrosslimit == nullptr? "1.0" : icrosslimit, ioffset == nullptr? "0.0" : ioffset);
   m_offset += msprintf(&m_to[m_offset], TRACE_MVAR_INSIDER(inormed[0]), igap == nullptr? "0" : igap, isize);
   m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
-void FshTraceGenerator::trace_linehorz_r(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
+void FshOVCoordsConstructor::trace_linehorz_r(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
 { 
   m_offset += msprintf(&m_to[m_offset], TRACE_MAIN_CONDITION(1), icrosslimit == nullptr? "1.0" : icrosslimit, ioffset == nullptr? "0.0" : ioffset);
   m_offset += msprintf(&m_to[m_offset], TRACE_MVAR_INSIDER(-inormed[0]), igap == nullptr? "0" : igap, isize);
   m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
-void FshTraceGenerator::trace_linevert_t(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
+void FshOVCoordsConstructor::trace_linevert_t(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
 { 
   m_offset += msprintf(&m_to[m_offset], TRACE_MAIN_CONDITION(0), icrosslimit == nullptr? "1.0" : icrosslimit, ioffset == nullptr? "0.0" : ioffset);
   m_offset += msprintf(&m_to[m_offset], TRACE_MVAR_INSIDER(-inormed[1]), igap == nullptr? "0" : igap, isize);
   m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
-void FshTraceGenerator::trace_linevert_b(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
+void FshOVCoordsConstructor::trace_linevert_b(const char *isize, const char *igap, const char *ioffset, const char *icrosslimit)
 { 
   m_offset += msprintf(&m_to[m_offset], TRACE_MAIN_CONDITION(0), icrosslimit == nullptr? "1.0" : icrosslimit, ioffset == nullptr? "0.0" : ioffset);
   m_offset += msprintf(&m_to[m_offset], TRACE_MVAR_INSIDER(inormed[1]), igap == nullptr? "0" : igap, isize);
   m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
-void FshTraceGenerator::trace_lines_x(const char *isize, const char *igap, const char *icrosslimit)
+void FshOVCoordsConstructor::trace_lines_x(const char *isize, const char *igap, const char *icrosslimit)
 {
 //  m_offset += msprintf(&m_to[m_offset],
 //                      "_mvar[0] = atan(float(abs(inormed.x)), float(abs(inormed.y)));" SHNL
@@ -751,7 +838,7 @@ void FshTraceGenerator::trace_lines_x(const char *isize, const char *igap, const
   m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
-void FshTraceGenerator::trace_line_from_normed_to(const char *inormedendpoint)
+void FshOVCoordsConstructor::trace_line_from_normed_to(const char *inormedendpoint)
 { 
   m_offset += msprintf(&m_to[m_offset], "vec2 _pt = %s;" SHNL, inormedendpoint);
   m_offset += msprintf(&m_to[m_offset], 
@@ -768,7 +855,7 @@ void FshTraceGenerator::trace_line_from_normed_to(const char *inormedendpoint)
                        );
 }
 
-//void FshTraceGenerator::trace_ray_trough_normed_from(const char* inormedstartpoint)
+//void FshOVCoordsConstructor::trace_ray_trough_normed_from(const char* inormedstartpoint)
 //{
 //  m_offset += msprintf(&m_to[m_offset], "_mvar.xy = %s;" SHNL, inormedstartpoint);
 //  m_offset += msprintf(&m_to[m_offset], 
@@ -791,7 +878,7 @@ void FshTraceGenerator::trace_line_from_normed_to(const char *inormedendpoint)
 //                       );
 //}
 
-void FshTraceGenerator::trace_ray_trough(const char* somepoint, const char* size)
+void FshOVCoordsConstructor::trace_ray_trough(const char* somepoint, const char* size)
 {
   m_offset += msprintf(&m_to[m_offset], "vec2 _pt = %s;" SHNL, somepoint);
   m_offset += msprintf(&m_to[m_offset], 
@@ -812,13 +899,13 @@ void FshTraceGenerator::trace_ray_trough(const char* somepoint, const char* size
   m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
-void FshTraceGenerator::tex_pickcolor(int palette_param_idx, const char *pickvalue, const char *result){  m_offset += msprintf(&m_to[m_offset], "%s = texture(opm%D_%D, vec2(%s, 1)).rgb;" SHNL, result, m_overlay, palette_param_idx, pickvalue); }
+void FshOVCoordsConstructor::tex_pickcolor(int palette_param_idx, const char *pickvalue, const char *result){  m_offset += msprintf(&m_to[m_offset], "%s = texture(opm%D_%D, vec2(%s, 1)).rgb;" SHNL, result, m_overlay, palette_param_idx, pickvalue); }
 
-void FshTraceGenerator::tex_addcolor(int palette_param_idx, const char *pickvalue, const char *weight, const char *result){  m_offset += msprintf(&m_to[m_offset], "%s += %s*texture(opm%D_%D, vec2(%s, 1)).rgb;" SHNL, result, weight, m_overlay, palette_param_idx, pickvalue); }
+void FshOVCoordsConstructor::tex_addcolor(int palette_param_idx, const char *pickvalue, const char *weight, const char *result){  m_offset += msprintf(&m_to[m_offset], "%s += %s*texture(opm%D_%D, vec2(%s, 1)).rgb;" SHNL, result, weight, m_overlay, palette_param_idx, pickvalue); }
 
-void FshTraceGenerator::tex_meshcolor(int palette_param_idx, const char *pickvalue, const char *mesh, const char *result){  m_offset += msprintf(&m_to[m_offset], "%s = %s*(1.0-%s) + %s*texture(opm%D_%D, vec2(%s, 0.0)).rgb;" SHNL, result, result, mesh, mesh, m_overlay, palette_param_idx, pickvalue); }
+void FshOVCoordsConstructor::tex_meshcolor(int palette_param_idx, const char *pickvalue, const char *mesh, const char *result){  m_offset += msprintf(&m_to[m_offset], "%s = %s*(1.0-%s) + %s*texture(opm%D_%D, vec2(%s, 0.0)).rgb;" SHNL, result, result, mesh, mesh, m_overlay, palette_param_idx, pickvalue); }
 
-void FshTraceGenerator::goto_func_end(bool traced)
+void FshOVCoordsConstructor::goto_func_end(bool traced)
 {
   if (traced)
   {

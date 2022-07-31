@@ -65,6 +65,8 @@ enum  OVL_ORIENTATION   { OO_INHERITED=0,     // default
 enum  DRAWVIEWALIGN     { DVA_LEFT=0,  DVA_CENTER,  DVA_RIGHT
                         };
 
+enum  { SPFLAG_COLORSPLIT = 0x10000000 };
+
 enum  SPLITPORTIONS     { SP_NONE=0,
                           SP_COLUMN_TB      =0x10001,    SP_ROW_LR       =0x10101,  SP_COLUMN_BT    =0x0001,  SP_ROW_RL     =0x0101, 
                           SP_COLUMNS_TB_2   =0x10002,    SP_ROWS_LR_2    =0x10102,  SP_COLUMNS_BT_2 =0x0002,  SP_ROWS_RL_2  =0x0102,
@@ -73,45 +75,27 @@ enum  SPLITPORTIONS     { SP_NONE=0,
                           SP_COLUMNS_TB_5   =0x10005,    SP_ROWS_LR_5    =0x10105,  SP_COLUMNS_BT_5 =0x0005,  SP_ROWS_RL_5  =0x0105,
                           SP_COLUMNS_TB_6   =0x10006,    SP_ROWS_LR_6    =0x10106,  SP_COLUMNS_BT_6 =0x0006,  SP_ROWS_RL_6  =0x0106,
                           SP_COLUMNS_TB_7   =0x10007,    SP_ROWS_LR_7    =0x10107,  SP_COLUMNS_BT_7 =0x0007,  SP_ROWS_RL_7  =0x0107,
-                          SP_COLUMNS_TB_8   =0x10008,    SP_ROWS_LR_8    =0x10108,  SP_COLUMNS_BT_8 =0x0008,  SP_ROWS_RL_8  =0x0108
+                          SP_COLUMNS_TB_8   =0x10008,    SP_ROWS_LR_8    =0x10108,  SP_COLUMNS_BT_8 =0x0008,  SP_ROWS_RL_8  =0x0108,
+                          
+                          
+                          SP_COLUMN_TB_COLORSPLIT     =SPFLAG_COLORSPLIT|0x10001,   SP_ROW_LR_COLORSPLIT      =SPFLAG_COLORSPLIT|0x10101,  
+                           SP_COLUMN_BT_COLORSPLIT    =SPFLAG_COLORSPLIT|0x0001,    SP_ROW_RL_COLORSPLIT      =SPFLAG_COLORSPLIT|0x0101, 
+                          SP_COLUMNS_TB_2_COLORSPLIT  =SPFLAG_COLORSPLIT|0x10002,   SP_ROWS_LR_2_COLORSPLIT   =SPFLAG_COLORSPLIT|0x10102,  
+                           SP_COLUMNS_BT_2_COLORSPLIT =SPFLAG_COLORSPLIT|0x0002,    SP_ROWS_RL_2_COLORSPLIT   =SPFLAG_COLORSPLIT|0x0102,
+                          SP_COLUMNS_TB_3_COLORSPLIT  =SPFLAG_COLORSPLIT|0x10003,   SP_ROWS_LR_3_COLORSPLIT   =SPFLAG_COLORSPLIT|0x10103,  
+                           SP_COLUMNS_BT_3_COLORSPLIT =SPFLAG_COLORSPLIT|0x0003,    SP_ROWS_RL_3_COLORSPLIT   =SPFLAG_COLORSPLIT|0x0103,
+                          SP_COLUMNS_TB_4_COLORSPLIT  =SPFLAG_COLORSPLIT|0x10004,   SP_ROWS_LR_4_COLORSPLIT   =SPFLAG_COLORSPLIT|0x10104,  
+                           SP_COLUMNS_BT_4_COLORSPLIT =SPFLAG_COLORSPLIT|0x0004,    SP_ROWS_RL_4_COLORSPLIT   =SPFLAG_COLORSPLIT|0x0104,
+                          SP_COLUMNS_TB_5_COLORSPLIT  =SPFLAG_COLORSPLIT|0x10005,   SP_ROWS_LR_5_COLORSPLIT   =SPFLAG_COLORSPLIT|0x10105,  
+                           SP_COLUMNS_BT_5_COLORSPLIT =SPFLAG_COLORSPLIT|0x0005,    SP_ROWS_RL_5_COLORSPLIT   =SPFLAG_COLORSPLIT|0x0105,
+                          SP_COLUMNS_TB_6_COLORSPLIT  =SPFLAG_COLORSPLIT|0x10006,   SP_ROWS_LR_6_COLORSPLIT   =SPFLAG_COLORSPLIT|0x10106,  
+                           SP_COLUMNS_BT_6_COLORSPLIT =SPFLAG_COLORSPLIT|0x0006,    SP_ROWS_RL_6_COLORSPLIT   =SPFLAG_COLORSPLIT|0x0106,
+                          SP_COLUMNS_TB_7_COLORSPLIT  =SPFLAG_COLORSPLIT|0x10007,   SP_ROWS_LR_7_COLORSPLIT   =SPFLAG_COLORSPLIT|0x10107,  
+                           SP_COLUMNS_BT_7_COLORSPLIT =SPFLAG_COLORSPLIT|0x0007,    SP_ROWS_RL_7_COLORSPLIT   =SPFLAG_COLORSPLIT|0x0107,
+                          SP_COLUMNS_TB_8_COLORSPLIT  =SPFLAG_COLORSPLIT|0x10008,   SP_ROWS_LR_8_COLORSPLIT   =SPFLAG_COLORSPLIT|0x10108,  
+                           SP_COLUMNS_BT_8_COLORSPLIT =SPFLAG_COLORSPLIT|0x0008,    SP_ROWS_RL_8_COLORSPLIT   =SPFLAG_COLORSPLIT|0x0108
                         };
 
-
-
-
-
-
-enum BSPOSTMASKOVER {  PO_OFF=0, PO_SIGNAL=1, PO_EMPTY=2, PO_ALL=3 };
-enum BSPOSTMASKTYPE {  
-                  PM_CONTOUR, 
-                  PM_LINELEFT, PM_LINERIGHT, PM_LINELEFTRIGHT, 
-                  PM_LINEBOTTOM, PM_LINETOP, PM_LINEBOTTOMTOP, 
-                  PM_LINELEFTBOTTOM, PM_LINERIGHTBOTTOM, PM_LINELEFTTOP, PM_LINERIGHTTOP,
-                  PM_CIRCLESMOOTH, PM_CIRCLEBORDERED, PM_DOT, 
-                  PM_DOTLEFTBOTTOM, PM_DOTCONTOUR,
-                  PM_SHTRICHL, PM_SHTRICHR, PM_CROSS, PM_GRID, PM_FILL, PM_SQUARES,
-                  PM_CIRCLESMOOTH2, PM_CIRCLEBORDERED2,
-                  _PM_TOTAL
-};
-
-struct  DPostmask
-{
-  BSPOSTMASKOVER    over;
-  BSPOSTMASKTYPE    mask;
-  int               weight;
-  int               colorManual;
-  float             colorPalette; /// activates if colorManual == -1
-  float             threshold;    /// for 2D draws
-  static DPostmask  postmask(BSPOSTMASKOVER over, BSPOSTMASKTYPE mask, int weight, float r, float g, float b, float emptyThreshold=0.0f)
-  { int clr = bscolor3fToint(r, g, b);  DPostmask result = { over, mask, weight, clr, 0.0f, emptyThreshold }; return result;  }
-  static DPostmask  postmask(BSPOSTMASKOVER over, BSPOSTMASKTYPE mask, int weight, int colorhex, float emptyThreshold=0.0f)
-  { DPostmask result = { over, mask, weight, colorhex, 0.0f, emptyThreshold };      return result;  }
-  static DPostmask  postmask(BSPOSTMASKOVER over, BSPOSTMASKTYPE mask, int weight, float colorByPalette=0.0f, float emptyThreshold=0.0f)
-  { DPostmask result = { over, mask, weight, -1, colorByPalette, emptyThreshold };  return result;  }
-  
-  static DPostmask  empty()
-  { DPostmask result = { PO_OFF, PM_CONTOUR, 0, 0, 0.0f, 0.0f };  return result;  }
-};
 
 enum  DTYPE       /// Trace/simple shader datatypes
 {
@@ -177,18 +161,18 @@ enum  COORDINATION      { CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
                           CR_PIXEL=CR_ABSOLUTE_NOSCALED
                         };
 
-class DrawOverlay;
-class _DrawOverlay;
-class IDrawOverlayFriendly
+class Ovldraw;
+class _Ovldraw;
+class IOvldrawFriendly
 {
 protected:
-  friend class _DrawOverlay;
-  IDrawOverlayFriendly(){}  // no vdestructor, closed constructor
+  friend class _Ovldraw;
+  IOvldrawFriendly(){}  // no vdestructor, closed constructor
   virtual void overlayUpdate(bool internal, bool noupdate)=0;
-  virtual void innerOverlayReplace(int ovlid, DrawOverlay* ovl, OVL_ORIENTATION orient, bool owner)=0;
+  virtual void innerOverlayReplace(int ovlid, Ovldraw* ovl, OVL_ORIENTATION orient, bool owner)=0;
   virtual void innerOverlayRemove(int ovlid)=0;
 };
-class _DrawOverlay
+class _Ovldraw
 {
 public:
   enum { MAXUNIFORMS = 16, MAXDRAWERS = 32 };
@@ -200,20 +184,20 @@ private:
   struct  _ioverlay_repaintable_t
   {
     int                       idoverlay;
-    IDrawOverlayFriendly*     repaintable;
+    IOvldrawFriendly*     repaintable;
     bool                      delowner;
   }                 m_drawers[MAXDRAWERS];
   unsigned int      m_drawersCount;
   unsigned int      m_pinger_reinit;
   unsigned int      m_pinger_update;
 public:
-  _DrawOverlay(): m_uniformsCount(0), m_uniformsCCdelim(0), m_drawersCount(0), m_pinger_reinit(0), m_pinger_update(0) {}
-  virtual ~_DrawOverlay()
+  _Ovldraw(): m_uniformsCount(0), m_uniformsCCdelim(0), m_drawersCount(0), m_pinger_reinit(0), m_pinger_update(0) {}
+  virtual ~_Ovldraw()
   {
     for (unsigned int i=0; i<m_drawersCount; i++)
       m_drawers[i].repaintable->innerOverlayRemove(m_drawers[i].idoverlay);
   }
-  friend class DrawOverlayUpdater;
+  friend class OvldrawUpdater;
 public:
   struct    uniforms_t
   {
@@ -243,7 +227,7 @@ protected:
   void            increasePingerReinit() { m_pinger_reinit++; }
   void            increasePingerUpdate() { m_pinger_update++; }
 public:
-  void  eject(DrawOverlay* ovl, OVL_ORIENTATION orient=OO_SAME, bool owner=true)
+  void  eject(Ovldraw* ovl, OVL_ORIENTATION orient=OO_SAME, bool owner=true)
   {
     for (unsigned int i=0; i<m_drawersCount; i++)
       m_drawers[i].repaintable->innerOverlayReplace(m_drawers[i].idoverlay, ovl, orient, owner); // this method calls assign for ovl
@@ -258,7 +242,7 @@ public:
 //protected:
 private:
   friend class DrawCore;
-  bool  assign(int overlay, IDrawOverlayFriendly* idr, bool delowner)
+  bool  assign(int overlay, IOvldrawFriendly* idr, bool delowner)
   {
     if (m_drawersCount >= MAXDRAWERS) return false;
     m_drawers[m_drawersCount].idoverlay = overlay;
@@ -267,7 +251,7 @@ private:
     m_drawersCount++;
     return true;
   }
-  bool  preDelete(IDrawOverlayFriendly* idr)
+  bool  preDelete(IOvldrawFriendly* idr)
   {
     int  ownermask = 0;
     bool move=false;
@@ -365,7 +349,9 @@ inline color3f_t    color3f_grey(){ return __color3f__(0.5f,0.5f,0.5f); }
 inline color3f_t    color3f_greylight(){ return __color3f__(0.7f,0.7f,0.7f); }
 inline color3f_t    color3f_greydark(){ return __color3f__(0.2f,0.2f,0.2f); }
 
-inline color3f_t    color3f(unsigned int hex){  return __color3f__((hex & 0xFF)/255.0f, (hex>>8 & 0xFF)/255.0f, (hex>>16 & 0xFF)/255.0f); }
+inline color3f_t    color3f(int colorhex){  return __color3f__((colorhex & 0xFF)/255.0f, (colorhex>>8 & 0xFF)/255.0f, (colorhex>>16 & 0xFF)/255.0f); }
+inline color3f_t    color3f(float r, float g, float b){  return __color3f__(r,g,b); }
+inline color3f_t    color3f(int r256, int g256, int b256){  return __color3f__(r256/255.0f, g256/255.0f, b256/255.0f); }
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -383,7 +369,7 @@ struct  linestyle_t
 };
 
 #if __cplusplus > 19971
-#define __linestyle__(lstroke, lspace, dots, red, green, blue, inversive, ols) {lstroke, lspace, dots, red,green,blue, inversive, ols}
+#define __linestyle__(lstroke, lspace, dots, red, green, blue, inversive, ols) { lstroke, lspace, dots, red,green,blue, inversive, ols }
 #else
 inline linestyle_t    __linestyle__(unsigned int lstroke, unsigned int lspace, unsigned int dots, float red, float green, float blue, int inversive, OUTSIDELINE ols)
 {   linestyle_t result = {lstroke, lspace, dots, red,green,blue, inversive, ols};   return result;    }
@@ -441,6 +427,58 @@ struct impulsedata_t
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+
+enum BSOVERPATTERN
+{  
+                  OP_CONTOUR, 
+                  OP_LINELEFT, OP_LINERIGHT, OP_LINELEFTRIGHT, OP_LINEBOTTOM, OP_LINETOP, 
+                  OP_LINEBOTTOMTOP, OP_LINELEFTBOTTOM, OP_LINERIGHTBOTTOM, OP_LINELEFTTOP, OP_LINERIGHTTOP,
+  
+                  OP_CIRCLESMOOTH, OP_CIRCLEBORDERED, OP_DOT, 
+                  OP_DOTLEFTBOTTOM, OP_DOTCONTOUR,
+                  OP_SHTRICHL, OP_SHTRICHR, OP_CROSS, OP_GRID, OP_FILL, OP_SQUARES,
+                  OP_CIRCLESMOOTH2, OP_CIRCLEBORDERED2,
+                  _OP_TOTAL
+};
+
+struct  overpattern_t     // Brush over scaling
+{
+  enum {  OALG_OFF=0, OALG_THRS_PLUS=1, OALG_THRS_MINUS=2, OALG_ANY=3 };
+  int               algo;         // OALG_...
+  int               mask;         // OP_...
+  float             threshold;    /// for 2D draws
+  int               weight;
+  bool              colorByPalette;
+  color3f_t         color; /// activates if colorByPalette == false
+};
+
+#if __cplusplus > 19971
+#define __overpattern_cp__(algo, mask, thrs, weight, colorByPalette) { algo, mask, thrs, weight, true, {colorByPalette,colorByPalette,colorByPalette} }
+#define __overpattern_cf__(algo, mask, thrs, weight, color3f) { algo, mask, thrs, weight, false, color3f }
+#else
+inline overpattern_t    __overpattern_cp__(int algo, int mask, float threshold, int weight, float colorByPalette)
+{   overpattern_t result = { algo, mask, thrs, weight, true, {colorByPalette,colorByPalette,colorByPalette} };   return result;    }
+inline overpattern_t    __overpattern_cf__(int algo, int mask, float threshold, int weight, color3f_t color3f)
+{   overpattern_t result = { algo, mask, thrs, weight, false, color3f };   return result;    }
+#endif
+
+inline overpattern_t    overpattern_off(){ return __overpattern_cf__(overpattern_t::OALG_OFF, 0, 0, 0, color3f_white()); }
+inline overpattern_t    overpattern_any(int OP_type, int colorhex, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_ANY, OP_type, 0.0f, weight, color3f(colorhex)); }
+inline overpattern_t    overpattern_any(int OP_type, const color3f_t& color, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_ANY, OP_type, 0.0f, weight, color); }
+inline overpattern_t    overpattern_any(int OP_type, float colorByPalette, int weight=0){ return __overpattern_cp__(overpattern_t::OALG_ANY, OP_type, 0.0f, weight, colorByPalette); }
+///
+inline overpattern_t    overpattern_thrs_plus(int OP_type, float threshold, int colorhex, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_THRS_PLUS, OP_type, threshold, weight, color3f(colorhex)); }
+inline overpattern_t    overpattern_thrs_plus(int OP_type, float threshold, const color3f_t& color, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_THRS_PLUS, OP_type, threshold, weight, color); }
+inline overpattern_t    overpattern_thrs_plus(int OP_type, float threshold, float colorByPalette, int weight=0){ return __overpattern_cp__(overpattern_t::OALG_THRS_PLUS, OP_type, threshold, weight, colorByPalette); }
+///
+inline overpattern_t    overpattern_thrs_minus(int OP_type, float threshold, int colorhex, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_THRS_MINUS, OP_type, threshold, weight, color3f(colorhex)); }
+inline overpattern_t    overpattern_thrs_minus(int OP_type, float threshold, const color3f_t& color, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_THRS_MINUS, OP_type, threshold, weight, color); }
+inline overpattern_t    overpattern_thrs_minus(int OP_type, float threshold, float colorByPalette, int weight=0){ return __overpattern_cp__(overpattern_t::OALG_THRS_MINUS, OP_type, threshold, weight, colorByPalette); }
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+
 enum  OVL_REACTION_MOUSE { 
   ORM_LMPRESS, ORM_LMMOVE, ORM_LMRELEASE, ORM_LMDOUBLE,
   ORM_RMPRESS, ORM_RMMOVE, ORM_RMRELEASE
@@ -479,13 +517,13 @@ struct ovlbasics_t
   float   slice_hl;
 };
 
-class DrawOverlay: virtual public _DrawOverlay
+class Ovldraw: virtual public _Ovldraw
 {
 private:
   bool                    m_visible;
   ovlbasics_t             m_ots;
 protected:
-  DrawOverlay(bool visible): m_visible(visible)
+  Ovldraw(bool visible): m_visible(visible)
   {
     m_ots.opacity = 0.0f;
     m_ots.thickness = 0.0f;
@@ -516,11 +554,11 @@ protected:
   virtual IOverlayReactor*  reactor() { return nullptr; }
 };
 
-class DrawOverlayUpdater
+class OvldrawUpdater
 {
-  _DrawOverlay* pOvl;
+  _Ovldraw* pOvl;
 public:
-  DrawOverlayUpdater(_DrawOverlay* povl): pOvl(povl){}
+  OvldrawUpdater(_Ovldraw* povl): pOvl(povl){}
   void updateParameter(bool recreate, bool update){ pOvl->updateParameter(recreate, update); }
   void appendUniform(DTYPE type, const void* value){  pOvl->appendUniform(type, value); }
 };
@@ -543,8 +581,9 @@ public:
   virtual   unsigned int  shvertex_pendingSize() const =0;
   virtual   unsigned int  shvertex_store(char* to) const =0;
   virtual   unsigned int  shfragment_pendingSize(const impulsedata_t&, unsigned int ovlscount) const =0;
-  virtual   unsigned int  shfragment_store(unsigned int allocPortions, const DPostmask&, ORIENTATION orient, SPLITPORTIONS splitPortions, 
-                                           const impulsedata_t&, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const =0;
+  virtual   unsigned int  shfragment_store(unsigned int allocPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
+                                           const impulsedata_t&, const overpattern_t&, 
+                                           unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const =0;
   
 public:
   enum      { PMT_PSEUDO2D, PMT_FORCE1D }; /// PORTION_MESH_TYPE

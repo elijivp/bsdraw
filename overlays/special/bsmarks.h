@@ -8,7 +8,7 @@
 
 #include "../../core/bsoverlay.h"
 
-class OMarkDashs: public DrawOverlay_ColorThroughPalette, public OVLCoordsStatic, public OVLDimmsOff
+class OMarkDashs: public Ovldraw_ColorThroughPalette, public OVLCoordsStatic, public OVLDimmsOff
 {
 protected:
   unsigned int      m_maxmarks;
@@ -28,14 +28,14 @@ public:
   void  updateMarkColor(unsigned int mark, float tcolor){ if (mark < m_maxmarks)  m_marks[mark].tcolor = tcolor; }
   void  updateMarkPos(unsigned int mark, float pos){ if (mark < m_maxmarks)  m_marks[mark].pos = pos; }
   void  updateMark(unsigned int mark, float tcolor, float pos){ if (mark < m_maxmarks){   m_marks[mark].tcolor = tcolor; m_marks[mark].pos = pos; } }
-  void  updateFinished(){ _DrawOverlay::updateParameter(false, true); }
+  void  updateFinished(){ _Ovldraw::updateParameter(false, true); }
   unsigned int countMarks() const { return m_maxmarks; }
 };
 
 
 
 /// max figures count limited by videoadapter
-class OCluster: public DrawOverlay_ColorThroughPalette, public OVLCoordsStatic, public OVLDimmsOff
+class OCluster: public Ovldraw_ColorThroughPalette, public OVLCoordsStatic, public OVLDimmsOff
 {
 public:
   struct    clusteritem_t
@@ -85,10 +85,10 @@ struct trasspoint_t
   float   position;
   float   halfstrob;
 };
-class FshTraceGenerator;
+class FshOVCoordsConstructor;
 
 
-class OTrass: public DrawOverlay_ColorThroughPalette, public OVLCoordsOff, public OVLDimmsOff
+class OTrass: public Ovldraw_ColorThroughPalette, public OVLCoordsOff, public OVLDimmsOff
 {
 protected:
   enum { TPS=3 };
@@ -97,7 +97,7 @@ protected:
   const unsigned int  tlines_frame;
   int           tline_current;
   float*        tlines_texture;
-  bool          vv_locked;
+  int           tline_skroll;
   int           vv_repeatcounter, vv_tline_repeated;
   float         vv_maxdistinterp;
 protected:
@@ -107,12 +107,15 @@ protected:
   dmtype_2d_t   dm_trass;
 private:
   void  _nladded(bool update);
+  void  _nlup(bool update);
 public:
   void  appendTrassline(const trasspoint_t tps[], bool update=true);    // use -intensity for mark slot as not for interpolate
   void  appendEmptyline(bool update=true);
   void  repeatTrassline(bool interpolate=true, bool update=true);
+  void  skipLines(int count, bool update=true);
   void  clearTrasses(bool update=true);
-  void  scroll(int offset, bool lock=true, bool update=true);
+  void  scroll(int offset, bool update=true);
+  void  update(); // explicit
 public:
   OTrass(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe=2048);
   ~OTrass();
@@ -121,7 +124,7 @@ public:
 protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 protected:
-  virtual void  finalizeOVCoords(class FshTraceGenerator& ocg) const;
+  virtual void  finalizeOVCoords(class FshOVCoordsConstructor& ocg) const;
 };
 
 class OTrassSelectable: public OTrass
@@ -133,7 +136,7 @@ public:
   void    select(int trassidx, bool update=true); // from 0
   int     selected() const { return selectidx; }
 protected:
-  virtual void  finalizeOVCoords(class FshTraceGenerator& ocg) const;
+  virtual void  finalizeOVCoords(class FshOVCoordsConstructor& ocg) const;
 };
 
 

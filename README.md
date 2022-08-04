@@ -17,9 +17,11 @@ DrawIntensity class allows you to create rectangular 2D draws. Inherits DrawQWid
 ![overview_2d_1.png](/demoimages/overview_2d_1.png)
 
 This example is supplemented with overpattern feature - shader posteffect over drawed data.
+
 Sequence is: _2d data converts into 2d texture, palette converts into 2d texture, palette texture applies to data texture, shader overpattern applies to result_
 
 <details><summary>Code snippet</summary><p>
+```
 LINES = 14;
 SAMPLES = 20;
 PORTIONS = 1;
@@ -80,6 +82,7 @@ const float* data = someGeneratedData; // at least [LINES x SAMPLES x PORTIONS] 
 for (int c=0; c<countCOLUMN; c++)
   for (int r=0; r<countROW; r++)
     pdraws[r][c]->setData(data);
+```
 </p></details>
 
 
@@ -88,9 +91,11 @@ DrawDomain class allows you to create rectangular 2D draws with regions of diffe
 ![overview_2d_2.png](/demoimages/overview_2d_2.png)
 
 All draws above have different regions but takes similar data.
+
 Sequence is: _full 2d field with region markup converts into 2d texture, region data converts into 1d texture, palette converts into 2d texture, palette texture applies to region data texture, which applies to field texture_
 
 <details><summary>Code snippet</summary><p>
+```
 LINES = 200;
 SAMPLES = 200;
 PORTIONS = 1;
@@ -200,6 +205,7 @@ const float* data = someGeneratedData; // at least [LINES x SAMPLES x PORTIONS] 
 for (int c=0; c<countCOLUMN; c++)
   for (int r=0; r<countROW; r++)
     pdraws[r][c]->setData(data);
+```
 </p></details>
 
 Portions its about how many draws/graphs painted in one draw. 2 or more portions in 2D draw means colormeshing (mixing) data in each pixel
@@ -207,6 +213,7 @@ Portions its about how many draws/graphs painted in one draw. 2 or more portions
 ![overview_2d_3.png](/demoimages/overview_2d_3.png)
 
 <details><summary>Code snippet</summary><p>
+```
 LINES = 120;
 SAMPLES = 400;
 PORTIONS = 3;
@@ -227,10 +234,12 @@ for (int i=0; i<countDraws; i++)
 const float* data = someGeneratedData; // at least [LINES x SAMPLES x PORTIONS] of floats
 for (int i=0; i<countDraws; i++)
   pdraws[i]->setData(data);
+```
 </p></details>
 
 
 DrawGraph class allows you to create 1D graphs and histograms. Inherits DrawQWidget
+
 Histograms with 3 portions displayed below
 
 ![overview_1d_histogram_1.png](/demoimages/overview_1d_histogram_1.png)
@@ -238,6 +247,7 @@ Histograms with 3 portions displayed below
 histograms above differ in the ordering of data draw. Histogram separation is created by overpattern
 
 <details><summary>Code snippet</summary><p>
+```
 SAMPLES = 80;
 PORTIONS = 3;
 
@@ -266,6 +276,7 @@ for (int i=0; i<countDraws; i++)
 const float* data = someGeneratedData; // at least [SAMPLES x PORTIONS] of floats
 for (int i=0; i<countDraws; i++)
   pdraws[i]->setData(data);
+```
 </p></details>
 
 More histograms with same data and different overpatterns
@@ -273,6 +284,7 @@ More histograms with same data and different overpatterns
 ![overview_1d_histogram_2.png](/demoimages/overview_1d_histogram_2.png)
 
 <details><summary>Code snippet</summary><p>
+```
 SAMPLES = 24;
 PORTIONS = 1;
 
@@ -329,10 +341,12 @@ const float* data = someGeneratedData; // at least [SAMPLES x PORTIONS] of float
 for (int c=0; c<countCOLUMN; c++)
   for (int r=0; r<countROW; r++)
     pdraws[r][c]->setData(data);
+```
 </p></details>
 
 
 DrawGraph class supports 3 principal types of graph: histogram, dots and interpolated graph. Interpolation is done on shader
+
 1st column is for 1 portion of data, 2nd is for 2 portions
 
 ![overview_1d_1.png](/demoimages/overview_1d_1.png)
@@ -340,6 +354,7 @@ DrawGraph class supports 3 principal types of graph: histogram, dots and interpo
 Up-to-down: dots (dotsize 0), linear interpolation (dotsize 0), dots (dotsize > 0), linear interpolation (dotsize > 0), histogram
 
 <details><summary>Code snippet</summary><p>
+```
 SAMPLES = 300;
 PORTIONS = 2;
 
@@ -372,15 +387,17 @@ const float* data = someGeneratedData; // at least [SAMPLES x PORTIONS] of float
 for (int c=0; c<countCOLUMN; c++)
   for (int r=0; r<countROW; r++)
     pdraws[r][c]->setData(data);
+```
 </p></details>
 
 
-In addition to linear interpolation there is an interpolation on 3 points and 4 points.
+In addition to linear interpolation there is an interpolation on 3 points and 4 points. 
 Different types of interpolation and a composition of drawing graph and scaling graph are shown in the picture below
 
 ![overview_1d_2.png](/demoimages/overview_1d_2.png)
 
 <details><summary>Code snippet</summary><p>
+```
 SAMPLES = 54;
 PORTIONS = 2;
 
@@ -412,6 +429,7 @@ for (int i=0; i<countDraws; i++)
 const float* data = someGeneratedData; // at least [SAMPLES x PORTIONS] of floats
 for (int i=0; i<countDraws; i++)
   pdraws[i]->setData(data);
+```
 </p></details>
 
 
@@ -422,6 +440,7 @@ And finally, graphopts_t struct adjust type of graph while coloropts_t struct ad
 Sequence is: _data for multiple portions converts into 2d texture, palette converts into 2d texture, palette texture applies to data texture in accordance with the color policy_
 
 <details><summary>Code snippet</summary><p>
+```
 SAMPLES = 100;
 PORTIONS = 4;
 
@@ -469,6 +488,7 @@ const float* data = someGeneratedData; // at least [SAMPLES x PORTIONS] of float
 for (int c=0; c<countCOLUMN; c++)
   for (int r=0; r<countROW; r++)
     pdraws[r][c]->setData(data);
+```
 </p></details>
 
 
@@ -481,6 +501,7 @@ Impulse feature for 2d draws - special shader code which smoothes border between
 In example above each 2d draw has size 1 'row' and 5 'columns' who scaled into more than 250x50 pixels
 
 <details><summary>Code snippet</summary><p>
+```
 LINES = 1;
 SAMPLES = 5;
 PORTIONS = 1;
@@ -522,6 +543,7 @@ const float* data = someGeneratedData; // at least [SAMPLES x PORTIONS] of float
 for (int c=0; c<countCOLUMN; c++)
   for (int r=0; r<countROW; r++)
     pdraws[r][c]->setData(data);
+```
 </p></details>
 
 Different smoothing for 1d linterp graph
@@ -529,6 +551,7 @@ Different smoothing for 1d linterp graph
 ![overview_1d_smooth.png](/demoimages/overview_1d_smooth.png)
 
 <details><summary>Code snippet</summary><p>
+```
 SAMPLES = 280;
 PORTIONS = 3;
 
@@ -546,6 +569,7 @@ for (unsigned int r=0; r<countROWS; r++)
     pdraws[r][c] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(smoothtest[r][c], DE_LINTERP));
   
 ... and same deploying and data applying like in other examples
+```
 </p></details>
 
 Available orientation for any type of draw
@@ -559,6 +583,7 @@ DrawMoveEx inherits DrawGraph. This type of graph saves previous data and setDat
 There is one more additional opportunity: background color of draw can be installed independently of palette
 
 <details><summary>Code snippet</summary><p>
+```
 SAMPLES = 300;
 PORTIONS = 2;
 
@@ -596,30 +621,44 @@ for (unsigned int r=0; r<countROWS; r++)
   }
 
 ... and same deploying and data applying like in other examples
+```
 </p></details>
 
 Visual explanation of scaling.
-Graph shader combines 2 mechanisms: 
+
+Graph shader combines 2 mechanisms:
+
 1. type of graph (histogram, dots or interpolated graph), who describes how data values connects with each other
+
 2. type of descaling, who describes how stretched (when you resize draw) data value disintegrates into subvalues and connects with each other
 
 ![extra_scaling.png](/demoimages/extra_scaling.png)
 
 first row:
+
 draw00 has interpolation between data points and interpolation in horizontal scaling
+
 draw01 has interpolation between data points and nothing in horizontal scaling - data values just repeats when you stretch draw width
+
 draw02 has interpolation between data points and only central points in horz scaling
+
 
 second row is the same like first, difference is vertical scaling. By default vertical scaling is set to 1 for draw, but you can change it
 
+
 third row:
+
 draw20 has nothing between data points and interpolation in horizontal scaling
+
 draw21 has nothing between data points and nothing in horizontal scaling - data values just repeats when you stretch draw width
+
 draw22 has nothing between data points and only central points in horz scaling
+
 
 fourth row is the same like third, difference is vertical scaling
 
 <details><summary>Code snippet</summary><p>
+```
 SAMPLES = 50;
 PORTIONS = 1;
 
@@ -647,6 +686,7 @@ for (int c=0; c<countCOLUMNS; c++)
   pdraws[3][c]->setScalingLimitsB(8);
 
 ... and same deploying and data applying like in other examples
+```
 </p></details>
 
 
@@ -658,9 +698,11 @@ bars (areas) for drawing axes, lines or labels. Drawing is done with QPainter an
 ![overview_bars_1.png](/demoimages/overview_bars_1.png)
 
 DrawBars takes colors from parent QPalette or DrawQWidget palette
+
 DrawBars counts bar sizes and controls DrawQWidget resize
 
 <details><summary>Code snippet</summary><p>
+```
 SAMPLES = 180;
 PORTIONS = 1;
 
@@ -725,20 +767,26 @@ for (int i=0; i<countDraws; i++)
 const float* data = someGeneratedData; // at least [SAMPLES x PORTIONS] of floats
 for (int i=0; i<countDraws; i++)
   pdraws[i]->setData(data);
+```
 </p></details>
 
 
 DrawBars class supports 3 principal types of scale on axis: 
+
 1 - smart 'native' scale. Marks placement depends of step and data bounds
+
 2 - symmetric scale. Marks are placed so that the resizing of DrawBars adds new marks precisely between existing marks
+
 3 - pixstep scale. Marks are placed so that the largest number of marks can fit on the scale
 
 ![overview_bars_2.png](/demoimages/overview_bars_2.png)
 
 Unit of measurement can be placed for last mark' note (1st draw) or for each mark' note (2nd draw) 
+
 Explicit precision can be setted up for notes (3rd draw)
 
 <details><summary>Code snippet</summary><p>
+```
 SAMPLES = 50;
 PORTIONS = 1;
 
@@ -802,6 +850,7 @@ for (int i=0; i<countDraws; i++)
 const float* data = someGeneratedData; // at least [SAMPLES x PORTIONS] of floats
 for (int i=0; i<countDraws; i++)
   pdraws[i]->setData(data);
+```
 </p></details>
 
 DrawBars class supports pointers: 
@@ -813,6 +862,7 @@ The following scheme is used there: we create special overlay object, who follow
 And we attach to him our pointer. Example below
 
 <details><summary>Code snippet</summary><p>
+```
 SAMPLES = 20;
 PORTIONS = 2;
 
@@ -849,6 +899,7 @@ this->layout()->addWidget(pdrawbars);
 
 const float* data = someGeneratedData; // at least [SAMPLES x PORTIONS] of floats
 pdraw->setData(data);
+```
 </p></details>
 
 
@@ -863,46 +914,81 @@ __simple_example_2D__, __simple_example_2D_with_scales__
 
 #### INCLUDES:
 1. Required core files:
+
 bsdraw/core/bsqdraw.cpp;
+
 bsdraw/core/bsqdraw.h;
+
 bsdraw/core/sheigen/bsshgenmain.cpp;
+
 bsdraw/core/sheigen/bsshgenmain.h;
+
 bsdraw/core/bsdraw.h;
+
 bsdraw/core/bsidrawcore.h
 
 2. Draw type you need:
+
 bsdraw/bsdrawgraph.cpp;
+
 bsdraw/bsdrawgraph.h;
+
 bsdraw/bsdrawintensity.cpp;
+
 bsdraw/bsdrawintensity.h;
+
 bsdraw/bsdrawrecorder.cpp;
+
 bsdraw/bsdrawrecorder.h;
+
 bsdraw/bsdrawdomain.cpp;
+
 bsdraw/bsdrawdomain.h
 
 3. For palettes (headers only):
+
 bsdraw/palettes/bspalettes_adv.h;
+
 bsdraw/palettes/bspalettes_rgb.h;
+
 bsdraw/palettes/bspalettes_std.h
 
+
 #### INCLUDES for overlays:
+
 bsdraw/core/bsoverlay.cpp;
+
 bsdraw/core/sheigen/bsshgencolor.cpp;
+
 bsdraw/core/sheigen/bsshgenmain.cpp;
+
 bsdraw/core/sheigen/bsshgentrace.cpp;
+
 .. and overlays you need:
+
 bsdraw/overlays/bsborder.cpp & .h;
+
 bsdraw/overlays/bsfigures.cpp & .h;
+
 bsdraw/overlays/bsgrid.cpp & .h;
+
 bsdraw/overlays/bspoints.cpp & .h;
+
 bsdraw/overlays/bssprites.cpp & .h;
+
 bsdraw/overlays/bstextstatic.cpp & .h;
+
 bsdraw/overlays/special/bsmarks.cpp & .h;
+
 bsdraw/overlays/special/bsblocker.cpp & .h;
+
 bsdraw/overlays/bsinteractive.cpp & .h;
+
 bsdraw/overlays/bscontour.cpp & .h;
+
 bsdraw/overlays/bsimage.cpp & .h
-    
+
+
 #### Future:
 * shader precompilation
 

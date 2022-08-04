@@ -203,7 +203,9 @@ public:
   
   void                enableDrawBoundsUpdater(bool);
 public:
+  DrawQWidget*        draw();
   DrawQWidget*        getDraw();
+  const DrawQWidget*  draw() const;
   const DrawQWidget*  getDraw() const;
   QRect               getDrawGeometry() const;
   DrawQWidget*        replaceDraw(DrawQWidget*);

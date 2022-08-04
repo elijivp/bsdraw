@@ -80,8 +80,10 @@ public:
         fmg.push(
                   "{" SHNL
                     "vec3   fy = vec3(getValue1D(i, fx[0]));" SHNL
-                    "vec3   fy_ns = floor(fy*(ab_indimms.y-1));" SHNL
-                    "vec3   fy_view = fy*(ab_ibounds.y-1);" SHNL
+//                    "vec3   fy_ns = floor(fy*(ab_indimms.y-1));" SHNL
+//                    "vec3   fy_view = fy*(ab_ibounds.y-1);" SHNL
+                    "vec3   fy_ns = floor(fy*ab_indimms.y);" SHNL
+                    "vec3   fy_view = fy*ab_ibounds.y;" SHNL
                     "ivec3  iy_view = ivec3(floor(fy_view));" SHNL
               );
       }
@@ -95,8 +97,10 @@ public:
         fmg.push(
                   "{" SHNL
                     "vec3  fy = vec3(getValue1D(i, fx[0]), getValue1D(i, fx[1]), getValue1D(i, fx[2]));" SHNL
-                    "vec3  fy_ns = floor(fy*(ab_indimms.y-1));" SHNL
-                    "vec3  fy_view = fy*(ab_ibounds.y - 1);" SHNL
+//                    "vec3  fy_ns = floor(fy*(ab_indimms.y-1));" SHNL
+//                    "vec3  fy_view = fy*(ab_ibounds.y - 1);" SHNL
+                    "vec3  fy_ns = floor(fy*ab_indimms.y);" SHNL
+                    "vec3  fy_view = fy*ab_ibounds.y;" SHNL
                     "ivec3 iy_view = ivec3(floor(fy_view));" SHNL
               );
       }
@@ -110,8 +114,10 @@ public:
         fmg.push(
                   "{" SHNL
                     "vec4  fy = vec4(getValue1D(i, fx[0]), getValue1D(i, fx[1]), getValue1D(i, fx[2]), getValue1D(i, fx[3]));" SHNL
-                    "vec4  fy_ns = floor(fy*(ab_indimms.y-1));" SHNL
-                    "vec4  fy_view = fy*(ab_ibounds.y - 1);" SHNL
+//                    "vec4  fy_ns = floor(fy*(ab_indimms.y-1));" SHNL
+//                    "vec4  fy_view = fy*(ab_ibounds.y - 1);" SHNL
+                    "vec4  fy_ns = floor(fy*ab_indimms.y);" SHNL
+                    "vec4  fy_view = fy*ab_ibounds.y;" SHNL
                     "ivec4 iy_view = ivec4(floor(fy_view));" SHNL
               );
       }
@@ -366,7 +372,7 @@ public:
                   "float VALCLR = b_coord_ns / ab_fndimms.y;" SHNL
                  );
         if (graphopts.postrect == PR_VALUEAROUND || graphopts.postrect == PR_SUMMARY)
-          fmg.push("vec2 fhit_rect = vec2(min(min(fy_ns[0], fy_ns[2]), fy_ns[1]-1)*ab_iscaler.y, max(max(fy_ns[0], fy_ns[2]), fy_ns[1]+1)*ab_iscaler.y + ab_iscaler.y - 1);" SHNL);
+          fmg.push("ivec2 fhit_rect = ivec2(min(min(fy_ns[0], fy_ns[2]), fy_ns[1]-1)*ab_iscaler.y, max(max(fy_ns[0], fy_ns[2]), fy_ns[1]+1)*ab_iscaler.y + ab_iscaler.y - 1);" SHNL);
       } // interp
       else if (isHistogram)
       {
@@ -399,7 +405,7 @@ public:
                   );
         
         if (graphopts.postrect == PR_VALUEAROUND || graphopts.postrect == PR_SUMMARY)
-          fmg.push("vec2 fhit_rect = vec2(0.0, int(fy_ns[1])*ab_iscaler.y + ab_iscaler.y - 1);" SHNL);
+          fmg.push("ivec2 fhit_rect = ivec2(0, int(fy_ns[1])*(ab_iscaler.y) + ab_iscaler.y - 1);" SHNL);
         
         if (graphopts.graphtype == GT_HISTOGRAM_MESH)
           fmg.push( 

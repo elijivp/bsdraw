@@ -7,10 +7,10 @@
 
 1. Class hierarchy
 
-* Base class, containing most operation methods:	DrawCore
+* Base class, containing most operation methods:        DrawCore
 * Next level, Qt implementation of shaders:             DrawQWidget
-* Next level, 4 main realizations:                      DrawGraph, DrawRecorder, DrawIntencity, DrawDomain
-* Next level, additional realizations following mains:  DrawIntensePoints, DrawGraphMove, DrawGraphMoveEx
+* Next level, 4 main realizations, 3 additional:        DrawGraph, DrawRecorder, DrawIntencity, DrawDomain; DrawEmpty, DrawHint, DrawSDPicture
+* Next level, additional realizations following mains:  DrawIntensePoints, DrawGraphMove, DrawGraphMoveEx, DrawGraphDyport
 
 2. Concept
 
@@ -52,8 +52,11 @@ Most useful methods are provided by base class DrawCore. Some implementation set
 * __ovlPopBack__  remove and returns last overlay. If draw is owner and no more references found it will destroy overlay and returns nullptr
 * __ovlClearAll__  remove all overlays. Destroy behavior is like in ovlPopBack
 
-* __setPostMask__  sets effects applyed after data is drawed. Cells/lines etc
-* __postMask__  returns current effects
+* __setOverpattern__  sets effects applyed over data drawed. Cells/lines etc
+* __overpattern__  returns current effects
+
+* __setImpulse__  sets effects on border of scaled cells
+* __impulse__  returns current effects
 
 * __setClearColor__  sets color used by fill free area around draw
 * __setClearByPalette__  clearcolor is lowest palette color

@@ -3221,15 +3221,10 @@ void DrawBars::slot_setForegroundColor(const QColor& color)
   pImpl->updatePalette(this, color);
 }
 
-DrawQWidget*  DrawBars::getDraw()
-{
-  return pDraw;
-}
-
-const DrawQWidget*  DrawBars::getDraw() const
-{
-  return pDraw;
-}
+DrawQWidget*  DrawBars::getDraw(){ return pDraw;   }
+DrawQWidget*  DrawBars::draw(){ return pDraw;   }
+const DrawQWidget*  DrawBars::getDraw() const { return pDraw; }
+const DrawQWidget*  DrawBars::draw() const { return pDraw; }
 
 QRect DrawBars::getDrawGeometry() const
 {

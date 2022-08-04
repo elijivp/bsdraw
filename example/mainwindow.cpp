@@ -245,8 +245,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   
   if (MW_TEST == LET_IT_SNOW)  /// fullsize recorder LET IT SNOW!
   {
-    SAMPLES = 1600;
     LINES = 600;
+    SAMPLES = 1600;
     PORTIONS = 1;
     PRECREATE(1, 1);
     for (unsigned int i=0; i<drawscount; i++)
@@ -254,8 +254,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   }
   else if (MW_TEST == OVERVIEW_2D_1)
   {
-    SAMPLES = 20;
     LINES = 14;
+    SAMPLES = 20;
     PORTIONS = 1;
     
     overpattern_t dpms[] = {  
@@ -308,8 +308,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   }
   else if (MW_TEST == OVERVIEW_2D_2)
   {
-    SAMPLES = 200;
     LINES = 200;
+    SAMPLES = 200;
     PORTIONS = 1;
     
     const int countROWS = 2, countCOLUMNS = 2;
@@ -414,8 +414,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   }
   else if (MW_TEST == OVERVIEW_2D_3)
   {
-    SAMPLES = 400;
     LINES = 120;
+    SAMPLES = 400;
     PORTIONS = 3;
     
     const int countDraws= 3;
@@ -434,8 +434,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   }
   else if (MW_TEST == OVERVIEW_1D_HISTOGRAM_1)
   {
+    LINES = 1;
     SAMPLES = 80;
-    LINES = 20;
     PORTIONS = 3;
     
     const int countDraws = 4;
@@ -462,17 +462,17 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   }
   else if (MW_TEST == OVERVIEW_1D_HISTOGRAM_2)
   {   
+    LINES = 1;
     SAMPLES = 24;
-    LINES = 20;
     PORTIONS = 1;
     
     const int countROWS = 3, countCOLUMNS = 3;
     DrawQWidget* pdraws[countROWS][countCOLUMNS];
     
+    // 1st row
     pdraws[0][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(PR_STANDARD) );
     pdraws[0][0]->setOverpattern(overpattern_thrs_plus(OP_CONTOUR, 0.0f, 0x00000000, // hex color is explicit color (black)
                                                        0));
-    
     pdraws[0][1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(PR_STANDARD) );
     pdraws[0][1]->setOverpattern(overpattern_thrs_plus(OP_CONTOUR, 0.0f, 0x00000000, 2));
     
@@ -480,6 +480,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     pdraws[0][2]->setOverpattern(overpattern_thrs_plus(OP_LINETOP, 0.0f, // float color is palette depending color
                                                        0.0f, 4));
     
+    // 2nd row
     pdraws[1][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(0.0f, DE_TRIANGLE, 0.0f, PR_VALUEAROUND) );
     pdraws[1][0]->setOverpattern(overpattern_any(OP_CONTOUR, 0.0f));
     
@@ -489,6 +490,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     pdraws[1][2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.5f, DE_NONE) );
     pdraws[1][2]->setOverpattern(overpattern_thrs_plus(OP_CONTOUR, 0.0f, 0x00000000, 1));
     
+    // 3rd row
     pdraws[2][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(PR_VALUEONLY) );
     pdraws[2][0]->setOverpattern(overpattern_thrs_plus(OP_CONTOUR, 0.0f, 0x00000000, 1));
     
@@ -512,8 +514,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   }
   else if (MW_TEST == OVERVIEW_1D_1)
   {
-    SAMPLES = 300;
     LINES = 1;
+    SAMPLES = 300;
     PORTIONS = 2;
     
     const int countROWS = 5, countCOLUMNS = 2;
@@ -538,8 +540,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   }
   else if (MW_TEST == OVERVIEW_1D_2)
   {
+    LINES = 1;
     SAMPLES = 54;
-    LINES = 200;
     PORTIONS = 2;
     
     const int countDraws = 7;
@@ -547,30 +549,30 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     const float smoothcoeff = 0.2f;
     
     pdraws[0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(4, 0.8f));
-    pdraws[0]->ovlPushBack(new OTextColored("DE_NONE, ORIGINAL DATA DOTS", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x44FFFFFF, 0x00000000));
+    pdraws[0]->ovlPushBack(new OTextColored("DE_NONE, ORIGINAL DATA DOTS", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x11FFFFFF, 0x00000000));
     
     pdraws[1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(smoothcoeff, DE_LINTERP_SCALINGLEFT, 4, 0.8f));
-    pdraws[1]->ovlPushBack(new OTextColored("DE_LINETERP_SCALINGLEFT", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x44FFFFFF, 0x00000000));
+    pdraws[1]->ovlPushBack(new OTextColored("DE_LINETERP_SCALINGLEFT", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x11FFFFFF, 0x00000000));
     
     pdraws[2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(smoothcoeff, DE_LINTERP_SCALINGCENTER, 4, 0.8f));
-    pdraws[2]->ovlPushBack(new OTextColored("DE_LINETERP_SCALINGCENTER", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x44FFFFFF, 0x00000000));
+    pdraws[2]->ovlPushBack(new OTextColored("DE_LINETERP_SCALINGCENTER", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x11FFFFFF, 0x00000000));
     
     pdraws[3] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp2(smoothcoeff, DE_LINTERP, 4, 0.8f));
-    pdraws[3]->ovlPushBack(new OTextColored("DE_LINETERP #2 (glsl' smoothstep)", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x44FFFFFF, 0x00000000));
+    pdraws[3]->ovlPushBack(new OTextColored("DE_LINETERP #2 (glsl' smoothstep)", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x11FFFFFF, 0x00000000));
     pdraws[4] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(smoothcoeff, DE_SINTERP, 4, 0.8f));
-    pdraws[4]->ovlPushBack(new OTextColored("DE_SINETERP", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x44FFFFFF, 0x00000000));
+    pdraws[4]->ovlPushBack(new OTextColored("DE_SINETERP", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x11FFFFFF, 0x00000000));
     pdraws[5] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(smoothcoeff, DE_QINTERP, 4, 0.8f));
-    pdraws[5]->ovlPushBack(new OTextColored("DE_QINETERP", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x44FFFFFF, 0x00000000));
+    pdraws[5]->ovlPushBack(new OTextColored("DE_QINETERP", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x11FFFFFF, 0x00000000));
     pdraws[6] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(-1.0f, DE_LINTERP, 4, 0.8f));
-    pdraws[6]->ovlPushBack(new OTextColored("\"8bit\"-interp", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x44FFFFFF, 0x00000000));
+    pdraws[6]->ovlPushBack(new OTextColored("\"8bit\"-interp", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x11FFFFFF, 0x00000000));
     
     AFTERCREATE_DRAW1C
     sigtype = ST_GEN_NORM;
   }
   else if (MW_TEST == OVERVIEW_1D_3)
   {
+    LINES = 1;
     SAMPLES = 100;
-    LINES = 70;
     PORTIONS = 4;
     
     const int countROWS = 7, countCOLUMNS = 2;
@@ -622,10 +624,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     AFTERCREATE_DRAW2D
     sigtype = ST_MOVE;
   }
-  else if (MW_TEST == OVERVIEW_2D_IMPULSE)
+  else if (MW_TEST == EXTRA_IMPULSE)
   {
-    SAMPLES = 5;
     LINES = 1;
+    SAMPLES = 5;
     PORTIONS = 1;
     
     const int countROWS = 5, countCOLUMNS = 2;
@@ -656,10 +658,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     AFTERCREATE_DRAW2D
     sigtype = ST_RAMP;
   }
-  else if (MW_TEST == OVERVIEW_1D_SMOOTH)
+  else if (MW_TEST == EXTRA_SMOOTH)
   {
+    LINES = 1;
     SAMPLES = 280;
-    LINES = 200;
     PORTIONS = 3;
     
     const int countROWS = 3, countCOLUMNS = 3;
@@ -684,10 +686,106 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         
     sigtype = ST_HIPERB;
   }
-  else if (MW_TEST == OVERVIEW_SCALES_1)
+  else if (MW_TEST == EXTRA_ORIENTS)
   {
+    AFTERCREATE_NOSNIPPET
+    LINES = 1;
+    SAMPLES = 400;
+    PORTIONS = 1;
+    syncscaling = 0;
+    PRECREATE(6, 1);
+    ORIENTATION orients[] = { OR_LRBT, OR_TBLR, OR_BTRL, OR_BTLR, OR_TBRL, OR_RLTB };
+    const char* ornames[] = { "LRBT",  "TBLR",  "BTRL",  "BTLR",  "TBRL",  "RLTB" };
+    for (unsigned int i=0; i<drawscount; i++)
+    {
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp2(0.5, DE_NONE), coloropts_t::copts(0x00111111));
+      draws[i]->setOrientation(orients[i]);
+      draws[i]->ovlPushBack(new OTextColored(ornames[i], CR_RELATIVE, i == 1 || i == 3 ? 0.6f : 0.15f, i == 0? 0.7f : 0.05f,
+                                             12, 0x00FFFF00, 0xFFFFFFFF, 0x00FFFF00), OO_AREA_LRBT);
+    }
+
+    sigtype = ST_MOVE;
+  }
+  else if (MW_TEST == EXTRA_GRAPHS_MOVE) /// graphs and graphmoves
+  {
+    LINES = 1;
+    SAMPLES = 300;
+    PORTIONS = 2;
+    
+    const int countROWS = 3, countCOLUMNS = 3;
+    graphopts_t  gopts[countROWS][countCOLUMNS] =
+    {
+      {
+        graphopts_t::goHistogram(0.4f, DE_NONE, 0.5f),
+        graphopts_t::goHistogram(0.3f, DE_NONE, 0.5f),
+        graphopts_t::goHistogram(0.4f, DE_NONE, 0.5f),
+      },
+      
+      {
+        graphopts_t::goInterp(0.4f, DE_NONE, 0, 0.0f),
+        graphopts_t::goInterp(0.4f, DE_NONE, 0, 0.0f),
+        graphopts_t::goInterp(0.4f, DE_NONE, 0, 0.0f),
+      },
+      
+      {
+        graphopts_t::goDots(2, 0.5f, DE_NONE),
+        graphopts_t::goDots(2, 0.5f, DE_NONE),
+        graphopts_t::goDots(2, 0.5f, DE_NONE)
+      }
+    };
+    DrawQWidget* pdraws[countROWS][countCOLUMNS];
+    const unsigned int HISTORY_LENGTH = SAMPLES*4;
+    
+    for (unsigned int r=0; r<countROWS; r++)
+      for (unsigned int c=0; c<countCOLUMNS; c++)
+      {
+        coloropts_t copts = {   c == 2? CP_REPAINTED : CP_MONO, 0.0f, 1.0f, c == 1? 0xFFFFFFFF : 0x00999999 };
+        pdraws[r][c] = new DrawGraphMoveEx(SAMPLES, 5, HISTORY_LENGTH, PORTIONS, 
+                                                   gopts[r][c], 
+                                                   copts);
+      }
+    
+    AFTERCREATE_DRAW2D
+
+    sigtype = ST_GEN_NORM;
+    sp = SP_FASTEST;
+  }
+  else if (MW_TEST == EXTRA_SCALING)
+  {
+    LINES = 1;
+    SAMPLES = 50;
+    PORTIONS = 1;
+    
+    const int countROWS = 4, countCOLUMNS = 3;
+    DrawQWidget* pdraws[countROWS][countCOLUMNS];
+    const BSDESCALING third_de = DE_CENTER;
+    pdraws[0][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP));
+    pdraws[0][1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_NONE));
+    pdraws[0][2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(third_de));
+    
+    pdraws[1][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP));
+    pdraws[1][1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_NONE));
+    pdraws[1][2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(third_de));
+    for (int c=0; c<countCOLUMNS; c++)
+      pdraws[1][c]->setScalingLimitsB(8);
+    
+    pdraws[2][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(DE_LINTERP));
+    pdraws[2][1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(DE_NONE));
+    pdraws[2][2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(third_de));
+    
+    pdraws[3][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(DE_LINTERP));
+    pdraws[3][1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(DE_NONE));
+    pdraws[3][2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(third_de));
+    for (int c=0; c<countCOLUMNS; c++)
+      pdraws[3][c]->setScalingLimitsB(8);
+    
+    AFTERCREATE_DRAW2D
+    sigtype = ST_SIN;
+  }
+  else if (MW_TEST == OVERVIEW_BARS_1)
+  {
+    LINES = 1;
     SAMPLES = 180;
-    LINES = 50;
     PORTIONS = 1;
     
     const int countDraws = 4;
@@ -748,10 +846,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     AFTERCREATE_DRAWBARS1C
     sigtype = ST_MOVE;
   }
-  else if (MW_TEST == OVERVIEW_SCALES_2)
+  else if (MW_TEST == OVERVIEW_BARS_2)
   {
-    SAMPLES = 50;
     LINES = 1;
+    SAMPLES = 50;
     PORTIONS = 1;
     
     const int countDraws = 4;
@@ -764,10 +862,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     int dbflags = 0;
     DrawBars* pdrawbars[countDraws];
     pdrawbars[0] = new DrawBars(pdraws[0], DrawBars::CP_DEFAULT);
-    pdrawbars[0]->addScaleNativeOwnbounds(AT_TOP, dbflags, 0.0f, 720.0f, 15.0f, 0.0f, 32, 40, 9, 0.0f);
+    pdrawbars[0]->addScaleNativeOwnbounds(AT_TOP, dbflags | DBF_POSTFIX_ONLYLAST, 0.0f, 720.0f, 15.0f, 0.0f, 32, 40, 9, 0.0f, "°");
     pdrawbars[0]->addLabel(AT_TOP, 0, "'Native' scale, mod off", Qt::AlignCenter, Qt::Horizontal);
     pdrawbars[0]->addScaleNativeOwnbounds(AT_LEFT, dbflags, 0.0f, 1.0f, 0.25f, 0.0f, 32, 40);
-    pdrawbars[0]->addScaleNativeOwnbounds(AT_BOTTOM, dbflags, 0.0f, 720.0f, 15.0f, 0.0f, 32, 40, 9, 360.0f);
+    pdrawbars[0]->addScaleNativeOwnbounds(AT_BOTTOM, dbflags | DBF_POSTFIX_ONLYLAST, 0.0f, 720.0f, 15.0f, 0.0f, 32, 40, 9, 360.0f, "°");
     pdrawbars[0]->addLabel(AT_BOTTOM, 0, "'Native' scale, mod 360.0f", Qt::AlignCenter, Qt::Horizontal);
     pdrawbars[0]->addSpace(AT_BOTTOM, 16);
     {
@@ -777,10 +875,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     }
     
     pdrawbars[1] = new DrawBars(pdraws[1], DrawBars::CP_DEFAULT);
-    pdrawbars[1]->addScaleSymmetricOwnbounds(AT_TOP, dbflags, 0.0f, 720.0f, 32, 50, 9, 0.0f);
+    pdrawbars[1]->addScaleSymmetricOwnbounds(AT_TOP, dbflags, 0.0f, 720.0f, 32, 50, 9, 0.0f, "°");
     pdrawbars[1]->addLabel(AT_TOP, 0, "Symmetric scale, mod off", Qt::AlignCenter, Qt::Horizontal);
     pdrawbars[1]->addScaleSymmetricOwnbounds(AT_LEFT, dbflags, 0.0f, 1.0f, 16, 32);
-    pdrawbars[1]->addScaleSymmetricOwnbounds(AT_BOTTOM, dbflags, 0.0f, 720.0f, 32, 50, 9, 360.0f);
+    pdrawbars[1]->addScaleSymmetricOwnbounds(AT_BOTTOM, dbflags, 0.0f, 720.0f, 32, 50, 9, 360.0f, "°");
     pdrawbars[1]->addLabel(AT_BOTTOM, 0, "Symmetric scale, mod 360.0f", Qt::AlignCenter, Qt::Horizontal);
     pdrawbars[1]->addSpace(AT_BOTTOM, 16);
     {
@@ -790,10 +888,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     }
     
     pdrawbars[2] = new DrawBars(pdraws[2], DrawBars::CP_DEFAULT);
-    pdrawbars[2]->addScalePixstepOwnbounds(AT_TOP, dbflags, 0.0f, 720.0f, 32, 50, 9, 0.0f);
+    pdrawbars[2]->addScalePixstepOwnbounds(AT_TOP, dbflags | DBF_PRECISION_EXACT_2, 0.0f, 720.0f, 32, 50, 9, 0.0f);
     pdrawbars[2]->addLabel(AT_TOP, 0, "Pixstep scale, mod off", Qt::AlignCenter, Qt::Horizontal);
     pdrawbars[2]->addScalePixstepOwnbounds(AT_LEFT, dbflags, 0.0f, 1.0f, 16, 32);
-    pdrawbars[2]->addScalePixstepOwnbounds(AT_BOTTOM, dbflags, 0.0f, 720.0f, 32, 50, 9, 360.0f);
+    pdrawbars[2]->addScalePixstepOwnbounds(AT_BOTTOM, dbflags | DBF_PRECISION_EXACT_2, 0.0f, 720.0f, 32, 50, 9, 360.0f);
     pdrawbars[2]->addLabel(AT_BOTTOM, 0, "Pixstep scale, mod 360.0f", Qt::AlignCenter, Qt::Horizontal);
     pdrawbars[2]->addSpace(AT_BOTTOM, 16);
     
@@ -812,10 +910,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     sp = SP_FASTEST;
     sigtype = ST_MANYSIN;
   }
-  else if (MW_TEST == OVERVIEW_SCALES_3)
+  else if (MW_TEST == OVERVIEW_BARS_3)
   {
-    SAMPLES = 20;
     LINES = 1;
+    SAMPLES = 20;
     PORTIONS = 2;
     
     DrawQWidget* pdraw = new DrawGraph(SAMPLES, PORTIONS, 
@@ -850,72 +948,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     AFTERCREATE_DRAWBARS1
     sp = SP_ONCE;
     sigtype = ST_GEN_NORM;
-  }
-  else if (MW_TEST == EXTRA_ORIENTS)
-  {
-    AFTERCREATE_NOSNIPPET
-    SAMPLES = 400;
-    LINES = 200;
-    PORTIONS = 1;
-    syncscaling = 0;
-    PRECREATE(6, 1);
-    ORIENTATION orients[] = { OR_LRBT, OR_TBLR, OR_BTRL, OR_BTLR, OR_TBRL, OR_RLTB };
-    const char* ornames[] = { "LRBT",  "TBLR",  "BTRL",  "BTLR",  "TBRL",  "RLTB" };
-    for (unsigned int i=0; i<drawscount; i++)
-    {
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp2(0.5, DE_NONE), coloropts_t::copts(0x00111111));
-      draws[i]->setOrientation(orients[i]);
-      draws[i]->ovlPushBack(new OTextColored(ornames[i], CR_XABS_YREL_NOSCALED, i == 1 || i == 3 ? 100.0f : 10.0f, i == 0? 0.7f : 0.05f,
-//                                             12, 0x00000000, 0x00FFFFFF, 0x00000000), i == 0 || i == drawscount-1? OO_AREA_LRBT : OO_AREA_TBLR );
-//                                             12, 0x00000000, 0x00FFFFFF, 0x00000000), i == 0 || i == drawscount-1? OO_AREA_LRBT : OO_AREA_LRBT);
-                                             12, 0x00FFFF00, 0xFFFFFFFF, 0x00FFFF00), OO_AREA_LRBT);
-    }
-
-    sigtype = ST_MOVE;
-  }
-  else if (MW_TEST == EXTRA_GRAPHS_MOVE) /// graphs and graphmoves
-  {
-    SAMPLES = 300;
-    LINES = 1;
-    PORTIONS = 2;
-    
-    const int countROWS = 3, countCOLUMNS = 3;
-    graphopts_t  gopts[countROWS][countCOLUMNS] =
-    {
-      {
-        graphopts_t::goHistogram(0.4f, DE_NONE, 0.5f),
-        graphopts_t::goHistogram(0.3f, DE_NONE, 0.5f),
-        graphopts_t::goHistogram(0.4f, DE_NONE, 0.5f),
-      },
-      
-      {
-        graphopts_t::goInterp(0.4f, DE_NONE, 0, 0.0f),
-        graphopts_t::goInterp(0.4f, DE_NONE, 0, 0.0f),
-        graphopts_t::goInterp(0.4f, DE_NONE, 0, 0.0f),
-      },
-      
-      {
-        graphopts_t::goDots(2, 0.5f, DE_NONE),
-        graphopts_t::goDots(2, 0.5f, DE_NONE),
-        graphopts_t::goDots(2, 0.5f, DE_NONE)
-      }
-    };
-    DrawQWidget* pdraws[countROWS][countCOLUMNS];
-    const unsigned int HISTORY_LENGTH = SAMPLES*4;
-    
-    for (unsigned int r=0; r<countROWS; r++)
-      for (unsigned int c=0; c<countCOLUMNS; c++)
-      {
-        coloropts_t copts = {   c == 2? CP_REPAINTED : CP_MONO, 0.0f, 1.0f, c == 1? 0xFFFFFFFF : 0x00999999 };
-        pdraws[r][c] = new DrawGraphMoveEx(SAMPLES, 5, HISTORY_LENGTH, PORTIONS, 
-                                                   gopts[r][c], 
-                                                   copts);
-      }
-    
-    AFTERCREATE_DRAW2D
-
-    sigtype = ST_GEN_NORM;
-    sp = SP_FASTEST;
   }
   else if (MW_TEST == DEMO_1) /// Demo 1
   {
@@ -2436,7 +2468,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       
 #define NEW_SPIN_ADDMAPPED(var, slot, ...)  { \
                               QSpinBox*   _sb = new QSpinBox(); \
-                              _sb->setRange(0, 10); \
+                              _sb->setRange(0, 99); \
                               _sb->setUserData(0, new BSUOD_0(var)); \
                               _sb->setMaximumWidth(80); \
                               BSADD(_sb, ##__VA_ARGS__); \
@@ -2515,6 +2547,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               {
                 if (line.contains("AFTERCREATE") == false)
                 {
+                  if (LINES == 1 && line.contains("LINES ="))
+                    continue;
                   result += line;
                   if (ctr++ > 500) 
                     onmyway = 4;
@@ -2525,8 +2559,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                   {
                     onmyway = 5;
                     continue;
-                  }
-                  
+                  }                  
                   onmyway = 3;
                   if (result.endsWith("\n") == false)
                     result += "\n";
@@ -2551,7 +2584,12 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                     result += "    ""this->layout()->addWidget(pdrawbars);\n";
                   
                   result += "\n";
-                  result += "    ""const float* data = someGeneratedData;\n";
+                  
+                  result += "    ""const float* data = someGeneratedData; // at least ";
+                  if (LINES > 1)
+                    result += "[LINES x SAMPLES x PORTIONS] of floats\n";
+                  else
+                    result += "[SAMPLES x PORTIONS] of floats\n";
                   if (drcount == 1 && dccount == 1)
                   {
                     result += "    ""pdraw->setData(data);\n";
@@ -5663,9 +5701,9 @@ void MainWindow::screenshot()
   QPixmap ss = QApplication::primaryScreen()->grabWindow(wdgArea->winId());
   
   QString filename;
-  filename += QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss") + QString("_") + QString(g_testnames[MW_TEST]).toLower() + ".jpg";
+  filename += QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss") + QString("_") + QString(g_testnames[MW_TEST]).toLower() + ".png";
   {
-    if (ss.save(filename, "jpg", 100))
+    if (ss.save(filename, "png", 100))
       qDebug()<<"Screenshot saved successfully into "<<filename;
     else
       qDebug()<<"Unable to save screenshot:"<<filename;

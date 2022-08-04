@@ -20,6 +20,7 @@ This example is supplemented with overpattern feature - shader posteffect over d
 
 Sequence is: _2d data converts into 2d texture, palette converts into 2d texture, palette texture applies to data texture, shader overpattern applies to result_
 
+```
 <details><summary>Code snippet</summary><p>
   
   LINES = 14;
@@ -84,7 +85,7 @@ Sequence is: _2d data converts into 2d texture, palette converts into 2d texture
       pdraws[r][c]->setData(data);
 
 </p></details>
-
+```
 
 DrawDomain class allows you to create rectangular 2D draws with regions of different size. One value on setData() method fills one region. Inherits DrawQWidget
 

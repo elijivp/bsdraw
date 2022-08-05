@@ -18,7 +18,7 @@ DrawIntensity class allows you to create rectangular 2D draws. Inherits DrawQWid
 
 This example is supplemented with overpattern feature - shader posteffect over drawed data.
 
-Sequence is: _2d data converts into 2d texture, palette converts into 2d texture; Palette texture applies to data texture, shader overpattern applies to result_
+Mechanics: _2d data converts into 2d texture, palette converts into 2d texture; Palette texture applies to data texture, shader overpattern applies to result_
 
 <details><summary>Code snippet</summary><p>
   
@@ -92,7 +92,7 @@ DrawDomain class allows you to create rectangular 2D draws with regions of diffe
 
 All draws above have different regions but takes similar data.
 
-Sequence is: _full 2d field with region markup converts into 2d texture, region data converts into 1d texture, palette converts into 2d texture; Palette texture applies to region data texture, which applies to field texture_
+Mechanics: _full 2d field with region markup converts into 2d texture, region data converts into 1d texture, palette converts into 2d texture; Palette texture applies to region data texture, which applies to field texture_
 
 <details><summary>Code snippet</summary><p>
  
@@ -246,7 +246,7 @@ Histograms with 3 portions displayed below
 
 ![overview_1d_histogram_1.png](/demoimages/overview_1d_histogram_1.png)
 
-histograms above differ in the ordering of data draw. Histogram separation is created by overpattern
+histograms above differ in the ordering of data draw. Histogram bar separation created by overpattern
 
 <details><summary>Code snippet</summary><p>
   
@@ -444,7 +444,7 @@ And finally, graphopts_t struct adjust type of graph while coloropts_t struct ad
 
 ![overview_1d_3.png](/demoimages/overview_1d_3.png)
 
-Sequence is: _data for multiple portions converts into 2d texture, palette converts into 2d texture; Palette texture applies to data texture in accordance with the color policy_
+Mechanics: _data for multiple portions converts into 2d texture, palette converts into 2d texture; Palette texture applies to data texture in accordance with the color policy_
 
 <details><summary>Code snippet</summary><p>
   
@@ -587,19 +587,15 @@ Different smoothing for 1d linterp graph
 
 #### ORIENTATION
 
-Available orientation for any type of draw
+Orientation for any type of draw can be set via setOrientation() method
 
 ![extra_orients.png](/demoimages/extra_orients.png)
 
-... can be set with setOrientation() method
-
 #### PALETTES
 
-Available palettes for any type of draw
+Palettes for any type of draw can be set via setDataPalette() method
 
 ![extra_palettes.png](/demoimages/extra_palettes.png)
-
-... can be set with setDataPalette() method
 
 Simple palettes are collected in one array _ppalettes_std[]_ i.e. paletteBkWh (black-white), paletteRdWh, paletteBkBlWh, etc; 
 full list of simple palettes available in "bspalettes_std.h"
@@ -697,7 +693,7 @@ There is one more additional opportunity: background color of draw can be instal
 
 </p></details>
 
-#### SCALING (visual explanation)
+### SCALING (visual explanation)
 
 Graph shader combines 2 mechanisms:
 

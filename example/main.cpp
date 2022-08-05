@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     tname = tname.replace('_', " ");
     tests<<QString::number(i) + ". " + tname;
 #ifdef ONLY_OVERVIEWS
-    if (i == 16)
+    if (i == 17)
       break;
 #endif
   }

@@ -706,6 +706,51 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 
     sigtype = ST_MOVE;
   }
+  else if (MW_TEST == EXTRA_PALETTES)
+  {
+    LINES = 1;
+    SAMPLES = 50;
+    PORTIONS = 2;
+    
+    const int countROWS = 3, countCOLUMNS = 3;
+    DrawQWidget* pdraws[countROWS][countCOLUMNS];
+    pdraws[0][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(DE_NONE, 3, 0.5f));
+    pdraws[0][0]->setDataPalette(&paletteBkWh);
+    pdraws[0][1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(DE_NONE, 3, 0.5f));
+    pdraws[0][1]->setDataPalette(ppalettes_adv[3]);
+    pdraws[0][2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(DE_NONE, 3, 0.5f));
+    pdraws[0][2]->setDataPalette(ppalettes_adv_inv[3]);
+    pdraws[0][2]->ovlPushBack(new OTextColored("Inverted palette", CR_RELATIVE, 0.25f, 0.05f,
+                                           12, 0x00000000, 0xFFFFFFFF, 0x00000000), OO_AREA_LRBT);
+    
+    pdraws[1][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP));
+    pdraws[1][0]->setDataPalette(ppalettes_adv[18]);
+    pdraws[1][1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP));
+    pdraws[1][1]->setDataPalette(ppalettes_adv[2]);
+    pdraws[1][2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP));
+    pdraws[1][2]->setDataPalette(ppalettes_adv_inv[2]);
+    pdraws[1][2]->ovlPushBack(new OTextColored("Inverted palette", CR_RELATIVE, 0.25f, 0.05f,
+                                           12, 0x00000000, 0xFFFFFFFF, 0x00000000), OO_AREA_LRBT);
+    
+    pdraws[2][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogramMesh(DE_NONE));
+    pdraws[2][0]->setDataPalette(ppalettes_adv[52]);
+    pdraws[2][1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogramMesh(DE_NONE));
+    pdraws[2][1]->setDataPalette(ppalettes_adv[59]);
+    pdraws[2][2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogramMesh(DE_NONE));
+    pdraws[2][2]->setDataPalette(ppalettes_adv[75]);
+  
+    AFTERCREATE_DRAW2D
+    sigtype = ST_TANHX;
+    
+    /*
+    pdraws[1][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP, 3, 0.5f));
+    pdraws[1][0]->setDataPalette(ppalettes_adv[18]);
+    pdraws[1][1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP, 3, 0.5f));
+    pdraws[1][1]->setDataPalette(ppalettes_adv[2]);
+    pdraws[1][2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP, 3, 0.5f));
+    pdraws[1][2]->setDataPalette(ppalettes_adv_inv[2]);
+*/
+  }
   else if (MW_TEST == EXTRA_GRAPHS_MOVE) /// graphs and graphmoves
   {
     LINES = 1;

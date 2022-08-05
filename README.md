@@ -18,7 +18,7 @@ DrawIntensity class allows you to create rectangular 2D draws. Inherits DrawQWid
 
 This example is supplemented with overpattern feature - shader posteffect over drawed data.
 
-Sequence is: _2d data converts into 2d texture, palette converts into 2d texture, palette texture applies to data texture, shader overpattern applies to result_
+Sequence is: _2d data converts into 2d texture, palette converts into 2d texture; Palette texture applies to data texture, shader overpattern applies to result_
 
 <details><summary>Code snippet</summary><p>
   
@@ -86,14 +86,13 @@ Sequence is: _2d data converts into 2d texture, palette converts into 2d texture
 
 </p></details>
 
-
 DrawDomain class allows you to create rectangular 2D draws with regions of different size. One value on setData() method fills one region. Inherits DrawQWidget
 
 ![overview_2d_2.png](/demoimages/overview_2d_2.png)
 
 All draws above have different regions but takes similar data.
 
-Sequence is: _full 2d field with region markup converts into 2d texture, region data converts into 1d texture, palette converts into 2d texture, palette texture applies to region data texture, which applies to field texture_
+Sequence is: _full 2d field with region markup converts into 2d texture, region data converts into 1d texture, palette converts into 2d texture; Palette texture applies to region data texture, which applies to field texture_
 
 <details><summary>Code snippet</summary><p>
  
@@ -439,12 +438,13 @@ Different types of interpolation and a composition of drawing graph and scaling 
 
 </p></details>
 
+Default palette can be changed by setDataPalette() method
 
 And finally, graphopts_t struct adjust type of graph while coloropts_t struct adjust graph coloring. 
 
 ![overview_1d_3.png](/demoimages/overview_1d_3.png)
 
-Sequence is: _data for multiple portions converts into 2d texture, palette converts into 2d texture, palette texture applies to data texture in accordance with the color policy_
+Sequence is: _data for multiple portions converts into 2d texture, palette converts into 2d texture; Palette texture applies to data texture in accordance with the color policy_
 
 <details><summary>Code snippet</summary><p>
   
@@ -585,6 +585,62 @@ Different smoothing for 1d linterp graph
 Available orientation for any type of draw
 
 ![extra_orients.png](/demoimages/extra_orients.png)
+
+... can be set with setOrientation() method
+
+
+Available palettes for any type of draw
+
+![extra_palettes.png](/demoimages/extra_palettes.png)
+
+... can be set with setDataPalette() method
+
+Simple palettes are collected in one array _ppalettes_std[]_ i.e. paletteBkWh (black-white), paletteRdWh, paletteBkBlWh, etc; 
+full list of simple palettes available in "bspalettes_std.h"
+
+There exists trivial palettes with 1 color i.e. paletteBk, paletteWh etc
+
+Advanced palettes are collected in one array _ppalettes_adv[]_; full list of advanced palettes available in "bspalettes_adv.h"
+
+Special palettes available in "bspalettes_spec.h"
+
+
+<details><summary>Code snippet</summary><p>
+  
+
+    SAMPLES = 50;
+    PORTIONS = 2;
+    
+    const int countROWS = 3, countCOLUMNS = 3;
+    DrawQWidget* pdraws[countROWS][countCOLUMNS];
+    pdraws[0][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(DE_NONE, 3, 0.5f));
+    pdraws[0][0]->setDataPalette(&paletteBkWh);
+    pdraws[0][1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(DE_NONE, 3, 0.5f));
+    pdraws[0][1]->setDataPalette(ppalettes_adv[3]);
+    pdraws[0][2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goDots(DE_NONE, 3, 0.5f));
+    pdraws[0][2]->setDataPalette(ppalettes_adv_inv[3]);
+    pdraws[0][2]->ovlPushBack(new OTextColored("Inverted palette", CR_RELATIVE, 0.25f, 0.05f,
+                                           12, 0x00000000, 0xFFFFFFFF, 0x00000000), OO_AREA_LRBT);
+    
+    pdraws[1][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP));
+    pdraws[1][0]->setDataPalette(ppalettes_adv[18]);
+    pdraws[1][1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP));
+    pdraws[1][1]->setDataPalette(ppalettes_adv[2]);
+    pdraws[1][2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP));
+    pdraws[1][2]->setDataPalette(ppalettes_adv_inv[2]);
+    pdraws[1][2]->ovlPushBack(new OTextColored("Inverted palette", CR_RELATIVE, 0.25f, 0.05f,
+                                           12, 0x00000000, 0xFFFFFFFF, 0x00000000), OO_AREA_LRBT);
+    
+    pdraws[2][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogramMesh(DE_NONE));
+    pdraws[2][0]->setDataPalette(ppalettes_adv[52]);
+    pdraws[2][1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogramMesh(DE_NONE));
+    pdraws[2][1]->setDataPalette(ppalettes_adv[59]);
+    pdraws[2][2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogramMesh(DE_NONE));
+    pdraws[2][2]->setDataPalette(ppalettes_adv[75]);
+    
+    ... and same deploying and data applying like in other examples
+    
+</p></details>
 
 DrawMoveEx inherits DrawGraph. This type of graph saves previous data and setData() method appends data to graph
 
@@ -930,78 +986,78 @@ __simple_example_2D__, __simple_example_2D_with_scales__
 #### INCLUDES:
 1. Required core files:
 
-bsdraw/core/bsqdraw.cpp;
-
-bsdraw/core/bsqdraw.h;
-
-bsdraw/core/sheigen/bsshgenmain.cpp;
-
-bsdraw/core/sheigen/bsshgenmain.h;
-
-bsdraw/core/bsdraw.h;
-
-bsdraw/core/bsidrawcore.h
+    bsdraw/core/bsqdraw.cpp;
+    
+    bsdraw/core/bsqdraw.h;
+    
+    bsdraw/core/sheigen/bsshgenmain.cpp;
+    
+    bsdraw/core/sheigen/bsshgenmain.h;
+    
+    bsdraw/core/bsdraw.h;
+    
+    bsdraw/core/bsidrawcore.h
 
 2. Draw type you need:
 
-bsdraw/bsdrawgraph.cpp;
-
-bsdraw/bsdrawgraph.h;
-
-bsdraw/bsdrawintensity.cpp;
-
-bsdraw/bsdrawintensity.h;
-
-bsdraw/bsdrawrecorder.cpp;
-
-bsdraw/bsdrawrecorder.h;
-
-bsdraw/bsdrawdomain.cpp;
-
-bsdraw/bsdrawdomain.h
+    bsdraw/bsdrawgraph.cpp;
+    
+    bsdraw/bsdrawgraph.h;
+    
+    bsdraw/bsdrawintensity.cpp;
+    
+    bsdraw/bsdrawintensity.h;
+    
+    bsdraw/bsdrawrecorder.cpp;
+    
+    bsdraw/bsdrawrecorder.h;
+    
+    bsdraw/bsdrawdomain.cpp;
+    
+    bsdraw/bsdrawdomain.h
 
 3. For palettes (headers only):
 
-bsdraw/palettes/bspalettes_adv.h;
-
-bsdraw/palettes/bspalettes_rgb.h;
-
-bsdraw/palettes/bspalettes_std.h
+    bsdraw/palettes/bspalettes_adv.h;
+    
+    bsdraw/palettes/bspalettes_rgb.h;
+    
+    bsdraw/palettes/bspalettes_std.h
 
 
 #### INCLUDES for overlays:
 
-bsdraw/core/bsoverlay.cpp;
-
-bsdraw/core/sheigen/bsshgencolor.cpp;
-
-bsdraw/core/sheigen/bsshgenmain.cpp;
-
-bsdraw/core/sheigen/bsshgentrace.cpp;
-
+    bsdraw/core/bsoverlay.cpp;
+    
+    bsdraw/core/sheigen/bsshgencolor.cpp;
+    
+    bsdraw/core/sheigen/bsshgenmain.cpp;
+    
+    bsdraw/core/sheigen/bsshgentrace.cpp;
+    
 .. and overlays you need:
-
-bsdraw/overlays/bsborder.cpp & .h;
-
-bsdraw/overlays/bsfigures.cpp & .h;
-
-bsdraw/overlays/bsgrid.cpp & .h;
-
-bsdraw/overlays/bspoints.cpp & .h;
-
-bsdraw/overlays/bssprites.cpp & .h;
-
-bsdraw/overlays/bstextstatic.cpp & .h;
-
-bsdraw/overlays/special/bsmarks.cpp & .h;
-
-bsdraw/overlays/special/bsblocker.cpp & .h;
-
-bsdraw/overlays/bsinteractive.cpp & .h;
-
-bsdraw/overlays/bscontour.cpp & .h;
-
-bsdraw/overlays/bsimage.cpp & .h
+    
+    bsdraw/overlays/bsborder.cpp & .h;
+    
+    bsdraw/overlays/bsfigures.cpp & .h;
+    
+    bsdraw/overlays/bsgrid.cpp & .h;
+    
+    bsdraw/overlays/bspoints.cpp & .h;
+    
+    bsdraw/overlays/bssprites.cpp & .h;
+    
+    bsdraw/overlays/bstextstatic.cpp & .h;
+    
+    bsdraw/overlays/special/bsmarks.cpp & .h;
+    
+    bsdraw/overlays/special/bsblocker.cpp & .h;
+    
+    bsdraw/overlays/bsinteractive.cpp & .h;
+    
+    bsdraw/overlays/bscontour.cpp & .h;
+    
+    bsdraw/overlays/bsimage.cpp & .h
 
 
 #### Future:

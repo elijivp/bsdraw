@@ -697,7 +697,7 @@ There is one more additional opportunity: background color of draw can be instal
 
 </p></details>
 
-#### Visual explanation of scaling
+#### SCALING (visual explanation)
 
 Graph shader combines 2 mechanisms:
 
@@ -989,7 +989,8 @@ __simple_example_2D__, __simple_example_2D_with_scales__, __simple_example_domai
 
 
 
-### ADD TO YOUR PROJECT:
+#### ADD TO YOUR PROJECT:
+
 1. Required core files:
 
     bsdraw/core/bsqdraw.cpp;
@@ -1031,7 +1032,7 @@ __simple_example_2D__, __simple_example_2D_with_scales__, __simple_example_domai
     bsdraw/palettes/bspalettes_std.h
 
 
-### ADD TO YOUR PROJECT for overlays:
+#### ADD TO YOUR PROJECT for overlays:
 
     bsdraw/core/bsoverlay.h;
     

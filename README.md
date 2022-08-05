@@ -1,4 +1,4 @@
-## BSDRAW
+# BSDRAW
 Source code for 4 principal types of graphs, drawed by fragment and vertex shaders.
 
 * Technology: Qt widgets, inherits QOpenGLWidget (Qt>=5) or QGLWidget (Qt<5) class.
@@ -10,7 +10,7 @@ All shaders in bsdraw are compatible with glsl 130, but by default BSGLSLVER is 
 if you have any issues, add DEFINES+=BSGLSLVER=130 in your .pro file.
 All examples are taken from the project "example".
 
-### Overview
+## Overview
 
 DrawIntensity class allows you to create rectangular 2D draws. Inherits DrawQWidget
 
@@ -500,8 +500,9 @@ Sequence is: _data for multiple portions converts into 2d texture, palette conve
 </p></details>
 
 
-### Additional Features
+## Additional Features
 
+#### IMPULSE
 Impulse feature for 2d draws - special shader code which smoothes border between scaled data
 
 ![overview_2d_impulse.png](/demoimages/overview_2d_impulse.png)
@@ -555,6 +556,8 @@ In example above each 2d draw has size 1 'row' and 5 'columns' who scaled into m
 
 </p></details>
 
+#### SMOOTHING
+
 Different smoothing for 1d linterp graph
 
 ![overview_1d_smooth.png](/demoimages/overview_1d_smooth.png)
@@ -582,12 +585,15 @@ Different smoothing for 1d linterp graph
 
 </p></details>
 
+#### ORIENTATION
+
 Available orientation for any type of draw
 
 ![extra_orients.png](/demoimages/extra_orients.png)
 
 ... can be set with setOrientation() method
 
+#### PALETTES
 
 Available palettes for any type of draw
 
@@ -691,7 +697,7 @@ There is one more additional opportunity: background color of draw can be instal
 
 </p></details>
 
-Visual explanation of scaling.
+#### Visual explanation of scaling
 
 Graph shader combines 2 mechanisms:
 
@@ -758,7 +764,7 @@ fourth row is the same like third, difference is vertical scaling
 </p></details>
 
 
-### Draw Bars
+## Draw Bars
 
 DrawBars class includes pointer to DrawQWidget object. DrawBars incapusulates DrawQWidget functionality and adds 4 (left, top, right, bottom)
 bars (areas) for drawing axes, lines or labels. Drawing is done with QPainter and QStaticText.
@@ -974,16 +980,16 @@ And we attach to him our pointer. Example below
 </p></details>
 
 
-### Examples Usage
+## Examples Usage
 
 1. Build&Run example from __example__ folder
 2. Choose test and press Accept button
 3. Additional tests available in folders: __simple_example__, __simple_example_1D__, __simple_example_1D_with_scales__,
-__simple_example_2D__, __simple_example_2D_with_scales__
+__simple_example_2D__, __simple_example_2D_with_scales__, __simple_example_domain__
 
 
 
-#### INCLUDES:
+### ADD TO YOUR PROJECT:
 1. Required core files:
 
     bsdraw/core/bsqdraw.cpp;
@@ -1025,13 +1031,21 @@ __simple_example_2D__, __simple_example_2D_with_scales__
     bsdraw/palettes/bspalettes_std.h
 
 
-#### INCLUDES for overlays:
+### ADD TO YOUR PROJECT for overlays:
 
+    bsdraw/core/bsoverlay.h;
+    
     bsdraw/core/bsoverlay.cpp;
+    
+    bsdraw/core/sheigen/bsshgencolor.h;
     
     bsdraw/core/sheigen/bsshgencolor.cpp;
     
+    bsdraw/core/sheigen/bsshgenmain.h;
+    
     bsdraw/core/sheigen/bsshgenmain.cpp;
+    
+    bsdraw/core/sheigen/bsshgentrace.h;
     
     bsdraw/core/sheigen/bsshgentrace.cpp;
     

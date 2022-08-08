@@ -103,6 +103,9 @@ private slots:
   void    changeFeatures(int sigid);
   void    changePostmask(int sigid);
   void    changePostmaskThreshold(double);
+  void    changePostmaskIntWeight(int);
+  void    changePostmaskFloatWeight(int);
+  void    changePostmaskFloatSmooth(int);
   void    changeImpulse(int v);
   void    changeInterpolation(int sigid);
   void    changeBans(bool banned);

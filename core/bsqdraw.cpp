@@ -10,8 +10,6 @@
 
 #include "../palettes/bspalettes_std.h"
 
-
-
 #if QT_VERSION >= 0x050000
 #include <QApplication>
 #include <QScreen>
@@ -32,26 +30,11 @@ int OvldrawEmpty::fshColor(int overlay, char* to) const
   return msprintf(to, "vec3 overlayColor%d(in vec4 overcolor, in vec3 undercolor) { return undercolor; }\n", overlay);
 }
 
+////////////////////////////////////////
+
+#define BSSHADER_DUMP     // write file fragshader.txt when compiling shader
 
 ///////////////////////////////////////
-
-
-//const char*   DrawQWidget::vardesc(SHEIFIELD sf)
-//{
-//  if (sf == SF_DATA)            return "texData";
-//  if (sf == SF_PALETTE)         return "texPalette";
-//  if (sf == SF_DOMAIN)          return "texGround";
-//  if (sf == SF_PORTIONSIZE)     return "countGround";
-//  if (sf == SF_COUNTPORTIONS)   return "countPortions";
-//  if (sf == SF_DIMM_A)          return "viewdimm_a";
-//  if (sf == SF_DIMM_B)          return "viewdimm_b";
-//  if (sf == SF_CHNL_scaler_a)  return "scaler_a";
-//  if (sf == SF_CHNL_scaler_b)  return "scaler_b";
-//  if (sf == SF_DATABOUNDS)      return "databounds";
-//  if (sf == SF_DYNRANGE)      return "databounds";
-//  if (sf == SF_VIEW_TURN)       return "viewturn";
-//  return nullptr;
-//}
 
 DrawQWidget::DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): 
   DrawCore(datex, portions, orient, splitPortions),

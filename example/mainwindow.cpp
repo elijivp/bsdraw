@@ -257,7 +257,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     LINES = 14;
     SAMPLES = 20;
     PORTIONS = 1;
-    
+
     overpattern_t dpms[] = {  
                           // row 1
                           overpattern_off(),
@@ -275,9 +275,9 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                           overpattern_any(OP_DOTCONTOUR, 0.0f, 3),
     
                           // row 4
-                          overpattern_any(OP_CIRCLEBORDERED2, 0.0f, -20),
-                          overpattern_any(OP_CIRCLESMOOTH, 0.0f, 4),
-                          overpattern_thrs_plus(OP_CIRCLESMOOTH, 0.9f, 0.0f),
+                          overpattern_any(OPF_CROSSPUFF, 0.0f, 0.5f),
+                          overpattern_any(OPF_CIRCLE, 0.0f, 4),
+                          overpattern_thrs_plus(OPF_CIRCLE, 0.9f, 0.0f),
       
                           // row 5
                           overpattern_thrs_plus(OP_FILL, 0.8f, 0.0f),
@@ -305,6 +305,37 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     AFTERCREATE_DRAW2D
     sigtype = ST_RAND;
     
+    /*
+     *     LINES = 2;
+    SAMPLES = 2;
+    PORTIONS = 1;
+
+    overpattern_t dpms[] = {  
+      overpattern_any(OP_CONTOUR, 0.0f), overpattern_any(OP_LINELEFT, 0.0f), overpattern_any(OP_LINERIGHT, 0.0f), overpattern_any(OP_LINEBOTTOM, 0.0f), 
+      overpattern_any(OP_LINETOP, 0.0f), overpattern_any(OP_LINELEFTRIGHT, 0.0f), overpattern_any(OP_LINEBOTTOMTOP, 0.0f), overpattern_any(OP_LINELEFTBOTTOM, 0.0f),
+      overpattern_any(OP_LINERIGHTBOTTOM, 0.0f), overpattern_any(OP_LINELEFTTOP, 0.0f), overpattern_any(OP_LINERIGHTTOP, 0.0f), overpattern_any(OP_GRID, 0.0f), 
+      overpattern_any(OP_DOT, 0.0f), overpattern_any(OP_DOTLEFTBOTTOM, 0.0f), overpattern_any(OP_DOTCONTOUR, 0.0f), overpattern_any(OP_CROSS, 0.0f), 
+      overpattern_any(OP_SHTRICHL, 0.0f), overpattern_any(OP_SHTRICHR, 0.0f), overpattern_any(OP_FILL, 0.0f), overpattern_any(OP_SQUARES, 0.0f), 
+      
+      overpattern_any(OPF_CIRCLE, 0.0f), overpattern_any(OPF_CIRCLE_REV, 0.0f), overpattern_any(OPF_CROSSPUFF, 0.0f), overpattern_any(OPF_RHOMB, 0.0f), 
+      overpattern_any(OPF_SURIKEN, 0.0f), overpattern_any(OPF_SURIKEN_REV, 0.0f), overpattern_any(OPF_DONUT, 0.0f), overpattern_any(OPF_CROSS, 0.0f), 
+      overpattern_any(OPF_HOURGLASS, 0.0f), overpattern_any(OPF_BULL, 0.0f), overpattern_any(OPF_HOURGLASS, 0.0f), overpattern_any(OPF_BULL, 0.0f)
+                       };
+    
+    const int countROWS = 8, countCOLUMNS = 4;
+    DrawQWidget* pdraws[countROWS][countCOLUMNS];
+    for (unsigned int r=0; r<countROWS; r++)
+      for (unsigned int c=0; c<countCOLUMNS; c++)
+      {
+        pdraws[r][c] = new DrawIntensity(SAMPLES, LINES, PORTIONS);
+        pdraws[r][c]->setOverpattern(dpms[r*countCOLUMNS + c]);
+        pdraws[r][c]->setScalingLimitsSynced(10); // 1 point now is 10x10 pixels (minimum)
+      }
+    
+    AFTERCREATE_DRAW2D
+    sigtype = ST_RAND;   
+    sp = SP_ONCE;
+*/
   }
   else if (MW_TEST == OVERVIEW_2D_2)
   {
@@ -1089,7 +1120,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
       draws[3*i + 2] = new DrawGraph(SAMPLES, PORTIONS, gopts[i]);
       if (i == 0)
-        draws[3*i + 2]->setOverpattern(overpattern_any(OP_CIRCLEBORDERED, color3f(0.0f,0.1f,0.0f)));
+        draws[3*i + 2]->setOverpattern(overpattern_any(OPF_CROSSPUFF, color3f(0.0f,0.1f,0.0f)));
       else
         draws[3*i + 2]->setOverpattern(overpattern_any(OP_LINELEFT, color3f(0.0f,0.0f,0.0f), 1));
     }
@@ -1157,7 +1188,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     draws[2]->setScalingLimitsVert(msc*2, msc*2);
     
     draws[3] = new DrawIntensity(1, 1, PORTIONS);
-    draws[3]->setOverpattern(overpattern_thrs_minus(OP_CIRCLESMOOTH, 0.2f, 0x0));
+    draws[3]->setOverpattern(overpattern_thrs_minus(OPF_CIRCLE, 0.2f, 0x0));
     draws[3]->setScalingLimitsSynced(msc*2, msc*2);
     
     lw = LW_10x;
@@ -1347,7 +1378,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     overpattern_t fsp[] = {   overpattern_thrs_plus(OP_LINELEFTTOP, 0.0f, color3f(0.3f,0.3f,0.3f)), 
                               overpattern_thrs_plus(OP_LINELEFTTOP, 0.0f, color3f(0.3f,0.3f,0.3f)), 
                               overpattern_thrs_plus(OP_LINELEFTTOP, 0.0f, color3f(0.3f,0.3f,0.3f)), 
-                              overpattern_any(OP_CIRCLESMOOTH, color3f(0.1f,0.1f,0.1f))
+                              overpattern_any(OPF_CIRCLE, color3f(0.1f,0.1f,0.1f))
                                };
     
     const char* gnames[] = { "Histogram (cross over)", "Histogram (cross min)", "Histogram (cross max)", "Linterp + pseudocircle" };
@@ -2399,7 +2430,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //        else if (i == 2)
 //          draws[i]->setOverpattern(overpattern_thrs_minus(OP_LINELEFTBOTTOM, OP_LINELEFT, 0, 0.7f,0.7f,0.7f));
 //        else if (i == 3)
-//          draws[i]->setOverpattern(overpattern_thrs_minus(OP_LINELEFTBOTTOM, OP_CIRCLESMOOTH, 0, 0.0f,0.0f,0.0f));
+//          draws[i]->setOverpattern(overpattern_thrs_minus(OP_LINELEFTBOTTOM, OPF_CIRCLE, 0, 0.0f,0.0f,0.0f));
 //      }
 //      else
 //        draws[i] = new DrawGraph(SAMPLES, 1, graphopts_t(GT_DOTS));
@@ -3104,7 +3135,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             {
               BSAUTO_BTN_ADDGROUPED(upbtns[i], qbg)
             }
-            qbg->setUserData(1, new BSUOD_DPM(1, dpm));
+            qbg->setUserData(1, new BSUOD_DPM(0, dpm));
             QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changePostmask(int)));
 //            QStringList dpmOver; dpmOver<<QString::fromUtf8("Off")<<QString::fromUtf8("Signal")<<QString::fromUtf8("Empty")<<QString::fromUtf8("All");
 //            QComboBox* qcb2 = new QComboBox;
@@ -3129,38 +3160,59 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //          BS_STOP
               
           BSAUTO_TEXT_ADD(QString::fromUtf8("Type: "))
-          BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-            BS_STRETCH
+          {
             QStringList dpmMain; dpmMain<<QString::fromUtf8("Contour")
-                                      <<QString::fromUtf8("Line left")<<QString::fromUtf8("Line right")<<QString::fromUtf8("Line left-rigth")
-                                        <<QString::fromUtf8("Line bottom")<<QString::fromUtf8("Line top")<<QString::fromUtf8("Line bottom-top")
-                                          <<QString::fromUtf8("Lines left-bot")<<QString::fromUtf8("Lines right-bot")
-                                            <<QString::fromUtf8("Lines left-top")<<QString::fromUtf8("Lines right-top")
-                                              <<QString::fromUtf8("Circle smooth")<<QString::fromUtf8("Circle bordered")
-                                                <<QString::fromUtf8("Dot")<<QString::fromUtf8("Dot left-bot")<<QString::fromUtf8("Dot contour")
-                                                  <<QString::fromUtf8("/")<<QString::fromUtf8("\\")
-                                                    <<QString::fromUtf8("Cross")<<QString::fromUtf8("Grid")
-                                                      <<QString::fromUtf8("Fill")<<QString::fromUtf8("Squares");
+                                     <<QString::fromUtf8("Line left")<<QString::fromUtf8("Line right")<<QString::fromUtf8("Line bottom")<<QString::fromUtf8("Line top")
+                                     <<QString::fromUtf8("Line left-rigth")<<QString::fromUtf8("Line bottom-top")<<QString::fromUtf8("Lines left-bot")<<QString::fromUtf8("Lines right-bot")
+                                     <<QString::fromUtf8("Lines left-top")<<QString::fromUtf8("Lines right-top")<<QString::fromUtf8("Grid")
+                                     <<QString::fromUtf8("Dot")<<QString::fromUtf8("Dot left-bot")<<QString::fromUtf8("Dot contour")<<QString::fromUtf8("/")<<QString::fromUtf8("\\")
+                                     <<QString::fromUtf8("Cross")<<QString::fromUtf8("Fill")<<QString::fromUtf8("Squares")
+                                     <<QString::fromUtf8("Circle")<<QString::fromUtf8("Circle rev")<<QString::fromUtf8("Crosspuf")
+                                     <<QString::fromUtf8("Rhomb")<<QString::fromUtf8("Suriken")<<QString::fromUtf8("Suriken rev")
+                                     <<QString::fromUtf8("Donut")<<QString::fromUtf8("Cross2")<<QString::fromUtf8("Umbrella")
+                                     <<QString::fromUtf8("Hourglass")<<QString::fromUtf8("Star")<<QString::fromUtf8("Bull")<<QString::fromUtf8("Bulr")
+                                       ;
             QComboBox* qcb = new QComboBox;
             qcb->addItems(dpmMain);
-            qcb->setUserData(1, new BSUOD_DPM(0, dpm));
+            qcb->setUserData(1, new BSUOD_DPM(1, dpm));
             QObject::connect(qcb, SIGNAL(currentIndexChanged(int)), this, SLOT(changePostmask(int)));
-            BSADD(qcb);
+            BSADD(qcb, 0, Qt::AlignHCenter);
+          }
             
-            BS_SPACING(16)
+          BSAUTO_TEXT_ADD(QString::fromUtf8("Integer settings: "))
+          BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+            BS_STRETCH
             BSAUTO_TEXT_ADD(QString::fromUtf8("Weight: "))
             QSpinBox* qcb3 = new QSpinBox;
             qcb3->setRange(-20, 20);
             qcb3->setMaximumWidth(80);
             qcb3->setUserData(1, new BSUOD_DPM(2, dpm));
-            QObject::connect(qcb3, SIGNAL(valueChanged(int)), this, SLOT(changePostmask(int)));
+            QObject::connect(qcb3, SIGNAL(valueChanged(int)), this, SLOT(changePostmaskIntWeight(int)));
             BSADD(qcb3);
-            BS_STRETCH
+            BS_SPACING(32)
           BS_STOP
-          BS_SPACING(16)
-              
+          BSAUTO_TEXT_ADD(QString::fromUtf8("Float settings: "))
+          BSAUTO_TEXT_ADD(QString::fromUtf8("    Weight: "))
           BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-            BSAUTO_TEXT_ADD(QString::fromUtf8("Palette color idx (0..20 -> 0.0..1.0): "));
+            BS_SPACING(32)
+            QSlider* slider = new QSlider(Qt::Horizontal);
+            slider->setRange(0,1000);
+            slider->setValue(500);
+            BSADD(slider, 1);
+            QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changePostmaskFloatWeight(int)));
+          BS_STOP
+          BSAUTO_TEXT_ADD(QString::fromUtf8("    Smooth: "))
+          BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+            BS_SPACING(32)
+            QSlider* slider = new QSlider(Qt::Horizontal);
+            slider->setRange(0,1000);
+            slider->setValue(500);
+            BSADD(slider, 1);
+            QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changePostmaskFloatSmooth(int)));
+          BS_STOP
+              
+          BSAUTO_TEXT_ADD(QString::fromUtf8("Palette color idx (0..20 -> 0.0..1.0): "));
+          BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
             BS_STRETCH
             QSpinBox* qcb4 = new QSpinBox;
             qcb4->setRange(-20, 20);
@@ -3168,7 +3220,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             qcb4->setUserData(1, new BSUOD_DPM(3, dpm));
             QObject::connect(qcb4, SIGNAL(valueChanged(int)), this, SLOT(changePostmask(int)));
             BSADD(qcb4);
-            BS_STRETCH
+            BS_SPACING(32)
           BS_STOP
         COLLAPSOR_END
                 
@@ -5024,44 +5076,28 @@ void  MainWindow::changeFeatures(int id)
 }
 
 void MainWindow::changePostmask(int sigid)
-{
-//  BSUOD_DPM* dpm = (BSUOD_DPM*)sender()->userData(1);
-//  if (dpm->id == 0)
-//    dpm->dpm->mask = sigid;
-//  else if (dpm->id == 1)
-//    dpm->dpm->algo = sigid;
-//  else if (dpm->id == 2)
-//    dpm->dpm->weight = sigid;
-//  else if (dpm->id == 3)
-//  {
-//    if (sigid < 0)
-//    {
-//      dpm->dpm->colorByPalette = false;
-//      int mygrey = -sigid*12;
-//      dpm->dpm->color = color3f(mygrey, mygrey, mygrey);
-//    }
-//    else
-//    {
-//      dpm->dpm->colorByPalette = true;
-//      dpm->dpm->color = color3f(sigid/20.0f,sigid/20.0f,sigid/20.0f);
-//    }
-//  }
-//  else if (dpm->id == 4)
-//  {
-//    dpm->dpm->threshold= sigid / 10.0f;
-//  }
-//  for (unsigned int i=0; i<drawscount; i++)
-//    draws[i]->setOverpattern(*dpm->dpm);
-  
+{  
   int id = ((BSUOD_DPM*)sender()->userData(1))->id;
   for (unsigned int i=0; i<drawscount; i++)
   {
     overpattern_t ovp = draws[i]->overpattern();
     switch (id)
     {
-    case 0: ovp.mask = sigid; break;
-    case 1: ovp.algo = sigid; break;
-    case 2: ovp.weight = sigid; break;
+    case 0: ovp.algo = sigid; break;
+    case 1:
+    {
+      if (sigid < _OP_TOTAL)
+      {
+        ovp.masktype = true;
+        ovp.mask = sigid;
+      }
+      else
+      {
+        ovp.masktype = false;
+        ovp.mask = sigid-_OP_TOTAL;
+      }
+      break;
+    }
     case 3:
     {
       if (sigid < 0)
@@ -5090,6 +5126,45 @@ void MainWindow::changePostmaskThreshold(double val)
     overpattern_t ovp = draws[i]->overpattern();
     ovp.threshold = val;
     draws[i]->setOverpattern(ovp);
+  }
+}
+
+void MainWindow::changePostmaskIntWeight(int val)
+{
+  for (unsigned int i=0; i<drawscount; i++)
+  {
+    overpattern_t ovp = draws[i]->overpattern();
+    if (ovp.masktype)
+    {
+      ovp.weight = val;
+      draws[i]->setOverpattern(ovp);
+    }
+  }
+}
+
+void MainWindow::changePostmaskFloatWeight(int val)
+{
+  for (unsigned int i=0; i<drawscount; i++)
+  {
+    overpattern_t ovp = draws[i]->overpattern();
+    if (ovp.masktype == false)
+    {
+      ovp.weight = val/1000.0f;
+      draws[i]->setOverpattern(ovp);
+    }
+  }
+}
+
+void MainWindow::changePostmaskFloatSmooth(int val)
+{
+  for (unsigned int i=0; i<drawscount; i++)
+  {
+    overpattern_t ovp = draws[i]->overpattern();
+    if (ovp.masktype == false)
+    {
+      ovp.smooth = val/1000.0f;
+      draws[i]->setOverpattern(ovp);
+    }
   }
 }
 

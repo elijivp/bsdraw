@@ -428,52 +428,69 @@ struct impulsedata_t
 ////////////////////////////////////////////////////////////////////////////////
 
 
-enum BSOVERPATTERN
+enum BSOVERPATTERN_INT
 {  
-                  OP_CONTOUR, 
-                  OP_LINELEFT, OP_LINERIGHT, OP_LINELEFTRIGHT, OP_LINEBOTTOM, OP_LINETOP, 
-                  OP_LINEBOTTOMTOP, OP_LINELEFTBOTTOM, OP_LINERIGHTBOTTOM, OP_LINELEFTTOP, OP_LINERIGHTTOP,
-  
-                  OP_CIRCLESMOOTH, OP_CIRCLEBORDERED, OP_DOT, 
-                  OP_DOTLEFTBOTTOM, OP_DOTCONTOUR,
-                  OP_SHTRICHL, OP_SHTRICHR, OP_CROSS, OP_GRID, OP_FILL, OP_SQUARES,
-                  OP_CIRCLESMOOTH2, OP_CIRCLEBORDERED2,
-                  _OP_TOTAL
+    OP_CONTOUR, OP_LINELEFT, OP_LINERIGHT, OP_LINEBOTTOM, OP_LINETOP, 
+    OP_LINELEFTRIGHT, OP_LINEBOTTOMTOP, OP_LINELEFTBOTTOM, OP_LINERIGHTBOTTOM, OP_LINELEFTTOP, OP_LINERIGHTTOP,
+    OP_GRID, OP_DOT, OP_DOTLEFTBOTTOM, OP_DOTCONTOUR,  OP_SHTRICHL, OP_SHTRICHR, 
+    OP_CROSS, OP_FILL, OP_SQUARES,
+    _OP_TOTAL
+};
+
+enum BSOVERPATTERN_FLOAT
+{
+    OPF_CIRCLE, OPF_CIRCLE_REV, OPF_CROSSPUFF, OPF_RHOMB, OPF_SURIKEN, OPF_SURIKEN_REV, OPF_DONUT, OPF_CROSS, 
+    OPF_UMBRELLA, OPF_HOURGLASS, OPF_STAR, OPF_BULL, OPF_BULR, OPF_CROSSHAIR,
+    _OPF_TOTAL
 };
 
 struct  overpattern_t     // Brush over scaling
 {
   enum {  OALG_OFF=0, OALG_THRS_PLUS=1, OALG_THRS_MINUS=2, OALG_ANY=3 };
   int               algo;         // OALG_...
-  int               mask;         // OP_...
+  bool              masktype;     // true if OP_ else OPF_
+  int               mask;         // OP_... or OPF_...
   float             threshold;    /// for 2D draws
-  int               weight;
+  float             weight;
+  float             smooth;       /// 0..1, only for OPF_
   bool              colorByPalette;
   color3f_t         color; /// activates if colorByPalette == false
 };
 
 #if __cplusplus > 19971
-#define __overpattern_cp__(algo, mask, thrs, weight, colorByPalette) { algo, mask, thrs, weight, true, {colorByPalette,colorByPalette,colorByPalette} }
-#define __overpattern_cf__(algo, mask, thrs, weight, color3f) { algo, mask, thrs, weight, false, color3f }
+#define __overpattern_cp__(algo, masktype, mask, thrs, weight, smooth, colorByPalette) { algo, masktype, mask, thrs, weight, smooth, true, {colorByPalette,colorByPalette,colorByPalette} }
+#define __overpattern_cf__(algo, masktype, mask, thrs, weight, smooth, color3f) { algo, masktype, mask, thrs, weight, smooth, false, color3f }
 #else
-inline overpattern_t    __overpattern_cp__(int algo, int mask, float threshold, int weight, float colorByPalette)
-{   overpattern_t result = { algo, mask, thrs, weight, true, {colorByPalette,colorByPalette,colorByPalette} };   return result;    }
-inline overpattern_t    __overpattern_cf__(int algo, int mask, float threshold, int weight, color3f_t color3f)
-{   overpattern_t result = { algo, mask, thrs, weight, false, color3f };   return result;    }
+inline overpattern_t    __overpattern_cp__(int algo, bool masktype, int mask, float threshold, int weight, float smooth, float colorByPalette)
+{   overpattern_t result = { algo, bool masktype, mask, thrs, float(weight), smooth, true, {colorByPalette,colorByPalette,colorByPalette} };   return result;    }
+inline overpattern_t    __overpattern_cf__(int algo, int mask, float threshold, int weight, float smooth, color3f_t color3f)
+{   overpattern_t result = { algo, bool masktype, mask, thrs, float(weight), smooth, false, color3f };   return result;    }
 #endif
 
-inline overpattern_t    overpattern_off(){ return __overpattern_cf__(overpattern_t::OALG_OFF, 0, 0, 0, color3f_white()); }
-inline overpattern_t    overpattern_any(int OP_type, int colorhex, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_ANY, OP_type, 0.0f, weight, color3f(colorhex)); }
-inline overpattern_t    overpattern_any(int OP_type, const color3f_t& color, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_ANY, OP_type, 0.0f, weight, color); }
-inline overpattern_t    overpattern_any(int OP_type, float colorByPalette, int weight=0){ return __overpattern_cp__(overpattern_t::OALG_ANY, OP_type, 0.0f, weight, colorByPalette); }
+inline overpattern_t    overpattern_off(){ return __overpattern_cf__(overpattern_t::OALG_OFF, true, 0, 0, 0, 0, color3f_white()); }
+inline overpattern_t    overpattern_any(BSOVERPATTERN_INT OP_type, int colorhex, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_ANY, true, OP_type, 0.0f, float(weight), 0.0f, color3f(colorhex)); }
+inline overpattern_t    overpattern_any(BSOVERPATTERN_INT OP_type, const color3f_t& color, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_ANY, true, OP_type, 0.0f, float(weight), 0.0f, color); }
+inline overpattern_t    overpattern_any(BSOVERPATTERN_INT OP_type, float colorByPalette, int weight=0){ return __overpattern_cp__(overpattern_t::OALG_ANY, true, OP_type, 0.0f, float(weight), 0.0f, colorByPalette); }
 ///
-inline overpattern_t    overpattern_thrs_plus(int OP_type, float threshold, int colorhex, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_THRS_PLUS, OP_type, threshold, weight, color3f(colorhex)); }
-inline overpattern_t    overpattern_thrs_plus(int OP_type, float threshold, const color3f_t& color, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_THRS_PLUS, OP_type, threshold, weight, color); }
-inline overpattern_t    overpattern_thrs_plus(int OP_type, float threshold, float colorByPalette, int weight=0){ return __overpattern_cp__(overpattern_t::OALG_THRS_PLUS, OP_type, threshold, weight, colorByPalette); }
+inline overpattern_t    overpattern_thrs_plus(BSOVERPATTERN_INT OP_type, float threshold, int colorhex, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_THRS_PLUS, true, OP_type, threshold, float(weight), 0.0f, color3f(colorhex)); }
+inline overpattern_t    overpattern_thrs_plus(BSOVERPATTERN_INT OP_type, float threshold, const color3f_t& color, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_THRS_PLUS, true, OP_type, threshold, float(weight), 0.0f, color); }
+inline overpattern_t    overpattern_thrs_plus(BSOVERPATTERN_INT OP_type, float threshold, float colorByPalette, int weight=0){ return __overpattern_cp__(overpattern_t::OALG_THRS_PLUS, true, OP_type, threshold, float(weight), 0.0f, colorByPalette); }
 ///
-inline overpattern_t    overpattern_thrs_minus(int OP_type, float threshold, int colorhex, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_THRS_MINUS, OP_type, threshold, weight, color3f(colorhex)); }
-inline overpattern_t    overpattern_thrs_minus(int OP_type, float threshold, const color3f_t& color, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_THRS_MINUS, OP_type, threshold, weight, color); }
-inline overpattern_t    overpattern_thrs_minus(int OP_type, float threshold, float colorByPalette, int weight=0){ return __overpattern_cp__(overpattern_t::OALG_THRS_MINUS, OP_type, threshold, weight, colorByPalette); }
+inline overpattern_t    overpattern_thrs_minus(BSOVERPATTERN_INT OP_type, float threshold, int colorhex, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_THRS_MINUS, true, OP_type, threshold, float(weight), 0.0f, color3f(colorhex)); }
+inline overpattern_t    overpattern_thrs_minus(BSOVERPATTERN_INT OP_type, float threshold, const color3f_t& color, int weight=0){ return __overpattern_cf__(overpattern_t::OALG_THRS_MINUS, true, OP_type, threshold, float(weight), 0.0f, color); }
+inline overpattern_t    overpattern_thrs_minus(BSOVERPATTERN_INT OP_type, float threshold, float colorByPalette, int weight=0){ return __overpattern_cp__(overpattern_t::OALG_THRS_MINUS, true, OP_type, threshold, float(weight), 0.0f, colorByPalette); }
+
+inline overpattern_t    overpattern_any(BSOVERPATTERN_FLOAT OP_type, int colorhex, float weight01=0.5f, float smooth01=0.5f){ return __overpattern_cf__(overpattern_t::OALG_ANY, false, OP_type, 0.0f, float(weight01), smooth01, color3f(colorhex)); }
+inline overpattern_t    overpattern_any(BSOVERPATTERN_FLOAT OP_type, const color3f_t& color, float weight01=0.5f, float smooth01=0.5f){ return __overpattern_cf__(overpattern_t::OALG_ANY, false, OP_type, 0.0f, float(weight01), smooth01, color); }
+inline overpattern_t    overpattern_any(BSOVERPATTERN_FLOAT OP_type, float colorByPalette, float weight01=0.5f, float smooth01=0.5f){ return __overpattern_cp__(overpattern_t::OALG_ANY, false, OP_type, 0.0f, float(weight01), smooth01, colorByPalette); }
+///
+inline overpattern_t    overpattern_thrs_plus(BSOVERPATTERN_FLOAT OP_type, float threshold, int colorhex, float weight01=0.5f, float smooth01=0.5f){ return __overpattern_cf__(overpattern_t::OALG_THRS_PLUS, false, OP_type, threshold, weight01, smooth01, color3f(colorhex)); }
+inline overpattern_t    overpattern_thrs_plus(BSOVERPATTERN_FLOAT OP_type, float threshold, const color3f_t& color, float weight01=0.5f, float smooth01=0.5f){ return __overpattern_cf__(overpattern_t::OALG_THRS_PLUS, false, OP_type, threshold, weight01, smooth01, color); }
+inline overpattern_t    overpattern_thrs_plus(BSOVERPATTERN_FLOAT OP_type, float threshold, float colorByPalette, float weight01=0.5f, float smooth01=0.5f){ return __overpattern_cp__(overpattern_t::OALG_THRS_PLUS, false, OP_type, threshold, weight01, smooth01, colorByPalette); }
+///
+inline overpattern_t    overpattern_thrs_minus(BSOVERPATTERN_FLOAT OP_type, float threshold, int colorhex, float weight01=0.5f, float smooth01=0.5f){ return __overpattern_cf__(overpattern_t::OALG_THRS_MINUS, false, OP_type, threshold, weight01, smooth01, color3f(colorhex)); }
+inline overpattern_t    overpattern_thrs_minus(BSOVERPATTERN_FLOAT OP_type, float threshold, const color3f_t& color, float weight01=0.5f, float smooth01=0.5f){ return __overpattern_cf__(overpattern_t::OALG_THRS_MINUS, false, OP_type, threshold, weight01, smooth01, color); }
+inline overpattern_t    overpattern_thrs_minus(BSOVERPATTERN_FLOAT OP_type, float threshold, float colorByPalette, float weight01=0.5f, float smooth01=0.5f){ return __overpattern_cp__(overpattern_t::OALG_THRS_MINUS, false, OP_type, threshold, weight01, smooth01, colorByPalette); }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////

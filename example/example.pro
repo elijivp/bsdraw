@@ -18,7 +18,6 @@ lessThan(QT_MAJOR_VERSION, 5) {
 
 DEFINES += BSGLSLVER=130     # no "#version" string includes in shader if not defined
 #DEFINES += BSGLSLVER=450     # no "#version" string includes in shader if not defined
-#DEFINES += BSSHADER_DUMP     # write file fragshader.txt when compiling shader
 
 TARGET = example
 TEMPLATE = app

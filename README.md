@@ -12,7 +12,7 @@ All examples are taken from the project "example".
 
 ## Overview
 
-DrawIntensity class allows you to create rectangular 2D draws. Inherits DrawQWidget
+__DrawIntensity__ class allows you to create rectangular 2D draws. Inherits DrawQWidget
 
 ![overview_2d_1.png](/demoimages/overview_2d_1.png)
 
@@ -20,7 +20,7 @@ This example is supplemented with overpattern feature - shader posteffect over d
 
 Mechanics: _2d data converts into 2d texture, palette converts into 2d texture; Palette texture applies to data texture, shader overpattern applies to result_
 
-<details><summary>Code snippet</summary><p>
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     LINES = 14;
@@ -86,7 +86,8 @@ Mechanics: _2d data converts into 2d texture, palette converts into 2d texture; 
 
 </p></details>
 
-DrawDomain class allows you to create rectangular 2D draws with regions of different size. One value on setData() method fills one region. Inherits DrawQWidget
+__DrawDomain__ class allows you to create rectangular 2D draws with regions of different size. One value on setData() method fills one region. 
+Inherits DrawQWidget
 
 ![overview_2d_2.png](/demoimages/overview_2d_2.png)
 
@@ -94,7 +95,7 @@ All draws above have different regions but takes similar data.
 
 Mechanics: _full 2d field with region markup converts into 2d texture, region data converts into 1d texture, palette converts into 2d texture; Palette texture applies to region data texture, which applies to field texture_
 
-<details><summary>Code snippet</summary><p>
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
  
 
     LINES = 200;
@@ -213,7 +214,10 @@ Portions its about how many draws/graphs painted in one draw. 2 or more portions
 
 ![overview_2d_3.png](/demoimages/overview_2d_3.png)
 
-<details><summary>Code snippet</summary><p>
+At the bottom of picture __DrawRecorder__ class allows you to create 2D draws from 1D data. 
+Each setData() call appends 1D data array to current 2D image as new line. Inherits DrawQWidget
+
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     LINES = 120;
@@ -240,7 +244,7 @@ Portions its about how many draws/graphs painted in one draw. 2 or more portions
 </p></details>
 
 
-DrawGraph class allows you to create 1D graphs and histograms. Inherits DrawQWidget
+__DrawGraph__ class allows you to create 1D graphs and histograms. Inherits DrawQWidget
 
 Histograms with 3 portions displayed below
 
@@ -248,7 +252,7 @@ Histograms with 3 portions displayed below
 
 histograms above differ in the ordering of data draw. Histogram bar separation created by overpattern
 
-<details><summary>Code snippet</summary><p>
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     SAMPLES = 80;
@@ -286,7 +290,7 @@ More histograms with same data and different overpatterns
 
 ![overview_1d_histogram_2.png](/demoimages/overview_1d_histogram_2.png)
 
-<details><summary>Code snippet</summary><p>
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     SAMPLES = 24;
@@ -349,7 +353,7 @@ More histograms with same data and different overpatterns
 </p></details>
 
 
-DrawGraph class supports 3 principal types of graph: histogram, dots and interpolated graph. Interpolation is done on shader
+__DrawGraph__ class supports 3 principal types of graph: histogram, dots and interpolated graph. Interpolation is done on shader
 
 1st column is for 1 portion of data, 2nd is for 2 portions
 
@@ -357,7 +361,7 @@ DrawGraph class supports 3 principal types of graph: histogram, dots and interpo
 
 Up-to-down: dots (dotsize 0), linear interpolation (dotsize 0), dots (dotsize > 0), linear interpolation (dotsize > 0), histogram
 
-<details><summary>Code snippet</summary><p>
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     SAMPLES = 300;
@@ -401,7 +405,7 @@ Different types of interpolation and a composition of drawing graph and scaling 
 
 ![overview_1d_2.png](/demoimages/overview_1d_2.png)
 
-<details><summary>Code snippet</summary><p>
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     SAMPLES = 54;
@@ -446,7 +450,7 @@ And finally, graphopts_t struct adjust type of graph while coloropts_t struct ad
 
 Mechanics: _data for multiple portions converts into 2d texture, palette converts into 2d texture; Palette texture applies to data texture in accordance with the color policy_
 
-<details><summary>Code snippet</summary><p>
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     SAMPLES = 100;
@@ -507,9 +511,12 @@ Impulse feature for 2d draws - special shader code which smoothes border between
 
 ![overview_2d_impulse.png](/demoimages/overview_2d_impulse.png)
 
-In example above each 2d draw has size 1 'row' and 5 'columns' who scaled into more than 250x50 pixels
+In example above each 2d draw has size 1 'row' and 5 'columns' what means 1x5 pixels for minimum size. 
+Vertical scaling is manually set to 50+ and window enlarged in both sides, so real size is more than 300x50 pixels.
+Impulse applies for data who appears, when you resize your 2d draw
 
-<details><summary>Code snippet</summary><p>
+
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     LINES = 1;
@@ -562,7 +569,7 @@ Different smoothing for 1d linterp graph
 
 ![overview_1d_smooth.png](/demoimages/overview_1d_smooth.png)
 
-<details><summary>Code snippet</summary><p>
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     SAMPLES = 280;
@@ -607,7 +614,7 @@ Advanced palettes are collected in one array _ppalettes_adv[]_; full list of adv
 Special palettes available in "bspalettes_spec.h"
 
 
-<details><summary>Code snippet</summary><p>
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     SAMPLES = 50;
@@ -644,13 +651,13 @@ Special palettes available in "bspalettes_spec.h"
     
 </p></details>
 
-DrawMoveEx inherits DrawGraph. This type of graph saves previous data and setData() method appends data to graph
+__DrawMoveEx__ inherits DrawGraph. This type of graph saves previous data and setData() method appends data to graph
 
 ![extra_graphs_move.png](/demoimages/extra_graphs_move.png)
 
 There is one more additional opportunity: background color of draw can be installed independently of palette
 
-<details><summary>Code snippet</summary><p>
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     SAMPLES = 300;
@@ -726,7 +733,7 @@ draw22 has nothing between data points and only central points in horz scaling
 
 fourth row is the same like third, difference is vertical scaling
 
-<details><summary>Code snippet</summary><p>
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     SAMPLES = 50;
@@ -762,8 +769,9 @@ fourth row is the same like third, difference is vertical scaling
 
 ## Draw Bars
 
-DrawBars class includes pointer to DrawQWidget object. DrawBars incapusulates DrawQWidget functionality and adds 4 (left, top, right, bottom)
-bars (areas) for drawing axes, lines or labels. Drawing is done with QPainter and QStaticText.
+__DrawBars__ class constructs with pointer to DrawQWidget object. 
+DrawBars incapusulates DrawQWidget functionality and adds 4 (left, top, right, bottom) bars (areas) for drawing axes, lines or labels. 
+Drawing is done with QPainter and QStaticText.
 
 ![overview_bars_1.png](/demoimages/overview_bars_1.png)
 
@@ -771,7 +779,7 @@ DrawBars takes colors from parent QPalette or DrawQWidget palette
 
 DrawBars counts bar sizes and controls DrawQWidget resize
 
-<details><summary>Code snippet</summary><p>
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     SAMPLES = 180;
@@ -856,7 +864,7 @@ Unit of measurement can be placed for last mark' note (1st draw) or for each mar
 
 Explicit precision can be setted up for notes (3rd draw)
 
-<details><summary>Code snippet</summary><p>
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     SAMPLES = 50;
@@ -933,7 +941,7 @@ Pointer is a more complex element. He can be set up as nonmovable on his place b
 The following scheme is used there: we create special overlay object, who follow user action. We attach to him visual overlay (cross, dot, etc).
 And we attach to him our pointer. Example below
 
-<details><summary>Code snippet</summary><p>
+<details><summary>Code snippet (see end of the page for includes)</summary><p>
   
 
     SAMPLES = 20;
@@ -983,94 +991,361 @@ And we attach to him our pointer. Example below
 3. Additional tests available in folders: __simple_example__, __simple_example_1D__, __simple_example_1D_with_scales__,
 __simple_example_2D__, __simple_example_2D_with_scales__, __simple_example_domain__
 
+#### Generated shader example
 
+<details><summary>Generated shader snippet for 2D draw (DrawIntensity + overpattern)</summary><p>
+  
 
-#### ADD TO YOUR PROJECT:
+    #version 130
+    uniform highp sampler2D  texData;
+    uniform highp int        viewdimm_a;
+    uniform highp int        viewdimm_b;
+    uniform highp int        scaler_a;
+    uniform highp int        scaler_b;
+    uniform highp int        countPortions;
+    uniform highp sampler2D  texPalette;
+    uniform highp vec2       palrange;
+    in highp vec2            coords;
+    float getValue1D(in int portion, in float x){  return texture(texData, vec2(x, float(portion)/(float(countPortions)-1.0))).r; }
+    float getValue2D(in int portion, in vec2  x){  return texture(texData, vec2(x.x, float(x.y + float(portion))/float(countPortions))).r; }
+    vec3  insider(int i, ivec2 ifromvec) { float scaled01 = float(i - ifromvec[0])/float(ifromvec[1] - sign(float(ifromvec[1])));
+      return vec3( step(0.0, scaled01)*(1.0-step(1.001, scaled01)), scaled01, sign(ifromvec[1])*ifromvec[1]); }
+    void main()
+    {
+      float mixwell = 1.0;
+      float dvalue = 0.0;
+      vec4  ovl_cur_otss;
+      ivec2 ovl_transfer_pos;
+      vec2  ovl_cur_coords;
+      ivec2 ab_indimms = ivec2(viewdimm_a, viewdimm_b);
+      ivec2 ab_iscaler = ivec2(scaler_a, scaler_b);
+      ivec2 ab_ibounds = ab_indimms*ab_iscaler;
+      vec2  xy_coords = vec2(coords.xy*0.5 + vec2(0.5,0.5));
+      vec2  ab_coords = xy_coords;             
+      vec2  abc_coords = ab_coords;
+      ivec2 ispcell = ivec2(0,0);
+      ivec2 icells = ivec2(1,1);
+      vec3  backcolor = texture(texPalette, vec2(0.0, 0.0)).rgb;
+      vec3  result = vec3(0.0, 0.0, 0.0);
+      vec4  post_mask = vec4(0.0, 0.0, 1.0, 1.0);
+      ivec2  immod = ivec2( int(mod(abc_coords.x*ab_ibounds.x, float(ab_iscaler.x))), int(mod(abc_coords.y*ab_ibounds.y, float(ab_iscaler.y))));
+      ivec4  imrect  = ivec4(immod.x, immod.y, ab_iscaler.x-1, ab_iscaler.y-1);
+      const int allocatedPortions = 1;
+      for (int i=0; i<countPortions; i++)
+      {
+        float value = texture(texData, vec2(abc_coords.x, float(abc_coords.y + float(i))/float(countPortions))).r;
+        dvalue = max(dvalue, value);
+        value = palrange[0] + (palrange[1] - palrange[0])*value;
+        result = result + texture(texPalette, vec2(value, float(i)/(allocatedPortions-1) )).rgb;
+        post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));
+      }
+      float ppb_in = sign(step(imrect.x, post_mask[2]) + step(imrect.y, post_mask[2]) + step(imrect[2] - imrect.x, post_mask[2]) + step(imrect[3] - imrect.y, post_mask[2]));
+      vec3   ppb_color = vec3(1.0,1.0,1.0);
+      result = mix(result, ppb_color, ppb_in * 1.0 );
+      vec4 ovTrace;
+      gl_FragColor = vec4(result, 0.0);
+    }
+    
+
+</p></details>
+
+<details><summary>Generated shader snippet for 1D draw (DrawGraph + 2 overlays)</summary><p>
+  
+
+    #version 130
+    uniform highp sampler2D  texData;
+    uniform highp int        viewdimm_a;
+    uniform highp int        viewdimm_b;
+    uniform highp int        scaler_a;
+    uniform highp int        scaler_b;
+    uniform highp int        countPortions;
+    uniform highp sampler2D  texPalette;
+    uniform highp vec2       palrange;
+    in highp vec2            coords;
+    float getValue1D(in int portion, in float x){  return texture(texData, vec2(x, float(portion)/(float(countPortions)-1.0))).r; }
+    float getValue2D(in int portion, in vec2  x){  return texture(texData, vec2(x.x, float(x.y + float(portion))/float(countPortions))).r; }
+    vec3  insider(int i, ivec2 ifromvec) { float scaled01 = float(i - ifromvec[0])/float(ifromvec[1] - sign(float(ifromvec[1])));
+      return vec3( step(0.0, scaled01)*(1.0-step(1.001, scaled01)), scaled01, sign(ifromvec[1])*ifromvec[1]); }
+    uniform highp vec4 ovl_otss_001;
+    vec4 overlayOVCoords1(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 shapeself);
+    vec3 overlayColor1(in vec4 in_variant, in vec3 color);
+    uniform highp vec4 ovl_otss_002;
+    vec4 overlayOVCoords2(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 shapeself);
+    vec3 overlayColor2(in vec4 in_variant, in vec3 color);
+    void main()
+    {
+      float mixwell = 1.0;
+      float dvalue = 0.0;
+      vec4  ovl_cur_otss;
+      ivec2 ovl_transfer_pos;
+      vec2  ovl_cur_coords;
+      ivec2 ab_indimms = ivec2(viewdimm_a, viewdimm_b);
+      ivec2 ab_iscaler = ivec2(scaler_a, scaler_b);
+      ivec2 ab_ibounds = ab_indimms*ab_iscaler;
+      vec2  xy_coords = vec2(coords.xy*0.5 + vec2(0.5,0.5));
+      vec2  ab_coords = xy_coords;             
+      vec2  abc_coords = ab_coords;
+      ivec2 ispcell = ivec2(0,0);
+      ivec2 icells = ivec2(1,1);
+      vec3  backcolor = texture(texPalette, vec2(0.0, 0.0)).rgb;
+      vec3  result = backcolor;
+      vec4  post_mask = vec4(0.0, 0.0, 0.0, 1.0);
+      ivec2  immod = ivec2( int(mod(abc_coords.x*ab_ibounds.x, float(ab_iscaler.x))), int(mod(abc_coords.y*ab_ibounds.y, float(ab_iscaler.y))));
+      ivec4  imrect  = ivec4(immod.x, immod.y, ab_iscaler.x-1, ab_iscaler.y-1);
+      mixwell = 0.0;const float specopc = 1.0;
+      vec2  ab_fndimms = vec2(viewdimm_a, viewdimm_b);
+      vec2  ab_fbounds = vec2(ab_ibounds);
+      float b_coord = abc_coords.y*ab_fbounds.y;
+      float b_coord_ns = floor(abc_coords.y*ab_fndimms.y);
+      const float specsmooth = 0.450000;
+      vec3 fx = vec3(float(max(abc_coords.x*ab_indimms.x, 1) - 1)/ab_indimms.x, abc_coords.x, float(min(abc_coords.x*ab_indimms.x, ab_indimms.x-1)  + 1)/ab_indimms.x);
+      for (int i=0; i<countPortions; i++)
+      {
+        vec3  fy = vec3(getValue1D(i, fx[0]), getValue1D(i, fx[1]), getValue1D(i, fx[2]));
+        vec3  fy_ns = floor(fy*ab_indimms.y);
+        vec3  fy_view = fy*ab_ibounds.y;
+        ivec3 iy_view = ivec3(floor(fy_view));
+        vec3 fds = vec3(immod.x/float(ab_iscaler.x)) + vec3(-1.0/ab_iscaler.x, 0.0, 1.0/ab_iscaler.x);
+        fy_view = vec3(
+            mix(iy_view[1] + (iy_view[1] - iy_view[0])*fds.x, iy_view[1] + (iy_view[2] - iy_view[1])*fds.x, step(0.0, fds.x)),
+            mix(iy_view[1] + (iy_view[1] - iy_view[0])*fds.y, iy_view[1] + (iy_view[2] - iy_view[1])*fds.y, step(0.0, fds.y)),
+            mix(iy_view[1] + (iy_view[1] - iy_view[0])*fds.z, iy_view[1] + (iy_view[2] - iy_view[1])*fds.z, step(0.0, fds.z))
+            );
+        iy_view = ivec3(floor(fy_view));
+        fy_ns = floor(fy_view/(ab_iscaler.y));
+        float fmix_self = abs(b_coord_ns - fy_ns[1]);
+        fmix_self = (1.0-fmix_self + fmix_self*(0.25+specsmooth*0.375))*step(fmix_self, 2.0);
+        float fsig_prev = sign(fy_ns[0] - fy_ns[1]);
+        float fsig_next = sign(fy_ns[2] - fy_ns[1]);
+        float fmix_prev = fy_ns[0] + fsig_prev;
+        float fmix_next = fy_ns[2] + fsig_next;
+        fmix_prev = (fmix_prev - b_coord_ns)/(fmix_prev-fy_ns[1]);
+        fmix_next = (fmix_next - b_coord_ns)/(fmix_next-fy_ns[1]);
+        fmix_prev = fmix_prev*step(0.0, fmix_prev)*(1.0 - step(1.0, fmix_prev));
+        fmix_next = fmix_next*step(0.0, fmix_next)*(1.0 - step(1.0, fmix_next));
+        float fmix_rej = step(1.0, fsig_prev*fsig_next)*0.25;
+        fmix_prev = fmix_prev + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_prev-0.5)*(fmix_prev-0.5));
+        fmix_next = fmix_next + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_next-0.5)*(fmix_next-0.5));
+        fmix_prev = mix(fmix_prev, 0.2, (1.0-step(fmix_prev, 0.0))*step(fmix_prev, 0.2));
+        fmix_next = mix(fmix_next, 0.2, (1.0-step(fmix_next, 0.0))*step(fmix_next, 0.2));
+        fmix_prev = mix(fmix_prev, 1.0, step(1.0, fmix_prev));
+        fmix_next = mix(fmix_next, 1.0, step(1.0, fmix_next));
+        vec3 fhit = vec3(0.0, step(1.0, fmix_self), 0.0);
+        float mixwellp =  max(fhit.y, specopc*max(max(fmix_prev, fmix_next), fmix_self ));
+        fhit.x = 1.0 - step(mixwellp, 0.0);
+        float VALCLR = b_coord_ns / ab_fndimms.y;
+        post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);
+        const int allocatedPortions = 2;
+        float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i);
+        vec3  colorGraph = texture(texPalette, vec2(porc, 0.0)).rgb;
+        result = mix(result, colorGraph, mixwellp);
+        mixwell = max(mixwell, mixwellp);
+        dvalue = mix(fy[1], dvalue, step(abs(b_coord - dvalue), abs(b_coord - fy[1])) );
+      }
+      
+      float ppb_in = 0.0;
+      vec4 ovTrace;
+      ovl_cur_otss = ovl_otss_001;
+      ovl_transfer_pos = ivec2(0,0);
+      ovl_cur_coords = abc_coords;
+      bool ovl_visible_1 = step(1.0, ovl_cur_otss[0]) != 1;
+      if  (ovl_visible_1)
+      {
+        ovTrace = overlayOVCoords1(ispcell, ab_indimms.xy, ab_iscaler.xy, ab_ibounds, ovl_cur_coords, ovl_cur_otss[1], ivec2(0,0), vec3(post_mask[0], post_mask[3], ppb_in), ovl_transfer_pos);
+        if (sign(ovTrace[3]) != 0.0 && (step(mixwell, 0.0) == 1 || (step(dvalue, ovl_cur_otss[2]) == 0 && step(ovl_cur_otss[3], dvalue) == 0)) )
+        result = mix(result, overlayColor1(ovTrace, result), 1.0 - ovl_cur_otss[0]);
+      }
+      ivec2 ovl_pos_1 = ovl_transfer_pos;
+      ovl_cur_otss = ovl_otss_002;
+      ovl_transfer_pos = ivec2(0,0);
+      ovl_cur_coords = abc_coords;
+      bool ovl_visible_2 = step(1.0, ovl_cur_otss[0]) != 1;
+      if  (ovl_visible_2)
+      {
+        ovTrace = overlayOVCoords2(ispcell, ab_indimms.xy, ab_iscaler.xy, ab_ibounds, ovl_cur_coords, ovl_cur_otss[1], ivec2(0,0), vec3(post_mask[0], post_mask[3], ppb_in), ovl_transfer_pos);
+        if (sign(ovTrace[3]) != 0.0 && (step(mixwell, 0.0) == 1 || (step(dvalue, ovl_cur_otss[2]) == 0 && step(ovl_cur_otss[3], dvalue) == 0)) )
+        result = mix(result, overlayColor2(ovTrace, result), 1.0 - ovl_cur_otss[0]);
+      }
+      ivec2 ovl_pos_2 = ovl_transfer_pos;
+      gl_FragColor = vec4(result, 0.0);
+    }
+        
+    #version 130
+    vec3 insider(int i, ivec2 ifromvec);
+    vec4 overlayOVCoords1(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition)
+    {
+      ivec2 icoords = ivec2(coords*ov_ibounds);
+      vec3 result = vec3(0.0);
+      float mixwell = 0.0;
+      vec2 _mvar;  float _fvar;
+      vec2 _tracepass = vec2(1.0,1.0);
+      ivec2 ioffset = ivec2(0,0);
+      ioffset = ioffset + mastercoords;
+      ivec2 inormed = icoords - ioffset;
+      ivec2 cr = ivec2(16, 24);
+      vec2   cellsizepix = vec2(float(ov_ibounds.x-1) / cr.x, float(ov_ibounds.y-1) / cr.y);ivec2  optiid = ivec2(inormed.x / cellsizepix.x + 0.49, inormed.y / cellsizepix.y + 0.49);ioffset = ivec2(cellsizepix.x*optiid.x, 0);inormed = icoords - ioffset;_mvar[0] = 1.0 * (1.0+thick - clamp(abs(inormed[0] - floor(float(0.0))), 0.0, 1.0+thick))/(1.0+thick);_mvar[1] = inormed[1] - 0;
+      _mvar[0] = _mvar[0] * step(0.0, _mvar[1]);
+      result = mix(result, vec3(_mvar*_tracepass, 0.0), 1.0 - step(abs(_mvar[0]) - abs(result[0]), 0.0) );
+      ioffset = ivec2(0, cellsizepix.y*optiid.y);inormed = icoords - ioffset;_mvar[0] = 1.0 * (1.0+thick - clamp(abs(inormed[1] - floor(float(0.0))), 0.0, 1.0+thick))/(1.0+thick);_mvar[1] = inormed[0] - 0;
+      _mvar[0] = _mvar[0] * step(0.0, _mvar[1]);
+      result = mix(result, vec3(_mvar*_tracepass, 0.0), 1.0 - step(abs(_mvar[0]) - abs(result[0]), 0.0) );
+      mixwell = result[0];
+      selfposition = ioffset; 
+      return vec4(result, mixwell);
+    }
+    
+    #version 130
+    vec3 overlayColor1(in vec4 in_variant, in vec3 undercolor) 
+    {
+      vec3 result;
+      float mixwell = 0.0;
+      mixwell = in_variant[0];
+      const int lenspace = 1;
+      const int countdot = 1;
+      int pos = int(mod(in_variant[1], float(2*countdot - 1 + lenspace)));
+      int mixdot = int((1.0 - step(2.0*countdot, float(pos)))*step(1.0, mod(pos - (2.0*countdot-1.0), 2.0)));
+      mixwell = mixwell*mixdot;
+      result = vec3(1.0,1.0,1.0);
+      return mix(undercolor, result, mixwell);
+    }
+    
+    #version 130
+    vec3 insider(int i, ivec2 ifromvec);
+    vec4 overlayOVCoords2(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition)
+    {
+      ivec2 icoords = ivec2(coords*ov_ibounds);
+      vec3 result = vec3(0.0);
+      float mixwell = 0.0;
+      vec2 _mvar;  float _fvar;
+      vec2 _tracepass = vec2(1.0,1.0);
+      ivec2 ioffset = ivec2(0,0);
+      ioffset = ioffset + mastercoords;
+      const float weight = 0.750000;
+      ivec2 inormed = icoords - ioffset;
+      ivec2 dd = ivec2(9999, 0);dd = (ivec2)mix(dd, ivec2(inormed.x, 9), step(float(inormed.x), float(dd[0])));dd = (ivec2)mix(dd, ivec2(ov_ibounds.y - 1 - inormed.y, 9), step(float(ov_ibounds.y - 1 - inormed.y), float(dd[0])));dd = (ivec2)mix(dd, ivec2(ov_ibounds.x - 1 - inormed.x, 9), step(float(ov_ibounds.x - 1 - inormed.x), float(dd[0])));dd = (ivec2)mix(dd, ivec2(inormed.y, 9), step(float(inormed.y), float(dd[0])));vec2 tms = vec2(abs(dd[0]), 0.0);
+      tms[1] = clamp((1+dd[1] - tms[0])/float(1+dd[1]), 0.0, 1.0);
+      tms[0] = tms[1]*(1.0 / (1 + 6.2*abs(weight)*(1.0 - tms[1])) );
+      tms[1] = mix(2.0*tms[1] - tms[0], tms[0], step(0.0, weight));
+      tms[0] = clamp(tms[1], 0.0, 1.0);
+      mixwell = tms[1];
+      selfposition = ioffset;
+      return vec4(result, mixwell);
+    }
+    
+    #version 130
+    vec3 overlayColor2(in vec4 in_variant, in vec3 undercolor) 
+    {
+      vec3 result;
+      float mixwell = 0.0;
+      mixwell = in_variant[3];
+      result = vec3(1.0,1.0,1.0);
+      return mix(undercolor, result, mixwell);
+    }
+
+</p></details>
+
+## Includes
+
+#### FOR COMPILATION (add to your Qt project):
 
 1. Required core files:
+```
+    bsdraw/core/bsidrawcore.h           # include for symbols. General structs, flags, enums, defines
+    bsdraw/core/bsdraw.h                # include for symbols. base class DrawCore (Non-Qt)
+    bsdraw/core/bsqdraw.h               # include for symbols. DrawCore + Qt
+    bsdraw/core/bsqdraw.cpp             # translation unit
+    bsdraw/core/sheigen/bsshgenmain.h   # include for symbols. shader generation funcs
+    bsdraw/core/sheigen/bsshgenmain.cpp # translation unit
+```
 
-    bsdraw/core/bsqdraw.cpp;
-    
-    bsdraw/core/bsqdraw.h;
-    
-    bsdraw/core/sheigen/bsshgenmain.cpp;
-    
-    bsdraw/core/sheigen/bsshgenmain.h;
-    
-    bsdraw/core/bsdraw.h;
-    
-    bsdraw/core/bsidrawcore.h
+2. For 2D draws:
+```
+    bsdraw/bsdrawintensity.h            # class DrawIntensity, declaration
+    bsdraw/bsdrawintensity.cpp          # translation unit, definition
+    bsdraw/bsdrawrecorder.h             # class DrawRecorder, declaration
+    bsdraw/bsdrawrecorder.cpp           # translation unit, definition
+    bsdraw/bsdrawdomain.h               # class DrawDomain, declaration
+    bsdraw/bsdrawdomain.cpp             # translation unit, definition
+```
 
-2. Draw type you need:
+3. For 1D draws:
+```
+    bsdraw/bsdrawgraph.h                # class DrawGraph, declaration
+    bsdraw/bsdrawgraph.cpp              # translation unit, definition
+```    
 
-    bsdraw/bsdrawgraph.cpp;
-    
-    bsdraw/bsdrawgraph.h;
-    
-    bsdraw/bsdrawintensity.cpp;
-    
-    bsdraw/bsdrawintensity.h;
-    
-    bsdraw/bsdrawrecorder.cpp;
-    
-    bsdraw/bsdrawrecorder.h;
-    
-    bsdraw/bsdrawdomain.cpp;
-    
-    bsdraw/bsdrawdomain.h
+4. For draw bars:
+```
+    bsdraw/bsdrawscales.h;              # class DrawBars, declaration
+    bsdraw/bsdrawscales.cpp             # translation unit, definition
+```    
 
-3. For palettes (headers only):
-
-    bsdraw/palettes/bspalettes_adv.h;
-    
-    bsdraw/palettes/bspalettes_rgb.h;
-    
-    bsdraw/palettes/bspalettes_std.h
-
-
-#### ADD TO YOUR PROJECT for overlays:
-
-    bsdraw/core/bsoverlay.h;
-    
-    bsdraw/core/bsoverlay.cpp;
-    
-    bsdraw/core/sheigen/bsshgencolor.h;
-    
-    bsdraw/core/sheigen/bsshgencolor.cpp;
-    
-    bsdraw/core/sheigen/bsshgenmain.h;
-    
-    bsdraw/core/sheigen/bsshgenmain.cpp;
-    
-    bsdraw/core/sheigen/bsshgentrace.h;
-    
-    bsdraw/core/sheigen/bsshgentrace.cpp;
-    
-.. and overlays you need:
-    
-    bsdraw/overlays/bsborder.cpp & .h;
-    
-    bsdraw/overlays/bsfigures.cpp & .h;
-    
-    bsdraw/overlays/bsgrid.cpp & .h;
-    
-    bsdraw/overlays/bspoints.cpp & .h;
-    
-    bsdraw/overlays/bssprites.cpp & .h;
-    
-    bsdraw/overlays/bstextstatic.cpp & .h;
-    
-    bsdraw/overlays/special/bsmarks.cpp & .h;
-    
-    bsdraw/overlays/special/bsblocker.cpp & .h;
-    
-    bsdraw/overlays/bsinteractive.cpp & .h;
-    
-    bsdraw/overlays/bscontour.cpp & .h;
-    
+5. For overlays:
+```
+    bsdraw/core/bsoverlay.h             # include for symbols. Overlay base classes
+    bsdraw/core/bsoverlay.cpp           # translation unit
+    bsdraw/core/bsqoverlay.h            # optionally. Qt signals&slots support for basic overlay methods
+    bsdraw/core/bsqoverlay.cpp          # optionally. translation unit
+    bsdraw/core/sheigen/bsshgencolor.h    # include for symbols. Shader generator for overlay coloring 
+    bsdraw/core/sheigen/bsshgencolor.cpp  # translation unit
+    bsdraw/core/sheigen/bsshgentrace.h    # include for symbols. Shader generator for overlay coordinates maths
+    bsdraw/core/sheigen/bsshgentrace.cpp  # translation unit
+    ... and overlays you need, i.e.
+    bsdraw/overlays/bsborder.cpp & .h
+    bsdraw/overlays/bsfigures.cpp & .h
+    bsdraw/overlays/bsgrid.cpp & .h
+    bsdraw/overlays/bspoints.cpp & .h
+    bsdraw/overlays/bssprites.cpp & .h
+    bsdraw/overlays/bstextstatic.cpp & .h
+    bsdraw/overlays/special/bsmarks.cpp & .h
+    bsdraw/overlays/special/bsblocker.cpp & .h
+    bsdraw/overlays/bsinteractive.cpp & .h
+    bsdraw/overlays/bscontour.cpp & .h
     bsdraw/overlays/bsimage.cpp & .h
+```
+  
 
+#### FOR SYMBOLS (add to your header or source file):
+
+1. For 2D draws:
+```
+    bsdraw/bsdrawintensity.h            // class DrawIntensity
+    bsdraw/bsdrawrecorder.h             // class DrawRecorder
+    bsdraw/bsdrawdomain.h               // class DrawDomain
+```
+
+2. For 1D draws:
+```
+    bsdraw/bsdrawgraph.h                // class DrawGraph
+```    
+
+3. For draw bars:
+```
+    bsdraw/bsdrawscales.h;              // class DrawBars
+```   
+
+4. For palettes:
+```
+    bsdraw/palettes/bspalettes_std.h    // simple palettes list and includes
+    bsdraw/palettes/bspalettes_adv.h    // advanced palettes list and includes
+    bsdraw/palettes/bspalettes_rgb.h    // 2d palettes list and includes
+```
+
+5. For overlays you need:
+```
+    bsdraw/overlays/bsborder.h
+    bsdraw/overlays/bsfigures.h
+    bsdraw/overlays/bsgrid.h
+    bsdraw/overlays/bspoints.h
+    bsdraw/overlays/bssprites.h
+    bsdraw/overlays/bstextstatic.h
+    bsdraw/overlays/special/bsmarks.h
+    bsdraw/overlays/special/bsblocker.h
+    bsdraw/overlays/bsinteractive.h
+    bsdraw/overlays/bscontour.h
+    bsdraw/overlays/bsimage.h
+```
 
 #### Future:
 * shader precompilation
-
+* multiportional overpattern

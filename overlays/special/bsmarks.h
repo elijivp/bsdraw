@@ -117,6 +117,8 @@ public:
   void  scroll(int offset, bool update=true);
   void  update(); // explicit
 public:
+  unsigned int  maxTrasses() const { return trass_limit; }
+public:
   OTrass(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe=2048);
   ~OTrass();
   void  setTrail(int pxwidth, float lineary, bool update=true);
@@ -130,11 +132,27 @@ protected:
 class OTrassSelectable: public OTrass
 {
 protected:
+  float   selectcolor;
   int     selectidx;
 public:
-  OTrassSelectable(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe=2048);
+  OTrassSelectable(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, float selcolor_bypalette, unsigned int linesframe=2048);
   void    select(int trassidx, bool update=true); // from 0
   int     selected() const { return selectidx; }
+protected:
+  virtual void  finalizeOVCoords(class FshOVCoordsConstructor& ocg) const;
+};
+
+class OTrassMultiSelectable: public OTrass
+{
+protected:
+  float   selectcolor;
+  int*    selectarr;
+  dmtype_arr_t  _dm_select;
+public:
+  OTrassMultiSelectable(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, float selcolor_bypalette, unsigned int linesframe=2048);
+  ~OTrassMultiSelectable();
+  void    select(int trassidx, bool selected, bool update=true); // from 0
+  bool    selected(int idx) const { return idx < trass_limit? selectarr[idx] : false; }
 protected:
   virtual void  finalizeOVCoords(class FshOVCoordsConstructor& ocg) const;
 };

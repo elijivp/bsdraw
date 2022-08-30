@@ -374,18 +374,16 @@ int OTrass::fshOVCoords(int overlay, bool /*switchedab*/, char* to) const
     ocg.var_fixed("frame", (int)tlines_frame);
     
     ocg.push("float ty=float(inormed.y)/float(frame);");
-    ocg.push("vec3 niph=vec3(0.0);"
+    ocg.push("vec4 niph=vec4(0.0);"
              "float dist=9999;"
-             "float idx=-1.0;"
              );
     ocg.push("for (int i=0; i<line; i++){"
                "float tx = i/float(line-1);"
                "vec3 iph = texture("); ocg.param_get(); ocg.push(", vec2(tx, ty)).rgb;"
                "float dd = abs(float(inormed.x) - iph[1]*ov_ibounds.x);"
                "float good = (1.0 - step(iph[0], 0.0))*step(dd, dist);"
-               "niph = mix(niph, iph, good);"
+               "niph = mix(niph, vec4(iph, float(i)), good);"
                "dist = mix(dist, dd, good);"
-               "idx = mix(idx, float(i), good);"
              "}"
              );
     
@@ -413,10 +411,7 @@ int OTrass::fshOVCoords(int overlay, bool /*switchedab*/, char* to) const
 
 void OTrass::finalizeOVCoords(FshOVCoordsConstructor& ocg) const
 {
-  ocg.push(  "result[0] = niph[0];"
-//           "mixwell = step(float(abs(ipos - inormed.x)), 0.0);"
-//           "mixwell = (1.0 - step(niph[0], 0.0))*mix(mixwell, 0.25, step(float(abs(ipos - inormed.x)), niph[2]*ov_ibounds.x)*step(mixwell, 0.0));"
-           );
+  ocg.push(  "result[0] = niph[0];" );
 }
 
 /******************************************************************************************************************/
@@ -425,8 +420,8 @@ void OTrass::finalizeOVCoords(FshOVCoordsConstructor& ocg) const
 
 
 
-OTrassSelectable::OTrassSelectable(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, unsigned int linesframe): 
-  OTrass(trasslimit, linestotal, ipal, discrete, linesframe), selectidx(-1)
+OTrassSelectable::OTrassSelectable(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, float selcolor_bypalette, unsigned int linesframe): 
+  OTrass(trasslimit, linestotal, ipal, discrete, linesframe), selectcolor(selcolor_bypalette), selectidx(-1)
 {
   appendUniform(DT_1I, &selectidx);
 }
@@ -439,98 +434,52 @@ void OTrassSelectable::select(int trassidx, bool update)
 
 void OTrassSelectable::finalizeOVCoords(FshOVCoordsConstructor& ocg) const
 {
-  ocg.param_alias("selected");
-//    ocg.push(
-//              "int ipos = int(niph[1]*ov_ibounds.x);"
-//              "vec3 tms = vec3(step(float(abs(ipos - inormed.x)), 0.0), step(float(abs(ipos - inormed.x)), ipw), step(float(abs(ipos - inormed.x)), niph[2]*ov_ibounds.x));"
-//              "result[0] = mix(niph[0], 1.0, step(idx, float(selected))*step(float(selected),idx));"
-////              "result[1] = mix( mix(0.0, 1.0, max(step(float(abs(ipos - inormed.x)), ipw), step(idx, float(selected))*step(float(selected),idx))), 0.0, mixwell);"
-//              "result[1] = mix(tms[1], 0.0, tms[0]);"
-////              "mixwell = (1.0 - step(niph[0], 0.0))*mix(mixwell, 0.25, *step(mixwell, 0.0));"
-//              "mixwell = (1.0 - step(niph[0], 0.0))*max(tms[0], tms[1]);"
-//             );
-  
-//  ocg.push(
-//            "result[0] = mix(0.0, mix(0.01, mix(niph[0], 1.0, step(idx, float(selected))*step(float(selected),idx)) , tms[0]), tms[0] + tms[1] );"
-//            "result[1] = mix(0.0, 0.35, 1.0 - step(tms[1], 0.0));"
-//            "mixwell = (1.0 - step(niph[0], 0.0))*(tms[0] + tms[1]);"
-//           );
+  ocg.var_const_fixed("sclr", selectcolor);
+  ocg.param_alias("sidx");
   ocg.push(
-            "result[0] = mix(0.0, mix(0.01, mix(niph[0], 1.0, step(idx, float(selected))*step(float(selected),idx)) , tms[0]), tms[0] + tms[1] );"
+            "result[0] = mix(0.0, mix(0.01, mix(niph[0], sclr, step(niph[3], float(sidx))*step(float(sidx), niph[3])) , tms[0]), tms[0] + tms[1] );"
             "result[1] = mix(0.0, 0.35, 1.0 - step(tms[1], 0.0));"
            );
-  
-//    ocg.push("result[0] = niph[0];"
-//             "result[1] = step(idx, float(selected))*step(float(selected),idx);"
-//             "int ipos = int(niph[1]*ov_ibounds.x);"
-//             "mixwell = step(float(abs(ipos - inormed.x)), 0.0);"
-//             "mixwell = (1.0 - step(niph[0], 0.0))*mix(mixwell, 0.25, step(float(abs(ipos - inormed.x)), niph[2]*ov_ibounds.x)*step(mixwell, 0.0));"
-//             );
 }
 
-/*
-int OTrassSelectable::fshOVCoords(int overlay, bool , char* to) const
+
+
+/******************************************************************************************************************/
+/******************************************************************************************************************/
+/******************************************************************************************************************/
+
+
+
+OTrassMultiSelectable::OTrassMultiSelectable(unsigned int trasslimit, unsigned int linestotal, const IPalette* ipal, bool discrete, float selcolor_bypalette, unsigned int linesframe): 
+  OTrass(trasslimit, linestotal, ipal, discrete, linesframe), selectcolor(selcolor_bypalette)
 {
-  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
-  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
-  {
-    ocg.goto_normed();
-    ocg.var_fixed("line", (int)trass_limit);
-    ocg.var_fixed("frame", (int)tlines_frame);
-    
-    ocg.push("float ty=float(inormed.y)/float(frame);");
-    ocg.push("vec3 niph=vec3(0.0);"
-             "float dist=9999;"
-             "float idx=-1.0;"
-             );
-    ocg.push("for (int i=0; i<line; i++){"
-               "float tx = i/float(line-1);"
-               "vec3 iph = texture("); ocg.param_get(); ocg.push(", vec2(tx, ty)).rgb;"
-               "float dd = abs(float(inormed.x) - iph[1]*ov_ibounds.x);"
-               "float good = (1.0 - step(iph[0], 0.0))*step(dd, dist);"
-               "niph = mix(niph, iph, good);"
-               "dist = mix(dist, dd, good);"
-               "idx = mix(idx, float(i), good);"
-             "}"
-             );
-    
-    int invpathwidth = 8;
-    ocg.var_fixed("ipw", float(invpathwidth));
-    
-    
-  }
-  ocg.push("inormed.x = ov_ibounds.x/2;");
-  ocg.goto_func_end(false);
-  return ocg.written();
+  selectarr = new int[trasslimit];
+  memset(selectarr, 0, sizeof(int)*trasslimit);
+  _dm_select.data = selectarr;
+  _dm_select.count = trasslimit;
+  appendUniform(DT_ARRI, &_dm_select);
 }
 
-
-/*
-void OTrassSelectable::appendTrassline(const trass2point_t tps[])
+OTrassMultiSelectable::~OTrassMultiSelectable()
 {
-  tline_current--;
-  if (tline_current < 0)
-    tline_current = tlines_total - 1;
-  for (int i=0; i<trass_limit; i++)
-  {
-    tlines_texture[TPS*trass_limit*tline_current + 0] = tps[i].intensity == 0? 0 : tps[i].intensity == 1? 0.5f : 1.0f;
-    tlines_texture[TPS*trass_limit*tline_current + 1] = tps[i].position;
-    tlines_texture[TPS*trass_limit*tline_current + 2] = tps[i].halfstrob;
-//    memcpy(&tlines_texture[TPS*trass_limit*tline_current], tps, sizeof(float)*TPS*trass_limit);
-  }
-  if (tline_current < tlines_frame)
-  {
-    for (int i=0; i<trass_limit; i++)
-    {
-      tlines_texture[TPS*trass_limit*(tlines_total + tline_current) + 0] = tps[i].intensity == 0? 0 : tps[i].intensity == 1? 0.5f : 1.0f;
-      tlines_texture[TPS*trass_limit*(tlines_total + tline_current) + 1] = tps[i].position;
-      tlines_texture[TPS*trass_limit*(tlines_total + tline_current) + 2] = tps[i].halfstrob;
-    }
-//    memcpy(&tlines_texture[TPS*trass_limit*(tlines_total + tline_current)], tps, sizeof(float)*TPS*trass_limit);
-  }
-  
-  dm_trass.data = &tlines_texture[TPS*trass_limit*tline_current];
-  updateParameter(false, true);
+  delete []selectarr;
 }
 
-*/
+void OTrassMultiSelectable::select(int trassidx, bool selected, bool update)
+{
+  if (trassidx >= 0 && trassidx < trass_limit)
+  {
+    selectarr[trassidx] = selected? 1 : 0;
+    updateParameter(false, update);
+  }
+}
+
+void OTrassMultiSelectable::finalizeOVCoords(FshOVCoordsConstructor& ocg) const
+{
+  ocg.var_const_fixed("sclr", selectcolor);
+  ocg.push("int selected = ");    ocg.param_get();  ocg.push("[int(niph[3])];");
+  ocg.push(
+            "result[0] = mix(0.0, mix(0.01, mix(niph[0], sclr, selected) , tms[0]), tms[0] + tms[1] );"
+            "result[1] = mix(0.0, 0.35, 1.0 - step(tms[1], 0.0));"
+           );
+}

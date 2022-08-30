@@ -857,6 +857,12 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     AFTERCREATE_DRAW2D
     sigtype = ST_SIN;
+    
+//    for (int c=0; c<drawscount; c++)
+//    {
+//      draws[c]->setScalingLimitsSynced(4);
+//      draws[c]->setOverpattern(overpattern_thrs_plus(OPF_DONUT, 0.0f, 0.0f));
+//    }
   }
   else if (MW_TEST == OVERVIEW_BARS_1)
   {

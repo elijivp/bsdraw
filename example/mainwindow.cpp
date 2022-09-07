@@ -66,6 +66,7 @@
 #include <QColorDialog>
 #include <QResizeEvent>
 
+#include <QFile>
 #include <QtMath>
 
 #if QT_VERSION >= 0x050000
@@ -133,15 +134,6 @@ static const char* img_path_sdp = "../example/template.png";  /// 700x800
 /// if uncomment: DrawScales usage
 //#define USESCALES
 
-class BSUOD_DPM: public QObjectUserData
-{
-public:
-  unsigned int      id;
-  overpattern_t*    dpm;
-  BSUOD_DPM(unsigned int _id, overpattern_t* _dpm): id(_id), dpm(_dpm) {} 
-  ~BSUOD_DPM(){ if (id == 0) delete dpm; }
-};
-
 struct test_rgb_p
 {
   struct  compo
@@ -180,7 +172,8 @@ QString palette2string(const QString& name, const T& pptr, unsigned int clc)
   QString part="  ";
   for (int i=0; i<clc; i++)
   {
-    part += QString().sprintf(i == clc-1? "0x%08x" : "0x%08x,", pptr[i]);
+//    part += QString().sprintf(i == clc-1? "0x%08x" : "0x%08x,", pptr[i]);
+    part += QString("0x%1").arg(pptr[i], 8, 16, QChar('0')) + (i == clc-1? "" : ",");
     if ((i+1) % (clc/4) == 0)
     {
       result += part + "\n";
@@ -772,15 +765,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   
     AFTERCREATE_DRAW2D
     sigtype = ST_TANHX;
-    
-    /*
-    pdraws[1][0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP, 3, 0.5f));
-    pdraws[1][0]->setDataPalette(ppalettes_adv[18]);
-    pdraws[1][1] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP, 3, 0.5f));
-    pdraws[1][1]->setDataPalette(ppalettes_adv[2]);
-    pdraws[1][2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(DE_LINTERP, 3, 0.5f));
-    pdraws[1][2]->setDataPalette(ppalettes_adv_inv[2]);
-*/
   }
   else if (MW_TEST == EXTRA_GRAPHS_MOVE) /// graphs and graphmoves
   {
@@ -857,12 +841,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     AFTERCREATE_DRAW2D
     sigtype = ST_SIN;
-    
-//    for (int c=0; c<drawscount; c++)
-//    {
-//      draws[c]->setScalingLimitsSynced(4);
-//      draws[c]->setOverpattern(overpattern_thrs_plus(OPF_DONUT, 0.0f, 0.0f));
-//    }
   }
   else if (MW_TEST == OVERVIEW_BARS_1)
   {
@@ -1718,11 +1696,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     SAMPLES = 180;
     LINES = 50;
     PORTIONS = 3;
-//    PRECREATE(1 + PORTIONS, 1);
-//    draws[0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(0.2f, DE_QINTERP), coloropts_t::copts(CP_MONO, 0.5f, 1.0f, 0x777777));
-//    for (int i=0; i<PORTIONS; i++)
-//      draws[1 + i] = new DrawHint((DrawGraph*)draws[0], i, DH_LINE, OR_LRTB);
-//    sigtype = ST_MOVE;
+    
     int TD = PORTIONS+1;
     PRECREATE(TD, PORTIONS);
     for (int i=0; i<PORTIONS; i++)
@@ -1772,7 +1746,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(12, 4);
     for (unsigned int i=0; i<drawscount; i++)
     {
-//      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t(GT_LINTERPSMOOTH, 0.0, 0x00111111), CP_MONO, 1.0, -0.5);
       draws[i] = new DrawGraphMove(SAMPLES, 1, PORTIONS, graphopts_t::goInterp2(DE_NONE), coloropts_t::copts(CP_MONO, 1.0, 0.5, 0x00111111));
     }
     
@@ -1790,7 +1763,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       draws[i]->setScalingLimitsSynced(2 + i, 2 + i);
       
     }
-//    draws[2]->setOverpattern(overpattern_any(OP_DOTCONTOUR, 0, 0.0f, 0.0f));
     draws[2]->setOverpattern(overpattern_thrs_minus(OP_LINERIGHTTOP, 0.2f, 0x00333333));
 
     sigtype = ST_MOVE;
@@ -1820,194 +1792,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
       draws[i] = new DrawIntensity(SAMPLES, LINES, PORTIONS);
       draws[i]->setScalingLimitsA(4);
-//      draws[i]->setScalingDefaultA(4);
     }
     
-//    static PaletteIMPACT<30> pimp(0xFF0000, 0x00FF00, 0x0000FF);
-//    static PaletteIMPACT<30>  pimp(0x00373737, 0x00FF8867, 0x00FFFF00, 0x000000FF, 
-//                                            0x00006622, 0x0000FFFF, 0x000000FF);
-    
-//    static PaletteENUM  pimp(0x0000FF, 0x00A5FF, 0x00FFFF, 0x008000, 0xFF0000, 0x82004b, 0xee82ee );
-//    static PaletteENUM  pimp(0x0000FF, 0x00A5FF, 0x00FFFF, 0x008000, 0xFF0000, 0x82004b, 0xee82ee );
-    
-    
-    
-//    static PaletteENUM  pimp(0x00444444, 0x00003200, 0x0000ff00, 0x0000ffff);
-//    defaultPalette = &pimp;
-    
-//    const unsigned int colors_tfm_seismic[] = {
-//                                               0x00150005, 0x00190006, 0x001c0008, 0x00200009, 0x0023000b, 0x0027000c, 0x002a000d, 0x002e000e, 
-//                                               0x00310010, 0x00350011, 0x00380012, 0x003c0013, 0x003f0014, 0x00430015, 0x00460016, 0x004a0016, 
-//                                               0x004e0017, 0x00510018, 0x00550018, 0x00580019, 0x005c0019, 0x0060001a, 0x0063001a, 0x0067001b, 
-//                                               0x006b001b, 0x006e001b, 0x0072001b, 0x0076001c, 0x0079001c, 0x007d001c, 0x0081001c, 0x0085001b, 
-//                                               0x0088001b, 0x008c001b, 0x0090001b, 0x0094001b, 0x0098001a, 0x009c001a, 0x00a00019, 0x00a40019, 
-//                                               0x00a80018, 0x00ac0018, 0x00b00017, 0x00b40016, 0x00b80015, 0x00bc0014, 0x00c00013, 0x00c40012, 
-//                                               0x00c80011, 0x00cd0010, 0x00d1000f, 0x00d5000e, 0x00d9000d, 0x00de000b, 0x00e2000a, 0x00e60009, 
-//                                               0x00eb0007, 0x00ef0006, 0x00f40004, 0x00f80002, 0x00fd0001, 0x00ff0302, 0x00ff0907, 0x00ff0f0b, 
-//                                               0x00ff150f, 0x00ff1b13, 0x00ff2117, 0x00ff261b, 0x00ff2c1f, 0x00ff3224, 0x00ff3728, 0x00ff3c2c, 
-//                                               0x00ff4230, 0x00ff4734, 0x00ff4c38, 0x00ff513d, 0x00ff5741, 0x00ff5c45, 0x00ff6149, 0x00ff664d, 
-//                                               0x00ff6a51, 0x00ff6f56, 0x00ff745a, 0x00ff795e, 0x00ff7d62, 0x00ff8266, 0x00ff866a, 0x00ff8b6e, 
-//                                               0x00ff8f73, 0x00ff9377, 0x00ff987b, 0x00ff9c7f, 0x00ffa083, 0x00ffa487, 0x00ffa88c, 0x00ffac90, 
-//                                               0x00ffb094, 0x00ffb498, 0x00ffb89c, 0x00ffbba0, 0x00ffbfa5, 0x00ffc3a9, 0x00ffc6ad, 0x00ffc9b1, 
-//                                               0x00ffcdb5, 0x00ffd0b9, 0x00ffd3bd, 0x00ffd7c2, 0x00ffdac6, 0x00ffddca, 0x00ffe0ce, 0x00ffe3d2, 
-//                                               0x00ffe6d6, 0x00ffe9db, 0x00ffebdf, 0x00ffeee3, 0x00fff1e7, 0x00fff3eb, 0x00fff6ef, 0x00fff8f3, 
-//                                               0x00fffbf8, 0x00fffdfc, 0x00fefeff, 0x00fafbff, 0x00f7f9ff, 0x00f3f6ff, 0x00eff3ff, 0x00ecf0ff, 
-//                                               0x00e8edff, 0x00e4eaff, 0x00e0e6ff, 0x00dde3ff, 0x00d9e0ff, 0x00d5ddff, 0x00d2daff, 0x00ced7ff, 
-//                                               0x00cad3ff, 0x00c6d0ff, 0x00c3cdff, 0x00bfc9ff, 0x00bbc6ff, 0x00b8c3ff, 0x00b4bfff, 0x00b0bcff, 
-//                                               0x00acb8ff, 0x00a9b5ff, 0x00a5b1ff, 0x00a1aeff, 0x009daaff, 0x009aa6ff, 0x0096a3ff, 0x00929fff, 
-//                                               0x008f9bff, 0x008b98ff, 0x008794ff, 0x008390ff, 0x00808cff, 0x007c89ff, 0x007885ff, 0x007581ff, 
-//                                               0x00717dff, 0x006d79ff, 0x006975ff, 0x006671ff, 0x00626dff, 0x005e69ff, 0x005b65ff, 0x005761ff, 
-//                                               0x00535cff, 0x004f58ff, 0x004c54ff, 0x004850ff, 0x00444cff, 0x004147ff, 0x004f43ff, 0x004c3fff, 
-//                                               0x00493aff, 0x004736ff, 0x004431ff, 0x00412dff, 0x003e29ff, 0x003c24ff, 0x003920ff, 0x00361bff, 
-//                                               0x003316ff, 0x003112ff, 0x002e0dff, 0x002b08ff, 0x002804ff, 0x002600ff, 0x002300ff, 0x002200ff, 
-//                                               0x002200ff, 0x002200fc, 0x002200f9, 0x002300f7, 0x002300f4, 0x002300f1, 0x002300ef, 0x002300ec, 
-//                                               0x002300e9, 0x002300e6, 0x002400e4, 0x002400e1, 0x002400de, 0x002400dc, 0x002400d9, 0x002400d6, 
-//                                               0x002400d4, 0x002400d1, 0x002400ce, 0x002400cc, 0x002400c9, 0x002400c6, 0x002400c4, 0x002400c1, 
-//                                               0x002400be, 0x002400bb, 0x002400b9, 0x002300b6, 0x002300b3, 0x002300b1, 0x002300ae, 0x002300ab, 
-//                                               0x002300a9, 0x002300a6, 0x002200a3, 0x002200a1, 0x0022009e, 0x0022009b, 0x00210099, 0x00210096, 
-//                                               0x00210093, 0x00210090, 0x0020008e, 0x0020008b, 0x00200088, 0x001f0086, 0x001f0083, 0x001f0080, 
-//                                               0x001e007e, 0x001e007b, 0x001e0078, 0x001d0076, 0x001d0073, 0x001c0070, 0x001c006e, 0x001b006b, 
-//                                               0x001b0068, 0x001b0065, 0x001a0063, 0x001a0060, 0x0019005d, 0x0019005b, 0x00180058, 0x00170055
-//    };
-    
-//    const unsigned int colors_base[] = {    
-      
-//      0x00150005, 0x00190006, 0x001c0008, 0x00200009, 0x0023000b, 0x0027000c, 0x002a000d, 0x002e000e, 
-//      0x00310010, 0x00350011, 0x00380012, 0x003c0013, 0x003f0014, 0x00430015, 0x00460016, 0x004a0016, 
-//      0x004e0017, 0x00510018, 0x00550018, 0x00580019, 0x005c0019, 0x0060001a, 0x0063001a, 0x0067001b, 
-//      0x006b001b, 0x006e001b, 0x0072001b, 0x0076001c, 0x0079001c, 0x007d001c, 0x0081001c, 0x0085001b, 
-//      0x0088001b, 0x008c001b, 0x0090001b, 0x0094001b, 0x0098001a, 0x009c001a, 0x00a00019, 0x00a40019, 
-//      0x00a80018, 0x00ac0018, 0x00b00017, 0x00b40016, 0x00b80015, 0x00bc0014, 0x00c00013, 0x00c40012, 
-//      0x00c80011, 0x00cd0010, 0x00d1000f, 0x00d5000e, 0x00d9000d, 0x00de000b, 0x00e2000a, 0x00e60009, 
-//      0x00eb0007, 0x00ef0006, 0x00f40004, 0x00f80002, 0x00fd0001, 0x00ff0302, 0x00ff0907, 0x00ff0f0b, 
-//      0x00ff150f, 0x00ff1b13, 0x00ff2117, 0x00ff261b, 0x00ff2c1f, 0x00ff3224, 0x00ff3728, 0x00ff3c2c, 
-//      0x00ff4230, 0x00ff4734, 0x00ff4c38, 0x00ff513d, 0x00ff5741, 0x00ff5c45, 0x00ff6149, 0x00ff664d, 
-//      0x00ff6a51, 0x00ff6f56, 0x00ff745a, 0x00ff795e, 0x00ff7d62, 0x00ff8266, 0x00ff866a, 0x00ff8b6e, 
-//      0x00ff8f73, 0x00ff9377, 0x00ff987b, 0x00ff9c7f, 0x00ffa083, 0x00ffa487, 0x00ffa88c, 0x00ffac90, 
-//      0x00ffb094, 0x00ffb498, 0x00ffb89c, 0x00ffbba0, 0x00ffbfa5, 0x00ffc3a9, 0x00ffc6ad, 0x00ffc9b1, 
-//      0x00ffcdb5, 0x00ffd0b9, 0x00ffd3bd, 0x00ffd7c2, 0x00ffdac6, 0x00ffddca, 0x00ffe0ce, 0x00ffe3d2, 
-//      0x00ffe6d6, 0x00ffe9db, 0x00ffebdf, 0x00ffeee3, 0x00fff1e7, 0x00fff3eb, 0x00fff6ef, 0x00fff8f3, 
-//      0x00fffbf8, 0x00fffdfc, 0x00fefeff, 0x00fafbff, 0x00f7f9ff, 0x00f3f6ff, 0x00eff3ff, 0x00ecf0ff,
-//                                               0x00e8edff, 0x00e4eaff, 0x00e0e6ff, 0x00dde3ff, 0x00d9e0ff, 0x00d5ddff, 0x00d2daff, 0x00ced7ff, 
-//                                               0x00cad3ff, 0x00c6d0ff, 0x00c3cdff, 0x00bfc9ff, 0x00bbc6ff, 0x00b8c3ff, 0x00b4bfff, 0x00b0bcff, 
-//                                               0x00acb8ff, 0x00a9b5ff, 0x00a5b1ff, 0x00a1aeff, 0x009daaff, 0x009aa6ff, 0x0096a3ff, 0x00929fff, 
-//                                               0x008f9bff, 0x008b98ff, 0x008794ff, 0x008390ff, 0x00808cff, 0x007c89ff, 0x007885ff, 0x007581ff, 
-//                                               0x00717dff, 0x006d79ff, 0x006975ff, 0x006671ff, 0x00626dff, 0x005e69ff, 0x005b65ff, 0x005761ff, 
-//                                               0x00535cff, 0x004f58ff, 0x004c54ff, 0x004850ff, 0x00444cff, 0x004147ff, 0x004f43ff, 0x004c3fff, 
-//                                               0x00493aff, 0x004736ff, 0x004431ff, 0x00412dff, 0x003e29ff, 0x003c24ff, 0x003920ff, 0x00361bff, 
-//                                               0x003316ff, 0x003112ff, 0x002e0dff, 0x002b08ff, 0x002804ff, 0x002600ff, 0x002300ff, 0x002200ff, 
-//                                               0x002200ff, 0x002200fc, 0x002200f9, 0x002300f7, 0x002300f4, 0x002300f1, 0x002300ef, 0x002300ec, 
-//                                               0x002300e9, 0x002300e6, 0x002400e4, 0x002400e1, 0x002400de, 0x002400dc, 0x002400d9, 0x002400d6, 
-//                                               0x002400d4, 0x002400d1, 0x002400ce, 0x002400cc, 0x002400c9, 0x002400c6, 0x002400c4, 0x002400c1, 
-//                                               0x002400be, 0x002400bb, 0x002400b9, 0x002300b6, 0x002300b3, 0x002300b1, 0x002300ae, 0x002300ab, 
-//                                               0x002300a9, 0x002300a6, 0x002200a3, 0x002200a1, 0x0022009e, 0x0022009b, 0x00210099, 0x00210096, 
-//                                               0x00210093, 0x00210090, 0x0020008e, 0x0020008b, 0x00200088, 0x001f0086, 0x001f0083, 0x001f0080, 
-//                                               0x001e007e, 0x001e007b, 0x001e0078, 0x001d0076, 0x001d0073, 0x001c0070, 0x001c006e, 0x001b006b, 
-//                                               0x001b0068, 0x001b0065, 0x001a0063, 0x001a0060, 0x0019005d, 0x0019005b, 0x00180058, 0x00170055,
-      
-//    };
-    
-//    static unsigned int colors_creature[256];
-    
-//    for (int h=0; h<2; h++)
-//    {
-//      const int len = sizeof(colors_base)/sizeof(unsigned int)/2;
-//      for (int i=0; i<len; i++)
-//      {
-//        colors_creature[h*len+i] = colors_base[h*len + len-1 - i];
-//      }
-//    }
-    
-//    const unsigned int colors_creature[] = { 
-//      0x00ecf0ff,0x00eff3ff,0x00f3f6ff,0x00f7f9ff,0x00fafbff,0x00fefeff,0x00fffdfc,0x00fffbf8,0x00fff8f3,0x00fff6ef,0x00fff3eb,0x00fff1e7,0x00ffeee3,0x00ffebdf,0x00ffe9db,0x00ffe6d6,0x00ffe3d2,0x00ffe0ce,0x00ffddca,0x00ffdac6,0x00ffd7c2,0x00ffd3bd,0x00ffd0b9,0x00ffcdb5,0x00ffc9b1,0x00ffc6ad,0x00ffc3a9,0x00ffbfa5,0x00ffbba0,0x00ffb89c,0x00ffb498,0x00ffb094,0x00ffac90,0x00ffa88c,0x00ffa487,0x00ffa083,0x00ff9c7f,0x00ff987b,0x00ff9377,0x00ff8f73,0x00ff8b6e,0x00ff866a,0x00ff8266,0x00ff7d62,0x00ff795e,0x00ff745a,0x00ff6f56,0x00ff6a51,0x00ff664d,0x00ff6149,0x00ff5c45,0x00ff5741,0x00ff513d,0x00ff4c38,0x00ff4734,0x00ff4230,0x00ff3c2c,0x00ff3728,0x00ff3224,0x00ff2c1f,0x00ff261b,0x00ff2117,0x00ff1b13,0x00ff150f,
-//      0x00ff0f0b,0x00ff0907,0x00ff0302,0x00fd0001,0x00f80002,0x00f40004,0x00ef0006,0x00eb0007,0x00e60009,0x00e2000a,0x00de000b,0x00d9000d,0x00d5000e,0x00d1000f,0x00cd0010,0x00c80011,0x00c40012,0x00c00013,0x00bc0014,0x00b80015,0x00b40016,0x00b00017,0x00ac0018,0x00a80018,0x00a40019,0x00a00019,0x009c001a,0x0098001a,0x0094001b,0x0090001b,0x008c001b,0x0088001b,0x0085001b,0x0081001c,0x007d001c,0x0079001c,0x0076001c,0x0072001b,0x006e001b,0x006b001b,0x0067001b,0x0063001a,0x0060001a,0x005c0019,0x00580019,0x00550018,0x00510018,0x004e0017,0x004a0016,0x00460016,0x00430015,0x003f0014,0x003c0013,0x00380012,0x00350011,0x00310010,0x002e000e,0x002a000d,0x0027000c,0x0023000b,0x00200009,0x001c0008,0x00190006,0x00150005,
-//      0x00170055,0x00180058,0x0019005b,0x0019005d,0x001a0060,0x001a0063,0x001b0065,0x001b0068,0x001b006b,0x001c006e,0x001c0070,0x001d0073,0x001d0076,0x001e0078,0x001e007b,0x001e007e,0x001f0080,0x001f0083,0x001f0086,0x00200088,0x0020008b,0x0020008e,0x00210090,0x00210093,0x00210096,0x00210099,0x0022009b,0x0022009e,0x002200a1,0x002200a3,0x002300a6,0x002300a9,0x002300ab,0x002300ae,0x002300b1,0x002300b3,0x002300b6,0x002400b9,0x002400bb,0x002400be,0x002400c1,0x002400c4,0x002400c6,0x002400c9,0x002400cc,0x002400ce,0x002400d1,0x002400d4,0x002400d6,0x002400d9,0x002400dc,0x002400de,0x002400e1,0x002400e4,0x002300e6,0x002300e9,0x002300ec,0x002300ef,0x002300f1,0x002300f4,0x002300f7,0x002200f9,0x002200fc,0x002200ff,
-//      0x002200ff,0x002300ff,0x002600ff,0x002804ff,0x002b08ff,0x002e0dff,0x003112ff,0x003316ff,0x00361bff,0x003920ff,0x003c24ff,0x003e29ff,0x00412dff,0x004431ff,0x004736ff,0x00493aff,0x004c3fff,0x004f43ff,0x004147ff,0x00444cff,0x004850ff,0x004c54ff,0x004f58ff,0x00535cff,0x005761ff,0x005b65ff,0x005e69ff,0x00626dff,0x006671ff,0x006975ff,0x006d79ff,0x00717dff,0x007581ff,0x007885ff,0x007c89ff,0x00808cff,0x008390ff,0x008794ff,0x008b98ff,0x008f9bff,0x00929fff,0x0096a3ff,0x009aa6ff,0x009daaff,0x00a1aeff,0x00a5b1ff,0x00a9b5ff,0x00acb8ff,0x00b0bcff,0x00b4bfff,0x00b8c3ff,0x00bbc6ff,0x00bfc9ff,0x00c3cdff,0x00c6d0ff,0x00cad3ff,0x00ced7ff,0x00d2daff,0x00d5ddff,0x00d9e0ff,0x00dde3ff,0x00e0e6ff,0x00e4eaff,0x00e8edff
-//      };
-//    const unsigned int colors_creature[] = { 
-////      0x00ff0f0b, 0x00ff0907, 0x00ff0302, 0x00fd0001, 0x00f80002, 0x00f40004, 0x00ef0006, 0x00eb0007, 
-////      0x00e60009, 0x00e2000a, 0x00de000b, 0x00d9000d, 0x00d5000e, 0x00d1000f, 0x00cd0010, 0x00c80011, 
-//      0x00c40012, 0x00c00013, 0x00bc0014, 0x00b80015, 0x00b40016, 0x00b00017, 0x00ac0018, 0x00a80018, 
-//      0x00a40019, 0x00a00019, 0x009c001a, 0x0098001a, 0x0094001b, 0x0090001b, 0x008c001b, 0x0088001b, 
-//      0x0085001b, 0x0081001c, 0x007d001c, 0x0079001c, 0x0076001c, 0x0072001b, 0x006e001b, 0x006b001b, 
-//      0x0067001b, 0x0063001a, 0x0060001a, 0x005c0019, 0x00580019, 0x00550018, 0x00510018, 0x004e0017, 
-//      0x004a0016, 0x00460016, 0x00430015, 0x003f0014, 0x003c0013, 0x00380012, 0x00350011, 0x00310010, 
-//      0x002e000e, 0x002a000d, 0x0027000c, 0x0023000b, 0x00200009, 0x001c0008, 0x00190006, 0x00150005, 
-      
-//      0x00000001, 0x00000004, 0x00000007, 0x0000000a, 0x0000000d, 0x00000010, 0x00000013, 0x00000016, 
-//      0x00000019, 0x0000001c, 0x0000001f, 0x00000022, 0x00000025, 0x00000028, 0x0000002b, 0x0000002e, 
-//      0x00000031, 0x00000034, 0x00000037, 0x0000003a, 0x0000003d, 0x00000040, 0x00000043, 0x00000046, 
-//      0x00000049, 0x0000004c, 0x0000004f, 0x00000052, 0x00000055, 0x00000058, 0x0000005b, 0x0000005e, 
-//      0x00000061, 0x00000064, 0x00000067, 0x0000006a, 0x0000006d, 0x00000070, 0x00000073, 0x00000076, 
-//      0x00000079, 0x0000007c, 0x0000007f, 0x00000082, 0x00000085, 0x00000088, 0x0000008b, 0x0000008e, 
-//      0x00000091, 0x00000094, 0x00000097, 0x0000009a, 0x0000009d, 0x000000a0, 0x000000a3, 0x000000a6, 
-//      0x000000a9, 0x000000ac, 0x000000af, 0x000000b2, 0x000000b5, 0x000000b8, 0x000000bb, 0x000000be, 
-//      0x000000c1, 0x000000c4, 0x000000c7, 0x000000ca, 0x000000cd, 0x000000d0, 0x000000d3, 0x000000d6, 
-//      0x000000d9, 0x000000dc, 0x000000df, 0x000000e2, 0x000000e5, 0x000000e8, 0x000000eb, 0x000000ee, 
-//      0x000000f1, 0x000000f4, 0x000000f7, 0x000000fa, 0x000000fd, 0x000000ff, 0x000003ff, 0x000006ff, 
-//      0x000009ff, 0x00000cff, 0x00000fff, 0x000012ff, 0x000015ff, 0x000018ff, 0x00001bff, 0x00001eff, 
-//      0x000021ff, 0x000024ff, 0x000027ff, 0x00002aff, 0x00002dff, 0x000030ff, 0x000033ff, 0x000036ff, 
-//      0x000039ff, 0x00003cff, 0x00003fff, 0x000042ff, 0x000045ff, 0x000048ff, 0x00004bff, 0x00004eff, 
-//      0x000051ff, 0x000054ff, 0x000057ff, 0x00005aff, 0x00005dff, 0x000060ff, 0x000063ff, 0x000066ff, 
-//      0x000069ff, 0x00006cff, 0x00006fff, 0x000072ff, 0x000075ff, 0x000078ff, 0x00007bff, 0x00007eff, 
-//      0x000081ff, 0x000084ff, 0x000087ff, 0x00008aff, 0x00008dff, 0x000090ff, 0x000093ff, 0x000096ff, 
-//      0x000099ff, 0x00009cff, 0x00009fff, 0x0000a2ff, 0x0000a5ff, 0x0000a8ff, 0x0000abff, 0x0000aeff, 
-//      0x0000b1ff, 0x0000b4ff, 0x0000b7ff, 0x0000baff, 0x0000bdff, 0x0000c0ff, 0x0000c3ff, 0x0000c6ff, 
-//      0x0000c9ff, 0x0000ccff, 0x0000cfff, 0x0000d2ff, 0x0000d5ff, 0x0000d8ff, 0x0000dbff, 0x0000deff, 
-//      0x0000e1ff, 0x0000e4ff, 0x0000e7ff, 0x0000eaff, 0x0000edff, 0x0000f0ff, 0x0000f3ff, 0x0000f6ff, 
-//      0x0000f9ff, 0x0000fcff, 0x0000ffff, 0x0002ffff, 0x0005ffff, 0x0008ffff, 0x000bffff, 0x000effff, 
-////                0x0011ffff, 0x0014ffff, 0x0017ffff, 0x001affff, 0x001dffff, 0x0020ffff, 0x0023ffff, 0x0026ffff, 
-////                0x0029ffff, 0x002cffff, 0x002fffff, 0x0032ffff, 0x0035ffff, 0x0038ffff, 0x003bffff, 0x003effff, 
-////                0x0041ffff, 0x0044ffff, 0x0047ffff, 0x004affff, 0x004dffff, 0x0050ffff, 0x0053ffff, 0x0056ffff, 
-////                0x0059ffff, 0x005cffff, 0x005fffff, 0x0062ffff, 0x0065ffff, 0x0068ffff, 0x006bffff, 0x006effff, 
-      
-//      0x0012ffff,0x0019ffff,0x0021ffff,0x0029ffff,0x0030ffff,0x0038ffff,0x0040ffff,0x0047ffff,
-//      0x004fffff,0x0057ffff,0x005effff,0x0066ffff,0x006effff,0x0075ffff,0x007dffff,0x0085ffff,
-//      0x008cffff,0x0094ffff,0x009cffff,0x00a3ffff,0x00abffff,0x00b3ffff,0x00baffff,0x00c2ffff,
-//      0x00caffff,0x00d1ffff,0x00d9ffff,0x00e1ffff,0x00e8ffff,0x00f0ffff,0x00f8ffff,0x00ffffff
-      
-////      0x0071ffff, 0x0074ffff, 0x0077ffff, 0x007affff, 0x007dffff, 0x0080ffff, 0x0083ffff, 0x0086ffff, 
-////      0x0089ffff, 0x008cffff, 0x008fffff, 0x0092ffff, 0x0095ffff, 0x0098ffff, 0x009bffff, 0x009effff, 
-////      0x00a1ffff, 0x00a4ffff, 0x00a7ffff, 0x00aaffff, 0x00adffff, 0x00b0ffff, 0x00b3ffff, 0x00b6ffff, 
-////      0x00b9ffff, 0x00bcffff, 0x00bfffff, 0x00c2ffff, 0x00c5ffff, 0x00c8ffff, 0x00cbffff, 0x00ceffff, 
-////      0x00d1ffff, 0x00d4ffff, 0x00d7ffff, 0x00daffff, 0x00ddffff, 0x00e0ffff, 0x00e3ffff, 0x00e6ffff, 
-////      0x00e9ffff, 0x00ecffff, 0x00efffff, 0x00f2ffff, 0x00f5ffff, 0x00f8ffff, 0x00fbffff, 0x00feffff
-//      };
-    
-//    const unsigned int colors_creature[] = {
-//                                              0x00feffff, 0x00fcfffe, 0x00fafffd, 0x00f8fffc, 0x00f6fffc, 0x00f4fffb, 0x00f2fffb, 0x00f0fffa, 
-//                                              0x00eefffa, 0x00ecfffa, 0x00eafff9, 0x00e8fff9, 0x00e6fff9, 0x00e4fff9, 0x00e2fff9, 0x00e0fff9, 
-//                                              0x00defff9, 0x00dcfff9, 0x00dafff9, 0x00d8fff9, 0x00d6fffa, 0x00d4fffa, 0x00d2fffa, 0x00d0fffb, 
-//                                              0x00cefffc, 0x00ccfffc, 0x00cafffd, 0x00c8fffd, 0x00c6fffe, 0x00c4ffff, 0x00c2feff, 0x00c0fdff, 
-//                                              0x00befcff, 0x00bcfbff, 0x00bafaff, 0x00b8f9ff, 0x00b6f8ff, 0x00b4f6ff, 0x00b2f5ff, 0x00b0f4ff, 
-//                                              0x00aef2ff, 0x00acf1ff, 0x00aaefff, 0x00a8edff, 0x00a6ecff, 0x00a4eaff, 0x00a2e8ff, 0x00a0e6ff, 
-//                                              0x009ee4ff, 0x009ce2ff, 0x009ae0ff, 0x0098deff, 0x0096dcff, 0x0094daff, 0x0092d8ff, 0x0090d5ff, 
-//                                              0x008ed3ff, 0x008cd0ff, 0x008aceff, 0x0088cbff, 0x0086c9ff, 0x0084c6ff, 0x0082c3ff, 0x0080c1ff, 
-//                                              0x007fbeff, 0x007dbbff, 0x007bb8ff, 0x0079b5ff, 0x0077b2ff, 0x0075afff, 0x0073abff, 0x0071a8ff, 
-//                                              0x006fa5ff, 0x006da1ff, 0x006b9eff, 0x00699bff, 0x006797ff, 0x006593ff, 0x006390ff, 0x00618cff, 
-//                                              0x005f88ff, 0x005d84ff, 0x005b81ff, 0x00597dff, 0x005779ff, 0x005575ff, 0x005371ff, 0x00516cff, 
-//                                              0x004f68ff, 0x004d64ff, 0x004b5fff, 0x00495bff, 0x004757ff, 0x004552ff, 0x00434eff, 0x004149ff, 
-//                                              0x003f44ff, 0x003d3fff, 0x003b3bff, 0x003d39ff, 0x003f37ff, 0x004135ff, 0x004433ff, 0x004631ff, 
-//                                              0x00492fff, 0x004c2dff, 0x004e2bff, 0x005129ff, 0x005427ff, 0x005725ff, 0x005a23ff, 0x005e21ff, 
-//                                              0x00611fff, 0x00641dff, 0x00671bff, 0x006b19ff, 0x006e17ff, 0x007215ff, 0x007513ff, 0x007911ff, 
-//                                              0x007c0fff, 0x00800dff, 0x00830bff, 0x008709ff, 0x008b07ff, 0x008e05ff, 0x009203ff, 0x009501ff, 
-//                                              0x009900fe, 0x009c00fc, 0x00a000fa, 0x00a300f8, 0x00a700f6, 0x00aa00f4, 0x00ad00f2, 0x00b100f0, 
-//                                              0x00b400ee, 0x00b700ec, 0x00ba00ea, 0x00bd00e8, 0x00c000e6, 0x00c300e4, 0x00c600e2, 0x00c800e0, 
-//                                              0x00cb00de, 0x00cd00dc, 0x00cf00da, 0x00d200d8, 0x00d400d6, 0x00d400d2, 0x00d200cc, 0x00d000c6, 
-//                                              0x00ce00c1, 0x00cc00bb, 0x00ca00b5, 0x00c800af, 0x00c600aa, 0x00c400a4, 0x00c2009f, 0x00c0009a, 
-//                                              0x00be0094, 0x00bc008f, 0x00ba008a, 0x00b80085, 0x00b60080, 0x00b4007b, 0x00b20077, 0x00b00072, 
-//                                              0x00ae006d, 0x00ac0069, 0x00aa0064, 0x00a80060, 0x00a6005b, 0x00a40057, 0x00a20053, 0x00a0004f, 
-//                                              0x009e004b, 0x009c0047, 0x009a0043, 0x0098003f, 0x0096003c, 0x00940038, 0x00920034, 0x00900031, 
-//                                              0x008e002d, 0x008c002a, 0x008a0027, 0x00880024, 0x00860021, 0x0084001e, 0x0082001b, 0x00800018, 
-//                                              0x007f0015, 0x007d0012, 0x007b0010, 0x0079000d, 0x0077000a, 0x00750008, 0x00730006, 0x00710003, 
-//                                              0x006f0001, 0x006d0100, 0x006b0300, 0x00690500, 0x00670700, 0x00650900, 0x00630a00, 0x00610c00, 
-//                                              0x005f0d00, 0x005d0f00, 0x005b1000, 0x00591200, 0x00571300, 0x00551400, 0x00531500, 0x00511600, 
-//                                              0x004f1700, 0x004d1800, 0x004b1900, 0x00491a00, 0x00471a00, 0x00451b00, 0x00431b00, 0x00411c00, 
-//                                              0x003f1c00, 0x003d1d00, 0x003b1d00, 0x00391d00, 0x00371d00, 0x00351d00, 0x00331d00, 0x00311d00, 
-//                                              0x002f1c00, 0x002d1c00, 0x002b1c00, 0x00291b00, 0x00271a00, 0x00251a00, 0x00231900, 0x00211800, 
-//                                              0x001f1700, 0x001d1600, 0x001b1500, 0x00191400, 0x00171300, 0x00151200, 0x00131100, 0x00110f00, 
-//                                              0x000f0e00, 0x000d0c00, 0x000b0a00, 0x00090900, 0x00070700, 0x00050500, 0x00030300, 0x00010100
-//    };
     const unsigned int colors_creature[] = { 
       0x00010100, 0x00030300, 0x00050500, 0x00070700, 0x00090900, 0x000b0a00, 0x000d0c00, 0x000f0e00,
       0x00110f00, 0x00131100, 0x00151200, 0x00171300, 0x00191400, 0x001b1500, 0x001d1600, 0x001f1700, 
@@ -2019,20 +1805,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       0x00710003, 0x00730006, 0x00750008, 0x0077000a, 0x0079000d, 0x007b0010, 0x007d0012, 0x007f0015, 
       0x00800018, 0x0082001b, 0x0084001e, 0x00860021, 0x00880024, 0x008a0027, 0x008c002a, 0x008e002d, 
       0x00900031, 0x00920034, 0x00940038, 0x0096003c, 0x0098003f, 0x009a0043, 0x009c0047, 0x009e004b, 
-//      0x00a0004f, 0x00a20053, 0x00a40057, 0x00a6005b, 0x00a80060, 0x00aa0064, 0x00ac0069, 0x00ae006d, 
-      
-      
-//      0x00d000c6, 0x00d200cc, 0x00d400d2, 0x00d400d6, 0x00d200d8, 0x00cf00da, 0x00cd00dc, 0x00cb00de, 
-//      0x00c800e0, 0x00c600e2, 0x00c300e4, 0x00c000e6, 0x00bd00e8, 0x00ba00ea, 0x00b700ec, 0x00b400ee, 
-//      0x00b100f0, 0x00ad00f2, 0x00aa00f4, 0x00a700f6, 0x00a300f8, 0x00a000fa, 0x009c00fc, 0x009900fe, 
-//      0x009501ff, 0x009203ff, 0x008e05ff, 0x008b07ff, 0x008709ff, 0x00830bff, 0x00800dff, 0x007c0fff, 
-      
       0x009d0050, 0x009b0155, 0x0099025a, 0x00970360, 0x00950465, 0x0093056a, 0x00910670, 0x008f0775, 
       0x008e087a, 0x008c097f, 0x008a0a85, 0x00880b8a, 0x00860c8f, 0x00840d95, 0x00820e9a, 0x00800f9f, 
       0x007e10a5, 0x007d11aa, 0x007b12af, 0x007913b4, 0x007714ba, 0x007515bf, 0x007316c4, 0x007117ca, 
       0x006f18cf, 0x006e19d4, 0x006c1ad9, 0x006a1bdf, 0x00681ce4, 0x00661de9, 0x00641eef, 0x00621ff4, 
-      
-//      0x007911ff, 0x007513ff, 0x007215ff, 0x006e17ff, 0x006b19ff, 0x00671bff, 0x00641dff, 0x00611fff, 
       0x005e21ff, 0x005a23ff, 0x005725ff, 0x005427ff, 0x005129ff, 0x004e2bff, 0x004c2dff, 0x00492fff, 
       0x004631ff, 0x004433ff, 0x004135ff, 0x003f37ff, 0x003d39ff, 0x003b3bff, 0x003d3fff, 0x003f44ff,
       0x004149ff, 0x00434eff, 0x004552ff, 0x004757ff, 0x00495bff, 0x004b5fff, 0x004d64ff, 0x004f68ff,
@@ -2218,24 +1994,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     }
 //    sigtype = ST_ONE;
     sp = SP_ONCE;
-    
-//    static PaletteBORDS<100> pptr(0x000000ff, 0.15f, 0x0000ff00, 0.85f, 0x000000ff);
-//    defaultPalette = &pptr;
-    
-//    SAMPLES = 3;
-//    LINES = 100;
-//    PORTIONS = 1;
-//    PRECREATE(1, 1);
-//    for (int i=0; i < 1; i++)
-//    {
-//      draws[i] = new DrawIntensity(SAMPLES, LINES, PORTIONS);
-//      draws[i]->setDataPaletteDiscretion(true);
-//    }
-//    sigtype = ST_RAMP;
-//    sp = SP_ONCE;
-    
-//    static PaletteBORDS<100> pptr(0x000000ff, 0.3333f, 0x0000ff00, 0.6666f, 0x000000ff);
-//    defaultPalette = &pptr;
   }
   else if (MW_TEST == DEBUG_ROTATIONSOVLS) 
   {
@@ -2299,44 +2057,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)    //linestyle_green(4, 2, 0)
       {
-//        Ovldraw* ovl = new OSegment(linestyle_inverse_1(10, 8, 0), CR_ABSOLUTE, 20, 100);
-//        Ovldraw* ovl = new OHighlight(linestyle_inverse_1(1, 0, 0), true, CR_ABSOLUTE, 10);
-//        ovl->setOTS(0.0f, 1.0f, 0.0f, 1.0f);
-//        draws[c*drcount + i]->ovlPushBack(ovl);
-        
-        
-//        Ovldraw* ovl = new OFSubjectif(CR_RELATIVE, 0.0f, 0.0f, CR_ABSOLUTE, 40, 60, 3, linestyle_inverse_1(10, 6, 0));
-        
-        
-//        Ovldraw* ovl = new OFPointrun(CR_RELATIVE, 0.0f, 0.0f, CR_ABSOLUTE, 40, 6);
-        
-//        int ovlroot = draws[c*drcount + i]->ovlPushBack(new OActiveCursor());
-//        draws[c*drcount + i]->ovlPushBack(ovl, ovlroot);
-        
-//        ORecLine* ovl = new ORecLine(linestyle_red(7,2,0));
-//        for (int i=0; i<10; i++)
-//          ovl->increment(false);
-//        ovl->increment(true);
-//        for (int i=0; i<5; i++)
-//          ovl->increment(false);
-//        ovl->increment(true);
-//        for (int i=0; i<20; i++)
-//          ovl->increment(false);
-        
-//        for (int j=0; j<4; j++)
-//        {
-//          Ovldraw*  ovl = new OFRhombCC(0.2f, CR_RELATIVE, 0.2f + j*0.2f, 0.5f, CR_RELATIVE, 0.1f + 0.1f*j, linestyle_white(8, 4, 0));
-          
-//          draws[c*drcount + i]->ovlPushBack(ovl);
-//        }
-        
-        
-//        OGridCells* ovl = new OGridCells(5, 4, linestyle_inverse_1(4, 2, 0));
-//        draws[c*drcount + i]->ovlPushBack(ovl);
-        
-//        OActiveCell* ovl2 = new OActiveCell(5, 4, linestyle_red(10, 4, 0), 4);
-//        draws[c*drcount + i]->ovlPushBack(ovl2);
-        
         OCluster* pMKFigures = new OCluster(false, 32, CR_RELATIVE, 0.05f, &paletteGnWh, false, 0.15f);
         {
           for (int r=0; r<8; r++)
@@ -2346,12 +2066,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         }
         draws[c*drcount + i]->ovlPushBack(pMKFigures);
       }
-    
-    
     sp = SP_SLOWEST;
-//    sigtype = ST_PEAK3;
     sigtype = ST_ZERO;
-//    sigtype = ST_MANYSIN;
   }
   else if (MW_TEST == DEBUG_MEVSCALES)
   {   
@@ -2391,60 +2107,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     sigtype = ST_RAMP;
   }
   
-//  else if (MW_TEST == DEBUG_PALETTE2DX)
-//  {
-//#if false
-//    static const int clc = 33;
-//    static unsigned int colors[clc];
-//    int dm = clc/3;
-//    for (int i=0; i<dm; i++)
-//    {
-//      unsigned int up = (unsigned int)((i/float(dm-1))*255);
-//      colors[dm*0 + i] = up << 8;
-//      colors[dm*1 + i] = up << 8 | up << 0;
-//      colors[dm*2 + i] = up << 0;
-//    }
-//#elif false
-//    static const int clc = 24;
-//    static unsigned int colors[clc];
-//    int dm = clc/4;
-//    for (int i=0; i<dm; i++)
-//    {
-//      colors[dm*0 + i] = 0xFFFFFF;
-//      colors[dm*1 + i] = 0xFF << 0;
-//      colors[dm*2 + i] = 0xFF << 8 | 0xFF << 0;
-//      colors[dm*3 + i] = 0xFF << 8;
-//    }
-//#else
-//  }
-//  else if (MW_TEST == PROGRESS_BAR)   /// progress
-//  {
-//    sigtype = ST_10;
-//    SAMPLES = 20;
-//    LINES = 1;
-//    PORTIONS = 1;
-//    PRECREATE(5, 1);
-//    for (unsigned int i=0; i<drawscount; i++)
-//    {
-//      if (i<drawscount - 1)
-//      {
-//        draws[i] = new DrawIntensity(SAMPLES, 1, PORTIONS);
-//        draws[i]->setScalingLimitsVert(10,10);
-//        draws[i]->setScalingLimitsHorz(10,10);
-//        if (i == 1)
-//          draws[i]->setOverpattern(overpattern_thrs_minus(OP_LINELEFTBOTTOM, OP_CONTOUR, 0, 0.3f,0.3f,0.3f));
-//        else if (i == 2)
-//          draws[i]->setOverpattern(overpattern_thrs_minus(OP_LINELEFTBOTTOM, OP_LINELEFT, 0, 0.7f,0.7f,0.7f));
-//        else if (i == 3)
-//          draws[i]->setOverpattern(overpattern_thrs_minus(OP_LINELEFTBOTTOM, OPF_CIRCLE, 0, 0.0f,0.0f,0.0f));
-//      }
-//      else
-//        draws[i] = new DrawGraph(SAMPLES, 1, graphopts_t(GT_DOTS));
-//    }
-//  }
-  
-  
-  
   
 #ifdef SYNCSCALING
   syncscaling = SYNCSCALING;
@@ -2454,16 +2116,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     for (unsigned int i=0; i<drawscount; i++)
     {
 //      draws[i]->setRawResizeModeNoScaled(true);
-      
       if (syncscaling > 0)
       {
         draws[i]->setScalingLimitsSynced(syncscaling);
-//        draws[i]->setScalingLimitsHorz(syncscaling);
-//        draws[i]->setScalingLimitsVert(syncscaling);
       }
-      
-//      draws[i]->setClearColor(0x00FFFFFF);
-//      draws[i]->setClearByPalette();
       if (MW_TEST == LET_IT_SNOW)
       {
         Ovldraw* oimg = new OImageStretched(new QImage(img_path_mikey), OVLQImage::IC_BLOCKALPHA);
@@ -2510,9 +2166,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 
   {
     QFont     fntSTD = QFont(this->font());
-    
-    QLabel*       lab;
-    
     const unsigned int btnMicroWidth = 44;
     const unsigned int btnMinWidth = 64, btnMaxWidth = 100;
     const unsigned int edMinWidth = 48, edMaxWidth = 48;
@@ -2522,36 +2175,15 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     mainLayout->setContentsMargins(0,0,0,0);
     mainLayout->setSpacing(0);
     
-    
-    //#define COLLAPSOR_BEGIN(caption) \
-    //        BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout) \
-    //          menuBtns[menucount] = new QPushButton(menucount == 0 ? "-" : "+"); \
-    //          menuBtns[menucount]->setFixedSize(12,12); \
-    //          menuBtns[menucount]->setFlat(true); \
-    //          QObject::connect(menuBtns[menucount], SIGNAL(clicked()), this, SLOT(changeMenu())); \
-    //          BSADD(menuBtns[menucount]) \
-    //          BSAUTO_TEXT_ADD(tr(caption), 0); \
-    //        BS_STOP \
-    //        BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1) \
-    //          BSWIDGET->setContentsMargins(32, 4, 12, 24); \
-    //          menuWdgs[menucount] = BSWIDGET;
-    
-    
-    int tabshow = 0;
     QSignalMapper*  featsMapper = new QSignalMapper(this);
     
     BS_INIT_FOR(mainLayout)
-//        BS_START_LAYOUT(QVBoxLayout)
-//      BS_START_FRAME_V_HMIN_VMAX(BS_FRAME_BOX, 0)
     BS_START_SCROLL_V_HMAX_VMIN
     {
-      QWidget* totalHideShow = BSWIDGET;
-      
-      
 #define NEW_SPIN_ADDMAPPED(var, slot, ...)  { \
                               QSpinBox*   _sb = new QSpinBox(); \
                               _sb->setRange(0, 99); \
-                              _sb->setUserData(0, new BSUOD_0(var)); \
+                              _sb->setProperty("itarget", var); \
                               _sb->setMaximumWidth(80); \
                               BSADD(_sb, ##__VA_ARGS__); \
                               QObject::connect(_sb, SIGNAL(valueChanged(int)), this, slot); \
@@ -2560,17 +2192,13 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                               QDoubleSpinBox*   _sb = new QDoubleSpinBox(); \
                               _sb->setRange(0, 10); \
                               _sb->setSingleStep(0.1); \
-                              _sb->setUserData(1, var); \
+                              _sb->setProperty("itarget", var); \
                               _sb->setMaximumWidth(80); \
                               BSADD(_sb, ##__VA_ARGS__); \
                               QObject::connect(_sb, SIGNAL(valueChanged(double)), this, SLOT(slot(double))); \
                             }
-      
-      
-//        BSWIDGET->setMinimumWidth(560);
       menucount = 0;
       const int maincaption = 16;
-//        _bs_topScroll->setWidgetResizable(false);
       _bs_topScroll->setMinimumWidth(536);
       
 #define COLLAPSOR_BEGIN(caption) \
@@ -2596,10 +2224,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         QObject::connect(menuBtns[menucount], SIGNAL(clicked(bool)), menuWdgs[menucount], SLOT(setVisible(bool))); \
         menucount++; \
       BS_STOP
-      
-//          BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
-//        BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-                      
+
       {
         COLLAPSOR_BEGIN("Code snipped")
           QString result;
@@ -2713,7 +2338,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         COLLAPSOR_BEGIN("Data Generation")
           BSAUTO_TEXT_ADD(tr("setData()"), 0, Qt::AlignLeft);
           BS_SPACING(maincaption)
-//            BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
           BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
             int bfsmask = BFS_CHECKABLE | (MW_TEST == DRAW_BRIGHT_CLUSTER || MW_TEST == DEBUG_PALETTE2D? BFS_DISABLED : 0);
             BSFieldSetup sigs[] = { 
@@ -2751,7 +2375,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             QButtonGroup* qbg = new QButtonGroup(this);
             qbg->setExclusive(true);
             
-            const unsigned int vsigs = 6; //sizeof(sigs)/sizeof(BSFieldSetup) / 3;
+            const unsigned int vsigs = 6;
             BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
               for (unsigned int i=0; i<vsigs; i++)
                 BSAUTO_BTN_ADDGROUPED(sigs[i], qbg, 0, Qt::AlignCenter);
@@ -2768,7 +2392,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               for (unsigned int i=vsigs*3; i<sizeof(sigs)/sizeof(BSFieldSetup); i++)
                 BSAUTO_BTN_ADDGROUPED(sigs[i], qbg, 0, Qt::AlignCenter);
             BS_STOP
-            QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeSigtype(int)));
+#if QT_VERSION >= 0x060000
+            QObject::connect(qbg, &QButtonGroup::idPressed, this, &MainWindow::changeSigtype);
+#else
+            QObject::connect(qbg, SIGNAL(buttonPressed(int)), this, SLOT(changeSigtype(int)));
+#endif
           BS_STOP
         
           BS_SPACING(8)
@@ -2789,7 +2417,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 BSAUTO_EDIT_ADDMAPPED(sigeds[i], edMapper, 0, Qt::AlignRight);
               BS_STOP
             }
+#if QT_VERSION >= 0x060000
+            QObject::connect(edMapper, &QSignalMapper::mappedInt, this, &MainWindow::changeFloats);
+#else
             QObject::connect(edMapper, SIGNAL(mapped(int)), this, SLOT(changeFloats(int)));
+#endif
             BS_STRETCH
           BS_STOP
           
@@ -2832,13 +2464,13 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             }
             BS_SPACING(16)
           BS_STOP
-            
-//            BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-//              BSAUTO_BTN_ADDGROUPED(rtsbtns[0], qbg, 0, Qt::AlignCenter);
-//              BS_STRETCH
-//              BSAUTO_BTN_ADDGROUPED(rtsbtns[rtsbtnscount-1], qbg, 0, Qt::AlignCenter);
-//            BS_STOP
-          QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeSpeedData(int)));
+                
+
+#if QT_VERSION >= 0x060000
+          QObject::connect(qbg, &QButtonGroup::idPressed, this, &MainWindow::changeSpeedData);
+#else
+          QObject::connect(qbg, SIGNAL(buttonPressed(int)), this, SLOT(changeSpeedData(int)));
+#endif
         COLLAPSOR_END
               
         COLLAPSOR_BEGIN("General methods")
@@ -2869,20 +2501,12 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BS_STOP
               BSAUTO_BTN_ADDMAPPED(BSFieldSetup("reset", nullptr, ED_RESET, 0, 44,44), edMapper, 0, Qt::AlignCenter);
             BS_STOP
+#if QT_VERSION >= 0x060000
+            QObject::connect(edMapper, &QSignalMapper::mappedInt, this, &MainWindow::changeFloats);
+#else
             QObject::connect(edMapper, SIGNAL(mapped(int)), this, SLOT(changeFloats(int)));
+#endif
           }
-          
-//          BSAUTO_TEXT_ADD(tr("setOrientation()"), 0, Qt::AlignLeft);
-//          BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-//            BS_STRETCH
-//            BSFieldSetup featbtns[] = { 
-//              BSFieldSetup(tr("Mirror horz"), &fntSTD, BTF_INVHORZ, 0, btnMinWidth),
-//              BSFieldSetup(tr("Mirror vert"), &fntSTD, BTF_INVVERT, 0, btnMinWidth),
-//            };
-//            for (unsigned int i=0; i<sizeof(featbtns)/sizeof(BSFieldSetup); i++)
-//              BSAUTO_BTN_ADDMAPPED(featbtns[i], featsMapper);
-//            BS_STRETCH
-//          BS_STOP
           BSAUTO_TEXT_ADD(tr("setOrientation()"), 0, Qt::AlignLeft);
           QButtonGroup* qbgOrient = new QButtonGroup(this);
           BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
@@ -2910,7 +2534,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BSAUTO_BTN_ADDGROUPED(or1[i], qbgOrient);
             BS_STRETCH
           BS_STOP
-          QObject::connect(qbgOrient, SIGNAL(buttonClicked(int)), this, SLOT(changeOrientation(int)));
+#if QT_VERSION >= 0x060000
+          QObject::connect(qbgOrient, &QButtonGroup::idPressed, this, &MainWindow::changeOrientation);
+#else
+          QObject::connect(qbgOrient, SIGNAL(buttonPressed(int)), this, SLOT(changeOrientation(int)));
+#endif
           
           BSAUTO_TEXT_ADD(tr("setScalingLimitsHorz()"), 0, Qt::AlignLeft);
           BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
@@ -2970,7 +2598,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               }
             BS_STOP
           }
+#if QT_VERSION >= 0x060000
+          QObject::connect(palMapper, &QSignalMapper::mappedInt, this, &MainWindow::changePaletteSTD);
+#else
           QObject::connect(palMapper, SIGNAL(mapped(int)), this, SLOT(changePaletteSTD(int)));
+#endif
             
           BS_SPACING(8)
           BSAUTO_TEXT_ADD(tr("bspalettes_adv.h:"), 0, Qt::AlignCenter);
@@ -3007,7 +2639,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             for (unsigned int j=0; j<sizeof(bfs)/sizeof(BSFieldSetup); j++)
               BSAUTO_BTN_ADDMAPPED(bfs[j], palMapperRGB);
             BS_STRETCH
+#if QT_VERSION >= 0x060000
+            QObject::connect(palMapperRGB, &QSignalMapper::mappedInt, this, &MainWindow::changePaletteRGB);
+#else
             QObject::connect(palMapperRGB, SIGNAL(mapped(int)), this, SLOT(changePaletteRGB(int)));
+#endif
           }
           BS_STOP
               
@@ -3023,32 +2659,26 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             BS_STRETCH
           BS_STOP
           BS_SPACING(8)
-//          BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-//            BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
-              BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                BSAUTO_LBL_ADD(BSFieldSetup(tr("setDataPaletteRangeStart()  ")));
-                QSlider* slider = new QSlider(Qt::Horizontal);
-                slider->setRange(0,100);
-                slider->setValue(0);
-                BSADD(slider, 1);
-                QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changePalrangeStart(int)));
-              BS_STOP
-              BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                BSAUTO_LBL_ADD(BSFieldSetup(tr("setDataPaletteRangeStop()   ")));
-                QSlider* slider = new QSlider(Qt::Horizontal);
-                slider->setRange(0,100);
-                slider->setValue(100);
-                BSADD(slider, 1);
-                QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changePalrangeStop(int)));
-              BS_STOP
-//            BS_STOP
-//          BS_STOP
+          BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+            BSAUTO_LBL_ADD(BSFieldSetup(tr("setDataPaletteRangeStart()  ")));
+            QSlider* slider = new QSlider(Qt::Horizontal);
+            slider->setRange(0,100);
+            slider->setValue(0);
+            BSADD(slider, 1);
+            QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changePalrangeStart(int)));
+          BS_STOP
+          BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+            BSAUTO_LBL_ADD(BSFieldSetup(tr("setDataPaletteRangeStop()   ")));
+            QSlider* slider = new QSlider(Qt::Horizontal);
+            slider->setRange(0,100);
+            slider->setValue(100);
+            BSADD(slider, 1);
+            QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changePalrangeStop(int)));
+          BS_STOP
         COLLAPSOR_END
 
         COLLAPSOR_BEGIN("QWidget methods")
-//          BS_SPACING(maincaption)
           BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_BOX, 1)
-//          BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
             BSAUTO_TEXT_ADD(tr("Another type of draw refreshing:"), 0, Qt::AlignLeft);
             BSAUTO_TEXT_ADD(tr("Ban implicit update() calls"), 0, Qt::AlignLeft);
             BSAUTO_TEXT_ADD(tr("And update manually (explicit update() method)."), 0, Qt::AlignLeft);
@@ -3057,22 +2687,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 
             BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
               BSMARGINS(16,0,0,0)
-//              BSAUTO_TEXT_ADD(tr("banAutoUpdate(DrawCore::RD_BYDATA)"), 0, Qt::AlignLeft);
-//              BS_STRETCH
-                  
-//              BSFieldSetup banbtns[] = { 
-//                BSFieldSetup(tr("data"),      &fntSTD, BTF_BANUPDATEDATA, 0, btnMinWidth, btnMaxWidth),
-//                BSFieldSetup(tr("settings"),   &fntSTD, BTF_BANUPDATESETS, 0, btnMinWidth, btnMaxWidth),
-//                BSFieldSetup(tr("overlays"),   &fntSTD, BTF_BANUPDATEOVERLAYS, 0, btnMinWidth, btnMaxWidth),
-//              };
-//              for (unsigned int i=0; i<sizeof(banbtns) / sizeof(BSFieldSetup); i++)
-//              {
-//                BSAUTO_BTN(QCheckBox, _chb, banbtns[i]);
-//                _chb->setUserData(0, new BSUOD_0(banbtns[i].mappedvalue));
-//                BSADD(_chb);
-//                QObject::connect(_chb, SIGNAL(clicked(bool)), this, SLOT(changeBans(bool)));
-//              }
-                
               BSFieldSetup banbtns[] = { 
                 BSFieldSetup(tr("banAutoUpdate(DrawCore::RD_BYDATA)"),      &fntSTD, BTF_BANUPDATEDATA, 0, -1, -1),
                 BSFieldSetup(tr("banAutoUpdate(DrawCore::RD_BYSETTINGS)"),   &fntSTD, BTF_BANUPDATESETS, 0, -1, -1),
@@ -3086,13 +2700,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 
               for (unsigned int i=0; i<sizeof(banbtns) / sizeof(BSFieldSetup); i++)
               {
-//                  BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                  BSAUTO_BTN(QCheckBox, _chb, banbtns[i]);
-                  _chb->setUserData(0, new BSUOD_0(banbtns[i].mappedvalue));
-                  BSADD(_chb, 0, Qt::AlignLeft);
-                  BSAUTO_TEXT_ADD(dopcaps[i], 0, Qt::AlignRight);
-                  QObject::connect(_chb, SIGNAL(clicked(bool)), this, SLOT(changeBans(bool)));
-//                  BS_STOP
+                BSAUTO_BTN(QCheckBox, _chb, banbtns[i]);
+                _chb->setProperty("itarget", banbtns[i].mappedvalue);
+                BSADD(_chb, 0, Qt::AlignLeft);
+                BSAUTO_TEXT_ADD(dopcaps[i], 0, Qt::AlignRight);
+                QObject::connect(_chb, SIGNAL(clicked(bool)), this, SLOT(changeBans(bool)));
               }
             BS_STOP
             
@@ -3118,7 +2730,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               for (unsigned int i=0; i<sizeof(upbtns) / sizeof(BSFieldSetup); i++)
                 BSAUTO_BTN_ADDGROUPED(upbtns[i], qbg);
             BS_STOP
-            QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeSpeedUpdate(int)));
+#if QT_VERSION >= 0x060000
+            QObject::connect(qbg, &QButtonGroup::idPressed, this, &MainWindow::changeSpeedUpdate);
+#else
+            QObject::connect(qbg, SIGNAL(buttonPressed(int)), this, SLOT(changeSpeedUpdate(int)));
+#endif
           BS_STOP            
         COLLAPSOR_END
               
@@ -3141,30 +2757,17 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             {
               BSAUTO_BTN_ADDGROUPED(upbtns[i], qbg)
             }
-            qbg->setUserData(1, new BSUOD_DPM(0, dpm));
-            QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changePostmask(int)));
-//            QStringList dpmOver; dpmOver<<QString::fromUtf8("Off")<<QString::fromUtf8("Signal")<<QString::fromUtf8("Empty")<<QString::fromUtf8("All");
-//            QComboBox* qcb2 = new QComboBox;
-//            qcb2->addItems(dpmOver);
-//            qcb2->setCurrentIndex(0);
-//            qcb2->setUserData(1, new BSUOD_DPM(1, dpm));
-//            QObject::connect(qcb2, SIGNAL(currentIndexChanged(int)), this, SLOT(changePostmask(int)));
-//            BSADD(qcb2);
+            qbg->setProperty("itarget", 0);
+#if QT_VERSION >= 0x060000
+            QObject::connect(qbg, &QButtonGroup::idPressed, this, &MainWindow::changePostmask);
+#else
+            QObject::connect(qbg, SIGNAL(buttonPressed(int)), this, SLOT(changePostmask(int)));
+#endif
             BS_STRETCH
           BS_STOP
                 
           BSAUTO_TEXT_ADD(QString::fromUtf8("Threshold: "))
-          NEW_DOUBLESPIN_ADDMAPPED(new BSUOD_DPM(1, dpm), changePostmaskThreshold, 0, Qt::AlignCenter)
-//          BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-//            BS_STRETCH
-//            QSpinBox* qcb5 = new QSpinBox;
-//            qcb5->setRange(0, 10);
-//            qcb5->setMaximumWidth(80);
-//            qcb5->setUserData(1, new BSUOD_DPM(4, dpm));
-//            QObject::connect(qcb5, SIGNAL(valueChanged(int)), this, SLOT(changePostmask(int)));
-//            BSADD(qcb5);
-//          BS_STOP
-              
+          NEW_DOUBLESPIN_ADDMAPPED(/*new BSUOD_DPM(1, dpm)*/1, changePostmaskThreshold, 0, Qt::AlignCenter)              
           BSAUTO_TEXT_ADD(QString::fromUtf8("Type: "))
           {
             QStringList dpmMain; dpmMain<<QString::fromUtf8("Contour")
@@ -3180,7 +2783,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                                        ;
             QComboBox* qcb = new QComboBox;
             qcb->addItems(dpmMain);
-            qcb->setUserData(1, new BSUOD_DPM(1, dpm));
+//            qcb->setUserData(1, new BSUOD_DPM(1, dpm));
+            qcb->setProperty("itarget", 1);
             QObject::connect(qcb, SIGNAL(currentIndexChanged(int)), this, SLOT(changePostmask(int)));
             BSADD(qcb, 0, Qt::AlignHCenter);
           }
@@ -3192,7 +2796,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             QSpinBox* qcb3 = new QSpinBox;
             qcb3->setRange(-20, 20);
             qcb3->setMaximumWidth(80);
-            qcb3->setUserData(1, new BSUOD_DPM(2, dpm));
+//            qcb3->setUserData(1, new BSUOD_DPM(2, dpm));
+            qcb3->setProperty("itarget", 2);
             QObject::connect(qcb3, SIGNAL(valueChanged(int)), this, SLOT(changePostmaskIntWeight(int)));
             BSADD(qcb3);
             BS_SPACING(32)
@@ -3223,7 +2828,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             QSpinBox* qcb4 = new QSpinBox;
             qcb4->setRange(-20, 20);
             qcb4->setMaximumWidth(80);
-            qcb4->setUserData(1, new BSUOD_DPM(3, dpm));
+//            qcb4->setUserData(1, new BSUOD_DPM(3, dpm));
+            qcb4->setProperty("itarget", 3);
             QObject::connect(qcb4, SIGNAL(valueChanged(int)), this, SLOT(changePostmask(int)));
             BSADD(qcb4);
             BS_SPACING(32)
@@ -3269,7 +2875,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BS_STOP
             }
           }
-          QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeImpulse(int)));
+#if QT_VERSION >= 0x060000
+          QObject::connect(qbg, &QButtonGroup::idPressed, this, &MainWindow::changeImpulse);
+#else
+          QObject::connect(qbg, SIGNAL(buttonPressed(int)), this, SLOT(changeImpulse(int)));
+#endif
         COLLAPSOR_END
         
         COLLAPSOR_BEGIN("Overlays")
@@ -3322,13 +2932,18 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                 BS_STOP   
               }
               BSAUTO_BTN_ADDGROUPED(fseds[0], ocrGroup, 0, Qt::AlignHCenter);
-              QObject::connect(ocrGroup, SIGNAL(buttonClicked(int)), this, SLOT(createOverlaySTD(int)));
+#if QT_VERSION >= 0x060000
+              QObject::connect(ocrGroup, &QButtonGroup::idPressed, this, &MainWindow::createOverlaySTD);
+#else
+              QObject::connect(ocrGroup, SIGNAL(buttonPressed(int)), this, SLOT(createOverlaySTD(int)));
+#endif
               
               if (drawscount > 1)
               {
                 BSFieldSetup chbbs(tr("Sync interactive elements"), &fntSTD, 0, BFS_CHECKED);
                 BSAUTO_BTN(QCheckBox, _chb, chbbs);
-                _chb->setUserData(0, new BSUOD_0(chbbs.mappedvalue));
+//                _chb->setUserData(0, new BSUOD_0(chbbs.mappedvalue));
+                _chb->setProperty("itarget", chbbs.mappedvalue);
                 QObject::connect(_chb, SIGNAL(clicked(bool)), this, SLOT(setOverlaySync(bool)));
                 BSADD(_chb);
               }
@@ -3338,7 +2953,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           
             ptb_ovl->addTab(tr("Additional"));
             BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 2)
-              QButtonGroup* grForm = new QButtonGroup(this);
+              grForm = new QButtonGroup(this);
               BS_START_FRAME_V_HMIN_VMAX(BS_FRAME_SUNKEN, 1)
                 grForm->setExclusive(true);
                 BSFieldSetup fseds[] = { 
@@ -3353,7 +2968,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                   BSAUTO_BTN_ADDGROUPED(fseds[i], grForm);
               BS_STOP
               
-              QButtonGroup* grCount = new QButtonGroup(this);
+              grCount = new QButtonGroup(this);
               BS_START_FRAME_V_HMIN_VMAX(BS_FRAME_SUNKEN, 1)
                 grCount->setExclusive(true);
                 BSFieldSetup fseds[] = { 
@@ -3369,8 +2984,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BS_START_FRAME_V_HMIN_VMAX(BS_FRAME_SUNKEN, 1)
                 BSFieldSetup add(tr("ADD"),  &fntSTD, 0, 0, btnMinWidth, btnMaxWidth);
                 BSAUTO_BTN(QPushButton, _btn, add);
-                _btn->setUserData(0, new BSUOD_2(grForm));
-                _btn->setUserData(1, new BSUOD_2(grCount));
+//                _btn->setUserData(0, new BSUOD_2(grForm));
+//                _btn->setUserData(1, new BSUOD_2(grCount));
                 BSADD(_btn, 0, Qt::AlignCenter);
                 QObject::connect(_btn, SIGNAL(clicked(bool)), this, SLOT(createOverlayADD()));
               BS_STOP
@@ -3388,7 +3003,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               for (unsigned int i=0; i<10; i++)
                 BSAUTO_BTN_ADDGROUPED(BSFieldSetup(QString::number(i+1).toUtf8(), &fntSTD, i+1, i == 0? BFS_CHECKED : BFS_CHECKABLE, 30, 30), qbg, 0, Qt::AlignCenter);
               active_ovl = 1;
-              QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeOVL(int)));
+#if QT_VERSION >= 0x060000
+              QObject::connect(qbg, &QButtonGroup::idPressed, this, &MainWindow::changeOVL);
+#else
+              QObject::connect(qbg, SIGNAL(buttonPressed(int)), this, SLOT(changeOVL(int)));
+#endif
             BS_STOP
             
             QTabBar*  ptb_ovl = new QTabBar;
@@ -3420,7 +3039,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                     QSpinBox*   psb = new QSpinBox();
                     BSAPPLY_FEATS(psb, spbs[i]);
                     psb->setRange(0, 100);
-                    psb->setUserData(0, new BSUOD_0(spbs[i].mappedvalue));
+//                    psb->setUserData(0, new BSUOD_0(spbs[i].mappedvalue));
+                    psb->setProperty("itarget", spbs[i].mappedvalue);
                     psb->setAccelerated(true);
                     BSADD(psb, 0, Qt::AlignLeft)
                     QObject::connect(psb, SIGNAL(valueChanged(int)), this, SLOT(changeOVLForm(int)));
@@ -3473,7 +3093,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                     BSAUTO_BTN_ADDGROUPED(BSFieldSetup(tr("Invert4"), &fntSTD, BTO_INV4, BFS_CHECKABLE, btnMinWidth/2, btnMaxWidth), qbg);
                     BSAUTO_BTN_ADDGROUPED(BSFieldSetup(tr("Invert5"), &fntSTD, BTO_INV5, BFS_CHECKABLE, btnMinWidth/2, btnMaxWidth), qbg);
                   BS_STOP
-                  QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeOVLFeatures(int)));
+#if QT_VERSION >= 0x060000
+                  QObject::connect(qbg, &QButtonGroup::idPressed, this, &MainWindow::changeFeatures);
+#else
+                  QObject::connect(qbg, SIGNAL(buttonPressed(int)), this, SLOT(changeOVLFeatures(int)));
+#endif
                 BS_STOP
 //                    BS_STRETCH
               BS_STOP
@@ -3487,12 +3111,16 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                   BSAUTO_BTN_ADDMAPPED(BSFieldSetup("+1", &fntSTD, BTOP_RIGHT, 0, btnMinWidth/2, btnMaxWidth), ovlposMapper);
                 BS_STOP
                 BSAUTO_BTN_ADDMAPPED(BSFieldSetup("-1", &fntSTD, BTOP_DOWN, 0, btnMinWidth/2, btnMaxWidth), ovlposMapper, 0, Qt::AlignHCenter);
+#if QT_VERSION >= 0x060000
+                QObject::connect(ovlposMapper, &QSignalMapper::mappedInt, this, &MainWindow::changeOVLPos);
+#else
                 QObject::connect(ovlposMapper, SIGNAL(mapped(int)), this, SLOT(changeOVLPos(int)));
+#endif
                 BS_STRETCH
               BS_STOP
               
               QString ftabs[] = { tr("Replace"), tr("Create") };
-              for (unsigned int t=0; t<sizeof(ftabs)/sizeof(const char*); t++)
+              for (unsigned int t=0; t<sizeof(ftabs)/sizeof(QString); t++)
               {
                 ptb_ovl->addTab(ftabs[t]);
                 BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 2)
@@ -3535,9 +3163,21 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                   }
                   
                   if (t == 0)
-                    QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(metaOVLReplace(int)));
+                  {
+#if QT_VERSION >= 0x060000
+                    QObject::connect(qbg, &QButtonGroup::idPressed, this, &MainWindow::metaOVLReplace);
+#else
+                    QObject::connect(qbg, SIGNAL(buttonPressed(int)), this, SLOT(metaOVLReplace(int)));
+#endif
+                  }
                   else if (t == 1)
-                    QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(metaOVLCreate(int)));
+                  {
+#if QT_VERSION >= 0x060000
+                    QObject::connect(qbg, &QButtonGroup::idPressed, this, &MainWindow::metaOVLCreate);
+#else
+                    QObject::connect(qbg, SIGNAL(buttonPressed(int)), this, SLOT(metaOVLCreate(int)));
+#endif
+                  }
                   
                 BS_STOP
               }
@@ -3546,7 +3186,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             BSAUTO_TEXT_ADD(tr("(settings are not saved between overlays there)"), 0, Qt::AlignHCenter);
 
           BS_STRETCH
+#if QT_VERSION >= 0x060000
+          QObject::connect(ovlMapper, &QSignalMapper::mappedInt, this, &MainWindow::changeOVLFeatures);
+#else
           QObject::connect(ovlMapper, SIGNAL(mapped(int)), this, SLOT(changeOVLFeatures(int)));
+#endif
         COLLAPSOR_END
 
         
@@ -3568,7 +3212,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               for (unsigned int i=0; i<sizeof(interp)/sizeof(BSFieldSetup); i++)
                 BSAUTO_BTN_ADDGROUPED(interp[i], qbg, 0, Qt::AlignCenter);
             BS_STOP
-            QObject::connect(qbg, SIGNAL(buttonClicked(int)), this, SLOT(changeInterpolation(int)));
+#if QT_VERSION >= 0x060000
+            QObject::connect(qbg, &QButtonGroup::idPressed, this, &MainWindow::changeInterpolation);
+#else
+            QObject::connect(qbg, SIGNAL(buttonPressed(int)), this, SLOT(changeInterpolation(int)));
+#endif
           BS_STOP
           
           BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
@@ -3579,11 +3227,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BSADD(_btn, 0, Qt::AlignCenter);
               QObject::connect(_btn, SIGNAL(clicked(bool)), this, SLOT(changeClusterPalette()));
             }
-//                {
-//                  BSFieldSetup test2("TEST_TIMED",  &fntSTD, 0, BFS_CHECKABLE, btnMinWidth, btnMaxWidth);
-//                  BSAUTO_BTN(QPushButton, _btn, test2);
-//                  BSADD(_btn, 0, Qt::AlignCenter);
-//                }
           BS_STOP
           
           BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
@@ -3592,35 +3235,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
             BSAUTO_BTN_ADDMAPPED(BSFieldSetup(tr("Special Debug Button"), &fntSTD, BTF_DEBUG, 0, btnMinWidth), featsMapper, 0, Qt::AlignCenter);
             BSAUTO_BTN_ADDMAPPED(BSFieldSetup(tr("updateGeometry()"), &fntSTD, BTF_UPDATEGEOMETRY, 0, btnMinWidth), featsMapper, 0, Qt::AlignLeft);
-          BS_STOP
-              
-              
-              //          BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_PANEL, 1)
-              //            BSFieldSetup extra[] = { 
-              //              BSFieldSetup(tr("Hide tab panel"), &fntSTD, 0, 0, btnMinWidth),
-              //              BSFieldSetup(tr("Hide all panel"), &fntSTD, 0, 0, btnMinWidth),
-              //            };
-              ////              QWidget* pHiding[] = { stackHideShow, totalHideShow };
-              ////              for (unsigned int i=0; i< sizeof(extra) / sizeof(BSFieldSetup); i++)
-              ////              {
-              ////                BSAUTO_BTN(QPushButton, _btn, extra[i]);
-              ////                BSADD(_btn, 0, Qt::AlignCenter);
-              ////                QObject::connect(_btn, SIGNAL(pressed()), pHiding[i], SLOT(hide()));
-              ////              }
-              //          BS_STOP    
-              
-//              BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 1)
-//                BSAUTO_TEXT_ADD(tr("Overlay' images:"), 0, Qt::AlignLeft);
-//                QSignalMapper*  pathMapper = new QSignalMapper(this);
-//                for (int i=0; i<sizeof(img_paths)/sizeof(img_paths[0]); i++)
-//                {
-//                  BSFieldSetup bfs(img_paths[i], &fntSTD, i, 0, btnMinWidth);
-//                  QLineEdit ed;
-//                  BSAUTO_EDIT_ADDMAPPED(bfs, pathMapper, 0, Qt::AlignCenter);
-//                };
-//                QObject::connect(pathMapper, SIGNAL(mapped(int)), this, SLOT(changePaths(int)));
-//              BS_STOP
-              
+          BS_STOP              
           BS_STRETCH
         COLLAPSOR_END
 
@@ -3631,7 +3246,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BSAUTO_LBL_ADD(BSFieldSetup(tr("State:")));
               QSlider* slider = new QSlider(Qt::Horizontal);
               slider->setRange(0,100);
-              slider->setUserData(0, new BSUOD_0(MF_TCOLOR));
+//              slider->setUserData(0, new BSUOD_0(MF_TCOLOR));
+              slider->setProperty("itarget", MF_TCOLOR);
               BSADD(slider);
               QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeMarkData(int)));
             BS_STOP
@@ -3639,7 +3255,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               BSAUTO_LBL_ADD(BSFieldSetup(tr("Position:")));
               QSlider* slider = new QSlider(Qt::Horizontal);
               slider->setRange(0,100);
-              slider->setUserData(0, new BSUOD_0(MF_POS));
+//              slider->setUserData(0, new BSUOD_0(MF_POS));
+              slider->setProperty("itarget", MF_POS);
               BSADD(slider);
               QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeMarkData(int)));
             BS_STOP
@@ -3649,7 +3266,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             
       BS_STRETCH
     }
+#if QT_VERSION >= 0x060000
+    QObject::connect(featsMapper, &QSignalMapper::mappedInt, this, &MainWindow::changeFeatures);
+#else
     QObject::connect(featsMapper, SIGNAL(mapped(int)), this, SLOT(changeFeatures(int)));
+#endif
     BS_STOP
 
     BS_START_WIDGET_HMAX_VMAX(QVBoxLayout)
@@ -3675,23 +3296,12 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         BS_START_SCROLL_V_HMAX_VMAX
           for (unsigned int i=0; i<drawscount; i++)
           {
-            BSAUTO_TEXT_ADD(QString().sprintf("ppalettes_adv[%d]:\t\t%s", i, ppalettenames_adv[i]));
+            BSAUTO_TEXT_ADD(QString("ppalettes_adv[%1]:\t\t%2").arg(i).arg(ppalettenames_adv[i]));
             BSADD(draws[i]);
           }
         BS_STRETCH
         BS_STOP;
       }
-//      else if (MW_TEST == PROGRESS_BAR)
-//      {
-//        BS_START_FRAME_V_HMIN_VMIN(BS_FRAME_PANEL, 2)
-//          for (unsigned int i=0; i<drawscount; i++)
-//          {
-//            if (i == drawscount - 1)
-//              draws[i]->setFixedHeight(40);
-//            BSADD(draws[i])
-//          }
-//        BS_STOP;
-//      }
       else if (MW_TEST == FEATURE_PORTIONS)
       {
         QSpinBox* psb = new QSpinBox;
@@ -3714,21 +3324,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             BSAUTO_TEXT_ADD(" ; Note, your upper limit is fixed (cause of already allocated data)");
             BS_STRETCH
           BS_STOP
-//            BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
-//              for (int i=0; i<3; i++)
-//                BSADD(draws[3 + i], i==0? 1 : 0)
-//              BS_START_FRAME_H_HMAX_VMIN(BS_FRAME_SUNKEN, 2)
-//                BSAUTO_TEXT_ADD("Change portions count:");
-//                QSpinBox* psb = new QSpinBox;
-//                psb->setRange(0, PORTIONS);
-//                psb->setValue(PORTIONS);
-//                BSADD(psb);
-//                for (int i=0; i<drawscount; i++)
-//                  QObject::connect(psb, SIGNAL(valueChanged(int)), draws[3 + i], SLOT(slot_setPortionsCount(int)));
-//                BSAUTO_TEXT_ADD(" ; Note, your upper limit is fixed,\n(cause of already allocated data)");
-//                BS_STRETCH
-//              BS_STOP
-//            BS_STOP
         BS_STOP
       }
       else if (MW_TEST == EXTRA_ORIENTS)
@@ -3754,8 +3349,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         BS_START_FRAME_H_HMAX_VMAX(BS_FRAME_PANEL, 2)
           for (unsigned int i=0; i<drawscount; i++)
           {
-//              draws[i]->setOrientation(OR_LRTB);
-//              draws[i]->setOrientation(OR_RLBT);
             DrawBars* pDB = new DrawBars(draws[i]);
             
             pDB->setContentsMargins(60,60,60,60);
@@ -3766,8 +3359,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               bool contourMaxZone = false;
               
               int otherFlags = /*DBF_ENUMERATE_FROMZERO | */DBF_ENUMERATE_SHOWLAST;
-  //            int otherFlags = DBF_ONLY2NOTES;
-  //            int otherFlags = DBF_NOTESINSIDE;
               
               int dockerFlags = DBF_DOCKTO_PREVMARK; 
               for (int j=0; j<4; j++)
@@ -3802,30 +3393,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               pDB->addLabel(AT_TOP, DBF_SHARED | DBF_LABELAREA_FULLBAR, "Dynamic", Qt::AlignLeft);
               pDB->addLabel(AT_TOP, DBF_SHARED | DBF_LABELAREA_FULLBAR, "Static", Qt::AlignRight);
             }
-            
-            
-//            if (i == 0)
-//              pDB->addScaleDrawUniSide(AT_TOP, DBF_ENUMERATE_FROMZERO | DBF_ENUMERATE_SHOWLAST, 20);
-//            else if (i == 1)
-//              pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED, 0.0, SAMPLES-1, SAMPLES);
-//            else if (i == 2)
-//              pDB->addScaleTapNM(AT_TOP, DBMODE_STATIC, standard_tap_symbolate<-1>, 4, nullptr, SAMPLES, 20);
-//            else
-//              pDB->addScaleFixed(AT_TOP, DBMODE_STRETCHED_POW2 | DBF_ONLY2NOTES | DBF_NOTESINSIDE, 0.0, 1.0, SAMPLES, 10);
-            
-//            MEWPointer* mpH = pDB->addPointerDrawUniSide(AT_BOTTOM, DBF_NOTESINSIDE);
-//            MEWPointer* mpV = pDB->addPointerDrawGraphB(AT_RIGHT, DBF_NOTESINSIDE);
-//            int oapH = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpH->createProactive()));
-//            pDB->getDraw()->ovlPushBack(new OFLine(OFLine::LT_VERT_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_stroks(1.0f,0.0f,0.0f)), oapH);
-//            int oapV = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpV->createProactive()));
-//            pDB->getDraw()->ovlPushBack(new OFLine(OFLine::LT_HORZ_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_stroks(1.0f,0.0f,0.0f)), oapV);
-//            {
-//              pDB->addLabel(AT_LEFT, 0 | DBF_LABELAREA_FULLBAR, labels_clr[i][0], Qt::AlignCenter, Qt::Vertical);
-//              pDB->addLabel(AT_TOP, 0, labels_clr[i][1], Qt::AlignCenter, Qt::Horizontal);
-//            }
-            
-//            draws[i]->setFixedHeight(10);
-            
             BSADD(pDB)
             QObject::connect(this, SIGNAL(remitBounds(float)), pDB, SLOT(slot_setBoundHigh(float)));
           }
@@ -3866,34 +3433,18 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               pDB->addScaleRollingTapNM(AT_TOP, 0, standard_tap_symbolate<-1>, 4, nullptr, SAMPLES, 20);
             else
               pDB->addScaleSymmetricOwnbounds(AT_TOP, DBF_NOTE_BORDERS_ONLY | DBF_NOTESINSIDE, 0.0, 1.0, SAMPLES, 10);
-            
-//              pDB->getDraw()->setOverpattern(overpattern_thrs_minus(OP_LINELEFTBOTTOM, OP_LINERIGHT, 0, 0.3f, 0.3f, 0.3f));
-//              MEPointer mpH = pDB->addPointerFixed(AT_BOTTOM, 0, 180);
             MEWPointer* mpH = pDB->addEPointer01Auto(AT_BOTTOM, DBF_NOTESINSIDE | DBF_ENUMERATE_FROMZERO, 0.0f);
-//              MEPointer mpV = pDB->addPointerDrawUniSide(AT_RIGHT);
             MEWPointer* mpV = pDB->addPointerRelativeDrawbounds(AT_RIGHT, DBF_NOTESINSIDE, 0.0f);
-//              mpH.setPosition(0.7f);
             int oapH = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpH->createReactor()));
             pDB->getDraw()->ovlPushBack(new OFLine(OFLine::LT_VERT_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_stroks(1.0f,0.0f,0.0f)), oapH);
-            
-//              mpV.setPosition(0.7f);
             int oapV = pDB->getDraw()->ovlPushBack(new OActiveCursorCarrier(mpV->createReactor()));
             pDB->getDraw()->ovlPushBack(new OFLine(OFLine::LT_HORZ_SYMMETRIC, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_stroks(1.0f,0.0f,0.0f)), oapV);
-//              pDB->getDraw()->ovlPushBack(new OFDouble(true, CR_RELATIVE, 0, CR_ABSOLUTE, 6, linestyle_stroks(1.0f,1.0f,0.0f)), oap);
-//              pDB->getDraw()->ovlPushBack(new OFDouble(false, CR_RELATIVE, 0, CR_ABSOLUTE, 6, linestyle_stroks(1.0f,1.0f,0.0f)), oap);
-            
-
             if (i == drawscount - 1)
             {
-//                pDB->addContour(AT_LEFT, 40);
               pDB->addScaleNativeDrawbounds(AT_LEFT, 0, 0.1f, 1.0f, 3, 32);
-//                pDB->addSpace(AT_LEFT, 10);
             }
             else
-//                pDB->addScaleDrawGraphB(AT_LEFT, 0 /*| DBF_NOTESINSIDE*/, 21, 32);
               pDB->addScaleNativeDrawbounds(AT_LEFT, 0, 0.1f, 1.0f, 21, 32);
-            
-//              if (i < 3)
             {
               pDB->addLabel(AT_LEFT, 0 | DBF_LABELAREA_FULLBAR, labels_clr[i][0], Qt::AlignCenter, Qt::Vertical);
               pDB->addLabel(AT_TOP, 0, labels_clr[i][1], Qt::AlignCenter, Qt::Horizontal);
@@ -3902,9 +3453,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             BSADD(pDB)
           }
         BS_STOP
-//          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-//            BSAUTO_TEXT_ADD("\tResize Me");
-//          BS_STOP
       }
       else if (MW_TEST == DRAW_SCALES_3)
       {
@@ -3912,24 +3460,13 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           int rounding[] = { DBF_MARKS_ROUNDING_ON, DBF_MARKS_ROUNDING_OFF, DBF_MARKS_ROUNDING_OFF_INC };
           for (unsigned int i=0; i<drawscount; i++)
           {
-//              draws[i]->setOrientation(OR_BTLR);
             DrawBars* pDB = new DrawBars(draws[i]);
-//              {
-//                pDB->addContour(AT_LEFT, 0);
-//                pDB->addContour(AT_TOP, 0);
-//                pDB->addContour(AT_BOTTOM, 0);
-//                pDB->addContour(AT_RIGHT, 0);
-//              }
             pDB->setContentsMargins(10, 10, 10, 10);
             pDB->addScalePixstepOwnbounds(AT_TOP, 0, 0.0, SAMPLES-1, SAMPLES);
-//              MEWPointer* mpV = pDB->addPointerDrawGraphB(AT_LEFT, DBF_NOTESINSIDE | rounding[i], 0.0f);
             pDB->addScalePixstepDrawbounds(AT_LEFT, rounding[i], 11, 18);
             BSADD(pDB)
           }
         BS_STOP
-//          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-//            BSAUTO_TEXT_ADD("\tResize Me");
-//          BS_STOP
       }
       else if (MW_TEST == DEBUG_TABS)
       {
@@ -3973,9 +3510,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             BSADD(pDB)
           }
         BS_STOP
-//          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-//            BSAUTO_TEXT_ADD("\tResize Me");
-//          BS_STOP
       }
       else if (MW_TEST == DEBUG_MAINSCALE)
       {
@@ -3994,35 +3528,19 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         BS_START_FRAME_V_HMAX_VMAX(BS_FRAME_PANEL, 2)
           for (unsigned int i=0; i<drawscount; i++)
           {
-//              draws[i]->setOrientation(OR_RLBT);
             pdbs[i] = new DrawBars(draws[i]);
-//              pDB->setContentsMargins(10, 10, 10, 10);
-//              scs[scscount++] = pdbs[i]->addScaleregFixed(AT_TOP, 0, 200.0f, 1200.0f, 200.0f, 0, 11, 50, 4);
-//              int count = 12;
-//              int pixstep = 50;
-//              float ownboundLL = 0.0f;
-//              float ownboundHL = -4.0f;
-//              scs[scscount++] = pdbs[i]->addScaleNativeOwnbounds(AT_TOP, 0, ownboundLL, ownboundHL, 0.025f, 0, count, pixstep, 4);
-//              scs[scscount++] = pdbs[i]->addScalePixstepOwnbounds(AT_TOP, 0, ownboundLL, ownboundHL, count, pixstep, 4);
-//              scs[scscount++] = pdbs[i]->addScaleSymmetricOwnbounds(AT_TOP, 0, ownboundLL, ownboundHL, count, pixstep, 4);
-//              scs[scscount++] = pdbs[i]->addScaleRollingOwnbounds(AT_TOP, 0, ownboundLL, ownboundHL, count, pixstep, 4);
             int count = 33;
             int pixstep = 40;
             float ownboundLL = 0.0f;
             float ownboundHL = 14.0f;
             
             ATTACHED_TO ats[] = { AT_LEFT, AT_TOP };
-//              ATTACHED_TO ats[] = { AT_TOP };
             for (int a=0; a<sizeof(ats)/sizeof(ATTACHED_TO); a++)
             {
               scs[scscount++] = pdbs[i]->addScaleNativeOwnbounds(ats[a], flags[i], ownboundLL, ownboundHL, 0.025f, 0, count, pixstep, 4);
               scs[scscount++] = pdbs[i]->addScalePixstepOwnbounds(ats[a], flags[i], ownboundLL, ownboundHL, count, pixstep, 4);
               scs[scscount++] = pdbs[i]->addScaleSymmetricOwnbounds(ats[a], flags[i], ownboundLL, ownboundHL, count, pixstep, 4);
-//                scs[scscount++] = pdbs[i]->addScaleRollingOwnbounds(ats[a], flags[i], ownboundLL, ownboundHL, count, pixstep, 4);
             }
-            
-//              pdbs[i]->addEScalePixstepOwnbounds(AT_BOTTOM, eflags[i] | DBF_ENUMERATE_SHOWLAST, count, pixstep);
-//              pdbs[i]->addEScaleRollingOwnbounds(AT_BOTTOM, eflags[i] | DBF_ENUMERATE_SHOWLAST, count, pixstep);
             
             MEWPointer* mpH = pdbs[i]->addPointerRelativeOwnbounds(AT_TOP, DBF_PRECISION_MAXIMIZE, -1.0f, ownboundLL, ownboundHL, 5);
             OActiveCursorCarrier* ocarrier = new OActiveCursorCarrier(mpH->createReactor(), CR_RELATIVE, -1,-1);
@@ -4030,37 +3548,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             int oap = pdbs[i]->getDraw()->ovlPushBack(ocarrier);
             pdbs[i]->getDraw()->ovlPushBack(pOvl, oap);
             
-              
-//              if (i == 0)
-//              {
-//                for (unsigned int a=0; a<2; a++)
-//                  scs[scscount++] = pdbs[i]->addScaleNativeOwnbounds(ATTACHED_TO(a), 0, 0.1f, 1.0f, 0.025f, 0, count, pixstep, 4);
-////                  scs[scscount++] = pdbs[i]->addScaleNativeAuto(ATTACHED_TO(a), 0, 0.025f, 0, count, pixstep, 4);
-//              }
-//              else if (i == 1)
-//              {
-//                for (unsigned int a=0; a<2; a++)
-//                  scs[scscount++] = pdbs[i]->addScaleRollingOwnbounds(ATTACHED_TO(a), 0, 0.1f, 1.0f, count, pixstep, 4);
-////                  scs[scscount++] = pdbs[i]->addScaleRollingAuto(ATTACHED_TO(a), 0, count, pixstep, 4);
-//              }
-//              else if (i == 2)
-//              {
-//                for (unsigned int a=0; a<2; a++)
-//                  scs[scscount++] = pdbs[i]->addScaleSymmetricOwnbounds(ATTACHED_TO(a), 0, 0.1f, 1.0f, count, pixstep, 4);
-////                  scs[scscount++] = pdbs[i]->addScalePowstepAuto(ATTACHED_TO(a), 0, count, pixstep, 4);
-//              }
-              
-//              pdbs[i]->addPointerRelativeDrawbounds(AT_TOP, 0, 0.25f, 4, false);
             pdbs[i]->addPointerRelativeDrawbounds(AT_BOTTOM, DBF_PRECISION_INCREASE, 0.25f, 4, true);
-            
-//              scs[scscount++] = pdbs[i]->addScaleFixed(AT_BOTTOM, DBMODE_STRETCHED, 0.0f, 1.0f, 11, 50, 4);
-            
-//              pdbs[i]->addScaleregFixed(AT_TOP, 0, -1200.0f, 1200.0f, 250.0f, 0, 11, 50, 4);
-//              pdbs[i]->addScaleregFixed(AT_BOTTOM, 0, 200.0f, 1200.0f, 200.0f, 0, 11, 50, 4);
-//              pdbs[i]->addScaleregFixed(AT_BOTTOM, 0, -1200.0f, 1200.0f, 250.0f, 0, 11, 50, 4);
-            
-//              pdbs[i]->addScaleregFixed(AT_BOTTOM, 0, 33.0f, 10000.0f, 500.0f, 0, 3, 50, 4);
-//              pdbs[i]->addScaleregFixed(AT_BOTTOM, 0, 33.0f, 10000.0f, 50.0f, 0, 100, 50, 4);
             
             BSADD(pdbs[i])
           }
@@ -4092,15 +3580,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 #endif
           BS_STRETCH
         BS_STOP
-//          BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
-//            BSAUTO_TEXT_ADD("\tResize Me");
-//          BS_STOP
       }
       else
       {
         QScrollBar* qsb = MW_TEST == EXTRA_GRAPHS_MOVE? new QScrollBar(Qt::Horizontal) : nullptr;
         BS_START_FRAME_H_HMAX_VMAX(BS_FRAME_PANEL, 2)
-//        BS_START_FRAME_H_HMIN_VMIN(BS_FRAME_PANEL, 2)
           for (unsigned int i=0; i<dccount; i++)
           {
             if (MW_TEST == DRAW_RECORDER)
@@ -4130,18 +3614,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
                 if (qsb)
                   draws[i*drcount + j]->connectScrollBar(qsb, false);
-                
-//#ifdef USESCALES
-//#define BS_SCALED_ALIAS(draw, drdre)  DrawBars* drdre = new DrawBars(draw, DrawBars::CP_FROM_DRAWBACK); \
-//                                      drdre->addScaleDrawUniSide(AT_TOP, 0, 21); \
-//                                      if (draw->directions() == 2)  drdre->addScaleDrawUniSide(AT_LEFT, 0, 21); \
-//                                      else                          drdre->addScaleDrawGraphB(AT_LEFT, 0 | DBF_NOTESINSIDE, 21, 20);
-//#else
-//#define BS_SCALED_ALIAS(draw, drdre)  DrawQWidget* drdre = draw;
-//#endif
-                
-//                BS_SCALED_ALIAS(draws[i*drcount + j], pDraw)
-//                BSADD(pDraw, lwresult);
                 
                 if (drawbarsstage)
                 {
@@ -4248,12 +3720,10 @@ void MainWindow::changeMenu()
   if (curidx >= 0)
   {
     menuWdgs[curidx]->setVisible(false);
-//    menuBtns[curidx]->setText("+");
   }
   if (nextidx >= 0)
   {
     menuWdgs[nextidx]->setVisible(true);
-//    menuBtns[nextidx]->setText("-");
   }
 }
 
@@ -4396,8 +3866,6 @@ void MainWindow::generateData()
     for (int pm=0; pm<PORTIONS*LINES; pm++)
     {
       int portion = pm / LINES;
-//      float fmov01samples = ((g_movX + portion*portion*10)%DSAMPLES)/float(DSAMPLES);
-//      float fmov01sin = qFastSin((g_movX + portion*portion*10)/(M_PI*2*2))/2.0f + 0.5f;
       float fmov01samples = ((g_movX + portion*10)%DSAMPLES)/float(DSAMPLES);
       float fmov01sin = qFastSin((g_movX + portion*10)/(M_PI*2*2))/2.0f + 0.5f;
       
@@ -4542,7 +4010,6 @@ void MainWindow::generateData()
       }
       case ST_HIPERB: case ST_SINXX: case ST_XX: case ST_TANHX:
       {
-  //      float fX = float(mm)/LINES - 0.5f;
         if (sigtype == ST_HIPERB)
           manual_fn = my_hiperb;
         else if (sigtype == ST_SINXX)
@@ -4551,16 +4018,7 @@ void MainWindow::generateData()
           manual_fn = my_xx;
         else if (sigtype == ST_TANHX)
           manual_fn = my_tanhx;
-  //      fX = manual_fn(fX, fmov01sin);
         #pragma omp for
-  //      for (int i = 0; i < DSAMPLES; i++)
-  //      {
-  //        float value = manual_fn((i - DSAMPLES/2)/10.0f, fmov01sin);
-  //        if (int((value+0.5f)*LINES) >= mm)
-  //          testbuf[i] = 1;
-  //        else
-  //          testbuf[i] = 0;
-  //      }
         for (int i = 0; i < DSAMPLES; i++)
         {
           float value = manual_fn((i - int(DSAMPLES)/2)/10.0f, fmov01sin) + 0.5f;
@@ -4997,19 +4455,6 @@ void  MainWindow::changeFloats(int edid)
       qle[ED_CONTRAST]->setText("1.0");
       qle[ED_OFFSET]->setText("0.0");
     }
-//    for (unsigned int i=0; i<drawscount; i++)
-//    {
-//      if (edid == ED_LOW || edid == ED_HIGH)
-//      {
-//        if (edid == ED_LOW)         draws[i]->setBoundLow(value);
-//        else if (edid == ED_HIGH)   draws[i]->setBoundHigh(value);
-//      }
-//      else if (edid == ED_CONTRAST || edid == ED_OFFSET)
-//      {
-//        if (edid == ED_CONTRAST)    draws[i]->setContrastK(value);
-//        else if (edid == ED_OFFSET) draws[i]->setContrastB(value);
-//      }
-//    }
   }
 }
 
@@ -5083,7 +4528,7 @@ void  MainWindow::changeFeatures(int id)
 
 void MainWindow::changePostmask(int sigid)
 {  
-  int id = ((BSUOD_DPM*)sender()->userData(1))->id;
+  int id = sender()->property("itarget").toInt();
   for (unsigned int i=0; i<drawscount; i++)
   {
     overpattern_t ovp = draws[i]->overpattern();
@@ -5183,37 +4628,37 @@ void MainWindow::changeInterpolation(int sigid)
 
 static const impulsedata_t g_impulse_rec[2][12] = 
 {  
-          {
-            { impulsedata_t::IR_A_COEFF, 3, 1, 1, { 0.1f, 0.8f, 0.1f } } ,
-            { impulsedata_t::IR_A_COEFF, 3, 1, 1, { 0.28f, 0.44f, 0.28f } } ,
-            { impulsedata_t::IR_A_COEFF, 5, 2, 1, { 0.05f, 0.15f, 0.6f, 0.15f, 0.05f } } ,
-            { impulsedata_t::IR_A_COEFF, 5, 2, 1, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } } ,
-            
-            { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 3, 1, 1, {} } ,
-            { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 3, 2, 1, {} } ,
-            { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 3, 3, 1, {} } ,
-            { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 3, 4, 1, {} } ,
+  {
+    { impulsedata_t::IR_A_COEFF, 3, 1, 1, { 0.1f, 0.8f, 0.1f } } ,
+    { impulsedata_t::IR_A_COEFF, 3, 1, 1, { 0.28f, 0.44f, 0.28f } } ,
+    { impulsedata_t::IR_A_COEFF, 5, 2, 1, { 0.05f, 0.15f, 0.6f, 0.15f, 0.05f } } ,
+    { impulsedata_t::IR_A_COEFF, 5, 2, 1, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } } ,
+    
+    { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 3, 1, 1, {} } ,
+    { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 3, 2, 1, {} } ,
+    { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 3, 3, 1, {} } ,
+    { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 3, 4, 1, {} } ,
 
-            { impulsedata_t::IR_A_BORDERS, 3, 1, 1, { 0.0f } } ,
-            { impulsedata_t::IR_A_BORDERS, 3, 2, 1, { 0.2f } } ,
-            { impulsedata_t::IR_A_BORDERS, 3, 6, 1, { 0.0f } } ,
-            { impulsedata_t::IR_A_BORDERS, 3, 2, 1, { 0.4f } }
-          },
-          {
-            { impulsedata_t::IR_B_COEFF, 3, 1, 1, { 0.1f, 0.8f, 0.1f } } ,
-            { impulsedata_t::IR_B_COEFF, 3, 1, 1, { 0.28f, 0.44f, 0.28f } } ,
-            { impulsedata_t::IR_B_COEFF, 5, 2, 1, { 0.05f, 0.15f, 0.6f, 0.15f, 0.05f } } ,
-            { impulsedata_t::IR_B_COEFF, 5, 2, 1, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } } ,
-            
-            { impulsedata_t::IR_B_BORDERS_FIXEDCOUNT, 3, 1, 1, {} } ,
-            { impulsedata_t::IR_B_BORDERS_FIXEDCOUNT, 3, 2, 1, {} } ,
-            { impulsedata_t::IR_B_BORDERS_FIXEDCOUNT, 3, 3, 1, {} } ,
-            { impulsedata_t::IR_B_BORDERS_FIXEDCOUNT, 3, 4, 1, {} } ,
-        
-            { impulsedata_t::IR_B_BORDERS, 3, 1, 1, { 0.0f } } ,
-            { impulsedata_t::IR_B_BORDERS, 3, 2, 1, { 0.2f } } ,
-            { impulsedata_t::IR_B_BORDERS, 3, 6, 1, { 0.0f } } ,
-            { impulsedata_t::IR_B_BORDERS, 3, 2, 1, { 0.4f } }
+    { impulsedata_t::IR_A_BORDERS, 3, 1, 1, { 0.0f } } ,
+    { impulsedata_t::IR_A_BORDERS, 3, 2, 1, { 0.2f } } ,
+    { impulsedata_t::IR_A_BORDERS, 3, 6, 1, { 0.0f } } ,
+    { impulsedata_t::IR_A_BORDERS, 3, 2, 1, { 0.4f } }
+  },
+  {
+    { impulsedata_t::IR_B_COEFF, 3, 1, 1, { 0.1f, 0.8f, 0.1f } } ,
+    { impulsedata_t::IR_B_COEFF, 3, 1, 1, { 0.28f, 0.44f, 0.28f } } ,
+    { impulsedata_t::IR_B_COEFF, 5, 2, 1, { 0.05f, 0.15f, 0.6f, 0.15f, 0.05f } } ,
+    { impulsedata_t::IR_B_COEFF, 5, 2, 1, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } } ,
+    
+    { impulsedata_t::IR_B_BORDERS_FIXEDCOUNT, 3, 1, 1, {} } ,
+    { impulsedata_t::IR_B_BORDERS_FIXEDCOUNT, 3, 2, 1, {} } ,
+    { impulsedata_t::IR_B_BORDERS_FIXEDCOUNT, 3, 3, 1, {} } ,
+    { impulsedata_t::IR_B_BORDERS_FIXEDCOUNT, 3, 4, 1, {} } ,
+
+    { impulsedata_t::IR_B_BORDERS, 3, 1, 1, { 0.0f } } ,
+    { impulsedata_t::IR_B_BORDERS, 3, 2, 1, { 0.2f } } ,
+    { impulsedata_t::IR_B_BORDERS, 3, 6, 1, { 0.0f } } ,
+    { impulsedata_t::IR_B_BORDERS, 3, 2, 1, { 0.4f } }
           }
 };
 
@@ -5234,7 +4679,7 @@ void MainWindow::changeImpulse(int v)
 
 void MainWindow::changeBans(bool banned)
 {
-  int id = ((BSUOD_0*)sender()->userData(0))->id;
+  int id = sender()->property("itarget").toInt();
   for (unsigned int i=0; i<drawscount; i++)
   {
     if (id == BTF_BANUPDATEDATA)
@@ -5309,9 +4754,7 @@ void MainWindow::createOverlaySTD(int id)
       {
         draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_visir));
       }
-//      draws[i]->ovlPushBack(new OFLine(OFLine::LT_CROSS, CR_RELATIVE, 0.0f, 0.0f, CR_XREL_YREL_SCALED_NOSCALED, 0.01, 0.1, linestyle_green(0,0,1)), ovl_visir);
       draws[i]->ovlPushBack(new OFLine(OFLine::LT_CROSS, CR_RELATIVE, 0.0f, 0.0f, CR_XREL_YREL_NOSCALED_SCALED, 0.01, 0.1, linestyle_green(0,0,1)), ovl_visir);
-      //draws[i]->ovlPushBack(new OFLine(OFLine::LT_CROSS, CR_RELATIVE, 0.0f, 0.0f, CR_RELATIVE_NOSCALED, 0.01, 0.01, linestyle_green(0,0,1)), ovl_visir);
       break;
     }
     case COS_GRIDSAXES:
@@ -5325,14 +4768,12 @@ void MainWindow::createOverlaySTD(int id)
     {
       draws[i]->ovlPushBack(new OFLine(OFLine::LT_CROSS, CR_RELATIVE, 0.5, 0.5, CR_ABSOLUTE, 0, 10, linestyle_grey(1,0,0)));
       draws[i]->ovlPushBack(new OGridCircular(CR_RELATIVE, 0.5, 0.5, CR_RELATIVE, 0.1, linestyle_grey(1,0,0)));
-//      draws[i]->ovlPushBack(new OToons(CR_RELATIVE, 0.95, 1, linestyle_greydark(1,0,0)));
       break;
     }
     case COS_DROPLINES:
     {
       if (!ovl_is_synced || i == 0)
         ovl_tmp = draws[i]->ovlPushBack(new ODropLine(25, true, linestyle_white(5,2,0)));
-//        ovl_tmp = draws[i]->ovlPushBack(new OBrush(1000, linestyle_white(5,2,0)));
       else
         draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_tmp));
       
@@ -5357,8 +4798,6 @@ void MainWindow::createOverlaySTD(int id)
         for (unsigned int j=0; j<pMKFigures->count(); j++)
         {
           pMKFigures->updateItemForm(j, (OCluster::FFORM)(1 + j % 6));
-  //        pMKFigures->updateItemColor(i, 1.0 - 0.15f*(rand()%4));
-  //        pMKFigures->updateItemColor(i, (1+rand()%5)*0.15f);
           pMKFigures->updateItemColor(j, rand()/float(RAND_MAX));
         }
         ovl_figures = draws[i]->ovlPushBack(pMKFigures);
@@ -5398,9 +4837,7 @@ void MainWindow::createOverlaySTD(int id)
     }
     case COS_COVERH:
     {
-//      draws[i]->ovlPushBack(new OCover(0.7f, 1.0f, 0.2f, 0.2f, 0.2f, OCover::COP_COVER));
       draws[i]->ovlPushBack(new OCover(0.7f, 1.0f, 2, OCover::COP_COVER));
-//      draws[i]->ovlPushBack(new OSlice(5.0, 0.0f, 0.4f, 0.0));
       break;
     }
     case COS_CONTOUR:
@@ -5422,8 +4859,6 @@ void MainWindow::createOverlaySTD(int id)
     }
     case COS_OBJECTIF:
     {
-//      draws[i]->ovlPushBack(new OFFactor(CR_RELATIVE, 0.5f, 0.5f, CR_RELATIVE, 0.25f, 0.45f, linestyle_inverse_1(2,1,0)));
-//      draws[i]->ovlPushBack(new OFObjectif(CR_RELATIVE, 0.5f, 0.5f, CR_RELATIVE, 0.4f, 0.4f, 0.1f, 0.1f, linestyle_inverse_1(2,1,0)));
       draws[i]->ovlPushBack(new OFObjectif(CR_RELATIVE, 0.5f, 0.5f, CR_RELATIVE, 0.45f, 0.45f, 0.25f, 0.25f, linestyle_solid(0,1,1)));
       break;
     }
@@ -5448,7 +4883,6 @@ void MainWindow::createOverlaySTD(int id)
     case COS_BACKGROUND:
     {
       QImage  img(img_path_normal);
-//      Ovldraw* ovl = new OImageOriginal(&img, OVLQImage::IC_AUTO, CR_RELATIVE, 0.0f, 0.0f);
       Ovldraw* ovl = new OImageOriginal(&img, OVLQImage::IC_AUTO, 1);
       ovl->setSlice(0.0f);
       draws[i]->ovlPushBack(ovl);
@@ -5478,13 +4912,8 @@ void MainWindow::createOverlayADD()
 {
   if (drawscount == 0)
     return;
-  
-  QButtonGroup* qbgCount = (QButtonGroup*)((BSUOD_2*)sender()->userData(1))->rawlink;
   const unsigned int counts[] = { 3, 1, 5, 10,  1,1,1 };
-
-  unsigned int count = counts[qbgCount->checkedId()];
-  
-  QButtonGroup* qbgForm = (QButtonGroup*)((BSUOD_2*)sender()->userData(0))->rawlink;
+  unsigned int count = counts[grCount->checkedId()];
   for (unsigned int i=0; i<count; i++)
   {
     float opacity = 0.2f;
@@ -5493,7 +4922,7 @@ void MainWindow::createOverlayADD()
     linestyle_t kls = linestyle_green(1,0,0);
     
     Ovldraw* ovl = nullptr;
-    switch (qbgForm->checkedId())
+    switch (grForm->checkedId())
     {
     case 0: ovl = new OFCircle(opacity, CR_RELATIVE, centerX, centerY, CR_ABSOLUTE, abssize, kls); break;
     case 1: ovl = new OFTriangle(OFTriangle::ORIENT_UP, opacity, CR_RELATIVE, centerX, centerY, CR_ABSOLUTE, abssize, kls); break;
@@ -5567,7 +4996,8 @@ void MainWindow::changeOVLForm(int value)
     if (povl)
     {
       linestyle_t kls = povl->getLineStyle();
-      switch (((BSUOD_0*)sender()->userData(0))->id)
+//      switch (((BSUOD_0*)sender()->userData(0))->id)
+      switch (sender()->property("itarget").toInt())
       {
       case 0: kls.lenstroke = value; break;
       case 1: kls.lenspace = value; break;
@@ -5607,10 +5037,6 @@ void MainWindow::changeOVLFeatures(int id)
     if (qdg.exec() != QColorDialog::Accepted)
       return;
     clr = qdg.currentColor();
-    
-//    QButtonGroup* snd = (QButtonGroup*)sender();
-//    snd->buttons()[0]->setChecked(true);
-    
     for (unsigned int i=0; i<drawscount; i++)
     {
       Ovldraw_ColorTraced* povl = dynamic_cast<Ovldraw_ColorTraced*>(draws[i]->ovlGet(active_ovl));
@@ -5639,24 +5065,6 @@ void MainWindow::changeOVLFeatures(int id)
     }
   }
 }
-
-//Ovldraw* MainWindow::createNewOverlay(BTN_VISIR btv)
-//{
-//  Ovldraw*  newOverlay = nullptr;
-//  switch (vistype)
-//  {
-//    case BTV_CIRCLE:  newOverlay = new OFCircle(false, ocs, 0.0, 0.0, true, 100, linestyle_green(1,0,0)); break;
-//    case BTV_SQUARE:  newOverlay = new OFSquareCC(false, ocs, 0.0, 0.0, true, 100, linestyle_green(1,0,0)); break;
-//    case BTV_LINEHORZ:  newOverlay = new OFLine(OFLine::LT_HORZ_BYLEFT, ocs, 0.0, 0.0, 10, 100, linestyle_green(1,0,0)); break;
-//    case BTV_LINEVERT:  newOverlay = new OFLine(OFLine::LT_VERT_BYBOTTOM, ocs, 0.0, 0.0, 10, 100, linestyle_green(1,0,0)); break;
-//    case BTV_FACTOR:  newOverlay = new OFFactor(ocs, 0.0, 0.0, 10, 30, linestyle_yellow(5,1,0)); break;
-//    case BTV_CROSS:  newOverlay = new OFLine(OFLine::LT_CROSS, ocs, 0.0, 0.0, 10, -1, linestyle_green(1,0,0)); break;
-//    case BTV_TEXT: newOverlay = new OTextTraced("CREATED", CR_RELATIVE, 0.5, 0.5, 12, true, linestyle_solid(1,0,0)); break;
-//    case BTV_BORDER: newOverlay = new OBorder(4, linestyle_solid(1,0,0)); break;
-//    default: break;
-//  }
-//  return newOverlay
-//}
 
 void MainWindow::metaOVLReplace(int vistype)
 {
@@ -5732,7 +5140,7 @@ void MainWindow::changeSigtype(int st)
 
 void MainWindow::changeScaling(int value)
 {
-  SCALING to = (SCALING)((BSUOD_0*)sender()->userData(0))->id;
+  SCALING to = (SCALING)(sender()->property("itarget").toInt());
   for (unsigned int i=0; i<drawscount; i++)
   {
     if (to == SC_MIN_H || to == SC_MAX_H)
@@ -5761,7 +5169,8 @@ void MainWindow::changePointer(int value)
 
 void MainWindow::changeMarkData(int ivalue)
 {
-  int mf = ((BSUOD_0*)sender()->userData(0))->id;
+//  int mf = ((BSUOD_0*)sender()->userData(0))->id;
+  int mf = sender()->property("itarget").toInt();
   if (mf >= _MF_COUNT || ovl_marks == -1)
     return;
     

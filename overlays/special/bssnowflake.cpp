@@ -7,12 +7,22 @@
 #include <qmath.h>
 #include <memory.h>
 
+#if QT_VERSION >= 0x051000
+#include <QRandomGenerator>
+#endif
+
 OSnowflake::OSnowflake(QImage *image, IMAGECONVERT icvt, unsigned int count, float sizemultiplier): OVLQImage(image, icvt, false), m_count(count), m_sm(sizemultiplier)
 {
   const unsigned int v4 = 4;
   float* rnd = new float[m_count*v4];
+#if QT_VERSION < 0x051000
   for (unsigned int i=0; i<m_count*v4; i++)
     rnd[i] = qrand()/float(RAND_MAX);
+#else
+  QRandomGenerator rg;
+  for (unsigned int i=0; i<m_count*v4; i++)
+    rnd[i] = rg.generateDouble();
+#endif
   
   m_randomer.count = m_count;
   m_randomer.data = rnd;

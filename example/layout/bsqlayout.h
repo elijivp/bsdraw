@@ -89,7 +89,7 @@ enum    _BS_LAYTYPE {   _BS_BOXED_LAYOUT, _BS_NONBOXED_LAYOUT, _BS_NOLAYOUT, /*_
 #define BS_STOP_EX(STRETCH)         if (_bs_pWidget == nullptr) {  ((QBoxLayout*)_bs_lStack.top())->addLayout((QBoxLayout*)_bs_active, STRETCH); } \
                                     else if (_bs_boxed == _BS_BOXED_LAYOUT || _bs_boxed == _BS_NONBOXED_LAYOUT) ((QWidget*)_bs_pWidget)->setLayout((QLayout*)_bs_active); \
                                     if (_bs_topScroll){ _bs_topScroll->setWidget(_bs_pWidget); _bs_pWidget = _bs_topScroll; } \
-                                    }  _BS_POP(STRETCH, 0)
+                                    }  _BS_POP(STRETCH, Qt::AlignmentFlag(0))
 
 #define BS_STOP_EX_ALIGNED(SH, AN)  if (_bs_pWidget == nullptr) {  ((QBoxLayout*)_bs_lStack.top())->addLayout((QBoxLayout*)_bs_active, SH); } \
                                     else if (_bs_boxed == _BS_BOXED_LAYOUT || _bs_boxed == _BS_NONBOXED_LAYOUT) ((QWidget*)_bs_pWidget)->setLayout((QLayout*)_bs_active); \
@@ -488,47 +488,47 @@ struct  BSFieldSetup
                                                           }
 
 
-#ifndef QT_NO_USERDATA
+//#ifndef QT_NO_USERDATA
 
-struct  BSUOD_0: public QObjectUserData
-{
-  unsigned int  id;
-  BSUOD_0(unsigned int identifier): id(identifier) {}
-};
+//struct  BSUOD_0: public QObjectUserData
+//{
+//  unsigned int  id;
+//  BSUOD_0(unsigned int identifier): id(identifier) {}
+//};
 
-struct  BSUOD_1: public QObjectUserData
-{
-  char  textes[2][64];
-  BSUOD_1(const char* text1, const char* text2){  strncpy(textes[0], text1, 64); strncpy(textes[1], text2, 64); }
-};
+//struct  BSUOD_1: public QObjectUserData
+//{
+//  char  textes[2][64];
+//  BSUOD_1(const char* text1, const char* text2){  strncpy(textes[0], text1, 64); strncpy(textes[1], text2, 64); }
+//};
 
-struct  BSUOD_2: public QObjectUserData
-{
-  void* rawlink;
-  BSUOD_2(void* directLink): rawlink(directLink) {}
-};
+//struct  BSUOD_2: public QObjectUserData
+//{
+//  void* rawlink;
+//  BSUOD_2(void* directLink): rawlink(directLink) {}
+//};
 
-struct  BSUOD_3: public QObjectUserData
-{
-  QString str;
-  BSUOD_3(const QString& value): str(value) {}
-};
+//struct  BSUOD_3: public QObjectUserData
+//{
+//  QString str;
+//  BSUOD_3(const QString& value): str(value) {}
+//};
 
-template <class T>
-struct  BSUOD: public QObjectUserData
-{
-  T     data;
-  BSUOD(const T& crdata): data(crdata){}
-};
+//template <class T>
+//struct  BSUOD: public QObjectUserData
+//{
+//  T     data;
+//  BSUOD(const T& crdata): data(crdata){}
+//};
 
-template <class T>
-struct  BSUOD<T*>: public QObjectUserData
-{
-  T*    data;
-  BSUOD(T* crdata): data(crdata){}
-};
+//template <class T>
+//struct  BSUOD<T*>: public QObjectUserData
+//{
+//  T*    data;
+//  BSUOD(T* crdata): data(crdata){}
+//};
 
-#endif
+//#endif
 
 
 #define BS_FORFOR_1(perline, iter, sublimit, max)     for (int iter=0, _forfor0=(max)/(perline) + ((max)%(perline)?1:0), _forfor1=(max)/(perline), _forfor2=(max)%(perline), sublimit=perline; iter < _forfor0 && (sublimit=iter<_forfor1? perline:_forfor2) != 0; iter++)

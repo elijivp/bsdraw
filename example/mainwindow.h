@@ -49,6 +49,7 @@ private:
   enum    ED_DRAW     {  ED_HIGH, ED_LOW, ED_CONTRAST, ED_OFFSET, ED_SIGB, ED_SIGK, ED_RESET };
 
   QTimer*               speedDataTimer, *speedUpdateTimer;
+  class QButtonGroup*   grForm, *grCount;
   
   enum    BTN_FEATS     { BTF_CLEAR, BTF_INVHORZ, BTF_INVVERT, BTF_HIDEOTHERS, 
                           BTF_BANUPDATEDATA, BTF_BANUPDATESETS, BTF_BANUPDATEOVERLAYS, BTF_DESTROYGRAPH, 

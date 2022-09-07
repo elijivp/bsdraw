@@ -807,6 +807,14 @@ void DrawQWidget::resizeGL(int w, int h)
 //  c_height = h;
 //  qDebug()<<m_cttrLeft<<m_cttrTop<<m_cttrRight<<m_cttrBottom;
 #if 1
+  QMargins ms(contentsMargins());
+  if (ms.left() != m_cttrLeft || ms.top() != m_cttrTop || ms.right() != m_cttrRight || ms.bottom() != m_cttrBottom)
+  {
+    m_cttrLeft = ms.left();  m_cttrRight = ms.right();  m_cttrTop = ms.top();  m_cttrBottom = ms.bottom();
+    updateGeometry();
+    return;   /// ?????????
+  }
+#elif 0
   int ml, mt, mr, mb;
   getContentsMargins(&ml, &mt, &mr, &mb);
   if (ml != m_cttrLeft || mt != m_cttrTop || mr != m_cttrRight || mb != m_cttrBottom)
@@ -932,7 +940,14 @@ void DrawQWidget::callWidgetUpdate()
 void DrawQWidget::innerRescale()
 {
   int w = c_width, h = c_height;
-  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
+  {
+    QMargins ms(contentsMargins());
+    m_cttrLeft = ms.left();
+    m_cttrTop = ms.top();
+    m_cttrRight = ms.right();
+    m_cttrBottom = ms.bottom();
+  }
+//  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
   w -= m_cttrLeft + m_cttrRight;
   h -= m_cttrTop + m_cttrBottom;
   

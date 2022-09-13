@@ -991,11 +991,11 @@ static const bool isPress[] = { true, false, false, true, true, false, true };
 
 void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
 {
+#if 0     /// Integer calculatons
   unsigned int singleDimmWidth = sizeHorz();
   unsigned int singleDimmHeight = sizeVert();
   unsigned int totalDimmWidth = singleDimmWidth * (m_matrixSwitchAB? m_splitterB : m_splitterA);
   unsigned int totalDimmHeight = singleDimmHeight * (m_matrixSwitchAB? m_splitterA : m_splitterB);
-  
   x -= m_cttrLeft;    y -= m_cttrTop;
   x *=  c_dpr;        y *=  c_dpr;
 
@@ -1007,17 +1007,6 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
   else if (x >= totalDimmWidth || y >= totalDimmHeight)
     return;
 
-//  float fx, fy;
-//  if (orientationTransposed(m_orient))
-//  {
-//    fx = float((!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y) % singleDimmHeight) / singleDimmHeight;
-//    fy = float((orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x) % singleDimmWidth) / singleDimmWidth;
-//  }
-//  else
-//  {
-//    fx = float((orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x) % singleDimmWidth) / singleDimmWidth;
-//    fy = float((!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y) % singleDimmHeight) / singleDimmHeight;
-//  }
   coordstriumv_t ct;
   ct.fx_pix = x;
   ct.fy_pix = y;
@@ -1043,6 +1032,45 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
     ct.fx_ovl = ct.fx_rel;
     ct.fy_ovl = ct.fy_rel;
   }
+#else   /// floating calculations
+  float singleDimmWidth = sizeHorz();
+  float singleDimmHeight = sizeVert();
+  float totalDimmWidth = singleDimmWidth * (m_matrixSwitchAB? m_splitterB : m_splitterA);
+  float totalDimmHeight = singleDimmHeight * (m_matrixSwitchAB? m_splitterA : m_splitterB);
+  
+  float fx = (x - m_cttrLeft) * c_dpr;
+  float fy = (y - m_cttrTop) * c_dpr;
+  
+  if (isPress[oreact] == false)
+  {
+    if (x < 0)  x = 0; else if (x >= totalDimmWidth) x = totalDimmWidth - 1;
+    if (y < 0)  y = 0; else if (y >= totalDimmHeight) y = totalDimmHeight - 1;
+  }
+  else if (x >= totalDimmWidth || y >= totalDimmHeight)
+    return;
+
+  coordstriumv_t ct;
+  ct.fx_pix = x;
+  ct.fy_pix = y;
+  if (orientationTransposed(m_orient))
+  {
+    ct.fx_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y);
+    ct.fy_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x);
+    ct.fx_rel = singleDimmHeight <=1 ? 0 : (ct.fx_ovl - int(ct.fx_ovl/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
+    ct.fy_rel = singleDimmWidth <= 1? 0 : (ct.fy_ovl - int(ct.fy_ovl/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
+    ct.fx_ovl = ct.fx_rel;
+    ct.fy_ovl = ct.fy_rel;
+  }
+  else
+  {
+    ct.fx_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x);
+    ct.fy_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y);
+    ct.fx_rel = singleDimmWidth <= 1? 0 : (ct.fx_ovl - int(ct.fx_ovl/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
+    ct.fy_rel = singleDimmHeight <= 1? 0 : (ct.fy_ovl - int(ct.fy_ovl/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
+    ct.fx_ovl = ct.fx_rel;
+    ct.fy_ovl = ct.fy_rel;
+  }
+#endif
   
   bool doStop = false, doUpdate = false;
   if (m_proactive)  m_proactive->reactionMouse(this, oreact, &ct, &doStop);
@@ -1065,6 +1093,20 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
       callWidgetUpdate();
   }
 }
+
+/*
+//  float fx, fy;
+//  if (orientationTransposed(m_orient))
+//  {
+//    fx = float((!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y) % singleDimmHeight) / singleDimmHeight;
+//    fy = float((orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x) % singleDimmWidth) / singleDimmWidth;
+//  }
+//  else
+//  {
+//    fx = float((orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x) % singleDimmWidth) / singleDimmWidth;
+//    fy = float((!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y) % singleDimmHeight) / singleDimmHeight;
+//  }
+*/
 
 #define BUTTONCHECK_DOGSHIT(action) Qt::MouseButton btn = event->button(); \
                                     QPoint pos = event->pos(); \

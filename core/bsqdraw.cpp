@@ -1043,19 +1043,19 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
   
   if (isPress[oreact] == false)
   {
-    if (x < 0)  x = 0; else if (x >= totalDimmWidth) x = totalDimmWidth - 1;
-    if (y < 0)  y = 0; else if (y >= totalDimmHeight) y = totalDimmHeight - 1;
+    if (fx < 0)  fx = 0; else if (fx >= totalDimmWidth) fx = totalDimmWidth - 1;
+    if (fy < 0)  fy = 0; else if (fy >= totalDimmHeight) fy = totalDimmHeight - 1;
   }
-  else if (x >= totalDimmWidth || y >= totalDimmHeight)
+  else if (fx >= totalDimmWidth || fy >= totalDimmHeight)
     return;
 
   coordstriumv_t ct;
-  ct.fx_pix = x;
-  ct.fy_pix = y;
+  ct.fx_pix = fx;
+  ct.fy_pix = fy;
   if (orientationTransposed(m_orient))
   {
-    ct.fx_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y);
-    ct.fy_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x);
+    ct.fx_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
+    ct.fy_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
     ct.fx_rel = singleDimmHeight <=1 ? 0 : (ct.fx_ovl - int(ct.fx_ovl/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
     ct.fy_rel = singleDimmWidth <= 1? 0 : (ct.fy_ovl - int(ct.fy_ovl/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
     ct.fx_ovl = ct.fx_rel;
@@ -1063,8 +1063,8 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
   }
   else
   {
-    ct.fx_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x);
-    ct.fy_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y);
+    ct.fx_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
+    ct.fy_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
     ct.fx_rel = singleDimmWidth <= 1? 0 : (ct.fx_ovl - int(ct.fx_ovl/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
     ct.fy_rel = singleDimmHeight <= 1? 0 : (ct.fy_ovl - int(ct.fy_ovl/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
     ct.fx_ovl = ct.fx_rel;

@@ -4365,6 +4365,9 @@ void DrawBars::slot_fillData(float v){  pDraw->slot_fillData(v);  }
 void DrawBars::slot_clearData(){  pDraw->slot_clearData();  }
 
 void DrawBars::slot_adjustBounds(){ pDraw->slot_adjustBounds(); slot_updatedBounds(); }
+void DrawBars::slot_adjustBounds(unsigned int portion){ pDraw->slot_adjustBounds(portion); slot_updatedBounds(); }
+void DrawBars::slot_adjustBounds(unsigned int start, unsigned int stop){ pDraw->slot_adjustBounds(start, stop); slot_updatedBounds(); }
+void DrawBars::slot_adjustBounds(unsigned int start, unsigned int stop, unsigned int portion){ pDraw->slot_adjustBounds(start, stop, portion); slot_updatedBounds(); }
 void DrawBars::slot_adjustBoundsWithSpacingAdd(float add2min, float add2max){ pDraw->slot_adjustBoundsWithSpacingAdd(add2min, add2max); slot_updatedBounds(); }
 void DrawBars::slot_adjustBoundsWithSpacingMul(float mul2min, float mul2max){ pDraw->slot_adjustBoundsWithSpacingMul(mul2min, mul2max); slot_updatedBounds(); }
 

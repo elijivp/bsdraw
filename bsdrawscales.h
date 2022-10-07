@@ -350,6 +350,9 @@ public slots:
   void    slot_clearData();
   
   void    slot_adjustBounds();
+  void    slot_adjustBounds(unsigned int portion);
+  void    slot_adjustBounds(unsigned int start, unsigned int stop);
+  void    slot_adjustBounds(unsigned int start, unsigned int stop, unsigned int portion);
   void    slot_adjustBoundsWithSpacingAdd(float add2min, float add2max);
   void    slot_adjustBoundsWithSpacingMul(float mul2min, float mul2max);
   

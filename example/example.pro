@@ -21,6 +21,7 @@ equals(QT_MAJOR_VERSION, 6) {
 
 DEFINES += BSGLSLVER=130     # no "#version" string includes in shader if not defined
 #DEFINES += BSGLSLVER=450     # no "#version" string includes in shader if not defined
+DEFINES += BS_TAU_PROPERTY_OFF
 
 TARGET = example
 TEMPLATE = app

@@ -141,4 +141,12 @@ public slots:
   void    updateAllDraws();
 };
 
+#define TTL_FULL 0
+#define TTL_TITLE 1
+#define TTL_MEDTITLE 2
+#define TTL_SUBTITLE 3
+#define TTL_HIDDEN 4
+
+
+
 #endif // MAINWINDOW_H

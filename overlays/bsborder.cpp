@@ -79,13 +79,13 @@ int OShadow::fshOVCoords(int overlay, bool switchedab, char *to) const
       {
         if (m_lineset & (1 << i))
         {
-          ocg.push("dd = (ivec2)mix(dd, ivec2(");
+          ocg.push("dd = ivec2(mix(dd, ivec2(");
           ocg.push(dds[i]);
           ocg.push(", ");
           ocg.push(m_pxwidth[i]);
           ocg.push("), step(float(");
           ocg.push(dds[i]);
-          ocg.push("), float(dd[0])));");
+          ocg.push("), float(dd[0]))));");
         }
       }      
 //      ocg.push("mixwell = clamp(1.0 + dd[1] - dd[0], 0.0, 1.0 + dd[1])/(1.0 + dd[1]);");

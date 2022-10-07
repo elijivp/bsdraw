@@ -135,8 +135,16 @@ protected:
 };
 
 
+//////////////////////////////////
 
-
+class OPassiveRetraslator: public OActiveCursor
+{
+public:
+  OPassiveRetraslator(bool linkToScaledCenter=false);
+  OPassiveRetraslator(COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter=false);
+protected:
+  virtual IOverlayReactor*  reactor() { return nullptr; }   // !
+};
 
 
 //////////////////////////////////

@@ -496,41 +496,6 @@ public:
   virtual float*        getDataPtr(unsigned int portion) { if (portion >= m_allocatedPortions)  return nullptr; return &m_matrixData[portion*m_portionSize]; }     // You need manual update after data change
   void  manualDataPtrUpdate(){  vmanUpData(); }
   void  updateData(){ vmanUpData(); }
-public:
-  bool  getMinMax(float* rmin, float* rmax)
-  {
-    if (m_portionSize <= 1) return false;
-    float min = m_matrixData[0], max = m_matrixData[0];
-    for (unsigned int p=0; p<m_countPortions; p++)
-      for (unsigned int i=0; i<m_portionSize; i++)
-      {
-        if (min > m_matrixData[p*m_portionSize + i])
-          min = m_matrixData[p*m_portionSize + i];
-        if (max < m_matrixData[p*m_portionSize + i])
-          max = m_matrixData[p*m_portionSize + i];
-      }
-    if (rmin) *rmin = min;
-    if (rmax) *rmax = max;
-    return true;
-  }
-  void  adjustBounds()
-  {
-    float min,max;
-    if (getMinMax(&min, &max))
-      setBounds(min, max);
-  }
-  void  adjustBoundsWithSpacingAdd(float add2min, float add2max)
-  {
-    float min,max;
-    if (getMinMax(&min, &max))
-      setBounds(min + add2min, max + add2max);
-  }
-  void  adjustBoundsWithSpacingMul(float mul2min, float mul2max)
-  {
-    float min,max;
-    if (getMinMax(&min, &max))
-      setBounds(min*mul2min, max*mul2max);
-  }
 protected:
   void  vmanUpInit(){ m_bitmaskPendingChanges |= PC_INIT; if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();  }
   void  vmanUpData(){ m_bitmaskPendingChanges |= PC_DATA; if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();  }
@@ -834,6 +799,91 @@ protected:
   virtual void    callWidgetUpdate()=0;
   virtual void    innerRescale()=0;
   virtual void    innerUpdateGeometry()=0;
+public:
+  bool  getMinMax(unsigned int start, unsigned int stop, float* rmin, float* rmax)
+  {
+    if (m_portionSize == 0) return false;
+    if (start > m_portionSize || start > stop)  return false;
+    if (stop > m_portionSize) stop = m_portionSize;
+    float min = m_matrixData[start], max = m_matrixData[start];
+    for (unsigned int p=0; p<m_countPortions; p++)
+      for (unsigned int i=start+1; i<stop; i++)
+      {
+        if (min > m_matrixData[p*m_portionSize + i])
+          min = m_matrixData[p*m_portionSize + i];
+        if (max < m_matrixData[p*m_portionSize + i])
+          max = m_matrixData[p*m_portionSize + i];
+      }
+    if (rmin) *rmin = min;
+    if (rmax) *rmax = max;
+    return true;
+  }
+  bool  getMinMax(unsigned int start, unsigned int stop, unsigned int portion, float* rmin, float* rmax)
+  {
+    if (m_portionSize == 0) return false;
+    if (start > m_portionSize || start > stop)  return false;
+    if (stop > m_portionSize) stop = m_portionSize;
+    const unsigned int pjump = portion*m_portionSize;
+    float min = m_matrixData[pjump + start], max = m_matrixData[pjump + start];
+    for (unsigned int i=start+1; i<stop; i++)
+    {
+      if (min > m_matrixData[pjump + i])
+        min = m_matrixData[pjump + i];
+      if (max < m_matrixData[pjump + i])
+        max = m_matrixData[pjump + i];
+    }
+    if (rmin) *rmin = min;
+    if (rmax) *rmax = max;
+    return true;
+  }
+  void  adjustBounds()
+  {
+    float min,max;
+    if (getMinMax(0, m_portionSize, &min, &max))
+      setBounds(min, max);
+  }
+  void  adjustBounds(unsigned int portion)
+  {
+    float min,max;
+    if (getMinMax(0, m_portionSize, portion, &min, &max))
+      setBounds(min, max);
+  }
+  void  adjustBounds(unsigned int start, unsigned int stop)
+  {
+    float min,max;
+    if (getMinMax(start, stop, &min, &max))
+      setBounds(min, max);
+  }
+  void  adjustBounds(unsigned int start, unsigned int stop, unsigned int portion)
+  {
+    float min,max;
+    if (getMinMax(start, stop, portion, &min, &max))
+      setBounds(min, max);
+  }
+  void  adjustBoundsWithSpacingAdd(float add2min, float add2max)
+  {
+    float min,max;
+    if (getMinMax(0, m_portionSize, &min, &max))
+      setBounds(min + add2min, max + add2max);
+  }
+  void  adjustBoundsWithSpacingAdd(float add2min, float add2max, unsigned int start, unsigned int stop)
+  {
+    float min,max;
+    if (getMinMax(start, stop, &min, &max))
+      setBounds(min + add2min, max + add2max);
+  }
+  void  adjustBoundsWithSpacingMul(float mul2min, float mul2max)
+  {
+    float min,max;
+    if (getMinMax(0, m_portionSize, &min, &max))
+      setBounds(min*mul2min, max*mul2max);
+  }
+  void  adjustBoundsWithSpacingMul(float mul2min, float mul2max, unsigned int start, unsigned int stop)
+  {
+    float min,max;
+    if (getMinMax(start, stop, &min, &max))
+      setBounds(min*mul2min, max*mul2max);
+  }
 };
 
 

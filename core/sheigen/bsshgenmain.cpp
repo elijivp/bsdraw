@@ -735,6 +735,7 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
         m_offset += msprintf(&m_to[m_offset], "impulsemix = step(%F, float(imrect[2]))*(impulsemix - 1.0)/2.0;" SHNL,
                               double(m_impulsegen.count)
                            );
+//        qDebug()<<m_to;
       }
       else
       {

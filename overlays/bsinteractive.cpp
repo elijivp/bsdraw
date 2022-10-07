@@ -386,6 +386,14 @@ bool OActiveCursorCarrierR2::overlayReactionMouse(OVL_REACTION_MOUSE oreact, con
 /********************************************************************************************************************************************/
 /********************************************************************************************************************************************/
 
+OPassiveRetraslator::OPassiveRetraslator(bool linkToScaledCenter): OActiveCursor(linkToScaledCenter) {}
+OPassiveRetraslator::OPassiveRetraslator(COORDINATION cn, float default_x, float default_y, bool linkToScaledCenter): 
+  OActiveCursor(cn, default_x, default_y, linkToScaledCenter){}
+
+
+/********************************************************************************************************************************************/
+/********************************************************************************************************************************************/
+
 #include <time.h>
 
 OActiveRandom::OActiveRandom(): Ovldraw_ColorForegoing(), OVLCoordsDynamic(CR_RELATIVE, 0.0, 0.0)

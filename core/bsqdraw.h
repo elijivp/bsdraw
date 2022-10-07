@@ -40,7 +40,7 @@ class DrawQWidget: public QOpenGLWidget, protected QOpenGLFunctions, public Draw
   Q_OBJECT
   enum  SHEIFIELD  {  SF_DATA, SF_PALETTE, 
                       SF_DOMAIN, SF_GROUND=SF_DOMAIN, SF_PORTIONSIZE, 
-                      SF_COUNTPORTIONS, SF_DIMM_A, SF_DIMM_B, SF_CHNL_scaler_a, SF_CHNL_scaler_b,
+                      SF_COUNTPORTIONS, SF_DIMM_A, SF_DIMM_B, SF_CHNL_SCALER_A, SF_CHNL_SCALER_B,
                       SF_DATABOUNDS, SF_COLORRANGE, SF_VIEW_TURN,
                       _SF_COUNT
                    };
@@ -101,6 +101,9 @@ public slots:
   void    slot_clearData();
   
   void    slot_adjustBounds();
+  void    slot_adjustBounds(unsigned int portion);
+  void    slot_adjustBounds(unsigned int start, unsigned int stop);
+  void    slot_adjustBounds(unsigned int start, unsigned int stop, unsigned int portion);
   void    slot_adjustBoundsWithSpacingAdd(float add2min, float add2max);
   void    slot_adjustBoundsWithSpacingMul(float mul2min, float mul2max);
   

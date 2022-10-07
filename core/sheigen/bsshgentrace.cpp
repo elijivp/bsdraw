@@ -52,7 +52,7 @@ FshOVCoordsConstructor::FshOVCoordsConstructor(const _Ovldraw::uniforms_t &ufms,
                                             "float getValue2D(in int portion, in vec2 x);" SHNL;
     if (ocg_include_bits & OINC_GETVALUE){    memcpy(&m_to[m_offset], _overinc_getvalue, sizeof(_overinc_getvalue)-1);  m_offset += sizeof(_overinc_getvalue) - 1;   }
     
-    static const char _overinc_random[] =   "float randfloat(vec2 co){ return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453); }" SHNL
+    static const char _overinc_random[] =   "float randf(vec2 co){ return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453); }" SHNL
                                             "vec2  randvec2(vec2 co){ return vec2(fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453), fract(sin(dot(co.yx ,vec2(12.9898,78.233))) * 43758.5453)); }" SHNL;
     if (ocg_include_bits & OINC_RANDOM){      memcpy(&m_to[m_offset], _overinc_random, sizeof(_overinc_random)-1);  m_offset += sizeof(_overinc_random) - 1;   }
     

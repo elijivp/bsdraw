@@ -586,8 +586,8 @@ void DrawQWidget::paintGL()
     {
       if ((loc = m_locations[SF_DIMM_A]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixDimmA);
       if ((loc = m_locations[SF_DIMM_B]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixDimmB);
-      if ((loc = m_locations[SF_CHNL_scaler_a]) != -1) m_ShaderProgram.setUniformValue(loc, m_scalingA);
-      if ((loc = m_locations[SF_CHNL_scaler_b]) != -1) m_ShaderProgram.setUniformValue(loc, m_scalingB);
+      if ((loc = m_locations[SF_CHNL_SCALER_A]) != -1)  m_ShaderProgram.setUniformValue(loc, m_scalingA);
+      if ((loc = m_locations[SF_CHNL_SCALER_B]) != -1)  m_ShaderProgram.setUniformValue(loc, m_scalingB);
     }
     
     if (havePendOn(PC_PARAMS, bitmaskPendingChanges))
@@ -1221,6 +1221,9 @@ void DrawQWidget::slot_fillData(float data){ fillData(data); }
 void DrawQWidget::slot_clearData(){ clearData(); }
 
 void DrawQWidget::slot_adjustBounds(){  adjustBounds();  }
+void DrawQWidget::slot_adjustBounds(unsigned int portion){ adjustBounds(portion); }
+void DrawQWidget::slot_adjustBounds(unsigned int start, unsigned int stop){ adjustBounds(start, stop); }
+void DrawQWidget::slot_adjustBounds(unsigned int start, unsigned int stop, unsigned int portion){ adjustBounds(start, stop, portion); }
 void DrawQWidget::slot_adjustBoundsWithSpacingAdd(float add2min, float add2max){  adjustBoundsWithSpacingAdd(add2min, add2max); }
 void DrawQWidget::slot_adjustBoundsWithSpacingMul(float mul2min, float mul2max){  adjustBoundsWithSpacingMul(mul2min, mul2max); }
 

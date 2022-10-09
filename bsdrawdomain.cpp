@@ -224,9 +224,9 @@ void DIDomain::excludePixel(int r, int c)
 DrawDomain::DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, bool isBckgrndDomain, ORIENTATION orient, bool holdmemorytilltheend): 
   DrawQWidget(DATEX_DD, new SheiGeneratorBright(isBckgrndDomain? SheiGeneratorBright::DS_DOMSTD : SheiGeneratorBright::DS_DOMBLACK), portions, orient)
 {
-  m_matrixDimmA = samplesHorz;
-  m_matrixDimmB = samplesVert;
-  unsigned int total = m_matrixDimmA*m_matrixDimmB;
+  m_dataDimmA = samplesHorz;
+  m_dataDimmB = samplesVert;
+  unsigned int total = m_dataDimmA*m_dataDimmB;
   deployMemory(total*portions);
   m_portionSize = 1;
   
@@ -235,15 +235,15 @@ DrawDomain::DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsig
   memset(m_groundData, 0, total*sizeof(float));
   m_groundDataFastFree = !holdmemorytilltheend;
   
-  m_domain._init(m_matrixDimmA, m_matrixDimmB, isBckgrndDomain, &m_portionSize, (float*)m_groundData);
+  m_domain._init(m_dataDimmA, m_dataDimmB, isBckgrndDomain, &m_portionSize, (float*)m_groundData);
 }
 
 DrawDomain::DrawDomain(const DIDomain &cpy, unsigned int portions, ORIENTATION orient, bool holdmemorytilltheend): 
   DrawQWidget(DATEX_DD, new SheiGeneratorBright(cpy.isBackgroundDomain()? SheiGeneratorBright::DS_DOMSTD : SheiGeneratorBright::DS_DOMBLACK), portions, orient)
 {
-  m_matrixDimmA = cpy.m_width;
-  m_matrixDimmB = cpy.m_height;
-  unsigned int total = m_matrixDimmA*m_matrixDimmB;
+  m_dataDimmA = cpy.m_width;
+  m_dataDimmB = cpy.m_height;
+  unsigned int total = m_dataDimmA*m_dataDimmB;
   deployMemory(total*portions);
   
   m_groundType = GND_DOMAIN;
@@ -252,7 +252,7 @@ DrawDomain::DrawDomain(const DIDomain &cpy, unsigned int portions, ORIENTATION o
   m_portionSize = *cpy.m_count;
   m_groundDataFastFree = !holdmemorytilltheend;
  
-  m_domain._init(m_matrixDimmA, m_matrixDimmB, cpy.isBackgroundDomain(), &m_portionSize, (float*)m_groundData);
+  m_domain._init(m_dataDimmA, m_dataDimmB, cpy.isBackgroundDomain(), &m_portionSize, (float*)m_groundData);
 }
 
 DrawDomain::~DrawDomain()
@@ -278,10 +278,10 @@ unsigned int DrawDomain::domainsCount() const
 
 void DrawDomain::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
 {
-  *matrixDimmA = m_matrixDimmA;
-  *matrixDimmB = m_matrixDimmB;
-  *scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
-  *scalingB = (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB);
+  *matrixDimmA = m_dataDimmA;
+  *matrixDimmB = m_dataDimmB;
+  *scalingA = (unsigned int)sizeA <= m_dataDimmA? 1 : (sizeA / m_dataDimmA);
+  *scalingB = (unsigned int)sizeB <= m_dataDimmB? 1 : (sizeB / m_dataDimmB);
   clampScaling(scalingA, scalingB);
 }
 

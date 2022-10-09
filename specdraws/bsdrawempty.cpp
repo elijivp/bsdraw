@@ -32,8 +32,8 @@ SheiGeneratorEmpty::~SheiGeneratorEmpty(){}
 DrawEmpty::DrawEmpty(unsigned int samplesHorz, unsigned int samplesVert, unsigned int backcolor, bool allowNoscaledResize): 
   DrawQWidget(DATEX_2D, new SheiGeneratorEmpty(backcolor), 1, OR_LRTB), m_allowNoscaledResize(allowNoscaledResize)
 {
-  m_matrixDimmA = samplesHorz;
-  m_matrixDimmB = samplesVert;
+  m_dataDimmA = samplesHorz;
+  m_dataDimmB = samplesVert;
   m_portionSize = 0;
   deployMemory();
 }
@@ -49,10 +49,10 @@ void DrawEmpty::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA
   }
   else
   {
-    *matrixDimmA = m_matrixDimmA;
-    *matrixDimmB = m_matrixDimmB;
-    *scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
-    *scalingB = (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB);
+    *matrixDimmA = m_dataDimmA;
+    *matrixDimmB = m_dataDimmB;
+    *scalingA = (unsigned int)sizeA <= m_dataDimmA? 1 : (sizeA / m_dataDimmA);
+    *scalingB = (unsigned int)sizeB <= m_dataDimmB? 1 : (sizeB / m_dataDimmB);
   }
   clampScaling(scalingA, scalingB);
 }

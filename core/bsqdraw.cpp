@@ -195,7 +195,7 @@ void DrawQWidget::initCollectAndCompileShader()
   
   /// 2. Fragment shader
   /// mem alloc
-  unsigned int fshps = m_pcsh->shfragment_pendingSize(m_impulsedata, m_overlaysCount);
+  unsigned int fshps = m_pcsh->shfragment_pendingSize(m_postImpulse, m_overlaysCount);
   if (m_fshalloc < fshps)
   {
     if (m_fshalloc)  delete []m_fshmem;
@@ -216,7 +216,7 @@ void DrawQWidget::initCollectAndCompileShader()
       ovlsinfo[i].orient = m_overlays[i].orient;
     }
     unsigned int fsh_written = m_pcsh->shfragment_store(m_allocatedPortions, m_orient, m_splitPortions, 
-                                                        m_impulsedata, m_overpattern, 
+                                                        m_postImpulse, m_postOverpattern,
                                                         m_overlaysCount, ovlsinfo, m_fshmem);
     
 //    qDebug()<<m_pcsh->shaderName()<<" fragment size "<<fsh_written<<" (had"<<m_fshalloc<<")";
@@ -241,7 +241,7 @@ void DrawQWidget::initCollectAndCompileShader()
   char  ovlshaderbuf[8192*2];
   for (unsigned int i=0; i<m_overlaysCount; i++)
   {     
-    int fshtResult = m_overlays[i].povl->fshOVCoords(i + 1, m_matrixSwitchAB, ovlshaderbuf);
+    int fshtResult = m_overlays[i].povl->fshOVCoords(i + 1, m_dataDimmSwitchAB, ovlshaderbuf);
     if (fshtResult <= 0)
       qDebug()<<Q_FUNC_INFO<<"OVL fshOVCoords failure!";
     else
@@ -268,8 +268,8 @@ void DrawQWidget::initCollectAndCompileShader()
   
   if (m_ShaderProgram.link())
   {
-    static const char* vd_corresponding_array[] = { "texData", "texPalette", "texGround", "countGround", "countPortions",
-                                      "viewdimm_a", "viewdimm_b", "scaler_a", "scaler_b", "databounds", "palrange", 
+    static const char* vd_corresponding_array[] = { "texdata", "texpalette", "texground", "lenground", "portions",
+                                      "texdatadimm_a", "texdatadimm_b", "scaler_a", "scaler_b", "databounds", "palrange",
                                       "viewturn" };
     
     Q_ASSERT(_SF_COUNT == sizeof(vd_corresponding_array)/sizeof(const char*));
@@ -441,8 +441,8 @@ void DrawQWidget::paintGL()
       glBindTexture(GL_TEXTURE_2D, m_texAll[HT_MATRIX]);
       if (havePendOn(PC_DATA, bitmaskPendingChanges) || havePendOn(PC_SIZE, bitmaskPendingChanges))
       {
-        GLsizei dataDimmA = m_matrixDimmA;
-        GLsizei dataDimmB = m_matrixDimmB;
+        GLsizei dataDimmA = m_dataDimmA;
+        GLsizei dataDimmB = m_dataDimmB;
         if (m_datex == DATEX_1D || m_datex == DATEX_DD)
         {
           dataDimmB = 1;
@@ -457,7 +457,7 @@ void DrawQWidget::paintGL()
         {
           unsigned int total = dataDimmA*dataDimmB*m_countPortions;
           for (unsigned int i=0; i<total; i++)
-            m_matrixDataCached[i] = m_matrixData[i] * m_loc_k + m_loc_b;
+            m_dataStorageCached[i] = m_dataStorage[i] * m_loc_k + m_loc_b;
         }
         glTexImage2D(   GL_TEXTURE_2D, 0, 
 #if QT_VERSION >= 0x050000
@@ -465,7 +465,7 @@ void DrawQWidget::paintGL()
 #elif QT_VERSION >= 0x040000
                         GL_RED, 
 #endif
-                        dataDimmA, dataDimmB*m_countPortions, 0, GL_RED, GL_FLOAT, m_matrixDataCached);
+                        dataDimmA, dataDimmB*m_countPortions, 0, GL_RED, GL_FLOAT, m_dataStorageCached);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_dataTextureInterp? GL_LINEAR : GL_NEAREST);  // GL_LINEAR
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_dataTextureInterp? GL_LINEAR : GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // GL_CLAMP_TO_EDGE
@@ -504,8 +504,8 @@ void DrawQWidget::paintGL()
         case GND_DOMAIN:
         {
           float* groundData = (float*)m_groundData;
-          float* groundDataCached=m_groundDataFastFree? groundData : new float[m_matrixDimmA*m_matrixDimmB];
-          for (unsigned int i=0; i<m_matrixDimmA*m_matrixDimmB; i++)
+          float* groundDataCached=m_groundDataFastFree? groundData : new float[m_dataDimmA*m_dataDimmB];
+          for (unsigned int i=0; i<m_dataDimmA*m_dataDimmB; i++)
             groundDataCached[i] = groundData[i] / (m_portionSize+1);
         
           glTexImage2D(   GL_TEXTURE_2D, 0, 
@@ -514,7 +514,7 @@ void DrawQWidget::paintGL()
 #elif QT_VERSION >= 0x040000
                           GL_RED, 
 #endif
-                          m_matrixDimmA, m_matrixDimmB, 0, GL_RED, GL_FLOAT, groundDataCached);
+                          m_dataDimmA, m_dataDimmB, 0, GL_RED, GL_FLOAT, groundDataCached);
   //          glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          
           if (m_groundMipMapping) glGenerateMipmap( GL_TEXTURE_2D );
           
@@ -584,8 +584,8 @@ void DrawQWidget::paintGL()
     
     if (havePendOn(PC_SIZE, bitmaskPendingChanges))
     {
-      if ((loc = m_locations[SF_DIMM_A]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixDimmA);
-      if ((loc = m_locations[SF_DIMM_B]) != -1)         m_ShaderProgram.setUniformValue(loc, m_matrixDimmB);
+      if ((loc = m_locations[SF_DIMM_A]) != -1)         m_ShaderProgram.setUniformValue(loc, m_dataDimmA);
+      if ((loc = m_locations[SF_DIMM_B]) != -1)         m_ShaderProgram.setUniformValue(loc, m_dataDimmB);
       if ((loc = m_locations[SF_CHNL_SCALER_A]) != -1)  m_ShaderProgram.setUniformValue(loc, m_scalingA);
       if ((loc = m_locations[SF_CHNL_SCALER_B]) != -1)  m_ShaderProgram.setUniformValue(loc, m_scalingB);
     }
@@ -757,7 +757,7 @@ void DrawQWidget::paintGL()
     
 //    if (!m_rawResizeModeNoScaled)
 //    {
-//      if (m_matrixSwitchAB)
+//      if (m_dataDimmSwitchAB)
 //        glViewport(0 + m_cttrLeft, c_height - sizeA() - m_cttrTop, sizeB()/* + m_cttrLeft + m_cttrRight*/, sizeA()/* + m_cttrBottom*/);
 //      else
 //        glViewport(0 + m_cttrLeft, c_height - sizeB() - m_cttrTop, sizeA()/* + m_cttrLeft + m_cttrRight*/, sizeB()/* + m_cttrBottom*/);
@@ -767,19 +767,19 @@ void DrawQWidget::paintGL()
       switch (m_viewAlign)
       {
       case DVA_LEFT:
-        if (m_matrixSwitchAB)
+        if (m_dataDimmSwitchAB)
           glViewport(0 + m_cttrLeft, c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
         else
           glViewport(0 + m_cttrLeft, c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
         break;
       case DVA_CENTER:
-        if (m_matrixSwitchAB)
+        if (m_dataDimmSwitchAB)
           glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - (int)sizeB())/2, c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
         else
           glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - (int)sizeA())/2, c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
         break;
       case DVA_RIGHT:
-        if (m_matrixSwitchAB)
+        if (m_dataDimmSwitchAB)
           glViewport(c_width - m_cttrRight - (int)sizeB(), c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
         else
           glViewport(c_width - m_cttrRight - (int)sizeA(), c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
@@ -829,31 +829,31 @@ void DrawQWidget::resizeGL(int w, int h)
   w -= m_cttrLeft + m_cttrRight;
   h -= m_cttrTop + m_cttrBottom;
   
-//  qDebug()<<"DrawQWidget PRE resizeEv: "<<QSize(w,h)<<m_matrixDimmA<<m_matrixDimmB<<m_scalingA<<m_scalingB;
-  if (m_matrixSwitchAB)
+//  qDebug()<<"DrawQWidget PRE resizeEv: "<<QSize(w,h)<<m_dataDimmA<<m_dataDimmB<<m_scalingA<<m_scalingB;
+  if (m_dataDimmSwitchAB)
     adjustSizeAndScale(h, w);
   else
     adjustSizeAndScale(w, h);
-//  qDebug()<<"DrawQWidget resizeEv: "<<m_matrixDimmA<<m_matrixDimmB<<m_scalingA<<m_scalingB;
+//  qDebug()<<"DrawQWidget resizeEv: "<<m_dataDimmA<<m_dataDimmB<<m_scalingA<<m_scalingB;
   
   if (m_rawResizeModeNoScaled)
   {
     switch (m_viewAlign)
     {
     case DVA_LEFT:
-      if (m_matrixSwitchAB)
+      if (m_dataDimmSwitchAB)
         glViewport(0 + m_cttrLeft, c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
       else
         glViewport(0 + m_cttrLeft, c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
       break;
     case DVA_CENTER:
-      if (m_matrixSwitchAB)
+      if (m_dataDimmSwitchAB)
         glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - (int)sizeB())/2, c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
       else
         glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - (int)sizeA())/2, c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
       break;
     case DVA_RIGHT:
-      if (m_matrixSwitchAB)
+      if (m_dataDimmSwitchAB)
         glViewport(c_width - m_cttrRight - (int)sizeB(), c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
       else
         glViewport(c_width - m_cttrRight - (int)sizeA(), c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
@@ -870,12 +870,12 @@ void DrawQWidget::resizeGL(int w, int h)
 //  width_in -= m_cttrLeft + m_cttrRight;
 //  height_in -= m_cttrTop + m_cttrBottom;
   
-//  int wsizeA = m_matrixSwitchAB? height_in : width_in;
-//  int wsizeB = m_matrixSwitchAB? width_in : height_in;
+//  int wsizeA = m_dataDimmSwitchAB? height_in : width_in;
+//  int wsizeB = m_dataDimmSwitchAB? width_in : height_in;
   
 //  unsigned int dimmA, dimmB, scalingA, scalingB;
 //  sizeAndScaleHint(wsizeA/m_splitterA, wsizeB/m_splitterB, &dimmA, &dimmB, &scalingA, &scalingB);
-//  if (m_matrixSwitchAB)
+//  if (m_dataDimmSwitchAB)
 //  {
 //    *actualwidth = dimmB*scalingB*m_splitterB;
 //    *actualheight = dimmA*scalingA*m_splitterA;
@@ -886,7 +886,7 @@ void DrawQWidget::resizeGL(int w, int h)
 //    *actualheight = dimmB*scalingB*m_splitterB;
 //  }
 ////  unsigned int dimmA, dimmB, scalingA, scalingB;
-////  if (m_matrixSwitchAB)
+////  if (m_dataDimmSwitchAB)
 ////    sizeAndScaleHint(height_in, width_in, &dimmB, &dimmA, &scalingB, &scalingA);
 ////  else
 ////    sizeAndScaleHint(width_in, height_in, &dimmA, &dimmB, &scalingA, &scalingB);
@@ -903,14 +903,14 @@ void DrawQWidget::fitSize(int width_in, int height_in, dcsizecd_t* dc_horz, dcsi
   height_in -= m_cttrTop + m_cttrBottom;
   
   
-  int wsizeA = m_matrixSwitchAB? height_in : width_in;
-  int wsizeB = m_matrixSwitchAB? width_in : height_in;
+  int wsizeA = m_dataDimmSwitchAB? height_in : width_in;
+  int wsizeB = m_dataDimmSwitchAB? width_in : height_in;
  
   dcsizecd_t  dcA, dcB;
   sizeAndScaleHint(wsizeA/m_splitterA, wsizeB/m_splitterB, &dcA.dimm, &dcB.dimm, &dcA.scaling, &dcB.scaling);
   dcA.splitter = m_splitterA;
   dcB.splitter = m_splitterB;
-  if (m_matrixSwitchAB)
+  if (m_dataDimmSwitchAB)
   {
     *dc_horz = dcB;
     *dc_vert = dcA;
@@ -951,7 +951,7 @@ void DrawQWidget::innerRescale()
   w -= m_cttrLeft + m_cttrRight;
   h -= m_cttrTop + m_cttrBottom;
   
-  if (m_matrixSwitchAB)
+  if (m_dataDimmSwitchAB)
     adjustSizeAndScale(h, w);
   else
     adjustSizeAndScale(w, h);
@@ -959,24 +959,24 @@ void DrawQWidget::innerRescale()
 
 void DrawQWidget::innerUpdateGeometry()
 {
-//  int sizeA = m_scalingA * m_matrixDimmA * m_splitterA * c_dpr_inv;       if (sizeA < 1)  sizeA = 1;
-//  int sizeB = m_scalingB * (m_datex == DATEX_1D? 1 : m_matrixDimmB) * m_splitterB * c_dpr_inv;      if (sizeB < 1)  sizeB = 1;
+//  int sizeA = m_scalingA * m_dataDimmA * m_splitterA * c_dpr_inv;       if (sizeA < 1)  sizeA = 1;
+//  int sizeB = m_scalingB * (m_datex == DATEX_1D? 1 : m_dataDimmB) * m_splitterB * c_dpr_inv;      if (sizeB < 1)  sizeB = 1;
 //  this->resize(sizeA, sizeB);
   this->updateGeometry();
 }
 
 QSize DrawQWidget::minimumSizeHint() const
 {
-  int sizeA = m_scalingAMin * m_matrixDimmA * m_splitterA * c_dpr_inv;    if (sizeA < 1)  sizeA = 1;
-  int sizeB = m_scalingBMin * (m_datex == DATEX_1D? 1 : m_matrixDimmB) * m_splitterB * c_dpr_inv;   if (sizeB < 1)  sizeB = 1;
-  return m_matrixSwitchAB ? QSize( sizeB + m_cttrLeft + m_cttrRight, sizeA + m_cttrTop + m_cttrBottom ) : QSize( sizeA + m_cttrLeft + m_cttrRight, sizeB + m_cttrTop + m_cttrBottom );
+  int sizeA = m_scalingAMin * m_dataDimmA * m_splitterA * c_dpr_inv;    if (sizeA < 1)  sizeA = 1;
+  int sizeB = m_scalingBMin * (m_datex == DATEX_1D? 1 : m_dataDimmB) * m_splitterB * c_dpr_inv;   if (sizeB < 1)  sizeB = 1;
+  return m_dataDimmSwitchAB ? QSize( sizeB + m_cttrLeft + m_cttrRight, sizeA + m_cttrTop + m_cttrBottom ) : QSize( sizeA + m_cttrLeft + m_cttrRight, sizeB + m_cttrTop + m_cttrBottom );
 }
 
 QSize DrawQWidget::sizeHint() const
 { 
-  int sizeA = m_scalingA * m_matrixDimmA * m_splitterA * c_dpr_inv;       if (sizeA < 1)  sizeA = 1;
-  int sizeB = m_scalingB * (m_datex == DATEX_1D? 1 : m_matrixDimmB) * m_splitterB * c_dpr_inv;      if (sizeB < 1)  sizeB = 1;
-  return m_matrixSwitchAB ? QSize( sizeB + m_cttrLeft + m_cttrRight, sizeA + m_cttrTop + m_cttrBottom ) : QSize( sizeA + m_cttrLeft + m_cttrRight, sizeB + m_cttrTop + m_cttrBottom );
+  int sizeA = m_scalingA * m_dataDimmA * m_splitterA * c_dpr_inv;       if (sizeA < 1)  sizeA = 1;
+  int sizeB = m_scalingB * (m_datex == DATEX_1D? 1 : m_dataDimmB) * m_splitterB * c_dpr_inv;      if (sizeB < 1)  sizeB = 1;
+  return m_dataDimmSwitchAB ? QSize( sizeB + m_cttrLeft + m_cttrRight, sizeA + m_cttrTop + m_cttrBottom ) : QSize( sizeA + m_cttrLeft + m_cttrRight, sizeB + m_cttrTop + m_cttrBottom );
 }
 
 //bool DrawQWidget::event(QEvent* event)
@@ -994,8 +994,8 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
 #if 0     /// Integer calculatons
   unsigned int singleDimmWidth = sizeHorz();
   unsigned int singleDimmHeight = sizeVert();
-  unsigned int totalDimmWidth = singleDimmWidth * (m_matrixSwitchAB? m_splitterB : m_splitterA);
-  unsigned int totalDimmHeight = singleDimmHeight * (m_matrixSwitchAB? m_splitterA : m_splitterB);
+  unsigned int totalDimmWidth = singleDimmWidth * (m_dataDimmSwitchAB? m_splitterB : m_splitterA);
+  unsigned int totalDimmHeight = singleDimmHeight * (m_dataDimmSwitchAB? m_splitterA : m_splitterB);
   x -= m_cttrLeft;    y -= m_cttrTop;
   x *=  c_dpr;        y *=  c_dpr;
 
@@ -1035,8 +1035,8 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
 #else   /// floating calculations
   float singleDimmWidth = sizeHorz();
   float singleDimmHeight = sizeVert();
-  float totalDimmWidth = singleDimmWidth * (m_matrixSwitchAB? m_splitterB : m_splitterA);
-  float totalDimmHeight = singleDimmHeight * (m_matrixSwitchAB? m_splitterA : m_splitterB);
+  float totalDimmWidth = singleDimmWidth * (m_dataDimmSwitchAB? m_splitterB : m_splitterA);
+  float totalDimmHeight = singleDimmHeight * (m_dataDimmSwitchAB? m_splitterA : m_splitterB);
   
   float fx = (x - m_cttrLeft) * c_dpr;
   float fy = (y - m_cttrTop) * c_dpr;

@@ -189,17 +189,20 @@ FshDrawConstructor::FshDrawConstructor(char *deststring, unsigned int allocatedP
 #ifdef BSGLSLVER
   m_offset += msprintf(&m_to[m_offset],   "#version %d" SHNL, BSGLSLVER);
 #endif
-  static const char fsh_base[] =          "uniform highp sampler2D  texData;" SHNL
-                                          "uniform highp int        viewdimm_a;" SHNL
-                                          "uniform highp int        viewdimm_b;" SHNL
+  static const char fsh_base[] =          "uniform highp sampler2D  texdata;" SHNL
+                                          "uniform highp int        texdatadimm_a;" SHNL
+                                          "uniform highp int        texdatadimm_b;" SHNL
                                           "uniform highp int        scaler_a;" SHNL
                                           "uniform highp int        scaler_b;" SHNL
-                                          "uniform highp int        countPortions;" SHNL
-                                          "uniform highp sampler2D  texPalette;" SHNL
+                                          "uniform highp int        portions;" SHNL
+                                          "uniform highp sampler2D  texpalette;" SHNL
                                           "uniform highp vec2       palrange;" SHNL
                                           "in highp vec2            coords;" SHNL
-                                          "float getValue1D(in int portion, in float x){  return texture(texData, vec2(x, float(portion)/(float(countPortions)-1.0))).r; }" SHNL
-                                          "float getValue2D(in int portion, in vec2  x){  return texture(texData, vec2(x.x, float(x.y + float(portion))/float(countPortions))).r; }" SHNL
+#if defined BSGLSLVER && BSGLSLVER >= 420
+                                          "out vec4                 outcolor;" SHNL
+#endif
+                                          "float getValue1D(in int portion, in float x){  return texture(texdata, vec2(x, float(portion)/(float(portions)-1.0))).r; }" SHNL
+                                          "float getValue2D(in int portion, in vec2  x){  return texture(texdata, vec2(x.x, float(x.y + float(portion))/float(portions))).r; }" SHNL
                                           "vec3  insider(int i, ivec2 ifromvec) { float scaled01 = float(i - ifromvec[0])/float(ifromvec[1] - sign(float(ifromvec[1])));\n\treturn vec3( step(0.0, scaled01)*(1.0-step(1.001, scaled01)), scaled01, sign(ifromvec[1])*ifromvec[1]); }" SHNL;
 
   memcpy(&m_to[m_offset], fsh_base, sizeof(fsh_base) - 1);  m_offset += sizeof(fsh_base) - 1;
@@ -225,7 +228,7 @@ void FshDrawConstructor::_main_begin(int initback, unsigned int backcolor, ORIEN
                                     "ivec2 ovl_transfer_pos;" SHNL
                                     "vec2  ovl_cur_coords;" SHNL
                                     
-                                    "ivec2 ab_indimms = ivec2(viewdimm_a, viewdimm_b);" SHNL
+                                    "ivec2 ab_indimms = ivec2(texdatadimm_a, texdatadimm_b);" SHNL
                                     "ivec2 ab_iscaler = ivec2(scaler_a, scaler_b);" SHNL
                                     "ivec2 ab_ibounds = ab_indimms*ab_iscaler;" SHNL;
   memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
@@ -299,7 +302,7 @@ void FshDrawConstructor::_main_begin(int initback, unsigned int backcolor, ORIEN
                                               spDirection == 0? "1" : "0"
                           );
     }
-    m_offset += msprintf(&m_to[m_offset],     "abc_coords = mix(abc_coords, vec2(-1.0), step(countPortions, float(explicitPortion)));" SHNL);
+    m_offset += msprintf(&m_to[m_offset],     "abc_coords = mix(abc_coords, vec2(-1.0), step(portions, float(explicitPortion)));" SHNL);
   }
   
   
@@ -308,7 +311,7 @@ void FshDrawConstructor::_main_begin(int initback, unsigned int backcolor, ORIEN
   else if (initback == INITBACK_BYVALUE || initback == INIT_BYVALUE)
     this->ccolor("backcolor", backcolor);
   else if (initback == INITBACK_BYPALETTE || initback == INIT_BYPALETTE)
-    m_offset += msprintf(&m_to[m_offset],   "vec3  backcolor = texture(texPalette, vec2(0.0, 0.0)).rgb;" SHNL);
+    m_offset += msprintf(&m_to[m_offset],   "vec3  backcolor = texture(texpalette, vec2(0.0, 0.0)).rgb;" SHNL);
   
   if (initback == INIT_BYZERO || initback == INIT_BYVALUE || initback == INIT_BYPALETTE)
     m_offset += msprintf(&m_to[m_offset],   "vec3  result = backcolor;" SHNL);
@@ -546,7 +549,7 @@ void FshDrawConstructor::main_end(const overpattern_t& fsp)
       if (fsp.color.r == 0.0f)
         m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = backcolor;" SHNL);
       else
-        m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = texture(texPalette, vec2(%F, 0.0)).rgb;" SHNL, fsp.color.r);
+        m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = texture(texpalette, vec2(%F, 0.0)).rgb;" SHNL, fsp.color.r);
     }
     else
     {
@@ -623,8 +626,11 @@ void FshDrawConstructor::main_end(const overpattern_t& fsp)
                                             , 
                                             i+1, i+1);
   }
-  
+#if !defined BSGLSLVER || BSGLSLVER < 420
   static const char fsh_end[] =   "gl_FragColor = vec4(result, 0.0);" SHNL "}" SHNL;
+#else
+  static const char fsh_end[] =   "outcolor = vec4(result, 0.0);" SHNL "}" SHNL;
+#endif
 //  static const char fsh_end[] =   "fragColor = vec4(result, 0.0);" SHNL "}" SHNL;
   memcpy(&m_to[m_offset], fsh_end, sizeof(fsh_end) - 1); m_offset += sizeof(fsh_end) - 1;
   m_to[m_offset++] = '\0';
@@ -669,7 +675,7 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
 {
   if (m_impulsegen.type == impulsedata_t::IR_OFF)
   {
-    m_offset += msprintf(&m_to[m_offset], "%s = texture(texData, vec2(%s.x, float(%s.y + float(%s))/float(countPortions))).r;" SHNL, 
+    m_offset += msprintf(&m_to[m_offset], "%s = texture(texdata, vec2(%s.x, float(%s.y + float(%s))/float(portions))).r;" SHNL,
                                           varname,                    coordsname, coordsname,   portionname);
   }
   
@@ -683,7 +689,7 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
                            m_impulsegen.type == impulsedata_t::IR_A_COEFF? "ab_ibounds" : "ab_indimms" :
                            m_impulsegen.type == impulsedata_t::IR_A_COEFF? "dbounds" : "dbounds_noscaled";
     
-    m_offset += msprintf(&m_to[m_offset],  "vec4 impulsegrad = vec4(0, %s.x*%s.x, 1.0/%s.x, float(%s.y + float(%s))/float(countPortions));" SHNL,
+    m_offset += msprintf(&m_to[m_offset],  "vec4 impulsegrad = vec4(0, %s.x*%s.x, 1.0/%s.x, float(%s.y + float(%s))/float(portions));" SHNL,
                                                           coordsname,  scnosc,   scnosc,     coordsname,  portionname
                         );
     
@@ -693,11 +699,11 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
       if (m_impulsegen.cycled == 1)
         m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], %s.x + loc_vv[1], 1.0 - step(0.0, loc_vv[1]));" SHNL, scnosc);
         
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texData, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r;" SHNL, 
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texdata, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r;" SHNL,
                                                                               m_impulsegen.coeff[i]);
     }
     
-    m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texData, vec2(impulsegrad[1]*impulsegrad[2], impulsegrad[3])).r;" SHNL, 
+    m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texdata, vec2(impulsegrad[1]*impulsegrad[2], impulsegrad[3])).r;" SHNL,
                                                                               m_impulsegen.coeff[m_impulsegen.central]);
     
     for (int i=m_impulsegen.central+1; i<m_impulsegen.count; i++)
@@ -705,7 +711,7 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
       m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = impulsegrad[1] + %d;" SHNL, i-m_impulsegen.central);
       if (m_impulsegen.cycled == 1)
         m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s.x, 1.0 - step(loc_vv[1], %s.x));" SHNL, scnosc, scnosc );
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texData, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r;" SHNL, 
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texdata, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r;" SHNL,
                                                                               m_impulsegen.coeff[i]);
     }
     
@@ -714,7 +720,7 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
   else if (m_impulsegen.type == impulsedata_t::IR_A_BORDERS || m_impulsegen.type == impulsedata_t::IR_A_BORDERS_FIXEDCOUNT)
   {    
     const char* scnosc = m_datamapped == DM_OFF? "ab_indimms.x" : "dbounds_noscaled.x";
-    m_offset += msprintf(&m_to[m_offset],  "vec4 impulsegrad = vec4(0, (%s.x*(%s)), 1.0/(%s), float(%s.y + float(%s))/float(countPortions));" SHNL,
+    m_offset += msprintf(&m_to[m_offset],  "vec4 impulsegrad = vec4(0, (%s.x*(%s)), 1.0/(%s), float(%s.y + float(%s))/float(portions));" SHNL,
                                                                    coordsname,  scnosc,             scnosc,               coordsname,  portionname );
     m_offset += msprintf(&m_to[m_offset],  "vec2 loc_vv = vec2(impulsegrad[1] - 1, impulsegrad[1] + 1);" SHNL );
     if (m_impulsegen.cycled == 1)
@@ -723,9 +729,9 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
       m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s, 1.0 - step(loc_vv[1], %s));" SHNL, scnosc, scnosc);
     }
     
-    m_offset += msprintf(&m_to[m_offset], "impulsegrad[0] = texture(texData, vec2(%s.x, impulsegrad[3])).r;" SHNL, coordsname);
-    m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(texture(texData, vec2(loc_vv[0]*impulsegrad[2], impulsegrad[3])).r," SHNL
-                                                            "texture(texData, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r);" SHNL);
+    m_offset += msprintf(&m_to[m_offset], "impulsegrad[0] = texture(texdata, vec2(%s.x, impulsegrad[3])).r;" SHNL, coordsname);
+    m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(texture(texdata, vec2(loc_vv[0]*impulsegrad[2], impulsegrad[3])).r," SHNL
+                                                            "texture(texdata, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r);" SHNL);
     
     {
       double halfcent = m_impulsegen.central/2.0;
@@ -768,7 +774,7 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
                            m_impulsegen.type == impulsedata_t::IR_B_COEFF? "ab_ibounds" : "ab_indimms" :
                            m_impulsegen.type == impulsedata_t::IR_B_COEFF? "dbounds" : "dbounds_noscaled";
     
-    m_offset += msprintf(&m_to[m_offset],  "vec4 impulsegrad = vec4(%s.x, %s.y*%s.y, 1.0/%s.y, %s);" SHNL, // float(%s.y + float(%s))/float(countPortions)
+    m_offset += msprintf(&m_to[m_offset],  "vec4 impulsegrad = vec4(%s.x, %s.y*%s.y, 1.0/%s.y, %s);" SHNL, // float(%s.y + float(%s))/float(portions)
                                                           coordsname,  coordsname,  scnosc,   scnosc,     portionname
                         );
     
@@ -778,11 +784,11 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
       if (m_impulsegen.cycled == 1)
         m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], %s.y + loc_vv[1], 1.0 - step(0.0, loc_vv[1]));" SHNL, scnosc);
         
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texData, vec2(impulsegrad[0], (loc_vv[1]*impulsegrad[2] + impulsegrad[3])/float(countPortions))).r;" SHNL, 
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texdata, vec2(impulsegrad[0], (loc_vv[1]*impulsegrad[2] + impulsegrad[3])/float(portions))).r;" SHNL,
                                                                               m_impulsegen.coeff[i]);
     }
     
-    m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texData, vec2(impulsegrad[0], (impulsegrad[1]*impulsegrad[2] + impulsegrad[3])/float(countPortions))).r;" SHNL, 
+    m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texdata, vec2(impulsegrad[0], (impulsegrad[1]*impulsegrad[2] + impulsegrad[3])/float(portions))).r;" SHNL,
                                                                               m_impulsegen.coeff[m_impulsegen.central]);
     
     for (int i=m_impulsegen.central+1; i<m_impulsegen.count; i++)
@@ -790,7 +796,7 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
       m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = impulsegrad[1] + %d;" SHNL, i-m_impulsegen.central);
       if (m_impulsegen.cycled == 1)
         m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s.y, 1.0 - step(loc_vv[1], %s.y));" SHNL, scnosc, scnosc );
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texData, vec2(impulsegrad[0], (loc_vv[1]*impulsegrad[2] + impulsegrad[3])/float(countPortions))).r;" SHNL, 
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texdata, vec2(impulsegrad[0], (loc_vv[1]*impulsegrad[2] + impulsegrad[3])/float(portions))).r;" SHNL,
                                                                               m_impulsegen.coeff[i]);
     }
     
@@ -812,9 +818,9 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
       m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s, 1.0 - step(loc_vv[1], %s));" SHNL, scnosc, scnosc);
     }
     
-    m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(texData, vec2(impulsegrad[0], (%s.y + impulsegrad[3])/float(countPortions))).r;" SHNL, coordsname);
-    m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(texture(texData, vec2(impulsegrad[0], (loc_vv[0]*impulsegrad[2] + impulsegrad[3])/float(countPortions))).r," SHNL
-                                                           "texture(texData, vec2(impulsegrad[0], (loc_vv[1]*impulsegrad[2] + impulsegrad[3])/float(countPortions))).r);" SHNL);
+    m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(texdata, vec2(impulsegrad[0], (%s.y + impulsegrad[3])/float(portions))).r;" SHNL, coordsname);
+    m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(texture(texdata, vec2(impulsegrad[0], (loc_vv[0]*impulsegrad[2] + impulsegrad[3])/float(portions))).r," SHNL
+                                                           "texture(texdata, vec2(impulsegrad[0], (loc_vv[1]*impulsegrad[2] + impulsegrad[3])/float(portions))).r);" SHNL);
     
     {
       double halfcent = m_impulsegen.central/2.0;

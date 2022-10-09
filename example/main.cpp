@@ -1,8 +1,7 @@
 #include <QApplication>
 #include "mainwindow.h"
 
-/*  elirupost@gmail.com
- * 
+/*
  if (rabota == volk)
   rabota.doRun(&les);
 */
@@ -25,7 +24,6 @@
 
 
 #ifndef MW_TEST_NOCHOOSE_DEFAULT
-//#include <QInputDialog>
 #include <QDialog>
 #include <QLabel>
 #include <QListWidget>
@@ -58,9 +56,14 @@ int main(int argc, char *argv[])
   };
 #undef REGTEST
   
-//  bool ok;
+
+#ifdef ONLY_OVERVIEWS
+  const int tstart = 1, tstop = 18;
+#else
+  const int tstart = 0, tstop = sizeof(testnames)/sizeof(const char*);
+#endif
   QStringList   tests;
-  for (unsigned int i=0; i<sizeof(testnames)/sizeof(const char*); i++)
+  for (int i=tstart; i<tstop; i++)
   {
     QString tname(testnames[i]);
     tname = tname.replace('_', " ");
@@ -81,7 +84,7 @@ int main(int argc, char *argv[])
     QListWidget*    qlv = new QListWidget;
     qlv->addItems(tests);
     qlv->setSelectionMode(QAbstractItemView::SingleSelection);
-    qlv->setCurrentRow(1);
+    qlv->setCurrentRow(1 - tstart);
     qlv->setMinimumHeight(qlv->sizeHintForRow(0)*tests.count() + 10);
     lay->addWidget(qlv);
     QPushButton*  btn = new QPushButton("Accept");
@@ -90,13 +93,11 @@ int main(int argc, char *argv[])
     dlg.setLayout(lay);
     if (dlg.exec() != QDialog::Accepted)
       return 0;
-    MW_TEST = (tests_t)qlv->currentIndex().row();
+    MW_TEST = (tests_t)(tstart + qlv->currentIndex().row());
   }
-//  MW_TEST = (tests_t)tests.indexOf(result);
 #endif
   MainWindow w(MW_TEST);
   w.move(100, 200);
-//  w.resize(1400, 1000);
   w.show();
   return a.exec();
 }

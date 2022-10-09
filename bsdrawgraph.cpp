@@ -41,7 +41,7 @@ public:
     fmg.cfloatvar("specopc", 1.0f - (graphopts.opacity > 1.0f? 1.0f : graphopts.opacity < 0.0f? 0.0f : graphopts.opacity));
     
     static const char graph_locals[] = 
-                                      "vec2  ab_fndimms = vec2(viewdimm_a, viewdimm_b);" SHNL
+                                      "vec2  ab_fndimms = vec2(texdatadimm_a, texdatadimm_b);" SHNL
                                       "vec2  ab_fbounds = vec2(ab_ibounds);" SHNL
                                       "float b_coord = abc_coords.y*ab_fbounds.y;" SHNL   /// ! no floor.
                                       "float b_coord_ns = floor(abc_coords.y*ab_fndimms.y);" SHNL
@@ -76,7 +76,7 @@ public:
       if (needDots == 1)
       {
         fmg.push( "vec3  fx = vec3(abc_coords.x, abc_coords.x, abc_coords.x);" SHNL );
-        fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = explicitPortion;" SHNL );
+        fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<portions; i++)" SHNL : "int i = explicitPortion;" SHNL );
         fmg.push(
                   "{" SHNL
                     "vec3   fy = vec3(getValue1D(i, fx[0]));" SHNL
@@ -93,7 +93,7 @@ public:
                     "abc_coords.x, "
                     "float(min(abc_coords.x*ab_indimms.x, ab_indimms.x-1)  + 1)/ab_indimms.x);" SHNL
                   );
-        fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = explicitPortion;" SHNL );
+        fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<portions; i++)" SHNL : "int i = explicitPortion;" SHNL );
         fmg.push(
                   "{" SHNL
                     "vec3  fy = vec3(getValue1D(i, fx[0]), getValue1D(i, fx[1]), getValue1D(i, fx[2]));" SHNL
@@ -110,7 +110,7 @@ public:
                     "float(min(abc_coords.x*ab_indimms.x, ab_indimms.x-1)  + 1)/ab_indimms.x, " SHNL
                     "float(min(abc_coords.x*ab_indimms.x, ab_indimms.x-2)  + 2)/ab_indimms.x);" SHNL
                   );
-        fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<countPortions; i++)" SHNL : "int i = explicitPortion;" SHNL );
+        fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<portions; i++)" SHNL : "int i = explicitPortion;" SHNL );
         fmg.push(
                   "{" SHNL
                     "vec4  fy = vec4(getValue1D(i, fx[0]), getValue1D(i, fx[1]), getValue1D(i, fx[2]), getValue1D(i, fx[3]));" SHNL
@@ -535,7 +535,7 @@ public:
         }
       }
 
-      fmg.push(  "vec3  colorGraph = texture(texPalette, vec2(porc, 0.0)).rgb;" SHNL );
+      fmg.push(  "vec3  colorGraph = texture(texpalette, vec2(porc, 0.0)).rgb;" SHNL );
       
       if (graphopts.graphtype == GT_HISTOGRAM_SUM)
         fmg.push("result = result + colorGraph*vec3(mixwellp);" SHNL );
@@ -562,8 +562,8 @@ DrawGraph_Sheigen::~DrawGraph_Sheigen()
 DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, unsigned int memForDeploy, const graphopts_t& graphopts, const coloropts_t& coloropts, SPLITPORTIONS splitGraphs):
   DrawQWidget(DATEX_1D, new DrawGraph_Sheigen(graphopts, coloropts), graphs, OR_LRBT, splitGraphs)
 {
-  m_matrixDimmA = samples;
-  m_matrixDimmB = 1;
+  m_dataDimmA = samples;
+  m_dataDimmB = 1;
   m_portionSize = samples;
   deployMemory(memForDeploy);
   reXtractDynrange(coloropts);
@@ -572,8 +572,8 @@ DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, unsigned int mem
 
 void DrawGraph::reConstructor(unsigned int samples)
 {
-  m_matrixDimmA = samples;
-  m_matrixDimmB = 1;
+  m_dataDimmA = samples;
+  m_dataDimmB = 1;
   m_portionSize = samples;
   deployMemory();
 }
@@ -620,8 +620,8 @@ void DrawGraph::setOpts(const graphopts_t& go, const coloropts_t& co)
 
 void DrawGraph::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
 {
-  *matrixDimmA = m_matrixDimmA;
-  *scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
+  *matrixDimmA = m_dataDimmA;
+  *scalingA = (unsigned int)sizeA <= m_dataDimmA? 1 : (sizeA / m_dataDimmA);
   *scalingB = m_scalingB;
   clampScaling(scalingA, scalingB);
   *matrixDimmB = sizeB / *scalingB;
@@ -641,7 +641,7 @@ unsigned int DrawGraph::colorBack() const
 
 void DrawGraphDyport::reConstructorEx(unsigned int samples)
 {
-  m_matrixDimmA = samples;
+  m_dataDimmA = samples;
   m_portionSize = samples;
 }
 
@@ -696,9 +696,9 @@ void DrawGraphMove::setData(const float *data)
   {
     unsigned int poffs = p*m_portionSize;
     for (unsigned int i=0; i<m_portionSize - m_stepSamples; i++)
-      m_matrixData[poffs + i] = m_matrixData[poffs + i + m_stepSamples];
+      m_dataStorage[poffs + i] = m_dataStorage[poffs + i + m_stepSamples];
     for (unsigned int i=0; i<m_stepSamples; i++)
-      m_matrixData[poffs + m_portionSize - m_stepSamples + i] = data[p*m_stepSamples + i];
+      m_dataStorage[poffs + m_portionSize - m_stepSamples + i] = data[p*m_stepSamples + i];
   }
   DrawGraph::vmanUpData();
 }
@@ -709,9 +709,9 @@ void DrawGraphMove::setData(const float* data, DataDecimator* decim)
   {
     unsigned int poffs = p*m_portionSize;
     for (unsigned int i=0; i<m_portionSize - m_stepSamples; i++)
-      m_matrixData[poffs + i] = m_matrixData[poffs + i + m_stepSamples];
+      m_dataStorage[poffs + i] = m_dataStorage[poffs + i + m_stepSamples];
     for (unsigned int i=0; i<m_stepSamples; i++)
-      m_matrixData[poffs + m_portionSize - m_stepSamples + i] = decim->decimate(data, m_stepSamples, i, p);
+      m_dataStorage[poffs + m_portionSize - m_stepSamples + i] = decim->decimate(data, m_stepSamples, i, p);
   }
   DrawGraph::vmanUpData();
 }
@@ -740,9 +740,9 @@ DrawGraphMoveEx::DrawGraphMoveEx(unsigned int samples, unsigned int stepsamples,
 
 //void DrawGraphMoveEx::rescaleA(int v)
 //{
-//  m_portionSize = m_matrixDimmA;
+//  m_portionSize = m_dataDimmA;
 //  int w = c_width, h = c_height;
-//  if (m_matrixSwitchAB)
+//  if (m_dataDimmSwitchAB)
 //    adjustSizeAndScale(h, w);
 //  else
 //    adjustSizeAndScale(w, h);
@@ -804,7 +804,7 @@ void DrawGraphMoveEx::appendData(const float* data, unsigned int length)
 //  if (m_sbStatic && m_filloffset != 0) m_filloffset += m_countPortions*length;
   
 //  int showlength = this->sizeDataA();
-//  m_memory.onFillData(m_filloffset + showlength, showlength, m_matrixData, 0);
+//  m_memory.onFillData(m_filloffset + showlength, showlength, m_dataStorage, 0);
   
 //  DrawQWidget::vmanUpData();
   
@@ -847,8 +847,8 @@ int DrawGraphMoveEx::sizeAndScaleChanged(bool changedDimmA, bool /*changedDimmB*
 {
   if (changedDimmA)
   {
-//    bool more = m_portionSize < m_matrixDimmA;
-    m_portionSize = m_matrixDimmA;
+//    bool more = m_portionSize < m_dataDimmA;
+    m_portionSize = m_dataDimmA;
 //    if (more)
     {
       clampFilloffset();
@@ -861,7 +861,7 @@ int DrawGraphMoveEx::sizeAndScaleChanged(bool changedDimmA, bool /*changedDimmB*
 
 void DrawGraphMoveEx::fillMatrix()
 {
-  m_memory.onFillData(m_filloffset + this->m_portionSize, this->m_portionSize, m_matrixData, 0);
+  m_memory.onFillData(m_filloffset + this->m_portionSize, this->m_portionSize, m_dataStorage, 0);
 }
 
 void DrawGraphMoveEx::clampFilloffset()

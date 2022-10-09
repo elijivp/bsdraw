@@ -26,16 +26,16 @@ public:
                                          unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
     FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
-    fmg.push( "uniform highp sampler2D texGround;"
-              "uniform highp int       countGround;" );
+    fmg.push( "uniform highp sampler2D texground;"
+              "uniform highp int       lenground;" );
     fmg.main_begin(FshDrawConstructor::INIT_BYVALUE, m_bckclr, orient, fsp);
     
-    fmg.push(   "vec4 pixsdp = texture(texGround, abc_coords).rgba;" );
+    fmg.push(   "vec4 pixsdp = texture(texground, abc_coords).rgba;" );
     
     if (m_mode == MODE_NONE)
     {
       fmg.push(   "result = mix(result, pixsdp.bgr, pixsdp.a);"
-//                  "float value = texture(texData, vec2(domain, 0.0)).r;"  // domain /float(countGround-1)
+//                  "float value = texture(texdata, vec2(domain, 0.0)).r;"  // domain /float(lenground-1)
 //                  "dvalue = max(dvalue, value);"
 //                  "post_mask[0] = mix(1.0, post_mask[0], step( value , post_mask[1]));"
                   );
@@ -44,9 +44,9 @@ public:
     {
       fmg.push(
                   "float marker = mod(pixsdp[2]*255.0, 4.0)*16.0 + mod(pixsdp[1]*255.0, 4.0)*4.0 + mod(pixsdp[0]*255.0, 4.0);"
-                  "float value = texture(texData, vec2((marker - 1.0)/float(countGround-1), 0.0)).r;"
+                  "float value = texture(texdata, vec2((marker - 1.0)/float(lenground-1), 0.0)).r;"
                   "value = palrange[0] + (palrange[1] - palrange[0])*value;"
-                  "vec3  mmc = texture(texPalette, vec2(value, 0.0)).rgb;"
+                  "vec3  mmc = texture(texpalette, vec2(value, 0.0)).rgb;"
                   "result = mix(mix(result, pixsdp.bgr, pixsdp.a), mmc, 1.0 - step(marker, 0.0));"
   //                "result = pixsdp.bgr;"
   //                "mixwell = pixsdp.a;"
@@ -66,8 +66,8 @@ SheiGeneratorSDP::~SheiGeneratorSDP(){}
 
 void DrawSDPicture::reConstructor(unsigned int samplesHorz, unsigned int samplesVert)
 {
-  m_matrixDimmA = samplesHorz;
-  m_matrixDimmB = samplesVert;
+  m_dataDimmA = samplesHorz;
+  m_dataDimmB = samplesVert;
   m_portionSize = SDPSIZE_MARKER;
   
   m_groundType = GND_SDP;
@@ -138,10 +138,10 @@ void DrawSDPicture::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixD
   }
   else
   {
-    *matrixDimmA = m_matrixDimmA;
-    *matrixDimmB = m_matrixDimmB;
-    *scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
-    *scalingB = (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB);
+    *matrixDimmA = m_dataDimmA;
+    *matrixDimmB = m_dataDimmB;
+    *scalingA = (unsigned int)sizeA <= m_dataDimmA? 1 : (sizeA / m_dataDimmA);
+    *scalingB = (unsigned int)sizeB <= m_dataDimmB? 1 : (sizeB / m_dataDimmB);
   }
   clampScaling(scalingA, scalingB);
 }

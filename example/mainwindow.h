@@ -102,11 +102,11 @@ private slots:
   void    changeSpeedUpdate(int sigid);
   void    changeSpeedUpdate_Once();
   void    changeFeatures(int sigid);
-  void    changePostmask(int sigid);
-  void    changePostmaskThreshold(double);
-  void    changePostmaskIntWeight(int);
-  void    changePostmaskFloatWeight(int);
-  void    changePostmaskFloatSmooth(int);
+  void    changeOverpattern(int sigid);
+  void    changeOverpatternThreshold(double);
+  void    changeOverpatternIntWeight(int);
+  void    changeOverpatternFloatWeight(int);
+  void    changeOverpatternFloatSmooth(int);
   void    changeImpulse(int v);
   void    changeInterpolation(int sigid);
   void    changeBans(bool banned);

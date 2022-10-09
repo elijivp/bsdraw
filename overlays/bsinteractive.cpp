@@ -445,10 +445,10 @@ int   OActiveRandom::fshOVCoords(int overlay, bool switchedab, char* to) const
 //      if (m_pointerType == PT_MAX_H || m_pointerType == PT_MAX_V)   ocg.push("vec2 saved = vec2(0.0, bounds.x*contrast.x + contrast.y);");
 //      else                                                          ocg.push("vec2 saved = vec2(0.0, bounds.y*contrast.x + contrast.y);");
 //    }
-//    ocg.push( "for (int i=0; i<countPortions; i++){"
-//                "for (int h=0; h<viewdimm_a; h++){"
-//                  "float fpos = float(h)/(viewdimm_a-1);"
-//                  "vec2 current = vec2((fpos*(viewdimm_a-1) + 0.5)/viewdimm_a, getValue1D(i, fpos));" );
+//    ocg.push( "for (int i=0; i<portions; i++){"
+//                "for (int h=0; h<texdatadimm_a; h++){"
+//                  "float fpos = float(h)/(texdatadimm_a-1);"
+//                  "vec2 current = vec2((fpos*(texdatadimm_a-1) + 0.5)/texdatadimm_a, getValue1D(i, fpos));" );
 //    {
 //      if (m_pointerType == PT_MAX_H || m_pointerType == PT_MAX_V)   ocg.push("float itis = step(saved[1], current[1]);");
 //      else                                                          ocg.push("float itis = step(current[1], saved[1]);");

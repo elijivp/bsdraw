@@ -26,37 +26,37 @@ public:
     FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
 
     if (dsup != DS_NONE)
-      fmg.push( "uniform highp sampler2D texGround;"
-                "uniform highp int       countGround;" );
+      fmg.push( "uniform highp sampler2D texground;"
+                "uniform highp int       lenground;" );
 
     fmg.main_begin(FshDrawConstructor::INITBACK_BYPALETTE, 0, orient, fsp); //FshDrawConstructor::INITBACK_BYZERO
     fmg.cintvar("allocatedPortions", (int)allocatedPortions);
-    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<countPortions; i++)" : "int i = explicitPortion;" );
+    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<portions; i++)" : "int i = explicitPortion;" );
     fmg.push( "{" );
     {
       if (dsup == DS_NONE)
         fmg.value2D("float value");
       else if (dsup == DS_DOMSTD)
         fmg.push(
-                  "float domain = texture(texGround, abc_coords).r;"
-                  "float value = texture(texData, vec2(domain, 0.0)).r;"  // domain /float(countGround-1)
+                  "float domain = texture(texground, abc_coords).r;"
+                  "float value = texture(texdata, vec2(domain, 0.0)).r;"  // domain /float(lenground-1)
                 );
       else if (dsup == DS_DOMBLACK)
         fmg.push(
-                  "float domain = texture(texGround, abc_coords).r;"
-                  "float value = texture(texData, vec2(domain, 0.0)).r * (1-step(domain, 0.0));"    // /float(countGround-1)
+                  "float domain = texture(texground, abc_coords).r;"
+                  "float value = texture(texdata, vec2(domain, 0.0)).r * (1-step(domain, 0.0));"    // /float(lenground-1)
                 );
       
       fmg.push(  "dvalue = max(dvalue, value);");
       fmg.push(  "value = palrange[0] + (palrange[1] - palrange[0])*value;" );
       
       if ( splitPortions == SP_NONE )
-        fmg.push("result = result + texture(texPalette, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );
+        fmg.push("result = result + texture(texpalette, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );
       else if (splitPortions & SPFLAG_COLORSPLIT)
-        fmg.push("result = result + texture(texPalette, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" );
-//        fmg.push("result.rgb = mix(texture(texPalette, vec2(value, float(i)/(allocatedPortions-1))).rgb, result.rgb, step(countPortions, float(explicitPortion)));" );
+        fmg.push("result = result + texture(texpalette, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" );
+//        fmg.push("result.rgb = mix(texture(texpalette, vec2(value, float(i)/(allocatedPortions-1))).rgb, result.rgb, step(countPortions, float(explicitPortion)));" );
       else
-        fmg.push("result.rgb = mix(texture(texPalette, vec2(value, 0.0)).rgb, result.rgb, step(countPortions, float(explicitPortion)));" );
+        fmg.push("result.rgb = mix(texture(texpalette, vec2(value, 0.0)).rgb, result.rgb, step(countPortions, float(explicitPortion)));" );
       
       fmg.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" );
     }

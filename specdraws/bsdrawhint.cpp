@@ -192,7 +192,7 @@ public:
     fmg.push(   
                 "mixwell = mixwell*step(distwell, 7.0)*(1.0-distwell/1.5);" SHNL
                 "mixwell = max(0.0, mixwell);" SHNL
-                "vec3  colorGraph = texture(texPalette, vec2(porc, 0.0)).rgb;" SHNL
+                "vec3  colorGraph = texture(texpalette, vec2(porc, 0.0)).rgb;" SHNL
                 "result = mix(result, colorGraph, mixwell);" SHNL
     );
     
@@ -225,7 +225,7 @@ public:
     
     fmg.cfloatvar("portionColor", m_value);
     fmg.push( "float distwell = 0.0;"  SHNL );
-    fmg.push( "vec3  colorGraph = texture(texPalette, vec2(palrange[0] + (palrange[1] - palrange[0])*portionColor, 0.0)).rgb;" SHNL
+    fmg.push( "vec3  colorGraph = texture(texpalette, vec2(palrange[0] + (palrange[1] - palrange[0])*portionColor, 0.0)).rgb;" SHNL
               "result = mix(result, colorGraph, mixwell);" SHNL
     );
     
@@ -241,12 +241,12 @@ DrawHint::DrawHint(const DrawGraph* pdg, int portion, int flags, ORIENTATION ori
                                            backgroundColor == 0xFFFFFFFF? pdg->coloropts().backcolor : backgroundColor)
               , 1, orient)
 {
-  m_matrixDimmA = 1;
-  m_matrixDimmB = 1;
+  m_dataDimmA = 1;
+  m_dataDimmB = 1;
   m_portionSize = 1;
   
   SheiGeneratorHint_Graph* shs = (SheiGeneratorHint_Graph*)m_pcsh;
-  if (m_matrixSwitchAB)
+  if (m_dataDimmSwitchAB)
     setMinimumSize(shs->m_mindimmB, shs->m_mindimmA);
   else
     setMinimumSize(shs->m_mindimmA, shs->m_mindimmB);
@@ -262,18 +262,18 @@ DrawHint::DrawHint(float value, ORIENTATION orient, unsigned int backgroundColor
               new SheiGeneratorHint_Intensity(value, backgroundColor)
               , 1, orient)
 {
-  m_matrixDimmA = 1;
-  m_matrixDimmB = 1;
+  m_dataDimmA = 1;
+  m_dataDimmB = 1;
   m_portionSize = 1;
   deployMemory();
 }
 
 void DrawHint::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
 {
-  *matrixDimmA = m_matrixDimmA;
-  *matrixDimmB = m_matrixDimmB;
-  *scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
-  *scalingB = (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB);
+  *matrixDimmA = m_dataDimmA;
+  *matrixDimmB = m_dataDimmB;
+  *scalingA = (unsigned int)sizeA <= m_dataDimmA? 1 : (sizeA / m_dataDimmA);
+  *scalingB = (unsigned int)sizeB <= m_dataDimmB? 1 : (sizeB / m_dataDimmB);
   clampScaling(scalingA, scalingB);
 }
 

@@ -92,15 +92,11 @@ protected:
   ORIENTATION           m_orient;
   SPLITPORTIONS         m_splitPortions;
 
-  float*                m_matrixData;
-  float*                m_matrixDataCached;
-  unsigned int          m_matrixDimmA;
-  unsigned int          m_matrixDimmB;
-  bool                  m_matrixSwitchAB;
-  
-  impulsedata_t         m_impulsedata;
-  DRAWVIEWALIGN         m_viewAlign;
-  bool                  m_dataTextureInterp;
+  float*                m_dataStorage;
+  float*                m_dataStorageCached;
+  unsigned int          m_dataDimmA;
+  unsigned int          m_dataDimmB;
+  bool                  m_dataDimmSwitchAB;
   
   bool                  m_rawResizeModeNoScaled;
 
@@ -112,6 +108,8 @@ protected:
   
   unsigned int          m_splitterA;
   unsigned int          m_splitterB;
+
+  bool                  m_dataTextureInterp;
 protected:
   const IPalette*       m_ppal;
   bool                  m_ppaldiscretise;       // inited by true if portions > 1
@@ -123,6 +121,8 @@ protected:
   bool                  m_doclearbackground;
   CLEARSOURCE           m_clearsource;
 protected:
+  DRAWVIEWALIGN         m_viewAlign;
+protected:
   enum  GROUNDTYPE      { GND_NONE, GND_DOMAIN, GND_SDP, GND_ASSISTFLOATTABLE };
   GROUNDTYPE            m_groundType;
   void*                 m_groundData;
@@ -132,7 +132,8 @@ protected:
   int                   m_bitmaskUpdateBan;
   int                   m_bitmaskPendingChanges;
 protected:
-  overpattern_t           m_overpattern;
+  impulsedata_t         m_postImpulse;
+  overpattern_t         m_postOverpattern;
 public:
                     /// Redraw control. Which actions will cause repaint
   enum  REDRAWBY        { RD_BYDATA, RD_BYSETTINGS, RD_BYOVL_ADDREMOVE, RD_BYOVL_ACTIONS };   // special now used on overlays removing
@@ -212,22 +213,24 @@ public:
   DrawCore(DATAASTEXTURE datex, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): m_datex(datex), 
                                                         m_portionSize(0), m_allocatedPortions(portions), 
                                                         m_countPortions(portions), m_orient(orient), m_splitPortions(splitPortions),
-                                                        m_matrixData(nullptr), m_matrixDataCached(nullptr),
-                                                        m_matrixSwitchAB(orient > OR_RLTB),
-                                                        m_viewAlign(DVA_LEFT), m_dataTextureInterp(false), m_rawResizeModeNoScaled(false),
+                                                        m_dataStorage(nullptr), m_dataStorageCached(nullptr),
+                                                        m_dataDimmSwitchAB(orient > OR_RLTB),
+                                                        m_rawResizeModeNoScaled(false),
                                                         m_scalingA(1), m_scalingB(1),
                                                         m_scalingAMin(1), m_scalingAMax(0),
                                                         m_scalingBMin(1), m_scalingBMax(0), m_scalingIsSynced(false),
+                                                        m_dataTextureInterp(false),
                                                         m_ppal(nullptr), m_ppaldiscretise(false), m_doclearbackground(true), m_clearsource(CS_WIDGET), 
+                                                        m_viewAlign(DVA_LEFT),
                                                         m_groundType(GND_NONE), m_groundData(nullptr), m_groundDataFastFree(true),
                                                         m_groundMipMapping(false), m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
-                                                        m_overpattern(overpattern_off()),
+                                                        m_postOverpattern(overpattern_off()),
                                                         m_overlaysCount(0), m_proactive(nullptr), m_proactiveOwner(true)
   {
     _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);
     
-    m_impulsedata.type = impulsedata_t::IR_OFF;
-    m_impulsedata.count = 0;
+    m_postImpulse.type = impulsedata_t::IR_OFF;
+    m_postImpulse.count = 0;
     
     m_ppalrange[PRNG_START] = 0.0f;
     m_ppalrange[PRNG_STOP] = 1.0f;
@@ -250,21 +253,21 @@ public:
     if (m_proactiveOwner && m_proactive)
       delete m_proactive;
     _ovlRemoveAll();
-    if (m_matrixData)
-      delete []m_matrixData;
-    if (m_matrixDataCached)
-      delete []m_matrixDataCached;
+    if (m_dataStorage)
+      delete []m_dataStorage;
+    if (m_dataStorageCached)
+      delete []m_dataStorageCached;
   }
 protected:
   void    deployMemory()
   {
     unsigned int total = m_allocatedPortions * m_portionSize;
-    m_matrixData = new float[total];
+    m_dataStorage = new float[total];
     for (unsigned int i=0; i<total; i++)
-      m_matrixData[i] = 0;
-    m_matrixDataCached = new float[total];
+      m_dataStorage[i] = 0;
+    m_dataStorageCached = new float[total];
   }
-  void    deployMemory(unsigned int total) {  m_matrixData = new float[total]; for (unsigned int i=0; i<total; i++) m_matrixData[i] = 0; m_matrixDataCached = new float[total]; }
+  void    deployMemory(unsigned int total) {  m_dataStorage = new float[total]; for (unsigned int i=0; i<total; i++) m_dataStorage[i] = 0; m_dataStorageCached = new float[total]; }
 public:
   unsigned int directions() const { if (m_datex == DATEX_2D || m_datex == DATEX_DD || m_datex == DATEX_POLAR) return 2; return 1; }
 public:
@@ -292,31 +295,31 @@ public:
   float                 contrastB()     const { return m_loc_b; }
 public:
   ///             size components
-  unsigned int          sizeDataA() const { return m_matrixDimmA; }
-  unsigned int          sizeDataB() const { return m_matrixDimmB; }
-  unsigned int          sizeDataHorz() const { return m_matrixSwitchAB? m_matrixDimmB : m_matrixDimmA; }
-  unsigned int          sizeDataVert() const { return m_matrixSwitchAB? m_matrixDimmA : m_matrixDimmB; }
+  unsigned int          sizeDataA() const { return m_dataDimmA; }
+  unsigned int          sizeDataB() const { return m_dataDimmB; }
+  unsigned int          sizeDataHorz() const { return m_dataDimmSwitchAB? m_dataDimmB : m_dataDimmA; }
+  unsigned int          sizeDataVert() const { return m_dataDimmSwitchAB? m_dataDimmA : m_dataDimmB; }
 
   unsigned int          scalingA() const { return m_scalingA; }
   unsigned int          scalingB() const { return m_scalingB; }
-  unsigned int          scalingHorz() const { return m_matrixSwitchAB? m_scalingB : m_scalingA; }
-  unsigned int          scalingVert() const { return m_matrixSwitchAB? m_scalingA : m_scalingB; }
+  unsigned int          scalingHorz() const { return m_dataDimmSwitchAB? m_scalingB : m_scalingA; }
+  unsigned int          scalingVert() const { return m_dataDimmSwitchAB? m_scalingA : m_scalingB; }
 
   unsigned int          splitterA() const { return m_splitterA; }
   unsigned int          splitterB() const { return m_splitterB; }
-  unsigned int          splitterHorz() const { return m_matrixSwitchAB? m_splitterB : m_splitterA; }
-  unsigned int          splitterVert() const { return m_matrixSwitchAB? m_splitterA : m_splitterB; }
+  unsigned int          splitterHorz() const { return m_dataDimmSwitchAB? m_splitterB : m_splitterA; }
+  unsigned int          splitterVert() const { return m_dataDimmSwitchAB? m_splitterA : m_splitterB; }
   
   ///             size total
-  unsigned int          sizeA() const { return m_matrixDimmA*m_scalingA*m_splitterA; }
-  unsigned int          sizeB() const { return m_matrixDimmB*m_scalingB*m_splitterB; }
-  unsigned int          sizeHorz() const { return m_matrixSwitchAB? sizeB() : sizeA(); }
-  unsigned int          sizeVert() const { return m_matrixSwitchAB? sizeA() : sizeB(); }
+  unsigned int          sizeA() const { return m_dataDimmA*m_scalingA*m_splitterA; }
+  unsigned int          sizeB() const { return m_dataDimmB*m_scalingB*m_splitterB; }
+  unsigned int          sizeHorz() const { return m_dataDimmSwitchAB? sizeB() : sizeA(); }
+  unsigned int          sizeVert() const { return m_dataDimmSwitchAB? sizeA() : sizeB(); }
   
-  dcsizecd_t            sizeComponentsA() const { return { m_matrixDimmA, m_scalingA, m_splitterA }; }
-  dcsizecd_t            sizeComponentsB() const { return { m_matrixDimmB, m_scalingB, m_splitterB }; }
-  dcsizecd_t            sizeComponentsHorz() const { return m_matrixSwitchAB? sizeComponentsB() : sizeComponentsA(); }
-  dcsizecd_t            sizeComponentsVert() const { return m_matrixSwitchAB? sizeComponentsA() : sizeComponentsB(); }
+  dcsizecd_t            sizeComponentsA() const { return { m_dataDimmA, m_scalingA, m_splitterA }; }
+  dcsizecd_t            sizeComponentsB() const { return { m_dataDimmB, m_scalingB, m_splitterB }; }
+  dcsizecd_t            sizeComponentsHorz() const { return m_dataDimmSwitchAB? sizeComponentsB() : sizeComponentsA(); }
+  dcsizecd_t            sizeComponentsVert() const { return m_dataDimmSwitchAB? sizeComponentsA() : sizeComponentsB(); }
 
 
   
@@ -325,13 +328,13 @@ public:
   
   void                  scalingLimitsA(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingAMin;  if (scmax) *scmax = m_scalingAMax; }
   void                  scalingLimitsB(unsigned int *scmin, unsigned int *scmax=nullptr) const { *scmin = m_scalingBMin;  if (scmax) *scmax = m_scalingBMax; }
-  void                  scalingLimitsHorz(unsigned int *scmin, unsigned int *scmax=nullptr) const { if (!m_matrixSwitchAB) scalingLimitsA(scmin, scmax); else scalingLimitsB(scmin, scmax); }
-  void                  scalingLimitsVert(unsigned int *scmin, unsigned int *scmax=nullptr) const { if (!m_matrixSwitchAB) scalingLimitsA(scmin, scmax); else scalingLimitsB(scmin, scmax); }
+  void                  scalingLimitsHorz(unsigned int *scmin, unsigned int *scmax=nullptr) const { if (!m_dataDimmSwitchAB) scalingLimitsA(scmin, scmax); else scalingLimitsB(scmin, scmax); }
+  void                  scalingLimitsVert(unsigned int *scmin, unsigned int *scmax=nullptr) const { if (!m_dataDimmSwitchAB) scalingLimitsA(scmin, scmax); else scalingLimitsB(scmin, scmax); }
   
   void                  setScalingLimitsA(unsigned int scmin, unsigned int scmax=0){  m_scalingAMin = scmin < 1? 1 : scmin; m_scalingAMax = scmax;  m_scalingIsSynced = false; clampScalingManually(); pendResize(true); }
   void                  setScalingLimitsB(unsigned int scmin, unsigned int scmax=0){  m_scalingBMin = scmin < 1? 1 : scmin; m_scalingBMax = scmax;  m_scalingIsSynced = false; clampScalingManually(); pendResize(true); }
-  void                  setScalingLimitsHorz(unsigned int scmin, unsigned int scmax=0){ if (!m_matrixSwitchAB) setScalingLimitsA(scmin, scmax); else setScalingLimitsB(scmin, scmax); }
-  void                  setScalingLimitsVert(unsigned int scmin, unsigned int scmax=0){ if (!m_matrixSwitchAB) setScalingLimitsB(scmin, scmax); else setScalingLimitsA(scmin, scmax); }
+  void                  setScalingLimitsHorz(unsigned int scmin, unsigned int scmax=0){ if (!m_dataDimmSwitchAB) setScalingLimitsA(scmin, scmax); else setScalingLimitsB(scmin, scmax); }
+  void                  setScalingLimitsVert(unsigned int scmin, unsigned int scmax=0){ if (!m_dataDimmSwitchAB) setScalingLimitsB(scmin, scmax); else setScalingLimitsA(scmin, scmax); }
   void                  setScalingLimitsSynced(unsigned int scmin, unsigned int scmax=0){ m_scalingIsSynced = true; m_scalingAMin = m_scalingBMin = scmin < 1? 1 : scmin; m_scalingAMax = m_scalingBMax = scmax; clampScalingManually(); pendResize(true); }
   
 //  void                  setScalingDefaultA(unsigned int sc){  if (sc < m_scalingAMin) sc = m_scalingAMin;   m_scalingA = sc;  innerUpdateGeometry();  }
@@ -342,11 +345,11 @@ public:
   {
     unsigned int matrixDimmA, matrixDimmB, scalingA, scalingB;
     sizeAndScaleHint(sizeA/(int)m_splitterA, sizeB/(int)m_splitterB, &matrixDimmA, &matrixDimmB, &scalingA, &scalingB);
-    bool  changedDimmA = m_matrixDimmA != matrixDimmA || m_scalingA != scalingA;
-    m_matrixDimmA = matrixDimmA;
+    bool  changedDimmA = m_dataDimmA != matrixDimmA || m_scalingA != scalingA;
+    m_dataDimmA = matrixDimmA;
     m_scalingA = scalingA;
-    bool  changedDimmB = m_matrixDimmB != matrixDimmB || m_scalingB != scalingB;
-    m_matrixDimmB = matrixDimmB;
+    bool  changedDimmB = m_dataDimmB != matrixDimmB || m_scalingB != scalingB;
+    m_dataDimmB = matrixDimmB;
     m_scalingB = scalingB;
     m_bitmaskPendingChanges |= sizeAndScaleChanged(changedDimmA, changedDimmB);
   }
@@ -375,7 +378,7 @@ private:
     if (m_scalingB != old_scaler_b  && m_datex == DATEX_1D)
     {
       float coeff = float(old_scaler_b) / m_scalingB;
-      m_matrixDimmB = (unsigned int)(m_matrixDimmB*coeff + 0.5f);
+      m_dataDimmB = (unsigned int)(m_dataDimmB*coeff + 0.5f);
     }
 //    m_bitmaskPendingChanges |= sizeAndScaleChanged(old_scaler_a != m_scalingA, old_scaler_b != m_scalingB);
   }
@@ -452,7 +455,7 @@ public:
   {
     unsigned int total = m_countPortions * m_portionSize;
     for (unsigned int i=0; i<total; i++)
-      m_matrixData[i] = data[i]; 
+      m_dataStorage[i] = data[i];
     
     m_bitmaskPendingChanges |= PC_DATA;
     if (!autoUpdateBanned(RD_BYDATA))   callWidgetUpdate();
@@ -461,7 +464,7 @@ public:
   {
     for (unsigned int p=0; p<m_countPortions; p++)
       for (unsigned int i=0; i<m_portionSize; i++)
-        m_matrixData[p*m_portionSize + i] = decim->decimate(data, (int)m_portionSize, (int)i, (int)p);
+        m_dataStorage[p*m_portionSize + i] = decim->decimate(data, (int)m_portionSize, (int)i, (int)p);
     
     m_bitmaskPendingChanges |= PC_DATA;
     if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();
@@ -470,7 +473,7 @@ public:
   {
     unsigned int total = m_countPortions * m_portionSize;
     for (unsigned int i=0; i<total; i++)
-      m_matrixData[i] = data; 
+      m_dataStorage[i] = data;
     
     m_bitmaskPendingChanges |= PC_DATA;
     if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();
@@ -479,7 +482,7 @@ public:
   {
     unsigned int total = m_allocatedPortions * m_portionSize;
     for (unsigned int i=0; i<total; i++)
-      m_matrixData[i] = 0;
+      m_dataStorage[i] = 0;
     m_bitmaskPendingChanges |= PC_DATA;
     if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();
   }
@@ -488,12 +491,12 @@ public:
   {
     unsigned int total = m_countPortions * m_portionSize;
     for (unsigned int i=0; i<total; i++)
-      result[i] = m_matrixData[i];
+      result[i] = m_dataStorage[i];
   }
-  const float*  getDataPtr() const {   return m_matrixData;    }
-  float*        getDataPtr() {    return m_matrixData;   }     // You need manual update after data change
-  virtual const float*  getDataPtr(unsigned int portion) const { if (portion >= m_allocatedPortions)  return nullptr; return &m_matrixData[portion*m_portionSize]; }
-  virtual float*        getDataPtr(unsigned int portion) { if (portion >= m_allocatedPortions)  return nullptr; return &m_matrixData[portion*m_portionSize]; }     // You need manual update after data change
+  const float*  getDataPtr() const {   return m_dataStorage;    }
+  float*        getDataPtr() {    return m_dataStorage;   }     // You need manual update after data change
+  virtual const float*  getDataPtr(unsigned int portion) const { if (portion >= m_allocatedPortions)  return nullptr; return &m_dataStorage[portion*m_portionSize]; }
+  virtual float*        getDataPtr(unsigned int portion) { if (portion >= m_allocatedPortions)  return nullptr; return &m_dataStorage[portion*m_portionSize]; }     // You need manual update after data change
   void  manualDataPtrUpdate(){  vmanUpData(); }
   void  updateData(){ vmanUpData(); }
 protected:
@@ -515,16 +518,16 @@ public:
 public:
   void  setImpulse(const impulsedata_t& id)
   {
-    m_impulsedata = id;
+    m_postImpulse = id;
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
   void  setImpulseOff()
   {
-    if (m_impulsedata.type != impulsedata_t::IR_OFF)
+    if (m_postImpulse.type != impulsedata_t::IR_OFF)
     {
-      m_impulsedata.type = impulsedata_t::IR_OFF;
-      m_impulsedata.count = m_impulsedata.central = 0;
+      m_postImpulse.type = impulsedata_t::IR_OFF;
+      m_postImpulse.count = m_postImpulse.central = 0;
       m_bitmaskPendingChanges |= PC_INIT;
       if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
     }
@@ -533,7 +536,7 @@ public:
   {
     impulsedata_t idt = { noscaled? impulsedata_t::IR_A_COEFF_NOSCALED : impulsedata_t::IR_A_COEFF, count, central, cycled? 1 : 0, {} };
     for (int i=0; i<count; i++)
-      m_impulsedata.coeff[i] = coeffs[i];
+      m_postImpulse.coeff[i] = coeffs[i];
     setImpulse(idt);
   }
   void  setImpulseCoeffA(float coeff_left, float coeff_central, float coeff_right, bool noscaled=false, bool cycled=false)
@@ -550,7 +553,7 @@ public:
   {
     impulsedata_t idt = { noscaled? impulsedata_t::IR_B_COEFF_NOSCALED : impulsedata_t::IR_B_COEFF, count, central, cycled? 1 : 0, {} };
     for (int i=0; i<count; i++)
-      m_impulsedata.coeff[i] = coeffs[i];
+      m_postImpulse.coeff[i] = coeffs[i];
     setImpulse(idt);
   }
   void  setImpulseCoeffB(float coeff_left, float coeff_central, float coeff_right, bool noscaled=false, bool cycled=false)
@@ -573,7 +576,7 @@ public:
     impulsedata_t idt = { fixed? impulsedata_t::IR_B_BORDERS_FIXEDCOUNT : impulsedata_t::IR_B_BORDERS, minscaling, bordersize, 0, {} };
     setImpulse(idt);
   }
-  const impulsedata_t& impulse() const { return m_impulsedata; }
+  const impulsedata_t& impulse() const { return m_postImpulse; }
   
   void  setViewAlign(DRAWVIEWALIGN dva){  m_viewAlign = dva; callWidgetUpdate(); }
   DRAWVIEWALIGN  viewAlign() const {  return m_viewAlign; }
@@ -582,7 +585,7 @@ public:
   void  setOrientation(ORIENTATION orient)
   { 
     m_orient = orient;
-    m_matrixSwitchAB = orient > OR_RLTB;
+    m_dataDimmSwitchAB = orient > OR_RLTB;
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
@@ -590,11 +593,11 @@ public:
   void  setTransponed(bool r)
   {
     m_orient = (ORIENTATION)((int)m_orient + (m_orient > OR_RLTB? ( r? 0 : -4 ) : ( r? 4 : 0 )));
-    m_matrixSwitchAB = r;
+    m_dataDimmSwitchAB = r;
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
-  bool  transponed() const {  return m_matrixSwitchAB;  }
+  bool  transponed() const {  return m_dataDimmSwitchAB;  }
   void  setMirroredHorz()
   {
     const ORIENTATION mh[] = { OR_RLBT, OR_LRBT, OR_RLTB, OR_LRTB, OR_TBRL, OR_BTRL, OR_TBLR, OR_BTLR };
@@ -742,11 +745,11 @@ public:
   /// 4. Optimized/Native posteffect methods on scaling
   void            setOverpattern(const overpattern_t& fsp)
   {
-    m_overpattern = fsp;
+    m_postOverpattern = fsp;
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
-  const overpattern_t& overpattern() const { return m_overpattern; }
+  const overpattern_t& overpattern() const { return m_postOverpattern; }
 protected:
   virtual void            overlayUpdate(bool reinit, bool pendonly)
   {
@@ -805,14 +808,14 @@ public:
     if (m_portionSize == 0) return false;
     if (start > m_portionSize || start > stop)  return false;
     if (stop > m_portionSize) stop = m_portionSize;
-    float min = m_matrixData[start], max = m_matrixData[start];
+    float min = m_dataStorage[start], max = m_dataStorage[start];
     for (unsigned int p=0; p<m_countPortions; p++)
       for (unsigned int i=start+1; i<stop; i++)
       {
-        if (min > m_matrixData[p*m_portionSize + i])
-          min = m_matrixData[p*m_portionSize + i];
-        if (max < m_matrixData[p*m_portionSize + i])
-          max = m_matrixData[p*m_portionSize + i];
+        if (min > m_dataStorage[p*m_portionSize + i])
+          min = m_dataStorage[p*m_portionSize + i];
+        if (max < m_dataStorage[p*m_portionSize + i])
+          max = m_dataStorage[p*m_portionSize + i];
       }
     if (rmin) *rmin = min;
     if (rmax) *rmax = max;
@@ -824,13 +827,13 @@ public:
     if (start > m_portionSize || start > stop)  return false;
     if (stop > m_portionSize) stop = m_portionSize;
     const unsigned int pjump = portion*m_portionSize;
-    float min = m_matrixData[pjump + start], max = m_matrixData[pjump + start];
+    float min = m_dataStorage[pjump + start], max = m_dataStorage[pjump + start];
     for (unsigned int i=start+1; i<stop; i++)
     {
-      if (min > m_matrixData[pjump + i])
-        min = m_matrixData[pjump + i];
-      if (max < m_matrixData[pjump + i])
-        max = m_matrixData[pjump + i];
+      if (min > m_dataStorage[pjump + i])
+        min = m_dataStorage[pjump + i];
+      if (max < m_dataStorage[pjump + i])
+        max = m_dataStorage[pjump + i];
     }
     if (rmin) *rmin = min;
     if (rmax) *rmax = max;

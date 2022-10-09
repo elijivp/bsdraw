@@ -2444,17 +2444,19 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             TauSetup(">>>>", 0, SP_FASTEST, BFS_CHECKABLE | BFS_WIDTHMAX_SYMBOL), 
             TauSetup("STOP", 0, SP_STOP, BFS_CHECKABLE | BFS_WIDTHMAX_SYMBOL),
           };
-          for (unsigned int i=0; i<sizeof(rtsbtns) / sizeof(TauSetup); i++)
-            if (rtsbtns[i].mappedvalue == sp)
-              rtsbtns[i].flags |= BFS_CHECKED;  
           const int rtsbtnscount = sizeof(rtsbtns) / sizeof(TauSetup);
           QButtonGroup* qbg = new QButtonGroup(this);
-            
           BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
             BS_SPACING(16)
             for (int i=0; i<rtsbtnscount; i++)
             {
-              TAU_BTN_ADDGROUPED(rtsbtns[i], qbg, 0, Qt::AlignCenter);
+              if (rtsbtns[i].mappedvalue == sp)
+                rtsbtns[i].flags |= BFS_CHECKED;
+              BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
+                TAU_BTN_ADDGROUPED(rtsbtns[i], qbg, 0, Qt::AlignCenter);
+                int v = rtsbtns[i].mappedvalue;
+                TAU_QSTR_ADD(0, i == 0 || i == rtsbtnscount - 1? QString("-") : v > 1000? QString("%1 sec").arg(v/1000) : QString("%1ms").arg(v), 0, Qt::AlignCenter);
+              BS_STOP
               if (i == 0)
                 BS_SPACING(12)
               if (i == rtsbtnscount - 2)
@@ -2722,9 +2724,15 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               TauSetup("STOP",    0, SP_STOP, BFS_CHECKED),
             };
             BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-              
-              for (unsigned int i=0; i<sizeof(upbtns) / sizeof(TauSetup); i++)
-                TAU_BTN_ADDGROUPED(upbtns[i], qbg);
+              const unsigned int upbtnscount = sizeof(upbtns) / sizeof(TauSetup);
+              for (unsigned int i=0; i<upbtnscount; i++)
+              {
+                BS_START_LAYOUT_HMAX_VMIN(QVBoxLayout)
+                  TAU_BTN_ADDGROUPED(upbtns[i], qbg, 0, Qt::AlignCenter);
+                  int v = upbtns[i].mappedvalue;
+                  TAU_QSTR_ADD(0, i == upbtnscount - 1? QString("-") : v > 1000? QString("%1 sec").arg(v/1000) : QString("%1ms").arg(v), 0, Qt::AlignCenter);
+                BS_STOP
+              }
             BS_STOP
 #if QT_VERSION >= 0x060000
             QObject::connect(qbg, &QButtonGroup::idPressed, this, &MainWindow::changeSpeedUpdate);
@@ -2755,15 +2763,15 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             }
             qbg->setProperty("itarget", 0);
 #if QT_VERSION >= 0x060000
-            QObject::connect(qbg, &QButtonGroup::idPressed, this, &MainWindow::changePostmask);
+            QObject::connect(qbg, &QButtonGroup::idPressed, this, &MainWindow::changeOverpattern);
 #else
-            QObject::connect(qbg, SIGNAL(buttonPressed(int)), this, SLOT(changePostmask(int)));
+            QObject::connect(qbg, SIGNAL(buttonPressed(int)), this, SLOT(changeOverpattern(int)));
 #endif
             BS_STRETCH
           BS_STOP
                 
           TAU_TEXT_ADD(0, "Threshold: ");
-          NEW_DOUBLESPIN_ADDMAPPED(/*new BSUOD_DPM(1, dpm)*/1, changePostmaskThreshold, 0, Qt::AlignCenter)              
+          NEW_DOUBLESPIN_ADDMAPPED(/*new BSUOD_DPM(1, dpm)*/1, changeOverpatternThreshold, 0, Qt::AlignCenter)
           TAU_TEXT_ADD(0, "Type: ");
           {
             QStringList dpmMain; dpmMain<<QString::fromUtf8("Contour")
@@ -2781,7 +2789,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             qcb->addItems(dpmMain);
 //            qcb->setUserData(1, new BSUOD_DPM(1, dpm));
             qcb->setProperty("itarget", 1);
-            QObject::connect(qcb, SIGNAL(currentIndexChanged(int)), this, SLOT(changePostmask(int)));
+            QObject::connect(qcb, SIGNAL(currentIndexChanged(int)), this, SLOT(changeOverpattern(int)));
             BSADD(qcb, 0, Qt::AlignHCenter);
           }
             
@@ -2794,7 +2802,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             qcb3->setMaximumWidth(80);
 //            qcb3->setUserData(1, new BSUOD_DPM(2, dpm));
             qcb3->setProperty("itarget", 2);
-            QObject::connect(qcb3, SIGNAL(valueChanged(int)), this, SLOT(changePostmaskIntWeight(int)));
+            QObject::connect(qcb3, SIGNAL(valueChanged(int)), this, SLOT(changeOverpatternIntWeight(int)));
             BSADD(qcb3);
             BS_SPACING(32)
           BS_STOP
@@ -2806,7 +2814,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             slider->setRange(0,1000);
             slider->setValue(500);
             BSADD(slider, 1);
-            QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changePostmaskFloatWeight(int)));
+            QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeOverpatternFloatWeight(int)));
           BS_STOP
           TAU_TEXT_ADD(0, "    Smooth: ")
           BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
@@ -2815,7 +2823,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             slider->setRange(0,1000);
             slider->setValue(500);
             BSADD(slider, 1);
-            QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changePostmaskFloatSmooth(int)));
+            QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(changeOverpatternFloatSmooth(int)));
           BS_STOP
               
           TAU_TEXT_ADD(0, "Palette color idx (0..20 -> 0.0..1.0): ");
@@ -2826,7 +2834,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             qcb4->setMaximumWidth(80);
 //            qcb4->setUserData(1, new BSUOD_DPM(3, dpm));
             qcb4->setProperty("itarget", 3);
-            QObject::connect(qcb4, SIGNAL(valueChanged(int)), this, SLOT(changePostmask(int)));
+            QObject::connect(qcb4, SIGNAL(valueChanged(int)), this, SLOT(changeOverpattern(int)));
             BSADD(qcb4);
             BS_SPACING(32)
           BS_STOP
@@ -3032,15 +3040,15 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                                         };
                   for (unsigned int i=0; i<sizeof(spbs)/sizeof(TauSetup); i++)
                   {
-                    TAU_QSTR_ADD(spbs[i].defaultText, 0, Qt::AlignLeft);
+                    TAU_TEXT_ADD(0, spbs[i].pcsztext, 0, Qt::AlignRight);
                     QSpinBox*   psb = new QSpinBox();
-//                    BSAPPLY_FEATS(psb, spbs[i]);
+                    psb->setMaximumWidth(100);
                     psb->setRange(0, 100);
-//                    psb->setUserData(0, new BSUOD_0(spbs[i].mappedvalue));
                     psb->setProperty("itarget", spbs[i].mappedvalue);
                     psb->setAccelerated(true);
                     BSADD(psb, 0, Qt::AlignLeft)
                     QObject::connect(psb, SIGNAL(valueChanged(int)), this, SLOT(changeOVLForm(int)));
+                    BS_SPACING(8)
                   }
                 BS_STOP
                 
@@ -3102,12 +3110,12 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               ptb_ovl->addTab(tr("Position"));
               BS_START_FRAME_V_HMAX_VMIN(BS_FRAME_PANEL, 2)
                 QSignalMapper*  ovlposMapper = new QSignalMapper(this);
-                TAU_BTN_ADDMAPPED(TauSetup("+1", 0, BTOP_UP, 0/2), ovlposMapper, 0, Qt::AlignHCenter);
+                TAU_BTN_ADDMAPPED(TauSetup("+1", 0, BTOP_UP, BFS_WIDTHMAX_SHORT), ovlposMapper, 0, Qt::AlignHCenter);
                 BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
-                  TAU_BTN_ADDMAPPED(TauSetup("-1", 0, BTOP_LEFT, 0/2), ovlposMapper);
-                  TAU_BTN_ADDMAPPED(TauSetup("+1", 0, BTOP_RIGHT, 0/2), ovlposMapper);
+                  TAU_BTN_ADDMAPPED(TauSetup("-1", 0, BTOP_LEFT, BFS_WIDTHMAX_SHORT), ovlposMapper);
+                  TAU_BTN_ADDMAPPED(TauSetup("+1", 0, BTOP_RIGHT, BFS_WIDTHMAX_SHORT), ovlposMapper);
                 BS_STOP
-                TAU_BTN_ADDMAPPED(TauSetup("-1", 0, BTOP_DOWN, 0/2), ovlposMapper, 0, Qt::AlignHCenter);
+                TAU_BTN_ADDMAPPED(TauSetup("-1", 0, BTOP_DOWN, BFS_WIDTHMAX_SHORT), ovlposMapper, 0, Qt::AlignHCenter);
 #if QT_VERSION >= 0x060000
                 QObject::connect(ovlposMapper, &QSignalMapper::mappedInt, this, &MainWindow::changeOVLPos);
 #else
@@ -4517,7 +4525,7 @@ void  MainWindow::changeFeatures(int id)
   }
 }
 
-void MainWindow::changePostmask(int sigid)
+void MainWindow::changeOverpattern(int sigid)
 {  
   int id = sender()->property("itarget").toInt();
   for (unsigned int i=0; i<drawscount; i++)
@@ -4561,7 +4569,7 @@ void MainWindow::changePostmask(int sigid)
   }
 }
 
-void MainWindow::changePostmaskThreshold(double val)
+void MainWindow::changeOverpatternThreshold(double val)
 {
   for (unsigned int i=0; i<drawscount; i++)
   {
@@ -4571,7 +4579,7 @@ void MainWindow::changePostmaskThreshold(double val)
   }
 }
 
-void MainWindow::changePostmaskIntWeight(int val)
+void MainWindow::changeOverpatternIntWeight(int val)
 {
   for (unsigned int i=0; i<drawscount; i++)
   {
@@ -4584,7 +4592,7 @@ void MainWindow::changePostmaskIntWeight(int val)
   }
 }
 
-void MainWindow::changePostmaskFloatWeight(int val)
+void MainWindow::changeOverpatternFloatWeight(int val)
 {
   for (unsigned int i=0; i<drawscount; i++)
   {
@@ -4597,7 +4605,7 @@ void MainWindow::changePostmaskFloatWeight(int val)
   }
 }
 
-void MainWindow::changePostmaskFloatSmooth(int val)
+void MainWindow::changeOverpatternFloatSmooth(int val)
 {
   for (unsigned int i=0; i<drawscount; i++)
   {

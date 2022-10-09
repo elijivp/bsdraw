@@ -9,9 +9,9 @@ DrawRecorder::DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, un
   DrawQWidget(DATEX_15D, new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient, splitPortions),
   m_filldirection(FILL_DEFAULT), m_stopped(0), m_memory(portions, samplesHorz, linesMemory), m_resizelim(resizeLimit)
 {
-  m_matrixDimmA = samplesHorz;
-  m_matrixDimmB = linesStart;
-  m_portionSize = m_matrixDimmA;
+  m_dataDimmA = samplesHorz;
+  m_dataDimmB = linesStart;
+  m_portionSize = m_dataDimmA;
   deployMemory(portions*m_portionSize*m_resizelim);
   m_matrixLmSize = linesMemory;
 }
@@ -47,11 +47,11 @@ void DrawRecorder::clearData()
 {  
   m_memory.onClearData();
   for (unsigned int p = 0; p < m_countPortions; ++p)
-    for (unsigned int i = 0; i < m_matrixDimmB; ++i)
+    for (unsigned int i = 0; i < m_dataDimmB; ++i)
     {
-      for (unsigned int j = 0; j < m_matrixDimmA; ++j)
+      for (unsigned int j = 0; j < m_dataDimmA; ++j)
       {
-        m_matrixData[p*m_matrixDimmB*m_matrixDimmA + i*m_matrixDimmA + j] = 0;
+        m_dataStorage[p*m_dataDimmB*m_dataDimmA + i*m_dataDimmA + j] = 0;
       }
     }
   DrawQWidget::vmanUpData();  // clearData?
@@ -60,17 +60,17 @@ void DrawRecorder::clearData()
 void DrawRecorder::resizeGL(int w, int h)
 {
   DrawQWidget::resizeGL(w,h);
-//  if (m_matrixLmSize < m_matrixDimmB*m_scalingB)
+//  if (m_matrixLmSize < m_dataDimmB*m_scalingB)
 //    m_stopped = 0;
 //  else
-//    m_stopped = ((float)pp/m_matrixLmSize)*(m_matrixLmSize - m_matrixDimmB*m_scalingB);
+//    m_stopped = ((float)pp/m_matrixLmSize)*(m_matrixLmSize - m_dataDimmB*m_scalingB);
   fillMatrix();
 }
 
 void DrawRecorder::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
 {
-  *matrixDimmA = m_matrixDimmA;
-  *scalingA = (unsigned int)sizeA <= m_matrixDimmA? 1 : (sizeA / m_matrixDimmA);
+  *matrixDimmA = m_dataDimmA;
+  *scalingA = (unsigned int)sizeA <= m_dataDimmA? 1 : (sizeA / m_dataDimmA);
   *scalingB = m_scalingB;
   clampScaling(scalingA, scalingB);
   *matrixDimmB = sizeB / *scalingB;
@@ -83,14 +83,14 @@ void DrawRecorder::fillMatrix()
   if (m_filldirection == FILL_OUTSIDE)
   {
     for (unsigned int p = 0; p < m_countPortions; ++p)
-      for (unsigned int i = 0; i < m_matrixDimmB; ++i)
+      for (unsigned int i = 0; i < m_dataDimmB; ++i)
       {
-        if (m_memory.onFillData(p, i + m_stopped, &m_matrixData[p*m_matrixDimmB*m_matrixDimmA +  i*m_matrixDimmA]) == false)
-  //      if (m_memory.onFillData(p + m_portionSize, i + m_stopped, &m_matrixData[p*m_matrixDimmB*m_matrixDimmA +  i*m_matrixDimmA]) == false)
+        if (m_memory.onFillData(p, i + m_stopped, &m_dataStorage[p*m_dataDimmB*m_dataDimmA +  i*m_dataDimmA]) == false)
+  //      if (m_memory.onFillData(p + m_portionSize, i + m_stopped, &m_dataStorage[p*m_dataDimmB*m_dataDimmA +  i*m_dataDimmA]) == false)
         {
-          for (unsigned int j = 0; j < m_matrixDimmA; ++j)
+          for (unsigned int j = 0; j < m_dataDimmA; ++j)
           {
-            m_matrixData[p*m_matrixDimmB*m_matrixDimmA + i*m_matrixDimmA + j] = 0;
+            m_dataStorage[p*m_dataDimmB*m_dataDimmA + i*m_dataDimmA + j] = 0;
           }
         }
       }
@@ -98,14 +98,14 @@ void DrawRecorder::fillMatrix()
   else if (m_filldirection == FILL_INSIDE)
   {
     for (unsigned int p = 0; p < m_countPortions; ++p)
-      for (unsigned int i = 0; i < m_matrixDimmB; ++i)
+      for (unsigned int i = 0; i < m_dataDimmB; ++i)
       {
-        if (m_memory.onFillDataBackward(p, i + m_stopped, &m_matrixData[p*m_matrixDimmB*m_matrixDimmA +  i*m_matrixDimmA]) == false)
-  //      if (m_memory.onFillData(p + m_portionSize, i + m_stopped, &m_matrixData[p*m_matrixDimmB*m_matrixDimmA +  i*m_matrixDimmA]) == false)
+        if (m_memory.onFillDataBackward(p, i + m_stopped, &m_dataStorage[p*m_dataDimmB*m_dataDimmA +  i*m_dataDimmA]) == false)
+  //      if (m_memory.onFillData(p + m_portionSize, i + m_stopped, &m_dataStorage[p*m_dataDimmB*m_dataDimmA +  i*m_dataDimmA]) == false)
         {
-          for (unsigned int j = 0; j < m_matrixDimmA; ++j)
+          for (unsigned int j = 0; j < m_dataDimmA; ++j)
           {
-            m_matrixData[p*m_matrixDimmB*m_matrixDimmA + i*m_matrixDimmA + j] = 0;
+            m_dataStorage[p*m_dataDimmB*m_dataDimmA + i*m_dataDimmA + j] = 0;
           }
         }
       }
@@ -142,25 +142,25 @@ bool DrawRecorder::getHistoryData(int offset, unsigned int portion, float* resul
   return m_memory.onFillData(portion, offset, result);
 }
 
-//const float* DrawRecorder::getHistoryDataPtr(int offset, int portion) const {   return &m_matrixData[portion*m_matrixDimmB*m_matrixDimmA + offset*m_matrixDimmA];    }
+//const float* DrawRecorder::getHistoryDataPtr(int offset, int portion) const {   return &m_dataStorage[portion*m_dataDimmB*m_dataDimmA + offset*m_dataDimmA];    }
 
-//float* DrawRecorder::getHistoryDataPtr(int offset, int portion) {    return &m_matrixData[portion*m_matrixDimmB*m_matrixDimmA + offset*m_matrixDimmA];   }
+//float* DrawRecorder::getHistoryDataPtr(int offset, int portion) {    return &m_dataStorage[portion*m_dataDimmB*m_dataDimmA + offset*m_dataDimmA];   }
 
 
 void DrawRecorder::scrollDataTo(int pp)
 {
-  if (m_matrixLmSize < m_matrixDimmB*m_scalingB)
+  if (m_matrixLmSize < m_dataDimmB*m_scalingB)
     m_stopped = 0;
   else
-    m_stopped = ((float)pp/m_matrixLmSize)*(m_matrixLmSize - m_matrixDimmB*m_scalingB);
+    m_stopped = ((float)pp/m_matrixLmSize)*(m_matrixLmSize - m_dataDimmB*m_scalingB);
   fillMatrix();
   DrawQWidget::vmanUpData();
 }
 
 void DrawRecorder::scrollDataToAbs(int v)
 {
-  if (v > (int)m_matrixLmSize - int(m_matrixDimmB*m_scalingB))
-    v = (int)m_matrixLmSize - int(m_matrixDimmB*m_scalingB);
+  if (v > (int)m_matrixLmSize - int(m_dataDimmB*m_scalingB))
+    v = (int)m_matrixLmSize - int(m_dataDimmB*m_scalingB);
   m_stopped = v;
   fillMatrix();
   DrawQWidget::vmanUpData();

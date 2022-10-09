@@ -57,7 +57,7 @@ public:
              "lenarcscal[2] = step(lenarcscal[0], 1.0);"
              );
     
-    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<countPortions; i++)" : "int i = explicitPortion;" );
+    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<portions; i++)" : "int i = explicitPortion;" );
     fmg.push( "{" );
     {
       fmg.value2D("float value", "datacoords");
@@ -65,11 +65,11 @@ public:
       fmg.push("dvalue = max(dvalue, value);");
       
       if ( splitPortions == SP_NONE )
-        fmg.push( "result = mix(result, result + texture(texPalette, vec2(value, float(i)/(allocatedPortions-1) )).rgb, lenarcscal[2]);"
+        fmg.push( "result = mix(result, result + texture(texpalette, vec2(value, float(i)/(allocatedPortions-1) )).rgb, lenarcscal[2]);"
 //                  "result = mix(result, vec3(0), step(float(immod.x), 3.0)*step(3.0, float(immod.x)));"
                   );
       else
-        fmg.push( "result = mix(result, texture(texPalette, vec2(value, 0.0)).rgb, (1.0 - step(countPortions, float(explicitPortion)))*lenarcscal[2]  );" );
+        fmg.push( "result = mix(result, texture(texpalette, vec2(value, 0.0)).rgb, (1.0 - step(countPortions, float(explicitPortion)))*lenarcscal[2]  );" );
 
 //      fmg.push("post_mask[0] = mix(post_mask[0], 1.0, (1.0 - step(value, post_mask[1]))*lenarcscal[2] );" );
       fmg.push("post_mask[0] = mix(post_mask[0], 1.0, (1.0 - step(value, post_mask[1]))*lenarcscal[2] );"
@@ -177,8 +177,8 @@ public:
 
 void DrawPolar::reConstructor(unsigned int samplesHorz, unsigned int samplesVert)
 {
-  m_matrixDimmA = samplesVert*2;
-  m_matrixDimmB = samplesVert*2;
+  m_dataDimmA = samplesVert*2;
+  m_dataDimmB = samplesVert*2;
   m_portionSize = samplesHorz*samplesVert;
   deployMemory();
   
@@ -213,10 +213,10 @@ DrawPolar::~DrawPolar()
 
 void DrawPolar::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
 {
-  *matrixDimmA = m_matrixDimmA;
-  *matrixDimmB = m_matrixDimmB;
-  *scalingA = (unsigned int)sizeA <= m_matrixDimmB? 1 : (sizeA / m_matrixDimmB);  // only B
-  *scalingB = (unsigned int)sizeB <= m_matrixDimmB? 1 : (sizeB / m_matrixDimmB);  // only B
+  *matrixDimmA = m_dataDimmA;
+  *matrixDimmB = m_dataDimmB;
+  *scalingA = (unsigned int)sizeA <= m_dataDimmB? 1 : (sizeA / m_dataDimmB);  // only B
+  *scalingB = (unsigned int)sizeB <= m_dataDimmB? 1 : (sizeB / m_dataDimmB);  // only B
   clampScaling(scalingA, scalingB);
 }
 
@@ -265,7 +265,7 @@ void DrawPolar::paintGL()
 //  int countDataHorz = ((SheiGeneratorPolar*)m_pcsh)->m_samplesHorz;
 //  if (!m_rawResizeModeNoScaled)
 //  {
-//    if (m_matrixSwitchAB)
+//    if (m_dataDimmSwitchAB)
 //      glViewport(0, c_height - sizeA() - m_cttrTop - m_cttrBottom, sizeB() + m_cttrLeft + m_cttrRight, sizeA() + m_cttrTop + m_cttrBottom);
 //    else
 //      glViewport(0, c_height - sizeB() - m_cttrTop - m_cttrBottom, sizeA() + m_cttrLeft + m_cttrRight, sizeB() + m_cttrTop + m_cttrBottom);

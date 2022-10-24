@@ -21,7 +21,8 @@
 enum PALETTE_SET
 {
   PS_ADVANCED,
-  PS_SPECIAL
+  PS_SPECIAL, 
+  PS_SPECIAL2
 };
 
 class QPaletteBoxPrivate;

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include <QDebug>
 
 #ifndef SHNL
 #define SHNL "\n"
@@ -226,7 +227,6 @@ void FshDrawConstructor::_main_begin(int initback, unsigned int backcolor, ORIEN
                                     "float dvalue = 0.0;" SHNL
                                     "vec4  ovl_cur_otss;" SHNL
                                     "ivec2 ovl_transfer_pos;" SHNL
-                                    "vec2  ovl_cur_coords;" SHNL
                                     
                                     "ivec2 ab_indimms = ivec2(texdatadimm_a, texdatadimm_b);" SHNL
                                     "ivec2 ab_iscaler = ivec2(scaler_a, scaler_b);" SHNL
@@ -566,33 +566,16 @@ void FshDrawConstructor::main_end(const overpattern_t& fsp)
   
   static const char fsh_decltrace[] = "vec4 ovTrace;" SHNL;
   memcpy(&m_to[m_offset], fsh_decltrace, sizeof(fsh_decltrace) - 1);  m_offset += sizeof(fsh_decltrace) - 1;
-  
-
-  
-  const char* ovl_coords_oriented[] =
-  {
-    //  OO_INHERITED=0, OO_INHERITED_MIRROR_HORZ, OO_INHERITED_MIRROR_VERT, OO_INHERITED_MIRROR_BOTH,
-    "abc_coords", "vec2(1.0 - abc_coords.x, abc_coords.y)", "vec2(abc_coords.x, 1.0 - abc_coords.y)", "vec2(1.0 - abc_coords.x, 1.0 - abc_coords.y)", 
-    //  OO_AREA_LRBT, OO_AREA_RLBT, OO_AREA_LRTB, OO_AREA_RLTB, OO_AREA_TBLR, OO_AREA_BTLR, OO_AREA_TBRL, OO_AREA_BTRL,
-    "xy_coords", "vec2(1.0 - xy_coords.x, xy_coords.y)", "vec2(xy_coords.x, 1.0 - xy_coords.y)", "vec2(1.0 - xy_coords.x, 1.0 - xy_coords.y)", 
-    "vec2(1.0 - xy_coords.y, xy_coords.x)", "xy_coords.yx", "vec2(1.0 - xy_coords.y, 1.0 - xy_coords.x)", "vec2(xy_coords.y, 1.0 - xy_coords.x)",
-    //  OO_AREAOR, OO_AREAOR_MIRROR_HORZ, OO_AREAOR_MIRROR_VERT, OO_AREAOR_MIRROR_BOTH,
-    "ab_coords", "vec2(1.0 - ab_coords.x, ab_coords.y)", "vec2(ab_coords.x, 1.0 - ab_coords.y)", "vec2(1.0 - ab_coords.x, 1.0 - ab_coords.y)", 
-    // OO_SAME
-    ""
-  };
-  
+ 
   bool transposed = orientationTransposed(m_orient);
   
   for (unsigned int i=0; i<m_ovlscount; i++)
   {
-    bool ovl_transposed = m_ovls[i].orient == OO_AREA_TBLR || m_ovls[i].orient == OO_AREA_BTLR || m_ovls[i].orient == OO_AREA_TBRL || m_ovls[i].orient == OO_AREA_BTRL;
-    bool area = m_ovls[i].orient >= OO_AREA_LRBT;
+//    bool ovl_transposed = m_ovls[i].orient == OO_AREA_TBLR || m_ovls[i].orient == OO_AREA_BTLR || m_ovls[i].orient == OO_AREA_TBRL || m_ovls[i].orient == OO_AREA_BTRL;
+//    bool area = m_ovls[i].orient >= OO_AREA_LRBT;
                         
     m_offset += msprintf(&m_to[m_offset],   "ovl_cur_otss = ovl_otss_%D;" SHNL    // opacity, thickness, slice
-                                            "ovl_transfer_pos = ivec2(0,0);" SHNL
-                                            "ovl_cur_coords = %s;" SHNL
-                         , i+1, ovl_coords_oriented[m_ovls[i].orient]);
+                                            "ovl_transfer_pos = ivec2(0,0);" SHNL, i+1);
     
     
     if (m_ovls[i].link >= 0)
@@ -600,16 +583,56 @@ void FshDrawConstructor::main_end(const overpattern_t& fsp)
     else
       m_offset += msprintf(&m_to[m_offset], "bool ovl_visible_%d = step(1.0, ovl_cur_otss[0]) != 1;" SHNL, i+1 );
     
-    m_offset += msprintf(&m_to[m_offset], 
-                                            "if  (ovl_visible_%d)" SHNL
+    const char* ovl_coords_oriented[] =
+    {
+      //  OO_INHERITED=0, OO_INHERITED_MIRROR_HORZ, OO_INHERITED_MIRROR_VERT, OO_INHERITED_MIRROR_BOTH,
+      "abc_coords", "vec2(1.0 - abc_coords.x, abc_coords.y)", "vec2(abc_coords.x, 1.0 - abc_coords.y)", "vec2(1.0 - abc_coords.x, 1.0 - abc_coords.y)", 
+      //  OO_AREA_LRBT, OO_AREA_RLBT, OO_AREA_LRTB, OO_AREA_RLTB, OO_AREA_TBLR, OO_AREA_BTLR, OO_AREA_TBRL, OO_AREA_BTRL,
+      "xy_coords", "vec2(1.0 - xy_coords.x, xy_coords.y)", "vec2(xy_coords.x, 1.0 - xy_coords.y)", "vec2(1.0 - xy_coords.x, 1.0 - xy_coords.y)", 
+      "vec2(1.0 - xy_coords.y, xy_coords.x)", "xy_coords.yx", "vec2(1.0 - xy_coords.y, 1.0 - xy_coords.x)", "vec2(xy_coords.y, 1.0 - xy_coords.x)",
+      //  OO_AREAOR, OO_AREAOR_MIRROR_HORZ, OO_AREAOR_MIRROR_VERT, OO_AREAOR_MIRROR_BOTH,
+      "ab_coords", "vec2(1.0 - ab_coords.x, ab_coords.y)", "vec2(ab_coords.x, 1.0 - ab_coords.y)", "vec2(1.0 - ab_coords.x, 1.0 - ab_coords.y)", 
+      // OO_SAME
+      ""
+    };
+    const char* ocall_indimms = nullptr, *ocall_iscaler = nullptr, *ocall_ibounds = nullptr;
+    const char* ocall_ovcoords = ovl_coords_oriented[m_ovls[i].orient];
+    if (m_ovls[i].orient < OO_AREA_LRBT)
+    {
+      ocall_indimms = "ab_indimms.xy";
+      ocall_iscaler = "ab_iscaler.xy";
+      ocall_ibounds = "ab_ibounds.xy"; 
+    }
+    else
+    {
+      if (m_ovls[i].orient == OO_AREA_LRBT || m_ovls[i].orient == OO_AREA_RLBT || m_ovls[i].orient == OO_AREA_LRTB || m_ovls[i].orient == OO_AREA_RLTB)
+      {
+        ocall_indimms = transposed ? "ab_indimms.yx" : "ab_indimms.xy";
+        ocall_iscaler = transposed ? "ab_iscaler.yx" : "ab_iscaler.xy";
+        ocall_ibounds = transposed ? "ab_indimms.yx*ab_iscaler.yx*icells.xy" : "ab_indimms.xy*ab_iscaler.xy*icells.yx";
+      }
+      else if (m_ovls[i].orient == OO_AREA_TBLR || m_ovls[i].orient == OO_AREA_BTLR || m_ovls[i].orient == OO_AREA_TBRL || m_ovls[i].orient == OO_AREA_BTRL)
+      {
+        ocall_indimms = transposed ? "ab_indimms.xy" : "ab_indimms.yx";
+        ocall_iscaler = transposed ? "ab_iscaler.xy" : "ab_iscaler.yx";
+        ocall_ibounds = transposed ? "ab_indimms.xy*ab_iscaler.xy*icells.yx" : "ab_indimms.yx*ab_iscaler.yx*icells.xy";
+      }
+      else if (m_ovls[i].orient == OO_AREAOR || m_ovls[i].orient == OO_AREAOR_MIRROR_HORZ || m_ovls[i].orient == OO_AREAOR_MIRROR_VERT || m_ovls[i].orient == OO_AREAOR_MIRROR_BOTH)
+      {
+        ocall_indimms = "ab_indimms.xy";
+        ocall_iscaler = "ab_iscaler.xy";
+        ocall_ibounds = transposed ? "ab_indimms.yx*ab_iscaler.yx*icells.xy" : "ab_indimms.xy*ab_iscaler.xy*icells.yx";
+      }
+      else
+        ;
+    }
+    
+    
+    m_offset += msprintf(&m_to[m_offset],   "if  (ovl_visible_%d)" SHNL
                                             "{" SHNL
-                                               "ovTrace = overlayOVCoords%d(ispcell, %s, %s, %s, ovl_cur_coords, ovl_cur_otss[1], "
+                                               "ovTrace = overlayOVCoords%d(ispcell, %s, %s, %s, %s, ovl_cur_otss[1], "
                                             , 
-                                            i+1, i+1, 
-                                            area && (ovl_transposed ^ transposed)? "ab_indimms.yx" : "ab_indimms.xy",
-                                            area && (ovl_transposed ^ transposed)? "ab_iscaler.yx" : "ab_iscaler.xy",
-                                            area ? (ovl_transposed ^ transposed)?  "ivec2(ab_ibounds.y*icells.y, ab_ibounds.x*icells.x)" : "ab_ibounds*icells" : 
-                                                                    "ab_ibounds"
+                                            i+1, i+1, ocall_indimms, ocall_iscaler, ocall_ibounds, ocall_ovcoords
                                             );
     
     if (m_ovls[i].link >= 0)

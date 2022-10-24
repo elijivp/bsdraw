@@ -100,9 +100,6 @@ PaletteItem::~PaletteItem(){}
 //  const IPalette*   paletteData(int idx, bool inverted) const { return inverted? PPALS_INV[idx] : PPALS[idx]; }
 //};
 
-//static PaletteSet<ppalettenames_adv, ppalettes_adv, ppalettes_adv_inv>   pset_adv;
-//static PaletteSet<ppalettenames_spec, ppalettes_spec, ppalettes_spec_inv>   pset_spec;
-
 
 template <int MAX_PP>
 struct PaletteSet
@@ -160,6 +157,9 @@ static PaletteSet<sizeof(ppalettenames_adv)/sizeof(const char*)>   pset_adv( ":/
 static PaletteSet<sizeof(ppalettenames_spec)/sizeof(const char*)>  pset_spec( ":/special/",
     (const char**)ppalettenames_spec, (const IPalette**)ppalettes_spec, (const IPalette**)ppalettes_spec_inv);
 
+static PaletteSet<sizeof(ppalettenames_spec)/sizeof(const char*)>  pset_spec2( ":/special/",
+    (const char**)ppalettenames_spec, (const IPalette**)ppalettes_spec2, (const IPalette**)ppalettes_spec2_inv);
+
 
 class QPaletteBoxPrivate
 {
@@ -195,6 +195,7 @@ public:
 QPaletteBox::QPaletteBox(PALETTE_SET ps, QWidget *parent): QComboBox(parent), d_ptr(
   ps == PS_ADVANCED? (QPaletteBoxPrivate*)new QPaletteBoxPrivateDetailed<PaletteSet<sizeof(ppalettenames_adv)/sizeof(const char*)>>(pset_adv) :
   ps == PS_SPECIAL? (QPaletteBoxPrivate*)new QPaletteBoxPrivateDetailed<PaletteSet<sizeof(ppalettenames_spec)/sizeof(const char*)>>(pset_spec) : 
+  ps == PS_SPECIAL2? (QPaletteBoxPrivate*)new QPaletteBoxPrivateDetailed<PaletteSet<sizeof(ppalettenames_spec2)/sizeof(const char*)>>(pset_spec2) : 
   nullptr
   )
 {

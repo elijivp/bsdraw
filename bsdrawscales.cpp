@@ -2357,7 +2357,7 @@ protected:
   int           miniPerMaxi;
   int           divalgo;
   int           round; // 0 - rounding, 1 - no round, 2 - no round and +1 for all except first and last
-  int           c_multiplier;
+  double        c_multiplier;
 protected:
   bool          textInnerPlaced;
   texts_t*      texts;
@@ -2490,10 +2490,15 @@ private:
       float tmp = LL; LL = HL; HL = tmp;
     }
     
-    int multiplier = 1;
+    float multiplier;
+    if (LL == HL)
+      multiplier = 1.0f;
+    else
     {
+      double d_multiplier = 1.0;
+      double countReglineF = (HL - LL)/odd;
       const int countMaxiInside = countMaxiTotal - 2;
-      float countReglineF = (HL - LL)/odd;
+      
       int divs0[] = { 1000, 10, 5, 2 }; // fixed len 4
       int divs1[] = { 1500, 15, 5, 3 };
       int divs2[] = { 100000, 1000, 100, 10 };
@@ -2505,13 +2510,13 @@ private:
         while (countReglineF/divs[d] > countMaxiInside)
         {
           countReglineF /= divs[d];
-          multiplier *= divs[d];
+          d_multiplier *= divs[d];
         }
       }
       if (countReglineF > countMaxiInside)
       {
         countReglineF /= divs[4-1];
-        multiplier *= divs[4-1];
+        d_multiplier *= divs[4-1];
       }
 
 //      qDebug()<<"<<<"<<area.segm_main<<pixSpace<<countReglineF;
@@ -2523,17 +2528,18 @@ private:
           while (area.segm_main / inversedCount < pixSpace)
           {
             inversedCount /= 2;
-            multiplier *= 2;
+            d_multiplier *= 2;
           }
         }
         else
         {
-          multiplier *= area.segm_main;
+          d_multiplier *= area.segm_main;
         }
       }
       
-      doChangeLabel = multiplier != c_multiplier;
-      c_multiplier = multiplier;
+      doChangeLabel = d_multiplier != c_multiplier;
+      c_multiplier = d_multiplier;
+      multiplier = float(d_multiplier);
     }
     
     int m=0;

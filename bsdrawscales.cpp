@@ -2304,6 +2304,15 @@ protected:
 //          else if (area.atto == AT_BOTTOM)
 //            texts[i].uarea_pos = mcur - QPoint(-(mnext - mcur).x()/2 + texts[i].uin_locsize.width()/2, -decayV);
               
+//          if (area.atto == AT_LEFT)
+//            widgets[i]->move(mcur - QPoint(-decayH + qMin<int>(widgets[i]->width(), maxperpendiculardimm), decayV));
+//          else if (area.atto == AT_RIGHT)
+//            widgets[i]->move(mcur - QPoint(-decayH, decayV));
+//          else if (area.atto == AT_TOP)
+//            widgets[i]->move(mcur - QPoint(-decayH, decayV + qMin<int>(widgets[i]->height(), maxperpendiculardimm)));
+//          else if (area.atto == AT_BOTTOM)
+//            widgets[i]->move(mcur - QPoint(-decayH, -decayV));
+              
           if (area.atto == AT_LEFT)
             widgets[i]->move(mcur - QPoint(-decayH + qMin<int>(widgets[i]->width(), maxperpendiculardimm), decayV));
           else if (area.atto == AT_RIGHT)
@@ -3019,7 +3028,7 @@ public:
       int atto_size, cursegm_main, cursegm_pre, cursegm_post;
       iter->pme->sizeHint(atto, &atto_size, &cursegm_main, &cursegm_pre, &cursegm_post);
       
-      if (iter->shared && total != 0)
+      if (iter->shared/* && total != 0*/)
       {
         iter->length = atto_size;
 //        if (total_prev < atto_size)

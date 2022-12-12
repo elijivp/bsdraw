@@ -12,6 +12,7 @@ enum  BSGRAPHTYPE {
                     GT_HISTOGRAM_CROSSMIN,  /// histogram with all graphs on cross
                     GT_HISTOGRAM_MESH,      /// histogram with meshing graphs
                     GT_HISTOGRAM_SUM,       /// histogram with rgb-sum graphs
+                    GT_HISTOGRAM_LASTBACK,  /// histogram with last portion is backcolor
                 };
 
 enum  BSDESCALING {
@@ -84,6 +85,11 @@ struct  graphopts_t
   { graphopts_t result = { GT_HISTOGRAM_SUM, ds, opacity, 0, 0.0f, smoothcoef, pr }; return result; }
   static graphopts_t goHistogramSum(BSPOSTRECT pr, BSDESCALING ds=DE_NONE)
   { graphopts_t result = { GT_HISTOGRAM_SUM, ds, 0.0f, 0, 0.0f, 0.0f, pr}; return result; }
+  
+  static graphopts_t goHistogramLastBack(float opacity=0.0f, BSDESCALING ds=DE_NONE, float smoothcoef=0.0f, BSPOSTRECT pr=PR_STANDARD)
+  { graphopts_t result = { GT_HISTOGRAM_LASTBACK, ds, opacity, 0, 0.0f, smoothcoef, pr}; return result; }
+  static graphopts_t goHistogramLastBack(BSPOSTRECT pr, BSDESCALING ds=DE_NONE)
+  { graphopts_t result = { GT_HISTOGRAM_LASTBACK, ds, 0.0f, 0, 0.0f, 0.0f, pr}; return result; }
 };
 
 inline graphopts_t& operator+=(graphopts_t& go, BSDESCALING ds){ go.descaling = ds; return go; }

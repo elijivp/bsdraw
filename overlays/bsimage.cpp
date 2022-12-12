@@ -106,7 +106,7 @@ bool  Ovldraw_Image::setImage(QImage* image, OVLQImage::IMAGECONVERT icvt, bool 
 
 OImageOriginal::OImageOriginal(QImage* image, IMAGECONVERT icvt, COORDINATION cn, float x, float y, float mult_w, float mult_h): 
   Ovldraw_Image(image, icvt, g_bs_detach_image), OVLCoordsDynamic(cn, x, y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f),
-  m_anchor(0)
+  m_anchor(10)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
@@ -115,7 +115,7 @@ OImageOriginal::OImageOriginal(QImage* image, IMAGECONVERT icvt, COORDINATION cn
 
 OImageOriginal::OImageOriginal(QImage *image, IMAGECONVERT icvt, OVLCoordsStatic *pcoords, float offset_x, float offset_y, float mult_w, float mult_h):
   Ovldraw_Image(image, icvt, g_bs_detach_image), OVLCoordsDynamic(pcoords->getCoordination(), offset_x, offset_y), OVLDimms2Dynamic(CR_ABSOLUTE_NOSCALED, 0.0f, 0.0f),
-  m_anchor(0)
+  m_anchor(10)
 {
   m_sides.w = m_dmti.w*mult_w;
   m_sides.h = m_dmti.h*mult_h;
@@ -137,7 +137,11 @@ int OImageOriginal::fshOVCoords(int overlay, bool switchedab, char *to) const
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
     ocg.goto_normed();
-    if (m_anchor != 0)
+    if (m_anchor == 10)
+    {
+      ocg.push("inormed = inormed - ivec2(ov_ibounds - idimms2);");
+    }
+    else if (m_anchor != 0)
     {
       ocg.push("inormed = inormed - ivec2(max((ov_ibounds[0] - idimms2.x)/2, 0), max((ov_ibounds[1] - idimms2.y)/2, 0));");
     }

@@ -53,7 +53,8 @@ public:
                          graphopts.graphtype == GT_HISTOGRAM_CROSSMAX || 
                          graphopts.graphtype == GT_HISTOGRAM_CROSSMIN || 
                          graphopts.graphtype == GT_HISTOGRAM_MESH || 
-                         graphopts.graphtype == GT_HISTOGRAM_SUM;
+                         graphopts.graphtype == GT_HISTOGRAM_SUM || 
+                         graphopts.graphtype == GT_HISTOGRAM_LASTBACK;
       bool isInterp = graphopts.graphtype == GT_LINTERP || graphopts.graphtype == GT_LINTERPSMOOTH;
       
       if (isHistogram)
@@ -537,7 +538,9 @@ public:
 
       fmg.push(  "vec3  colorGraph = texture(texpalette, vec2(porc, 0.0)).rgb;" SHNL );
       
-      if (graphopts.graphtype == GT_HISTOGRAM_SUM)
+      if (graphopts.graphtype == GT_HISTOGRAM_LASTBACK)
+        fmg.push("result = mix(result, mix(colorGraph, backcolor, step(float(portions), float(i+1))), mixwellp);" SHNL );
+      else if (graphopts.graphtype == GT_HISTOGRAM_SUM)
         fmg.push("result = result + colorGraph*vec3(mixwellp);" SHNL );
       else
         fmg.push("result = mix(result, colorGraph, mixwellp);" SHNL );

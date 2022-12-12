@@ -462,7 +462,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     SAMPLES = 80;
     PORTIONS = 3;
     
-    const int countDraws = 4;
+    const int countDraws = 5;
     DrawQWidget* pdraws[countDraws];
     
     pdraws[0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(PR_VALUEAROUND));
@@ -480,6 +480,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     pdraws[3] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogramMesh(PR_VALUEAROUND));
     pdraws[3]->setOverpattern(overpattern_thrs_plus(OP_LINELEFTTOP, 0.0f, color3f(0.3f,0.3f,0.3f)));
     pdraws[3]->setScalingLimitsSynced(10); // 1 point now is 10x10 pixels (minimum)
+    
+    pdraws[4] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogramLastBack(PR_VALUEAROUND));
+    pdraws[4]->setOverpattern(overpattern_any(OP_LINELEFT, 0.0f));
+    pdraws[4]->setScalingLimitsSynced(10); // 1 point now is 10x10 pixels (minimum)
     
     AFTERCREATE_DRAW1C
     sigtype = ST_GEN_NORM;

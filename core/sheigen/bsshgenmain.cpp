@@ -354,7 +354,7 @@ void FshDrawConstructor::main_end(const overpattern_t& fsp)
     m_offset += msprintf(&m_to[m_offset], "float ppb_in = 0.0;" SHNL);
   else
   {
-    if (fsp.masktype == true)
+    if (fsp.masktype == overpattern_t::OMASK_INT)
     {
       const char* dmasks[] = {  
         // OP_CONTOUR
@@ -407,7 +407,7 @@ void FshDrawConstructor::main_end(const overpattern_t& fsp)
       };
       m_offset += msprintf(&m_to[m_offset], "%s" SHNL, dmasks[fsp.mask >= _OP_TOTAL ? OP_CROSS : fsp.mask]);
     }
-    else    // FLOATS
+    else if (fsp.masktype == overpattern_t::OMASK_FLOAT)    // FLOATS
     {
       m_offset += msprintf(&m_to[m_offset], "vec2 ppb_dc = vec2(1.0 - 2.0*float(imrect.x)/imrect[2], 1.0 - 2.0*float(imrect.y)/imrect[3]);" SHNL);
       
@@ -443,7 +443,37 @@ void FshDrawConstructor::main_end(const overpattern_t& fsp)
         };
       m_offset += msprintf(&m_to[m_offset], "%s" SHNL, dmasks_sigm[fsp.mask >= _OPF_TOTAL ? OPF_CROSS : fsp.mask]);
       m_offset += msprintf(&m_to[m_offset], "ppb_in = clamp(ppb_in*(1.0+12.0*post_mask[3])/(1.0 + abs(ppb_in)*(1.0+12.0*post_mask[3]))*1.5 + 0.5, 0.0, 1.0);" SHNL);
+    }
+    else // ANGLEFIGURES
+    {
+//      m_offset += msprintf(&m_to[m_offset], "vec4 ppb_a4 = vec4("
+//                                            "distance(vec2(imrect.x, imrect.y), vec2(imrect[2]/2.0, imrect[3]/2.0)),"
+//                                            "distance(vec2(imrect[2] - 1 - imrect.x, imrect.y), vec2(imrect[2]/2.0, imrect[3]/2.0)),"
+//                                            "distance(vec2(imrect.x, imrect[3] - 1 - imrect.y), vec2(imrect[2]/2.0, imrect[3]/2.0)),"
+//                                            "distance(vec2(imrect[2] - 1 - imrect.x, imrect[3] - 1 - imrect.y), vec2(imrect[2]/2.0, imrect[3]/2.0))"
+//                                            ");" SHNL);
       
+      m_offset += msprintf(&m_to[m_offset], "vec2 ppb_a2 = vec2("
+                                              "mix(float(imrect.x), float(imrect[2] - imrect.x), step(imrect[2]/2.0, float(imrect.x))),"
+                                              "mix(float(imrect.y), float(imrect[3] - imrect.y), step(imrect[3]/2.0, float(imrect.y)))"
+                                            ");"  SHNL
+                                            "ppb_a2 = ppb_a2 / vec2(imrect[2]/2.0, imrect[3]/2.0);" SHNL
+                           );
+      
+      const char* dmasks_anglefigures[] = {  
+        // OPA_PUFFHYPERB
+//            "vec2 ppb_cc = vec2(post_mask[2]*1.0/ppb_a2.x, post_mask[2]*1.0/ppb_a2.y);" //    ppb_cc = vec2(max(ppb_cc.x, ppb_a2.x), max(ppb_cc.y, ppb_a2.y));
+//            "float ppb_in = length(vec2(1.0) - ppb_cc)/length(vec2(1.0) - ppb_a2);",
+            "float ppb_in = 1.0 - (ppb_a2.x*ppb_a2.y - 1.0*post_mask[2])/length(vec2(1.0) - ppb_a2);",
+        // OPA_PUFFCIRCLE
+            "vec2 ppb_cc = vec2(max(post_mask[2], ppb_a2.x), max(post_mask[2], ppb_a2.y));"
+            "float ppb_in = (length(ppb_a2 - ppb_cc) - post_mask[2]) / post_mask[2];"
+        };
+      m_offset += msprintf(&m_to[m_offset], "%s" SHNL, dmasks_anglefigures[fsp.mask >= _OPA_TOTAL ? OPA_PUFFCIRCLE : fsp.mask]);
+      
+      //return 0.5f + 0.5f*(x-xpos)*speed/(1.0f + ffabs(x-xpos)*speed);
+      m_offset += msprintf(&m_to[m_offset], "ppb_in = 0.5 + 0.5*(ppb_in*50*post_mask[3])/(1.0 + abs(ppb_in)*50*post_mask[3]);" SHNL);
+//      m_offset += msprintf(&m_to[m_offset], "ppb_in = clamp(ppb_in*(1.0+12.0*post_mask[3])/(1.0 + abs(ppb_in)*(1.0+12.0*post_mask[3]))*1.5 + 0.5, 0.0, 1.0);" SHNL);
     }
       
     /*

@@ -247,6 +247,57 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   }
   else if (MW_TEST == OVERVIEW_2D_1)
   {
+//    LINES = 14;
+//    SAMPLES = 20;
+//    PORTIONS = 1;
+
+//    overpattern_t dpms[] = {  
+//                          // row 1
+//                          overpattern_off(),
+//                          overpattern_thrs_minus(OP_CONTOUR, 0.5f, 0.0f, 3),
+//                          overpattern_any(OP_CONTOUR, 0.0f, 3),
+      
+//                          // row 2
+//                          overpattern_any(OP_LINELEFTBOTTOM, 0.0f),
+//                          overpattern_any(OP_DOTLEFTBOTTOM, 1.0f, 3),
+//                          overpattern_any(OP_LINELEFTBOTTOM, 0.4f, 2),
+      
+//                          // row 3
+//                          overpattern_any(OP_LINEBOTTOM, 0.0f, 7),
+//                          overpattern_any(OP_SQUARES, 0.0f),
+//                          overpattern_any(OP_DOTCONTOUR, 0.0f, 3),
+    
+//                          // row 4
+//                          overpattern_any(OPF_CROSSPUFF, 0.0f, 0.5f),
+//                          overpattern_any(OPF_CIRCLE, 0.0f, 4),
+//                          overpattern_thrs_plus(OPF_CIRCLE, 0.9f, 0.0f),
+      
+//                          // row 5
+//                          overpattern_thrs_plus(OP_FILL, 0.8f, 0.0f),
+//                          overpattern_any(OP_DOT, 0.0f, 4),
+//                          overpattern_thrs_minus(OP_SHTRICHL, 0.3f, color3f(0.5f, 0.5f, 0.5f), 1),
+                          
+//                          // row 6
+//                          overpattern_any(OP_CONTOUR, color3f(0.0f, 0.0f, 0.0f),1),
+//                          overpattern_any(OP_CONTOUR, color3f(0.3f, 0.3f, 0.3f),1),
+//                          overpattern_any(OP_CONTOUR, color3f(1.0f, 1.0f, 1.0f),1)
+//                       };
+    
+//    const int countROWS = 6, countCOLUMNS = 3;
+//    DrawQWidget* pdraws[countROWS][countCOLUMNS];
+//    for (unsigned int r=0; r<countROWS; r++)
+//      for (unsigned int c=0; c<countCOLUMNS; c++)
+//      {
+//        pdraws[r][c] = new DrawIntensity(SAMPLES, LINES, PORTIONS);
+//        pdraws[r][c]->setOverpattern(dpms[r*countCOLUMNS + c]);
+//        pdraws[r][c]->setScalingLimitsSynced(10); // 1 point now is 10x10 pixels (minimum)
+//      }
+//    // adding text as overlay for first draw
+//    pdraws[0][0]->ovlPushBack(new OTextColored("Original", CR_XABS_YREL_NOSCALED, 5.0f, 0.9f, 12, 0x00000000, 0x11FFFFFF, 0x00000000));
+    
+//    AFTERCREATE_DRAW2D
+//    sigtype = ST_RAND;
+    
     LINES = 14;
     SAMPLES = 20;
     PORTIONS = 1;
@@ -258,32 +309,27 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                           overpattern_any(OP_CONTOUR, 0.0f, 3),
       
                           // row 2
-                          overpattern_any(OP_LINELEFTBOTTOM, 0.0f),
-                          overpattern_any(OP_DOTLEFTBOTTOM, 1.0f, 3),
-                          overpattern_any(OP_LINELEFTBOTTOM, 0.4f, 2),
+                          overpattern_any(OPA_PUFFHYPERB, 0.2f, 0.1f),
+                          overpattern_any(OPA_PUFFHYPERB, 0.2f, 0.5f),
+                          overpattern_any(OPA_PUFFHYPERB, 0.2f, 0.9f),
       
                           // row 3
-                          overpattern_any(OP_LINEBOTTOM, 0.0f, 7),
-                          overpattern_any(OP_SQUARES, 0.0f),
-                          overpattern_any(OP_DOTCONTOUR, 0.0f, 3),
-    
+                          overpattern_any(OPA_PUFFHYPERB, 0.5f, 0.1f),
+                          overpattern_any(OPA_PUFFHYPERB, 0.5f, 0.5f),
+                          overpattern_any(OPA_PUFFHYPERB, 0.5f, 0.9f),
+      
                           // row 4
-                          overpattern_any(OPF_CROSSPUFF, 0.0f, 0.5f),
-                          overpattern_any(OPF_CIRCLE, 0.0f, 4),
-                          overpattern_thrs_plus(OPF_CIRCLE, 0.9f, 0.0f),
+                          overpattern_any(OPA_PUFFCIRCLE, 0.2f, 0.1f),
+                          overpattern_any(OPA_PUFFCIRCLE, 0.2f, 0.5f),
+                          overpattern_any(OPA_PUFFCIRCLE, 0.2f, 0.9f),
       
                           // row 5
-                          overpattern_thrs_plus(OP_FILL, 0.8f, 0.0f),
-                          overpattern_any(OP_DOT, 0.0f, 4),
-                          overpattern_thrs_minus(OP_SHTRICHL, 0.3f, color3f(0.5f, 0.5f, 0.5f), 1),
-                          
-                          // row 6
-                          overpattern_any(OP_CONTOUR, color3f(0.0f, 0.0f, 0.0f),1),
-                          overpattern_any(OP_CONTOUR, color3f(0.3f, 0.3f, 0.3f),1),
-                          overpattern_any(OP_CONTOUR, color3f(1.0f, 1.0f, 1.0f),1)
+                          overpattern_any(OPA_PUFFCIRCLE, 0.5f, 0.1f),
+                          overpattern_any(OPA_PUFFCIRCLE, 0.5f, 0.5f),
+                          overpattern_any(OPA_PUFFCIRCLE, 0.5f, 0.9f),
                        };
     
-    const int countROWS = 6, countCOLUMNS = 3;
+    const int countROWS = 5, countCOLUMNS = 3;
     DrawQWidget* pdraws[countROWS][countCOLUMNS];
     for (unsigned int r=0; r<countROWS; r++)
       for (unsigned int c=0; c<countCOLUMNS; c++)
@@ -298,37 +344,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     AFTERCREATE_DRAW2D
     sigtype = ST_RAND;
     
-    /*
-     *     LINES = 2;
-    SAMPLES = 2;
-    PORTIONS = 1;
-
-    overpattern_t dpms[] = {  
-      overpattern_any(OP_CONTOUR, 0.0f), overpattern_any(OP_LINELEFT, 0.0f), overpattern_any(OP_LINERIGHT, 0.0f), overpattern_any(OP_LINEBOTTOM, 0.0f), 
-      overpattern_any(OP_LINETOP, 0.0f), overpattern_any(OP_LINELEFTRIGHT, 0.0f), overpattern_any(OP_LINEBOTTOMTOP, 0.0f), overpattern_any(OP_LINELEFTBOTTOM, 0.0f),
-      overpattern_any(OP_LINERIGHTBOTTOM, 0.0f), overpattern_any(OP_LINELEFTTOP, 0.0f), overpattern_any(OP_LINERIGHTTOP, 0.0f), overpattern_any(OP_GRID, 0.0f), 
-      overpattern_any(OP_DOT, 0.0f), overpattern_any(OP_DOTLEFTBOTTOM, 0.0f), overpattern_any(OP_DOTCONTOUR, 0.0f), overpattern_any(OP_CROSS, 0.0f), 
-      overpattern_any(OP_SHTRICHL, 0.0f), overpattern_any(OP_SHTRICHR, 0.0f), overpattern_any(OP_FILL, 0.0f), overpattern_any(OP_SQUARES, 0.0f), 
-      
-      overpattern_any(OPF_CIRCLE, 0.0f), overpattern_any(OPF_CIRCLE_REV, 0.0f), overpattern_any(OPF_CROSSPUFF, 0.0f), overpattern_any(OPF_RHOMB, 0.0f), 
-      overpattern_any(OPF_SURIKEN, 0.0f), overpattern_any(OPF_SURIKEN_REV, 0.0f), overpattern_any(OPF_DONUT, 0.0f), overpattern_any(OPF_CROSS, 0.0f), 
-      overpattern_any(OPF_HOURGLASS, 0.0f), overpattern_any(OPF_BULL, 0.0f), overpattern_any(OPF_HOURGLASS, 0.0f), overpattern_any(OPF_BULL, 0.0f)
-                       };
-    
-    const int countROWS = 8, countCOLUMNS = 4;
-    DrawQWidget* pdraws[countROWS][countCOLUMNS];
-    for (unsigned int r=0; r<countROWS; r++)
-      for (unsigned int c=0; c<countCOLUMNS; c++)
-      {
-        pdraws[r][c] = new DrawIntensity(SAMPLES, LINES, PORTIONS);
-        pdraws[r][c]->setOverpattern(dpms[r*countCOLUMNS + c]);
-        pdraws[r][c]->setScalingLimitsSynced(10); // 1 point now is 10x10 pixels (minimum)
-      }
-    
-    AFTERCREATE_DRAW2D
-    sigtype = ST_RAND;   
-    sp = SP_ONCE;
-*/
   }
   else if (MW_TEST == OVERVIEW_2D_2)
   {
@@ -4588,7 +4603,7 @@ void MainWindow::changeOverpatternIntWeight(int val)
   for (unsigned int i=0; i<drawscount; i++)
   {
     overpattern_t ovp = draws[i]->overpattern();
-    if (ovp.masktype)
+    if (ovp.masktype == overpattern_t::OMASK_INT)
     {
       ovp.weight = val;
       draws[i]->setOverpattern(ovp);
@@ -4601,7 +4616,7 @@ void MainWindow::changeOverpatternFloatWeight(int val)
   for (unsigned int i=0; i<drawscount; i++)
   {
     overpattern_t ovp = draws[i]->overpattern();
-    if (ovp.masktype == false)
+    if (ovp.masktype != overpattern_t::OMASK_INT)
     {
       ovp.weight = val/1000.0f;
       draws[i]->setOverpattern(ovp);
@@ -4614,7 +4629,7 @@ void MainWindow::changeOverpatternFloatSmooth(int val)
   for (unsigned int i=0; i<drawscount; i++)
   {
     overpattern_t ovp = draws[i]->overpattern();
-    if (ovp.masktype == false)
+    if (ovp.masktype != overpattern_t::OMASK_INT)
     {
       ovp.smooth = val/1000.0f;
       draws[i]->setOverpattern(ovp);

@@ -69,8 +69,9 @@ public:
   unsigned int  countPages() const { return m_pagescount; }
 public:
   virtual void            implicitSetData(const float*);
-  void                    switchPage(int idx, bool currentPageImplicitlyUpdated);
+  void                    switchPage(int idx, bool currentPageImplicitlyModified);
   void                    switchPageNoUpdate(int idx);  // for setData immediately
+  void                    updatePageModified();
   
   void                    clearAllPages();
 public slots:

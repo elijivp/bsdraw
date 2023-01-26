@@ -195,19 +195,16 @@ void DrawRecorderPaged::implicitSetData(const float* data)
   if (m_sbStatic && m_stopped != 0) m_stopped++;
 }
 
-void DrawRecorderPaged::switchPage(int idx, bool currentPageImplicitlyUpdated)
+void DrawRecorderPaged::switchPage(int idx, bool currentPageImplicitlyModified)
 {
   if (idx != m_pagehole)
   {
     m_pages[m_pagehole] = m_memory.extendeddataarr_replace(m_pages[idx]);
     m_pagehole = idx;
-    currentPageImplicitlyUpdated |= true;
+    currentPageImplicitlyModified |= true;
   }
-  if (currentPageImplicitlyUpdated)
-  {
-    fillMatrix();
-    DrawQWidget::vmanUpData();
-  }
+  if (currentPageImplicitlyModified)
+    updatePageModified();
 }
 
 void DrawRecorderPaged::switchPageNoUpdate(int idx)
@@ -217,6 +214,12 @@ void DrawRecorderPaged::switchPageNoUpdate(int idx)
     m_pages[m_pagehole] = m_memory.extendeddataarr_replace(m_pages[idx]);
     m_pagehole = idx;
   }
+}
+
+void DrawRecorderPaged::updatePageModified()
+{
+  fillMatrix();
+  DrawQWidget::vmanUpData();
 }
 
 void DrawRecorderPaged::clearAllPages()

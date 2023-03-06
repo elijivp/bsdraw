@@ -15,7 +15,7 @@ int OLevel::fshOVCoords(int overlay, bool switchedab, char *to) const
   ocg.goto_normed();
   {
     ocg.var_const_fixed("value", m_value);
-    ocg.push("int zerooffset = int(((value-databounds[0])/(databounds[1]-databounds[0]))*ov_ibounds.y + 0.49);");
+    ocg.push("int zerooffset = int(((value-databounds[0])/(databounds[1]-databounds[0]))*ov_ibounds.y);");
     ocg.trace_linehorz_l(nullptr, nullptr, "zerooffset", nullptr);
   }
   ocg.goto_func_end(true);

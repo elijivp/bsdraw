@@ -467,11 +467,23 @@ void FshDrawConstructor::main_end(const overpattern_t& fsp)
             "float ppb_in = 1.0 - (ppb_a2.x*ppb_a2.y - 1.0*post_mask[2])/length(vec2(1.0) - ppb_a2);",
         // OPA_PUFFCIRCLE
             "vec2 ppb_cc = vec2(max(post_mask[2], ppb_a2.x), max(post_mask[2], ppb_a2.y));"
-            "float ppb_in = (length(ppb_a2 - ppb_cc) - post_mask[2]) / post_mask[2];"
+            "float ppb_in = (length(ppb_a2 - ppb_cc) - post_mask[2]) / post_mask[2];",
+        // OPA_PUFFCIRCLESPACED125
+            "vec2 ppb_cc = vec2(max(post_mask[2], ppb_a2.x), max(post_mask[2], ppb_a2.y));"
+            "float ppb_in = (length(ppb_a2 - ppb_cc)*1.25 - post_mask[2]) / post_mask[2];",
+        // OPA_PUFFCIRCLESPACED15
+            "vec2 ppb_cc = vec2(max(post_mask[2], ppb_a2.x), max(post_mask[2], ppb_a2.y));"
+            "float ppb_in = (length(ppb_a2 - ppb_cc)*1.5 - post_mask[2]) / post_mask[2];",
+        // OPA_PUFFCIRCLESPACED2
+            "vec2 ppb_cc = vec2(max(post_mask[2], ppb_a2.x), max(post_mask[2], ppb_a2.y));"
+            "float ppb_in = (length(ppb_a2 - ppb_cc)*2.0 - post_mask[2]) / post_mask[2];",
+        // OPA_PUFFCIRCLESPACED25
+            "vec2 ppb_cc = vec2(max(post_mask[2], ppb_a2.x), max(post_mask[2], ppb_a2.y));"
+            "float ppb_in = (length(ppb_a2 - ppb_cc)*2.5 - post_mask[2]) / post_mask[2];"
         };
       m_offset += msprintf(&m_to[m_offset], "%s" SHNL, dmasks_anglefigures[fsp.mask >= _OPA_TOTAL ? OPA_PUFFCIRCLE : fsp.mask]);
       
-      //return 0.5f + 0.5f*(x-xpos)*speed/(1.0f + ffabs(x-xpos)*speed);
+      //return 0.5f + 0.5f*(x-xpos)*speed/(1.0f + fabs(x-xpos)*speed);
       m_offset += msprintf(&m_to[m_offset], "ppb_in = 0.5 + 0.5*(ppb_in*50*post_mask[3])/(1.0 + abs(ppb_in)*50*post_mask[3]);" SHNL);
 //      m_offset += msprintf(&m_to[m_offset], "ppb_in = clamp(ppb_in*(1.0+12.0*post_mask[3])/(1.0 + abs(ppb_in)*(1.0+12.0*post_mask[3]))*1.5 + 0.5, 0.0, 1.0);" SHNL);
     }
@@ -560,7 +572,7 @@ void FshDrawConstructor::main_end(const overpattern_t& fsp)
               "float ppb_in = clamp(_ppb_pos.x + _ppb_pos.y + (2+post_mask[2])*_ppb_pos.x*_ppb_pos.y, 0.0, 1.0) - 0.5;"
               "ppb_in = 0.5 + 0.5*ppb_in*26/(1.0 + abs(ppb_in)*26);",  
         // OPF_DONUT
-  //      inline float  bsf_step(float x, float xpos, float speed=200.0f){ return 0.5f + 0.5f*(x-xpos)*speed/(1.0f + ffabs(x-xpos)*speed); }
+  //      inline float  bsf_step(float x, float xpos, float speed=200.0f){ return 0.5f + 0.5f*(x-xpos)*speed/(1.0f + fabs(x-xpos)*speed); }
             "vec2 _ppb_pos = vec2(abs(0.5 - float(imrect.x)/imrect[2]), abs(0.5 - float(imrect.y)/imrect[3]));"
               "float _ppb_d2 = dot(_ppb_pos, _ppb_pos);"
               "float ppb_in = smoothstep(0.25*0.25, (0.15 + post_mask[2]*0.05)*(0.15 + post_mask[2]*0.05), _ppb_d2);",

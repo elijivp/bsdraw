@@ -341,6 +341,22 @@ void OTrass::skipLines(int count, bool update)
   _nlup(update);
 }
 
+void OTrass::breakTrassFromRepeat(int idx)
+{
+  if (vv_repeatcounter && vv_repeatcounter < 30)
+  {
+    int backwalk[30];
+    for (int i=0; i<vv_repeatcounter; i++)
+      backwalk[i] = (tline_current + 1 + i) % tlines_total;
+    
+    for (int i=0; i<vv_repeatcounter; i++)
+    {
+      tlines_texture[TPS*trass_limit*backwalk[i] + TPS*idx + 0] = 0.0f;
+    }
+  }
+  tlines_texture[TPS*trass_limit*tline_current + TPS*idx + 0] = 0.0f;
+}
+
 void OTrass::clearTrasses(bool update)
 {
   memset(tlines_texture, 0, sizeof(float)*TPS*trass_limit * (tlines_total + tlines_frame));

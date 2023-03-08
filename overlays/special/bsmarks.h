@@ -113,6 +113,7 @@ public:
   void  appendEmptyline(bool update=true);
   void  repeatTrassline(bool interpolate=true, bool update=true);
   void  skipLines(int count, bool update=true);
+  void  breakTrassFromRepeat(int idx);
   void  clearTrasses(bool update=true);
   void  scroll(int offset, bool update=true);
   void  update(); // explicit

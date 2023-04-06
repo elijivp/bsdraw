@@ -618,7 +618,7 @@ public:
   virtual   unsigned int  shvertex_store(char* to) const =0;
   virtual   unsigned int  shfragment_pendingSize(const impulsedata_t&, unsigned int ovlscount) const =0;
   virtual   unsigned int  shfragment_store(unsigned int allocPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
-                                           const impulsedata_t&, const overpattern_t&, 
+                                           const impulsedata_t&, const overpattern_t&, float, 
                                            unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const =0;
   
 public:

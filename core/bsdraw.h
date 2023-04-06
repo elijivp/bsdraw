@@ -134,6 +134,7 @@ protected:
 protected:
   impulsedata_t         m_postImpulse;
   overpattern_t         m_postOverpattern;
+  float                 m_postOverpatternOpacity;
 public:
                     /// Redraw control. Which actions will cause repaint
   enum  REDRAWBY        { RD_BYDATA, RD_BYSETTINGS, RD_BYOVL_ADDREMOVE, RD_BYOVL_ACTIONS };   // special now used on overlays removing
@@ -224,7 +225,7 @@ public:
                                                         m_viewAlign(DVA_LEFT),
                                                         m_groundType(GND_NONE), m_groundData(nullptr), m_groundDataFastFree(true),
                                                         m_groundMipMapping(false), m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
-                                                        m_postOverpattern(overpattern_off()),
+                                                        m_postOverpattern(overpattern_off()), m_postOverpatternOpacity(0.0f), 
                                                         m_overlaysCount(0), m_proactive(nullptr), m_proactiveOwner(true)
   {
     _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);
@@ -749,7 +750,15 @@ public:
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
-  const overpattern_t& overpattern() const { return m_postOverpattern; }
+  void            setOverpattern(const overpattern_t& fsp, float opacity)
+  {
+    m_postOverpattern = fsp;
+    m_postOverpatternOpacity = opacity;
+    m_bitmaskPendingChanges |= PC_INIT;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+  }
+  const overpattern_t&  overpattern() const { return m_postOverpattern; }
+  float                 overpatternOpacity() const { return m_postOverpatternOpacity; }
 protected:
   virtual void            overlayUpdate(bool reinit, bool pendonly)
   {

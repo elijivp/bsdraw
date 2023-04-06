@@ -216,7 +216,7 @@ void DrawQWidget::initCollectAndCompileShader()
       ovlsinfo[i].orient = m_overlays[i].orient;
     }
     unsigned int fsh_written = m_pcsh->shfragment_store(m_allocatedPortions, m_orient, m_splitPortions, 
-                                                        m_postImpulse, m_postOverpattern,
+                                                        m_postImpulse, m_postOverpattern, m_postOverpatternOpacity, 
                                                         m_overlaysCount, ovlsinfo, m_fshmem);
     
 //    qDebug()<<m_pcsh->shaderName()<<" fragment size "<<fsh_written<<" (had"<<m_fshalloc<<")";

@@ -239,8 +239,8 @@ private:
     va_end(rct);
     for (int i=single*count; i<maxCount; i++)
       palbuf[i] = 0xFFFFFFFF;
-    m_k = 1.0f / (maxCount) * single;
-    m_b = 1.0f / (maxCount);
+    m_k = 1.0f / (maxCount-1) * single;
+    m_b = 0.0f;//1.0f / (maxCount);
   }
 public:
   float findex(int idx) const { return m_b + idx*m_k; }
@@ -269,46 +269,46 @@ public:
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12); }
   PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
-                  unsigned int clr13){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13); }
+                  unsigned int clr13){ reconstruct(13, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13); }
   PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
-                  unsigned int clr13, unsigned int clr14){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14); }
+                  unsigned int clr13, unsigned int clr14){ reconstruct(14, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14); }
   PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
-                  unsigned int clr13, unsigned int clr14, unsigned int clr15){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15); }
+                  unsigned int clr13, unsigned int clr14, unsigned int clr15){ reconstruct(15, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15); }
   PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
-                  unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16); }
+                  unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16){ reconstruct(16, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16); }
   PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
-                  unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17); }
+                  unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17){ reconstruct(17, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17); }
   PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
-                  unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18); }
-  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
-                  unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
-                  unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18,
-                  unsigned int clr19){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19); }
+                  unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18){ reconstruct(18, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18); }
   PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18,
-                  unsigned int clr19, unsigned int clr20){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20); }
+                  unsigned int clr19){ reconstruct(19, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19); }
   PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18,
-                  unsigned int clr19, unsigned int clr20, unsigned int clr21){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20, clr21); }
+                  unsigned int clr19, unsigned int clr20){ reconstruct(20, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20); }
   PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18,
-                  unsigned int clr19, unsigned int clr20, unsigned int clr21, unsigned int clr22){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20, clr21, clr22); }
+                  unsigned int clr19, unsigned int clr20, unsigned int clr21){ reconstruct(21, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20, clr21); }
   PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18,
-                  unsigned int clr19, unsigned int clr20, unsigned int clr21, unsigned int clr22, unsigned int clr23){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20, clr21, clr22, clr23); }
+                  unsigned int clr19, unsigned int clr20, unsigned int clr21, unsigned int clr22){ reconstruct(22, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20, clr21, clr22); }
   PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
                   unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
                   unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18,
-                  unsigned int clr19, unsigned int clr20, unsigned int clr21, unsigned int clr22, unsigned int clr23, unsigned int clr24){ reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20, clr21, clr22, clr23, clr24); }
+                  unsigned int clr19, unsigned int clr20, unsigned int clr21, unsigned int clr22, unsigned int clr23){ reconstruct(23, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20, clr21, clr22, clr23); }
+  PaletteENUM(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, 
+                  unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12,
+                  unsigned int clr13, unsigned int clr14, unsigned int clr15, unsigned int clr16, unsigned int clr17, unsigned int clr18,
+                  unsigned int clr19, unsigned int clr20, unsigned int clr21, unsigned int clr22, unsigned int clr23, unsigned int clr24){ reconstruct(24, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12, clr13, clr14, clr15, clr16, clr17, clr18, clr19, clr20, clr21, clr22, clr23, clr24); }
   
 public:
   template <int maxCount>

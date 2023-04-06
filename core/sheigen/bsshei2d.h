@@ -20,7 +20,7 @@ public:
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
   virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 700 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
   virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
-                                         const impulsedata_t& imp, const overpattern_t& fsp, 
+                                         const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
                                          unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
     FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
@@ -62,7 +62,7 @@ public:
     }
     fmg.push( "}" );
     
-    fmg.main_end(fsp);
+    fmg.main_end(fsp, fspopacity);
     return fmg.written();
   }
 };

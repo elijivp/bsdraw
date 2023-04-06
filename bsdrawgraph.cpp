@@ -30,7 +30,7 @@ public:
   virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 5000 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
   virtual unsigned int  shfragment_store(unsigned int allocatedPortions, 
                                          ORIENTATION orient, SPLITPORTIONS splitGraphs,
-                                         const impulsedata_t& imp, const overpattern_t& fsp,
+                                         const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
                                          unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
   {
     FshDrawConstructor fmg(to, allocatedPortions, splitGraphs, imp, ovlscount, ovlsinfo);
@@ -552,7 +552,7 @@ public:
       
 //      fmg.push("dvalue = mix(dvalue, b_coord, step(mixwell, 0.0));" SHNL);
     }
-    fmg.main_end(fsp);
+    fmg.main_end(fsp, fspopacity);
     return fmg.written();
   }
 };

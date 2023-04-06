@@ -347,7 +347,7 @@ void FshDrawConstructor::main_begin(int initback, unsigned int backcolor, ORIENT
   m_datamapped = DM_ON;
 }
 
-void FshDrawConstructor::main_end(const overpattern_t& fsp)
+void FshDrawConstructor::main_end(const overpattern_t& fsp, float fspopacity)
 {
   m_offset += msprintf(&m_to[m_offset], "" SHNL);
   if (fsp.algo == overpattern_t::OALG_OFF || fsp.mask >= _OP_TOTAL)
@@ -597,11 +597,12 @@ void FshDrawConstructor::main_end(const overpattern_t& fsp)
     {
       m_offset += msprintf(&m_to[m_offset],   "vec3   ppb_color = vec3(%F,%F,%F);" SHNL, fsp.color.r, fsp.color.g, fsp.color.b);
     }
-    m_offset += msprintf(&m_to[m_offset],     "result = mix(result, ppb_color, ppb_in * %s );" SHNL,
+    m_offset += msprintf(&m_to[m_offset],     "result = mix(result, ppb_color, ppb_in * %s * %F );" SHNL,
                              fsp.algo == overpattern_t::OALG_THRS_PLUS?   "post_mask[0]" : 
                              fsp.algo == overpattern_t::OALG_THRS_MINUS?  "(1.0 - post_mask[0])" : 
                              fsp.algo == overpattern_t::OALG_ANY?         "1.0" : 
-                                                                          "0.0"
+                                                                          "0.0",
+                             1.0f - fspopacity
                          );
   } // if mask
 

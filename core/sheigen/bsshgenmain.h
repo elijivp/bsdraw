@@ -55,7 +55,7 @@ public:
         };
   void  main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp); /// initresult: 0-none, 1-by zero, 2-by backcolor
   void  main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp, unsigned int dboundsA, unsigned int dboundsB); /// initresult: 0-none, 1-by zero, 2-by backcolor
-  void  main_end(const overpattern_t& fsp);
+  void  main_end(const overpattern_t& fsp, float fspopacity);
 public:
   void  push(const char* text);
   void  pushin(const char* text); // guaranteed no SHNL at the end

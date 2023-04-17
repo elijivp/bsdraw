@@ -32,7 +32,7 @@ int OvldrawEmpty::fshColor(int overlay, char* to) const
 
 ////////////////////////////////////////
 
-#define BSSHADER_DUMP     // write file fragshader.txt when compiling shader
+//#define BSSHADER_DUMP     // write file fragshader.txt when compiling shader
 
 ///////////////////////////////////////
 

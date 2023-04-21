@@ -172,13 +172,13 @@ unsigned int FshDrawConstructor::basePendingSize(const impulsedata_t& imp, unsig
   if (imp.type == impulsedata_t::IR_OFF)
     ;
   else if (imp.type == impulsedata_t::IR_A_COEFF || imp.type == impulsedata_t::IR_A_COEFF_NOSCALED)
-    base += 200 + imp.count*210;
+    base += 260 + imp.count*300;
   else if (imp.type == impulsedata_t::IR_A_BORDERS || imp.type == impulsedata_t::IR_A_BORDERS_FIXEDCOUNT)
-    base += 700;
+    base += 860;
   else if (imp.type == impulsedata_t::IR_B_COEFF || imp.type == impulsedata_t::IR_B_COEFF_NOSCALED)
-    base += 210 + imp.count*260;
+    base += 260 + imp.count*300;
   else if (imp.type == impulsedata_t::IR_B_BORDERS || imp.type == impulsedata_t::IR_B_BORDERS_FIXEDCOUNT)
-    base += 850;
+    base += 960;
   else
     ;
   return base;
@@ -749,7 +749,7 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
   
   else if (m_impulsegen.type == impulsedata_t::IR_A_COEFF || m_impulsegen.type == impulsedata_t::IR_A_COEFF_NOSCALED)
   {
-    m_offset += msprintf(&m_to[m_offset],  "vec2 loc_vv = vec2(0.0, 0.0);" SHNL );
+    m_offset += msprintf(&m_to[m_offset],  "vec3 loc_vv = vec3(0.0, 0.0, 0.0);" SHNL );
                          
     const char* scnosc = m_datamapped == DM_OFF ? 
                            m_impulsegen.type == impulsedata_t::IR_A_COEFF? "ab_ibounds" : "ab_indimms" :
@@ -759,14 +759,23 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
                                                           coordsname,  scnosc,   scnosc,     coordsname,  portionname
                         );
     
+    const char* lvclamp = "loc_vv[2]";
+    if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP && m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
+      lvclamp = "clamp(loc_vv[2], 0.0, 1.0)";
+    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP)
+      lvclamp = "min(loc_vv[2], 1.0)";
+    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
+      lvclamp = "max(loc_vv[2], 0.0)";
+    
     for (int i=0; i<m_impulsegen.central; i++)
     {
       m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = impulsegrad[1] - %d;" SHNL, -(i - m_impulsegen.central));
-      if (m_impulsegen.cycled == 1)
+      if (m_impulsegen.flags & impulsedata_t::F_CYCLED)
         m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], %s.x + loc_vv[1], 1.0 - step(0.0, loc_vv[1]));" SHNL, scnosc);
         
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texdata, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r;" SHNL,
-                                                                              m_impulsegen.coeff[i]);
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(texdata, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r;" SHNL);
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * %s;" SHNL,
+                                                                              m_impulsegen.coeff[i], lvclamp);
     }
     
     m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texdata, vec2(impulsegrad[1]*impulsegrad[2], impulsegrad[3])).r;" SHNL,
@@ -775,10 +784,12 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
     for (int i=m_impulsegen.central+1; i<m_impulsegen.count; i++)
     {
       m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = impulsegrad[1] + %d;" SHNL, i-m_impulsegen.central);
-      if (m_impulsegen.cycled == 1)
+      if (m_impulsegen.flags & impulsedata_t::F_CYCLED)
         m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s.x, 1.0 - step(loc_vv[1], %s.x));" SHNL, scnosc, scnosc );
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texdata, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r;" SHNL,
-                                                                              m_impulsegen.coeff[i]);
+      
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(texdata, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r;" SHNL);
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * %s;" SHNL,
+                                                                              m_impulsegen.coeff[i], lvclamp);
     }
     
     m_offset += msprintf(&m_to[m_offset],  "%s = loc_vv[0];" SHNL, varname);
@@ -789,7 +800,7 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
     m_offset += msprintf(&m_to[m_offset],  "vec4 impulsegrad = vec4(0, (%s.x*(%s)), 1.0/(%s), float(%s.y + float(%s))/float(portions));" SHNL,
                                                                    coordsname,  scnosc,             scnosc,               coordsname,  portionname );
     m_offset += msprintf(&m_to[m_offset],  "vec2 loc_vv = vec2(impulsegrad[1] - 1, impulsegrad[1] + 1);" SHNL );
-    if (m_impulsegen.cycled == 1)
+    if (m_impulsegen.flags & impulsedata_t::F_CYCLED)
     {
       m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = mix(loc_vv[0], %s + loc_vv[0], 1.0 - step(0.0, loc_vv[0]));" SHNL, scnosc);
       m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s, 1.0 - step(loc_vv[1], %s));" SHNL, scnosc, scnosc);
@@ -819,10 +830,23 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
     
     float fc = m_impulsegen.coeff[0];
     if (fc < 0.0f)  fc = 0.0f;  else if (fc > 0.99f) fc = 0.99f;
+    
+    const char* igclamp = "impulsegrad[0]";
+    const char* lv0clamp = "loc_vv[0]", *lv1clamp = "loc_vv[1]";
+    if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP && m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
+    {
+      igclamp = "clamp(impulsegrad[0], 0.0, 1.0)"; lv0clamp = "clamp(loc_vv[0], 0.0, 1.0)"; lv1clamp = "clamp(loc_vv[1], 0.0, 1.0)";
+    }
+    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP)
+    { igclamp = "min(impulsegrad[0], 1.0)"; lv0clamp = "min(loc_vv[0], 1.0)"; lv1clamp = "min(loc_vv[1], 1.0)"; }
+    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
+    { igclamp = "max(impulsegrad[0], 0.0)"; lv0clamp = "max(loc_vv[0], 0.0)"; lv1clamp = "max(loc_vv[1], 0.0)"; }
+    
+    
     m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2("
-                                            "-impulsemix*step(impulsemix, 0.0)*(impulsegrad[0] - loc_vv[0])/(1.0 - %f*(1.0+impulsemix)),"
-                                            " impulsemix*step(0.0, impulsemix)*(impulsegrad[0] - loc_vv[1])/(1.0 - %f*(1.0-impulsemix)) "
-                                          ");" SHNL, fc, fc);
+                                            "-impulsemix*step(impulsemix, 0.0)*(%s - %s)/(1.0 - %f*(1.0+impulsemix)),"
+                                            " impulsemix*step(0.0, impulsemix)*(%s - %s)/(1.0 - %f*(1.0-impulsemix)) "
+                                          ");" SHNL, igclamp, lv0clamp, fc, igclamp, lv1clamp, fc);
     
     m_offset += msprintf(&m_to[m_offset], "impulsegrad[0] = impulsegrad[0] - loc_vv.x - loc_vv.y;");
     
@@ -834,7 +858,7 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
   
   else if (m_impulsegen.type == impulsedata_t::IR_B_COEFF || m_impulsegen.type == impulsedata_t::IR_B_COEFF_NOSCALED)
   {
-    m_offset += msprintf(&m_to[m_offset],  "vec2 loc_vv = vec2(0.0, 0.0);" SHNL );
+    m_offset += msprintf(&m_to[m_offset],  "vec3 loc_vv = vec3(0.0, 0.0, 0.0);" SHNL );
                          
     const char* scnosc = m_datamapped == DM_OFF ? 
                            m_impulsegen.type == impulsedata_t::IR_B_COEFF? "ab_ibounds" : "ab_indimms" :
@@ -844,14 +868,22 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
                                                           coordsname,  coordsname,  scnosc,   scnosc,     portionname
                         );
     
+    const char* lvclamp = "loc_vv[2]";
+    if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP && m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
+      lvclamp = "clamp(loc_vv[2], 0.0, 1.0)";
+    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP)
+      lvclamp = "min(loc_vv[2], 1.0)";
+    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
+      lvclamp = "max(loc_vv[2], 0.0)";
+    
     for (int i=0; i<m_impulsegen.central; i++)
     {
       m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = impulsegrad[1] - %d;" SHNL, -(i - m_impulsegen.central));
-      if (m_impulsegen.cycled == 1)
+      if (m_impulsegen.flags & impulsedata_t::F_CYCLED)
         m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], %s.y + loc_vv[1], 1.0 - step(0.0, loc_vv[1]));" SHNL, scnosc);
         
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texdata, vec2(impulsegrad[0], (loc_vv[1]*impulsegrad[2] + impulsegrad[3])/float(portions))).r;" SHNL,
-                                                                              m_impulsegen.coeff[i]);
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(texdata, vec2(impulsegrad[0], (loc_vv[1]*impulsegrad[2] + impulsegrad[3])/float(portions))).r;" SHNL);
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * %s;" SHNL, m_impulsegen.coeff[i], lvclamp);
     }
     
     m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texdata, vec2(impulsegrad[0], (impulsegrad[1]*impulsegrad[2] + impulsegrad[3])/float(portions))).r;" SHNL,
@@ -860,10 +892,11 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
     for (int i=m_impulsegen.central+1; i<m_impulsegen.count; i++)
     {
       m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = impulsegrad[1] + %d;" SHNL, i-m_impulsegen.central);
-      if (m_impulsegen.cycled == 1)
+      if (m_impulsegen.flags & impulsedata_t::F_CYCLED)
         m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s.y, 1.0 - step(loc_vv[1], %s.y));" SHNL, scnosc, scnosc );
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(texdata, vec2(impulsegrad[0], (loc_vv[1]*impulsegrad[2] + impulsegrad[3])/float(portions))).r;" SHNL,
-                                                                              m_impulsegen.coeff[i]);
+      
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(texdata, vec2(impulsegrad[0], (loc_vv[1]*impulsegrad[2] + impulsegrad[3])/float(portions))).r;" SHNL);
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * %s;" SHNL, m_impulsegen.coeff[i], lvclamp);
     }
     
     m_offset += msprintf(&m_to[m_offset],  "%s = loc_vv[0];" SHNL, varname);
@@ -878,7 +911,7 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
     
     
     m_offset += msprintf(&m_to[m_offset],  "vec3 loc_vv = vec3(impulsegrad[1] - 1, impulsegrad[1] + 1, 0.0);" SHNL );
-    if (m_impulsegen.cycled == 1)
+    if (m_impulsegen.flags & impulsedata_t::F_CYCLED)
     {
       m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = mix(loc_vv[0], %s + loc_vv[0], 1.0 - step(0.0, loc_vv[0]));" SHNL, scnosc);
       m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s, 1.0 - step(loc_vv[1], %s));" SHNL, scnosc, scnosc);
@@ -907,10 +940,22 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
     
     float fc = m_impulsegen.coeff[0];
     if (fc < 0.0f)  fc = 0.0f;  else if (fc > 0.99f) fc = 0.99f;
+    
+    const char* igclamp = "loc_vv[2]";
+    const char* lv0clamp = "loc_vv[0]", *lv1clamp = "loc_vv[1]";
+    if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP && m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
+    {
+      igclamp = "clamp(loc_vv[2], 0.0, 1.0)"; lv0clamp = "clamp(loc_vv[0], 0.0, 1.0)"; lv1clamp = "clamp(loc_vv[1], 0.0, 1.0)";
+    }
+    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP)
+    { igclamp = "min(loc_vv[2], 1.0)"; lv0clamp = "min(loc_vv[0], 1.0)"; lv1clamp = "min(loc_vv[1], 1.0)"; }
+    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
+    { igclamp = "max(loc_vv[2], 0.0)"; lv0clamp = "max(loc_vv[0], 0.0)"; lv1clamp = "max(loc_vv[1], 0.0)"; }
+    
     m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2("
-                                            "-impulsemix*step(impulsemix, 0.0)*(loc_vv[2] - loc_vv[0])/(1.0 - %f*(1.0+impulsemix)),"
-                                            " impulsemix*step(0.0, impulsemix)*(loc_vv[2] - loc_vv[1])/(1.0 - %f*(1.0-impulsemix)) "
-                                          ");" SHNL, fc, fc);
+                                            "-impulsemix*step(impulsemix, 0.0)*(%s - %s)/(1.0 - %f*(1.0+impulsemix)),"
+                                            " impulsemix*step(0.0, impulsemix)*(%s - %s)/(1.0 - %f*(1.0-impulsemix)) "
+                                          ");" SHNL, igclamp, lv0clamp, fc, igclamp, lv1clamp, fc);
     m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = loc_vv[2] - loc_vv.x - loc_vv.y;");
     m_offset += msprintf(&m_to[m_offset],  "%s = loc_vv[2];" SHNL, varname);
 

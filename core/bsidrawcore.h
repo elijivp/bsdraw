@@ -420,7 +420,9 @@ struct impulsedata_t
   int type;
   int count;      // for IR_X_COEFF and IR_X_COEFF_NOSCALED - count of coeffs. For IR_X_BORDERS+ - minimal scaling for activation
   int central;    // for IR_X_COEFF and IR_X_COEFF_NOSCALED - central coeff. For IR_X_BORDERS+ - starter count for activation scaling
-  int cycled;
+  
+  enum  FLAGS { F_DEFAULT=0, F_CYCLED=0x1, F_CLAMPTOP=0x2, F_CLAMPBOT=0x4 };
+  int flags;
   float coeff[MAXCOEFFS]; // for IR_X_COEFF and IR_X_COEFF_NOSCALED - coeffs pack. For IR_X_BORDERS - only 1st special coeff
 };
 

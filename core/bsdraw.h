@@ -567,14 +567,14 @@ public:
     impulsedata_t idt = { noscaled? impulsedata_t::IR_B_COEFF_NOSCALED : impulsedata_t::IR_B_COEFF, 5, 2, cycled? 1 : 0, {coeff_left2, coeff_left1, coeff_central, coeff_right1, coeff_right2} };
     setImpulse(idt);
   }
-  void  setImpulseBordersA(int minscaling, int bordersize, bool fixed=true)
+  void  setImpulseBordersA(int minscaling, float coeff, bool smart=false)
   {
-    impulsedata_t idt = { fixed? impulsedata_t::IR_A_BORDERS_FIXEDCOUNT : impulsedata_t::IR_A_BORDERS, minscaling, bordersize, 0, {} };
+    impulsedata_t idt = { smart? impulsedata_t::IR_A_BORDERS_SMART : impulsedata_t::IR_A_BORDERS, minscaling, 0, 0, { coeff } };
     setImpulse(idt);
   }
-  void  setImpulseBordersB(int minscaling, int bordersize, bool fixed=true)
+  void  setImpulseBordersB(int minscaling, float coeff, bool smart=false)
   {
-    impulsedata_t idt = { fixed? impulsedata_t::IR_B_BORDERS_FIXEDCOUNT : impulsedata_t::IR_B_BORDERS, minscaling, bordersize, 0, {} };
+    impulsedata_t idt = { smart? impulsedata_t::IR_B_BORDERS_SMART : impulsedata_t::IR_B_BORDERS, minscaling, smart, 0, { coeff } };
     setImpulse(idt);
   }
   const impulsedata_t& impulse() const { return m_postImpulse; }

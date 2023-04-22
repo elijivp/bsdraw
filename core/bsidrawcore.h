@@ -414,8 +414,8 @@ inline linestyle_t    linestyle_update_inverse(linestyle_t ls, int inv){   ls.r 
 struct impulsedata_t
 {
   enum { MAXCOEFFS = 31 };
-  enum IMPULSE_TYPE {     IR_OFF, IR_A_COEFF, IR_A_COEFF_NOSCALED, IR_A_BORDERS, IR_A_BORDERS_FIXEDCOUNT,
-                                  IR_B_COEFF, IR_B_COEFF_NOSCALED, IR_B_BORDERS, IR_B_BORDERS_FIXEDCOUNT
+  enum IMPULSE_TYPE {     IR_OFF, IR_A_COEFF, IR_A_COEFF_NOSCALED, IR_A_BORDERS, IR_A_BORDERS_FIXEDCOUNT, IR_A_BORDERS_SMART, 
+                                  IR_B_COEFF, IR_B_COEFF_NOSCALED, IR_B_BORDERS, IR_B_BORDERS_FIXEDCOUNT, IR_B_BORDERS_SMART
                     };
   int type;
   int count;      // for IR_X_COEFF and IR_X_COEFF_NOSCALED - count of coeffs. For IR_X_BORDERS+ - minimal scaling for activation

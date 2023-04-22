@@ -169,18 +169,17 @@ unsigned int VshMainGenerator2D::operator()(char *to)
 unsigned int FshDrawConstructor::basePendingSize(const impulsedata_t& imp, unsigned int ovlscount)
 {
   unsigned int base = 2300 + ovlscount*1000;
-  if (imp.type == impulsedata_t::IR_OFF)
-    ;
-  else if (imp.type == impulsedata_t::IR_A_COEFF || imp.type == impulsedata_t::IR_A_COEFF_NOSCALED)
-    base += 260 + imp.count*300;
-  else if (imp.type == impulsedata_t::IR_A_BORDERS || imp.type == impulsedata_t::IR_A_BORDERS_FIXEDCOUNT)
-    base += 860;
-  else if (imp.type == impulsedata_t::IR_B_COEFF || imp.type == impulsedata_t::IR_B_COEFF_NOSCALED)
-    base += 260 + imp.count*300;
-  else if (imp.type == impulsedata_t::IR_B_BORDERS || imp.type == impulsedata_t::IR_B_BORDERS_FIXEDCOUNT)
-    base += 960;
-  else
-    ;
+  switch (imp.type)
+  {
+  case impulsedata_t::IR_A_COEFF: case impulsedata_t::IR_A_COEFF_NOSCALED: case impulsedata_t::IR_B_COEFF: case impulsedata_t::IR_B_COEFF_NOSCALED:
+    base += 320 + imp.count*220;
+    break;
+  case impulsedata_t::IR_A_BORDERS: case impulsedata_t::IR_A_BORDERS_FIXEDCOUNT: case impulsedata_t::IR_A_BORDERS_SMART: 
+  case impulsedata_t::IR_B_BORDERS: case impulsedata_t::IR_B_BORDERS_FIXEDCOUNT: case impulsedata_t::IR_B_BORDERS_SMART: 
+    base += 1000;
+    break;
+  default: break;
+  }
   return base;
 }
 
@@ -794,7 +793,7 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
     
     m_offset += msprintf(&m_to[m_offset],  "%s = loc_vv[0];" SHNL, varname);
   }
-  else if (m_impulsegen.type == impulsedata_t::IR_A_BORDERS || m_impulsegen.type == impulsedata_t::IR_A_BORDERS_FIXEDCOUNT)
+  else if (m_impulsegen.type == impulsedata_t::IR_A_BORDERS || m_impulsegen.type == impulsedata_t::IR_A_BORDERS_FIXEDCOUNT || m_impulsegen.type == impulsedata_t::IR_A_BORDERS_SMART)
   {    
     const char* scnosc = m_datamapped == DM_OFF? "ab_indimms.x" : "dbounds_noscaled.x";
     m_offset += msprintf(&m_to[m_offset],  "vec4 impulsegrad = vec4(0, (%s.x*(%s)), 1.0/(%s), float(%s.y + float(%s))/float(portions));" SHNL,
@@ -808,21 +807,20 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
     
     m_offset += msprintf(&m_to[m_offset], "impulsegrad[0] = texture(texdata, vec2(%s.x, impulsegrad[3])).r;" SHNL, coordsname);
     m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(texture(texdata, vec2(loc_vv[0]*impulsegrad[2], impulsegrad[3])).r," SHNL
-                                                            "texture(texdata, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r);" SHNL);
+                                                           "texture(texdata, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r);" SHNL);
     
     {
-      double halfcent = m_impulsegen.central/2.0;
-      if (m_impulsegen.type == impulsedata_t::IR_A_BORDERS)
+      if (m_impulsegen.type == impulsedata_t::IR_A_BORDERS || m_impulsegen.type == impulsedata_t::IR_A_BORDERS_SMART)
       {
-        m_offset += msprintf(&m_to[m_offset], "float impulsemix = float(1.0 + imrect[0])/int((imrect[2] + 1)/2);" SHNL);
-        m_offset += msprintf(&m_to[m_offset], "impulsemix = step(%F, float(imrect[2]))*(impulsemix - 1.0)/2.0;" SHNL,
+        //m_offset += msprintf(&m_to[m_offset], "float impulsemix = step(%F, float(imrect[2]))*(2.0*(0.5+float(imrect[0]))/float(imrect[2])-1.0);" SHNL,
+        m_offset += msprintf(&m_to[m_offset], "float impulsemix = step(%F, float(imrect[2]))*((1.0 + float(2*imrect[0]))/float(imrect[2])-1.0);" SHNL,
                               double(m_impulsegen.count)
                            );
-//        qDebug()<<m_to;
       }
       else
       {
-        m_offset += msprintf(&m_to[m_offset], "float impulsemix = step(%F, float(imrect[2]))*(0.5 - 0.25/%F)*(-clamp(1.0 - (imrect[0])/%F, 0.0, 1.0) + clamp(1.0 - float(imrect[2]-imrect[0])/%F, 0.0, 1.0) );" SHNL,
+        double halfcent = m_impulsegen.central/2.0;
+        m_offset += msprintf(&m_to[m_offset], "float impulsemix = step(%F, float(imrect[2]))*(1.0 - 0.5/%F)*(-clamp(1.0 - (imrect[0])/%F, 0.0, 1.0) + clamp(1.0 - float(imrect[2]-imrect[0])/%F, 0.0, 1.0) );" SHNL,
                               double(m_impulsegen.count), halfcent, halfcent, halfcent
                            );
       }
@@ -843,12 +841,26 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
     { igclamp = "max(impulsegrad[0], 0.0)"; lv0clamp = "max(loc_vv[0], 0.0)"; lv1clamp = "max(loc_vv[1], 0.0)"; }
     
     
-    m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2("
-                                            "-impulsemix*step(impulsemix, 0.0)*(%s - %s)/(1.0 - %f*(1.0+impulsemix)),"
-                                            " impulsemix*step(0.0, impulsemix)*(%s - %s)/(1.0 - %f*(1.0-impulsemix)) "
-                                          ");" SHNL, igclamp, lv0clamp, fc, igclamp, lv1clamp, fc);
+    if (m_impulsegen.type == impulsedata_t::IR_A_BORDERS || m_impulsegen.type == impulsedata_t::IR_A_BORDERS_FIXEDCOUNT)
+    {
+      m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(" SHNL
+  //                                            "-impulsemix*step(impulsemix, 0.0)*(%s - %s)/(1.0 - %f*(1.0+impulsemix)),"
+  //                                            " impulsemix*step(0.0, impulsemix)*(%s - %s)/(1.0 - %f*(1.0-impulsemix)) "
+                              // x + (x-1)*x*(2-x)*(coeff*2 - 1); 
+                           "(-impulsemix+(-impulsemix-1)*(-impulsemix)*(2+impulsemix)*(%F*2-1))*step(impulsemix, 0.0)*(%s - %s)/2.0," SHNL
+                           "( impulsemix+( impulsemix-1)*( impulsemix)*(2-impulsemix)*(%F*2-1))*step(0.0, impulsemix)*(%s - %s)/2.0 " SHNL
+                                            ");" SHNL, fc, igclamp, lv0clamp, fc, igclamp, lv1clamp);
+    }
+    else
+    {
+                              // x + (x-1)*x*coeff
+      m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(" SHNL
+                           "(-impulsemix+(-impulsemix-1)*(-impulsemix)*(%F*sign(impulsegrad[0]-loc_vv[0])))*step(impulsemix, 0.0)*(%s - %s)/2.0," SHNL
+                           "( impulsemix+( impulsemix-1)*( impulsemix)*(%F*sign(impulsegrad[0]-loc_vv[1])))*step(0.0, impulsemix)*(%s - %s)/2.0 " SHNL
+                                            ");" SHNL, 8*fc, igclamp, lv0clamp, 8*fc, igclamp, lv1clamp);
+    }
     
-    m_offset += msprintf(&m_to[m_offset], "impulsegrad[0] = impulsegrad[0] - loc_vv.x - loc_vv.y;");
+    m_offset += msprintf(&m_to[m_offset], "impulsegrad[0] = impulsegrad[0] - loc_vv.x - loc_vv.y;" SHNL);
     
     m_offset += msprintf(&m_to[m_offset],  "%s = impulsegrad[0];" SHNL, varname);
 
@@ -901,7 +913,7 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
     
     m_offset += msprintf(&m_to[m_offset],  "%s = loc_vv[0];" SHNL, varname);
   }
-  else if (m_impulsegen.type == impulsedata_t::IR_B_BORDERS || m_impulsegen.type == impulsedata_t::IR_B_BORDERS_FIXEDCOUNT)
+  else if (m_impulsegen.type == impulsedata_t::IR_B_BORDERS || m_impulsegen.type == impulsedata_t::IR_B_BORDERS_FIXEDCOUNT || m_impulsegen.type == impulsedata_t::IR_B_BORDERS_SMART)
   {
     
     const char* scnosc = m_datamapped == DM_OFF? "ab_indimms.y" : "dbounds_noscaled.y";
@@ -923,16 +935,19 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
     
     {
       double halfcent = m_impulsegen.central/2.0;
-      if (m_impulsegen.type == impulsedata_t::IR_B_BORDERS)
+      if (m_impulsegen.type == impulsedata_t::IR_B_BORDERS || m_impulsegen.type == impulsedata_t::IR_B_BORDERS_FIXEDCOUNT)
       {
-        m_offset += msprintf(&m_to[m_offset], "float impulsemix = float(1.0 + imrect[1])/int((imrect[3] + 1)/2);");
-        m_offset += msprintf(&m_to[m_offset], "impulsemix = step(%F, float(imrect[3]))*(impulsemix - 1.0)/2.0;" SHNL,
+//        m_offset += msprintf(&m_to[m_offset], "float impulsemix = float(1.0 + imrect[1])/int((imrect[3] + 1)/2);");
+//        m_offset += msprintf(&m_to[m_offset], "impulsemix = step(%F, float(imrect[3]))*(impulsemix - 1.0)/2.0;" SHNL,
+//                              double(m_impulsegen.count)
+//                           );
+        m_offset += msprintf(&m_to[m_offset], "float impulsemix = step(%F, float(imrect[3]))*((1.0 + float(2*imrect[1]))/float(imrect[3])-1.0);" SHNL,
                               double(m_impulsegen.count)
                            );
       }
       else
       {
-        m_offset += msprintf(&m_to[m_offset], "float impulsemix = step(%F, float(imrect[3]))*(0.5 - 0.25/%F)*(-clamp(1.0 - (imrect[1])/%F, 0.0, 1.0) + clamp(1.0 - float(imrect[3]-imrect[1])/%F, 0.0, 1.0) );" SHNL,
+        m_offset += msprintf(&m_to[m_offset], "float impulsemix = step(%F, float(imrect[3]))*(1.0 - 0.5/%F)*(-clamp(1.0 - (imrect[1])/%F, 0.0, 1.0) + clamp(1.0 - float(imrect[3]-imrect[1])/%F, 0.0, 1.0) );" SHNL,
                               double(m_impulsegen.count), halfcent, halfcent, halfcent
                            );
       }
@@ -952,9 +967,9 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
     else if (m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
     { igclamp = "max(loc_vv[2], 0.0)"; lv0clamp = "max(loc_vv[0], 0.0)"; lv1clamp = "max(loc_vv[1], 0.0)"; }
     
-    m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2("
-                                            "-impulsemix*step(impulsemix, 0.0)*(%s - %s)/(1.0 - %f*(1.0+impulsemix)),"
-                                            " impulsemix*step(0.0, impulsemix)*(%s - %s)/(1.0 - %f*(1.0-impulsemix)) "
+    m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(" SHNL
+                                            "-impulsemix*step(impulsemix, 0.0)*(%s - %s)/(1.0 - %f*(1.0+impulsemix))," SHNL
+                                            " impulsemix*step(0.0, impulsemix)*(%s - %s)/(1.0 - %f*(1.0-impulsemix)) " SHNL
                                           ");" SHNL, igclamp, lv0clamp, fc, igclamp, lv1clamp, fc);
     m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = loc_vv[2] - loc_vv.x - loc_vv.y;");
     m_offset += msprintf(&m_to[m_offset],  "%s = loc_vv[2];" SHNL, varname);

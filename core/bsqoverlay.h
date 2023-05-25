@@ -59,22 +59,19 @@ public:
 };
 
 
-//class MQOverlaySwap: public QObject
-//{
-//  Q_OBJECT
-//protected:  
-//  Ovldraw*  m_povlPrimary, *m_povlSecondary;
-//  bool          m_owner;
-//public:
-//  MQOverlaySwap(Ovldraw* ovlPrimary, Ovldraw* ovlSecondary, bool owner=false, QObject* parent=nullptr);
-//  ~MQOverlaySwap();
-//  Ovldraw* overlayPrimary() const { return m_povlPrimary; }
-//  Ovldraw* overlaySecondary() const { return m_povlSecondary; }
-//  Ovldraw* overlay(bool primary) const { return primary? m_povlPrimary : m_povlSecondary; }
-//public slots:
-//  void show(bool);
-//  void hide(bool);
-//};
+
+/****/
+
+class OQRemitStandard: public QObject, public IOverlayReactor
+{
+  Q_OBJECT
+public:
+  virtual void  overlayReactionVisible(bool /*visible*/);    // nothrow
+  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* doStop);
+signals:
+  void  mouseAction(float x01, float y01);
+  void  release();
+};
 
 /****/
 
@@ -113,6 +110,8 @@ signals:
 
 
 
+
+
 //class OQClicker: public QObject, public OvldrawProactive
 //{
 //  Q_OBJECT
@@ -121,6 +120,23 @@ signals:
 //signals:
 //  void  doubleClicked();
 //  void  doubleClicked(QPoint);
+//};
+
+//class MQOverlaySwap: public QObject
+//{
+//  Q_OBJECT
+//protected:  
+//  Ovldraw*  m_povlPrimary, *m_povlSecondary;
+//  bool          m_owner;
+//public:
+//  MQOverlaySwap(Ovldraw* ovlPrimary, Ovldraw* ovlSecondary, bool owner=false, QObject* parent=nullptr);
+//  ~MQOverlaySwap();
+//  Ovldraw* overlayPrimary() const { return m_povlPrimary; }
+//  Ovldraw* overlaySecondary() const { return m_povlSecondary; }
+//  Ovldraw* overlay(bool primary) const { return primary? m_povlPrimary : m_povlSecondary; }
+//public slots:
+//  void show(bool);
+//  void hide(bool);
 //};
 
 #endif // BSQOVERLAY_H

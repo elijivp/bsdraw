@@ -1511,6 +1511,25 @@ BSQProactiveSelectorBase::~BSQProactiveSelectorBase(){}
 
 
 
+BSQClickerXY::BSQClickerXY(QObject* parent): QObject(parent)
+{
+}
+
+bool BSQClickerXY::reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool*)
+{
+  if (oreact == ORM_LMPRESS)
+  {
+    emit clicked(ct->fx_rel, ct->fy_rel);
+    return true;
+  }
+  if (oreact == ORM_RMPRESS)
+  {
+    emit released();
+    return true;
+  }
+  return false;
+}
+
 
 BSQClickerPoint::BSQClickerPoint(OVL_REACTION_MOUSE em, QObject* parent): QObject(parent), emitter(em)
 {

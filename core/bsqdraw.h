@@ -220,6 +220,17 @@ protected:
   };
 };
 
+class BSQClickerXY: public QObject, public DrawEventReactor
+{
+  Q_OBJECT
+public:
+  BSQClickerXY(QObject* parent=nullptr);
+  virtual bool  reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE, const coordstriumv_t*, bool* /*doStop*/);
+signals:
+  void  clicked(float x01, float y01);
+  void  released();
+};
+
 class BSQClickerPoint: public QObject, public DrawEventReactor
 {
   Q_OBJECT

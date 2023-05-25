@@ -55,6 +55,25 @@ MQOverlayLined::MQOverlayLined(Ovldraw* ovl, bool owner, QObject* parent): MQOve
 {
 }
 
+/**********************************************************************/
+
+
+
+void OQRemitStandard::overlayReactionVisible(bool v)
+{
+  if (v == false)
+    emit release();
+}
+
+
+bool OQRemitStandard::overlayReactionMouse(OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* /*doStop*/)
+{
+  if (orm == ORM_LMPRESS)
+    emit mouseAction(ct->fx_rel, ct->fy_rel);
+  return false;
+}
+
+
 
 
 /**********************************************************************/

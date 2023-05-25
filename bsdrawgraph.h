@@ -41,15 +41,15 @@ public:
   virtual unsigned int    colorBack() const;
 };
 
-/// 2D graph dynamic portion:   Check portionSize() before each call setData
-class DrawGraphDyport: public DrawGraph
+/// 2D graph dynamic portion size:   Check portionSize() before each call setData
+class DrawGraphUpsizeA: public DrawGraph
 {
   unsigned int          m_minsamples;
   unsigned int          m_maxsamples;
   void  reConstructorEx(unsigned int samples);
 public:
-  DrawGraphDyport(unsigned int minsamples, unsigned int maxsamples, unsigned int graphs=1, const coloropts_t& copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SP_NONE);
-  DrawGraphDyport(unsigned int minsamples, unsigned int maxsamples, unsigned int graphs, const graphopts_t& graphopts, const coloropts_t& copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SP_NONE);
+  DrawGraphUpsizeA(unsigned int minsamples, unsigned int maxsamples, unsigned int graphs=1, const coloropts_t& copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SP_NONE);
+  DrawGraphUpsizeA(unsigned int minsamples, unsigned int maxsamples, unsigned int graphs, const graphopts_t& graphopts, const coloropts_t& copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SP_NONE);
 public:
   virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
   virtual int           sizeAndScaleChanged(bool changedDimmA, bool changedDimmB);

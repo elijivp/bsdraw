@@ -2,12 +2,12 @@
 
 #include "core/sheigen/bsshei2d.h"
 
-DrawIntensity::DrawIntensity(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): 
+DrawIntensity::DrawIntensity(unsigned int samplesA, unsigned int samplesB, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): 
   DrawQWidget(DATEX_2D, new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient, splitPortions)
 {
-  m_dataDimmA = samplesHorz;
-  m_dataDimmB = samplesVert;
-  m_portionSize = samplesHorz*samplesVert;
+  m_dataDimmA = samplesA;
+  m_dataDimmB = samplesB;
+  m_portionSize = samplesA*samplesB;
   deployMemory();
 }
 
@@ -18,6 +18,76 @@ void DrawIntensity::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixD
   *scalingA = (unsigned int)sizeA <= m_dataDimmA? 1 : (sizeA / m_dataDimmA);
   *scalingB = (unsigned int)sizeB <= m_dataDimmB? 1 : (sizeB / m_dataDimmB);
   clampScaling(scalingA, scalingB);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////
+///
+
+DrawIntensityUpsizeA::DrawIntensityUpsizeA(unsigned int samplesAmin, unsigned int samplesAmax, unsigned int samplesB, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): 
+  DrawQWidget(DATEX_2D, new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient, splitPortions), m_minA(samplesAmin), m_maxA(samplesAmax)
+{
+  m_dataDimmA = samplesAmax;
+  m_dataDimmB = samplesB;
+  m_portionSize = m_dataDimmA*m_dataDimmB;
+  deployMemory();
+  m_dataDimmA = samplesAmin;
+  m_portionSize = m_dataDimmA*m_dataDimmB;
+}
+
+void DrawIntensityUpsizeA::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
+{
+  *matrixDimmA = sizeA / m_scalingA;
+  *matrixDimmB = m_dataDimmB;
+  if (*matrixDimmA > m_maxA)      *matrixDimmA = m_maxA;
+  else if (*matrixDimmA < m_minA) *matrixDimmA = m_minA;
+  *scalingA = m_scalingA;
+  *scalingB = (unsigned int)sizeB <= m_dataDimmB? 1 : (sizeB / m_dataDimmB);
+  clampScaling(scalingA, scalingB);
+}
+
+int DrawIntensityUpsizeA::sizeAndScaleChanged(bool changedDimmA, bool /*changedDimmB*/)
+{
+  if (changedDimmA)
+  {
+    m_portionSize = sizeDataA()*sizeDataB();
+    return 0;
+  }
+  return 0;
+}
+
+
+
+DrawIntensityUpsizeB::DrawIntensityUpsizeB(unsigned int samplesA, unsigned int samplesBmin, unsigned int samplesBmax, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): 
+  DrawQWidget(DATEX_2D, new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient, splitPortions), m_minB(samplesBmin), m_maxB(samplesBmax)
+{
+  m_dataDimmA = samplesA;
+  m_dataDimmB = samplesBmax;
+  m_portionSize = m_dataDimmA*m_dataDimmB;
+  deployMemory();
+  m_dataDimmB = samplesBmin;
+  m_portionSize = m_dataDimmA*m_dataDimmB;
+}
+
+void DrawIntensityUpsizeB::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
+{
+  *matrixDimmA = m_dataDimmA;
+  *matrixDimmB = sizeB / m_scalingB;
+  if (*matrixDimmB > m_maxB)      *matrixDimmB = m_maxB;
+  else if (*matrixDimmB < m_minB) *matrixDimmB = m_minB;
+  *scalingA = (unsigned int)sizeA <= m_dataDimmA? 1 : (sizeA / m_dataDimmA);
+  *scalingB = m_scalingB;
+  clampScaling(scalingA, scalingB);
+}
+
+int DrawIntensityUpsizeB::sizeAndScaleChanged(bool /*changedDimmA*/, bool changedDimmB)
+{
+  if (changedDimmB)
+  {
+    m_portionSize = sizeDataA()*sizeDataB();
+    return 0;
+  }
+  return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

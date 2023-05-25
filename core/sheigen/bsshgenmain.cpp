@@ -862,10 +862,8 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
                                             ");" SHNL, igclamp, lv0clamp, igclamp, lv1clamp);
     }
     
-    m_offset += msprintf(&m_to[m_offset], "impulsegrad[0] = impulsegrad[0] - step(%F, float(imrect[2]+1))*(loc_vv.x + loc_vv.y);" SHNL, 
-                                                                  double(m_impulsegen.count));
-    
-    m_offset += msprintf(&m_to[m_offset],  "%s = impulsegrad[0];" SHNL, varname);
+    m_offset += msprintf(&m_to[m_offset], "%s = impulsegrad[0] - step(%F, float(imrect[2]+1))*(loc_vv.x + loc_vv.y);" SHNL, 
+                                                                  varname, double(m_impulsegen.count));
 
   }
   
@@ -994,8 +992,6 @@ void FshDrawConstructor::value2D(const char* varname, const char* coordsname, co
                                             ");" SHNL, igclamp, lv0clamp, igclamp, lv1clamp);
     }
     
-    m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = loc_vv[2] - step(%F, float(imrect[3]))*(loc_vv.x + loc_vv.y);", m_impulsegen.count);
-    m_offset += msprintf(&m_to[m_offset],  "%s = loc_vv[2];" SHNL, varname);
-
+    m_offset += msprintf(&m_to[m_offset], "%s = loc_vv[2] - step(%F, float(imrect[3]))*(loc_vv.x + loc_vv.y);", varname, m_impulsegen.count);
   }
 }

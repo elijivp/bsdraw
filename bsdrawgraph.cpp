@@ -642,25 +642,25 @@ unsigned int DrawGraph::colorBack() const
 
 ////////////////////////////////////////////////////////////////
 
-void DrawGraphDyport::reConstructorEx(unsigned int samples)
+void DrawGraphUpsizeA::reConstructorEx(unsigned int samples)
 {
   m_dataDimmA = samples;
   m_portionSize = samples;
 }
 
-DrawGraphDyport::DrawGraphDyport(unsigned int minsamples, unsigned int maxsamples, unsigned int graphs, const coloropts_t& copts, SPLITPORTIONS splitGraphs):
+DrawGraphUpsizeA::DrawGraphUpsizeA(unsigned int minsamples, unsigned int maxsamples, unsigned int graphs, const coloropts_t& copts, SPLITPORTIONS splitGraphs):
   DrawGraph(maxsamples, graphs, copts, splitGraphs), m_minsamples(minsamples), m_maxsamples(maxsamples)
 {
   reConstructorEx(minsamples);
 }
 
-DrawGraphDyport::DrawGraphDyport(unsigned int minsamples, unsigned int maxsamples, unsigned int graphs, const graphopts_t& graphopts, const coloropts_t& copts, SPLITPORTIONS splitGraphs):
+DrawGraphUpsizeA::DrawGraphUpsizeA(unsigned int minsamples, unsigned int maxsamples, unsigned int graphs, const graphopts_t& graphopts, const coloropts_t& copts, SPLITPORTIONS splitGraphs):
   DrawGraph(maxsamples, graphs, graphopts, copts, splitGraphs), m_minsamples(minsamples), m_maxsamples(maxsamples)
 {
   reConstructorEx(minsamples);
 }
 
-void DrawGraphDyport::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
+void DrawGraphUpsizeA::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const
 {
   *scalingA = m_scalingA;
   *scalingB = m_scalingB;
@@ -672,7 +672,7 @@ void DrawGraphDyport::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matri
     *matrixDimmB = 1;
 }
 
-int DrawGraphDyport::sizeAndScaleChanged(bool changedDimmA, bool /*changedDimmB*/)
+int DrawGraphUpsizeA::sizeAndScaleChanged(bool changedDimmA, bool /*changedDimmB*/)
 {
   if (changedDimmA)
   {

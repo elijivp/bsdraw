@@ -566,6 +566,17 @@ void FshOVCoordsConstructor::construct_trail_vec2(const char*  pxwidth, const ch
         );
 }
 
+void FshOVCoordsConstructor::construct_trail2_vec2(const char*  pxwidth, const char*  curver, const char* pxdistance_int, const char* result_vec2)
+{
+   m_offset += msprintf(&m_to[m_offset], 
+           "vec2 %1 = vec2(abs(%s), 0.0);" SHNL
+           "%1[1] = clamp(%1[0]/float(1+%3), 0.0, 1.0);" SHNL
+           "%1[1] = %1[1] + (%1[1] - 1.0)*%1[1]*%4;" SHNL
+           "%1[0] = clamp(%1[1], 0.0, 1.0);" SHNL,
+           result_vec2, pxdistance_int, pxwidth, curver
+        );
+}
+
 
 
 

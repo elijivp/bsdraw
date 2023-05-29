@@ -85,14 +85,26 @@ protected:
 
 class OToons: public Ovldraw_ColorTraced, public OVLCoordsStatic, public OVLDimms1Static
 {
-  float         m_radius2, m_border;
-  bool          m_banclicks;
+  float     m_radius2, m_border;
+  bool      m_banclicks;
 public:
-  OToons(COORDINATION cr, float diameter, float border, const linestyle_t& =linestyle_solid(0,0,0), bool banclikcks=true);
+  OToons(COORDINATION cr, float radius, float border, const linestyle_t& =linestyle_solid(0,0,0), bool banclikcks=true);
 protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
-//  virtual bool  clickBanned(float x, float y) const;
-//  virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool* doStop);
+};
+
+class OToonsShadow: public Ovldraw_ColorDomestic, public OVLCoordsOff, public OVLDimmsOff
+{
+  float     m_radius[2];
+  float     m_curver;
+  color3f_t m_color;
+public:
+  OToonsShadow(float radius0, float radius1, float curver=0.75f, const color3f_t& c3f=color3f_black());
+public:
+  void  setCurver(float curver, bool update=true);  // recomp
+  float curver() const { return m_curver; }
+protected:
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
 #endif // BSBORDER_H

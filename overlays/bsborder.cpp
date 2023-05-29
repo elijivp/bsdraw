@@ -235,10 +235,10 @@ int OColumnsSelected::fshOVCoords(int overlay, bool switchedab, char* to) const
 
 /*******************************************************************************************************************************************************/
 
-OToons::OToons(COORDINATION cr, float diameter, float border, const linestyle_t &kls, bool banclikcks): Ovldraw_ColorTraced(kls),
+OToons::OToons(COORDINATION cr, float radius, float border, const linestyle_t &kls, bool banclikcks): Ovldraw_ColorTraced(kls),
   OVLCoordsStatic(CR_RELATIVE, 0.5f, 0.5f),
-  OVLDimms1Static(cr, diameter/2.0f),
-  m_radius2(diameter*diameter/4.0f), m_border(border), m_banclicks(banclikcks)
+  OVLDimms1Static(cr, radius/2.0f),
+  m_radius2(radius*radius/4.0f), m_border(border), m_banclicks(banclikcks)
 {
 }
 
@@ -280,3 +280,66 @@ int OToons::fshOVCoords(int overlay, bool switchedab, char *to) const
 //}
 
 
+/*******************************************************************************************************************************************************/
+
+
+OToonsShadow::OToonsShadow(float radius0, float radius1, float curver, const color3f_t &clr): Ovldraw_ColorDomestic(clr), OVLCoordsOff(), OVLDimmsOff(), 
+  m_curver(curver), m_color(clr)
+{
+  m_radius[0] = radius0; 
+  m_radius[1] = radius1;
+}
+
+void OToonsShadow::setCurver(float curver, bool update)
+{
+  m_curver = curver;
+  updateParameter(true, update);
+}
+
+int OToonsShadow::fshOVCoords(int overlay, bool switchedab, char *to) const
+{
+  FshOVCoordsConstructor ocg(this->uniforms(), overlay, to);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  {
+    ocg.goto_normed();
+    ocg.var_const_fixed("weight", m_curver);
+    ocg.var_const_fixed("rr", m_radius[0], m_radius[1]);
+    ocg.push( "int diameter = ov_ibounds.x;" );
+//    ocg.push( "float d2 = inormed.x*inormed.x + inormed.y*inormed.y;"
+//              "vec3  r2 = vec3((diameter - border) * (diameter - border), diameter*diameter, (diameter + border) * (diameter + border));"
+//              "float mixwell_before = smoothstep(r2[0], r2[1], d2)*(1 - step(r2[1], d2));"
+//              "float mixwell_aftere = (step(r2[1], d2));"
+//              "float fmax = max(ov_ibounds.x, ov_ibounds.y);"
+//              "result += vec3(clamp(mixwell_before + mixwell_aftere, 0.0, 1.0), (sqrt(d2) - diameter)/(fmax - diameter), fmax - diameter);"
+//              );
+    
+//    const char* dds[] = { "inormed.x",
+//                          "ov_ibounds.y - 1 - inormed.y",
+//                          "ov_ibounds.x - 1 - inormed.x",
+//                          "inormed.y",
+//                        };
+//    ocg.push("ivec2 dd = ivec2(9999, 0);");
+//    for (int i=0; i<4; i++)
+//    {
+//      if (m_lineset & (1 << i))
+//      {
+//        ocg.push("dd = ivec2(mix(dd, ivec2(");
+//        ocg.push(dds[i]);
+//        ocg.push(", ");
+//        ocg.push(m_pxwidth[i]);
+//        ocg.push("), step(float(");
+//        ocg.push(dds[i]);
+//        ocg.push("), float(dd[0]))));");
+//      }
+//    }      
+    
+//    ocg.construct_trail_vec2("dd[1]", "weight", "dd[0]", "tms");
+    ocg.push( "float d2 = (inormed.x - ov_ibounds.x/2.0)*(inormed.x - ov_ibounds.x/2.0) + "
+                            "(inormed.y - ov_ibounds.y/2.0)*(inormed.y - ov_ibounds.y/2.0);");
+    ocg.push("ivec2 dd = ivec2(max(0.0, sqrt(d2) - diameter/2.0*rr[0]), (rr[1]-rr[0])*diameter/2.0);");
+    ocg.construct_trail2_vec2("dd[1]", "weight", "dd[0]", "tms");
+    ocg.push("mixwell = tms[0];");
+  }  
+  ocg.goto_func_end(false);
+  return ocg.written();
+}

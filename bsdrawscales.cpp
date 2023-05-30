@@ -442,13 +442,9 @@ static void rectAlign(const QRect& area, Qt::Alignment alignment, QPoint* result
 
 
 enum  RELATED_FLAG { 
-  RF_NONE=0,
-  RF_SETBOUNDS=1,
-  RF_SETENUMERATE=2,
-  RF_SETTAPS=3,
-  RF_SETTAPWDG=4,
-  
-  RF_UPDATETAP_PARAM
+  RF_NONE,  
+  RF_SETBOUNDS, RF_SETENUMERATE, RF_SETTAPS, RF_SETTAPWDG,
+  RF_UPBOUNDS, RF_UPTAPS
 };
 
 union relatedopts_t
@@ -502,18 +498,23 @@ public:
   {
     bool docall = (rtexttype != c_rtexttype) | forcedupdate;
     c_rtexttype = rtexttype;
-    if (rtexttype == RF_SETBOUNDS)
+    if (rtexttype == RF_SETBOUNDS || rtexttype == RF_UPBOUNDS)
     {
-      docall |= (rdata.rel_fixed.LL != c_rdata.rel_fixed.LL) || (rdata.rel_fixed.HL != c_rdata.rel_fixed.HL);
+      docall |= rtexttype == RF_SETBOUNDS ? true : 
+                    (rdata.rel_fixed.LL != c_rdata.rel_fixed.LL) || (rdata.rel_fixed.HL != c_rdata.rel_fixed.HL);
       if (docall)
       {
-        c_rdata = rdata;
-        float ll = rdata.rel_fixed.LL + (rdata.rel_fixed.HL - rdata.rel_fixed.LL)*c_reloffset;
-        float hl = rdata.rel_fixed.HL + (rdata.rel_fixed.HL - rdata.rel_fixed.LL)*c_reloffset;
-        bdContentUpdateBounds(ll, hl, rdata.rel_fixed.MOD);
+        c_rdata.rel_fixed.LL = rdata.rel_fixed.LL;
+        c_rdata.rel_fixed.HL = rdata.rel_fixed.HL;
+        if (rtexttype == RF_SETBOUNDS)
+          c_rdata.rel_fixed.MOD = rdata.rel_fixed.MOD;
+        
+        float ll = c_rdata.rel_fixed.LL + (c_rdata.rel_fixed.HL - c_rdata.rel_fixed.LL)*c_reloffset;
+        float hl = c_rdata.rel_fixed.HL + (c_rdata.rel_fixed.HL - c_rdata.rel_fixed.LL)*c_reloffset;
+        bdContentUpdateBounds(ll, hl, c_rdata.rel_fixed.MOD);
       }
     }
-    else if (rtexttype == RF_SETTAPS || rtexttype == RF_UPDATETAP_PARAM)
+    else if (rtexttype == RF_SETTAPS || rtexttype == RF_UPTAPS)
     {
       docall = true;
       if (rtexttype == RF_SETTAPS)
@@ -4290,7 +4291,7 @@ void DrawBars::mouseDoubleClickEvent(QMouseEvent* event)
       {
         int rtt = pImpl->elemsBoundsSetupDepended[i]->cachedRTexttype();
   //        const relatedopts_t& rdata = pImpl->elemsBoundsSetupDepended[i]->cachedRdata();
-        if (rtt == RF_SETBOUNDS)
+        if (rtt == RF_SETBOUNDS || rtt == RF_UPBOUNDS)
         {
           relatedopts_t rdata = pImpl->elemsBoundsSetupDepended[i]->cachedRdata();
           LL = rdata.rel_fixed.LL;
@@ -4433,7 +4434,7 @@ void DrawBars::slot_updatedBounds()
   {
     bool doupdate = false;
     for (int i=0; i<cnt; i++)
-      doupdate |= pImpl->elemsBoundDepended[i]->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bnd), false);
+      doupdate |= pImpl->elemsBoundDepended[i]->bdContentUpdate(RF_UPBOUNDS, relatedopts_t(bnd), false);
     if (doupdate)
     {
       update();
@@ -4699,18 +4700,18 @@ void MEWPointer::setPositionBifunc(float pos01, float posText)
 
 void MEWPointer::setBounds(float LL, float HL)
 {
-  if ( ((MarginPointer*)m_pme)->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL))) )
+  if ( ((MarginPointer*)m_pme)->bdContentUpdate(RF_UPBOUNDS, relatedopts_t(bounds_t(LL, HL))) )
     remoteUpdate();
 }
 
 void MEWPointer::setBoundLow(float LL)
 {
-  if ( ((MarginPointer*)m_pme)->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, ((MarginPointer*)m_pme)->cachedRdata().rel_fixed.HL))) )
+  if ( ((MarginPointer*)m_pme)->bdContentUpdate(RF_UPBOUNDS, relatedopts_t(bounds_t(LL, ((MarginPointer*)m_pme)->cachedRdata().rel_fixed.HL))) )
     remoteUpdate();
 }
 void MEWPointer::setBoundHigh(float HL)
 {
-  if ( ((MarginPointer*)m_pme)->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(((MarginPointer*)m_pme)->cachedRdata().rel_fixed.LL, HL))) )
+  if ( ((MarginPointer*)m_pme)->bdContentUpdate(RF_UPBOUNDS, relatedopts_t(bounds_t(((MarginPointer*)m_pme)->cachedRdata().rel_fixed.LL, HL))) )
     remoteUpdate();
 }
 
@@ -4726,7 +4727,7 @@ void MEWPointer::setBoundHigh(double HL){  setBoundHigh(float(HL)); }
 
 void MEWScale::updateTapParam(const void* param)
 {
-  if ( ((MarginMarksBase*)m_pme)->bdContentUpdate(RF_UPDATETAP_PARAM, relatedopts_t(nullptr, param, 0) ) )
+  if ( ((MarginMarksBase*)m_pme)->bdContentUpdate(RF_UPTAPS, relatedopts_t(nullptr, param, 0) ) )
     remoteUpdate();
 }
 
@@ -4757,18 +4758,18 @@ void MEWScale::setMarkMiniLen(int mlen)
 
 void MEWScaleNN::setBounds(float LL, float HL)
 {
-  if ( ((MarginMarksBase*)m_pme)->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL))) )
+  if ( ((MarginMarksBase*)m_pme)->bdContentUpdate(RF_UPBOUNDS, relatedopts_t(bounds_t(LL, HL))) )
     remoteUpdate();
 }
 
 void MEWScaleNN::setBoundLow(float LL)
 {
-  if ( ((MarginMarksBase*)m_pme)->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, ((MarginMarksBase*)m_pme)->cachedRdata().rel_fixed.HL))) )
+  if ( ((MarginMarksBase*)m_pme)->bdContentUpdate(RF_UPBOUNDS, relatedopts_t(bounds_t(LL, ((MarginMarksBase*)m_pme)->cachedRdata().rel_fixed.HL))) )
     remoteUpdate();
 }
 void MEWScaleNN::setBoundHigh(float HL)
 {
-  if ( ((MarginMarksBase*)m_pme)->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(((MarginMarksBase*)m_pme)->cachedRdata().rel_fixed.LL, HL))) )
+  if ( ((MarginMarksBase*)m_pme)->bdContentUpdate(RF_UPBOUNDS, relatedopts_t(bounds_t(((MarginMarksBase*)m_pme)->cachedRdata().rel_fixed.LL, HL))) )
     remoteUpdate();
 }
 

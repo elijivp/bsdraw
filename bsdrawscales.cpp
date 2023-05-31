@@ -1408,12 +1408,24 @@ public:
       if (ua_marks) delete []ua_marks;
       if (ua_marklinks2)  delete []ua_marklinks2;
       
-      if (algoType == DBMODE_STRETCHED_POW2 && marksLimit > 2)
+//      if (algoType == DBMODE_STRETCHED_POW2 && marksLimit > 2)
+//      {
+//        int mc = 2;
+//        while (2*mc + 1 <= marksLimit)
+//          mc *= 2;
+//        marksLimit = mc + 1;
+//      }
+      if (algoType == DBMODE_STRETCHED_POW2 && marksLimit >= 2)
       {
+#if 0
+        int oddmode = marksLimit % 2;
         int mc = 2;
-        while (2*mc + 1 <= marksLimit)
+        while (2*mc + oddmode <= marksLimit)
           mc *= 2;
-        marksLimit = mc + 1;
+        marksLimit = mc + oddmode;
+#else
+        // pass
+#endif
       }
       countMaxiNoted = marksLimit;
       countMaxiHided = 0;
@@ -1539,21 +1551,65 @@ protected:
       over_deltapix[0] = dimm_main/float(countMaxiTotal - 1);
       if (algoType == DBMODE_STRETCHED_POW2)
       {
+#if 0
         countMaxiNoted = countMaxiTotal;
-        if (over_deltapix[0] < pixStep_pixSpace && countMaxiNoted > 2)
+        if (countMaxiTotal % 2)
         {
-          float odp = dimm_main/float(countMaxiNoted - 1);
-          while (odp < pixStep_pixSpace)
+          if (over_deltapix[0] < pixStep_pixSpace)
           {
-            countMaxiNoted -= countMaxiNoted/2;
-            odp = dimm_main/float(countMaxiNoted - 1);
-            over_step[0] *= 2;
-    //        qDebug()<<countMaxiNoted<<over_deltapix[0]<<pixStep_pixSpace;
-            if (countMaxiNoted < 3)
-              break;
+            float odp = dimm_main/float(countMaxiNoted - 1);
+            while (odp < pixStep_pixSpace && countMaxiNoted > 2)
+            {
+              int rm = countMaxiNoted/2;
+              if ((countMaxiNoted - rm) % 2 != 1)
+                break;
+              countMaxiNoted -= rm;
+              odp = dimm_main/float(countMaxiNoted - 1);
+              over_step[0] *= 2;
+            }
           }
-//          qDebug()<<over_step[0];
         }
+        else
+        {
+          if (over_deltapix[0] < pixStep_pixSpace)
+          {
+            float odp = dimm_main/float(countMaxiNoted - 1);
+            while (odp < pixStep_pixSpace && countMaxiNoted > 3)
+            {
+              int rm = (2*countMaxiNoted)/3;
+              if ((countMaxiNoted - rm) % 2 != 0)
+                break;
+              countMaxiNoted -= rm;
+              odp = dimm_main/float(countMaxiNoted - 1);
+              over_step[0] *= 3;
+            }
+          }
+        }
+#else
+        countMaxiNoted = countMaxiTotal;
+        if (over_deltapix[0] < pixStep_pixSpace)
+        {
+          int centralmark = countMaxiNoted%2;
+          float odp = dimm_main/float(countMaxiNoted - 1);
+          while (odp < pixStep_pixSpace && countMaxiNoted > 2)
+          {
+            int hp = (countMaxiNoted - centralmark)/2;
+            int dv;
+            if (hp % 2 == 0)
+              dv = 2;
+            else if (hp % 3 == 0)
+              dv = 3;
+            else break;
+            
+            int rm = ((dv-1)*countMaxiNoted)/dv;
+            if ((countMaxiNoted - rm) % 2 != 1)
+              break;
+            countMaxiNoted -= rm;
+            odp = dimm_main/float(countMaxiNoted - 1);
+            over_step[0] *= dv;
+          }
+        }
+#endif
       }
       else
       {

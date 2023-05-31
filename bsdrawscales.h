@@ -260,6 +260,11 @@ public:
   /// Naming:      addScale_M_S
   /// where    M - Marks placement algorithm
   ///          S - Labels source
+  /// 
+  /// Native = smart algorithm, distance between marks depends on value (minSTEP, minSTEPbase)
+  /// Pixstep = simple algorithm, try to hold similar space between marks
+  /// Symmetric = try to place marks symmetric. if marksLimit is odd - there is no mark in center, another else
+  /// Rolling = from start with static steps
   
                       ///   Unmarked scales
   MEWScale*           addScalePixstepEmpty(ATTACHED_TO atto, int flags, int marksLimit=11, int minSpacing=30, int miniPerMaxi=9);

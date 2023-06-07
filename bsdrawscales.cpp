@@ -1407,26 +1407,6 @@ public:
     {
       if (ua_marks) delete []ua_marks;
       if (ua_marklinks2)  delete []ua_marklinks2;
-      
-//      if (algoType == DBMODE_STRETCHED_POW2 && marksLimit > 2)
-//      {
-//        int mc = 2;
-//        while (2*mc + 1 <= marksLimit)
-//          mc *= 2;
-//        marksLimit = mc + 1;
-//      }
-      if (algoType == DBMODE_STRETCHED_POW2 && marksLimit >= 2)
-      {
-#if 0
-        int oddmode = marksLimit % 2;
-        int mc = 2;
-        while (2*mc + oddmode <= marksLimit)
-          mc *= 2;
-        marksLimit = mc + oddmode;
-#else
-        // pass
-#endif
-      }
       countMaxiNoted = marksLimit;
       countMaxiHided = 0;
       countMini = 0;
@@ -1551,41 +1531,6 @@ protected:
       over_deltapix[0] = dimm_main/float(countMaxiTotal - 1);
       if (algoType == DBMODE_STRETCHED_POW2)
       {
-#if 0
-        countMaxiNoted = countMaxiTotal;
-        if (countMaxiTotal % 2)
-        {
-          if (over_deltapix[0] < pixStep_pixSpace)
-          {
-            float odp = dimm_main/float(countMaxiNoted - 1);
-            while (odp < pixStep_pixSpace && countMaxiNoted > 2)
-            {
-              int rm = countMaxiNoted/2;
-              if ((countMaxiNoted - rm) % 2 != 1)
-                break;
-              countMaxiNoted -= rm;
-              odp = dimm_main/float(countMaxiNoted - 1);
-              over_step[0] *= 2;
-            }
-          }
-        }
-        else
-        {
-          if (over_deltapix[0] < pixStep_pixSpace)
-          {
-            float odp = dimm_main/float(countMaxiNoted - 1);
-            while (odp < pixStep_pixSpace && countMaxiNoted > 3)
-            {
-              int rm = (2*countMaxiNoted)/3;
-              if ((countMaxiNoted - rm) % 2 != 0)
-                break;
-              countMaxiNoted -= rm;
-              odp = dimm_main/float(countMaxiNoted - 1);
-              over_step[0] *= 3;
-            }
-          }
-        }
-#else
         countMaxiNoted = countMaxiTotal;
         if (over_deltapix[0] < pixStep_pixSpace)
         {
@@ -1609,7 +1554,6 @@ protected:
             over_step[0] *= dv;
           }
         }
-#endif
       }
       else
       {

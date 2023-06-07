@@ -119,7 +119,8 @@ int OGridRegular::fshOVCoords(int overlay, bool switchedab, char *to) const
       else if (ishorz_risk){    ocg.xyscale_y_01("grid_step", step_xys_01);   ocg.xyscale_x_pixel("grid_height", risk_pixing_height);   }
       else if (isvert_risk){    ocg.xyscale_x_01("grid_step", step_xys_01);   ocg.xyscale_y_pixel("grid_height", risk_pixing_height);   }
       
-      ocg.push( "int optiid = int(crossed/grid_step + sign(crossed)*0.49);"
+//      ocg.push( "int optiid = int(crossed/grid_step + sign(crossed)*0.49);"
+      ocg.push( "int optiid = int(crossed/grid_step + sign(crossed)*0.5);"
                 "float offset = grid_step*optiid;" );
         
       ocg.push( "float limiter = 1.0;" );

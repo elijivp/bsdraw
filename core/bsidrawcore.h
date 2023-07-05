@@ -62,9 +62,6 @@ enum  OVL_ORIENTATION   { OO_INHERITED=0,     // default
                           OO_SAME // special orient when ovl replaced by another
                         };
 
-enum  DRAWVIEWALIGN     { DVA_LEFT=0,  DVA_CENTER,  DVA_RIGHT
-                        };
-
 enum  { SPFLAG_COLORSPLIT = 0x10000000 };
 
 enum  SPLITPORTIONS     { SP_NONE=0,

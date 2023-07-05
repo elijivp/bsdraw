@@ -41,6 +41,7 @@ DrawQWidget::DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int
   m_compileOnInitializeGL(true), m_vshalloc(0), m_fshalloc(0), m_pcsh(pcsh), 
   m_matrixLmSize(0), m_sbStatic(false), 
   m_cttrLeft(0), m_cttrTop(0), m_cttrRight(0), m_cttrBottom(0), c_width(0), c_height(0), 
+  m_viewAlignHorz(0.0f), m_viewAlignVert(0.0f), 
   m_viewTurn(0),
   m_texOvlCount(0)
 {
@@ -755,38 +756,11 @@ void DrawQWidget::paintGL()
     m_ShaderProgram.enableAttributeArray(0);
     m_ShaderProgram.setAttributeArray(0, GL_FLOAT, m_SurfaceVertex, 2);
     
-//    if (!m_rawResizeModeNoScaled)
-//    {
-//      if (m_dataDimmSwitchAB)
-//        glViewport(0 + m_cttrLeft, c_height - sizeA() - m_cttrTop, sizeB()/* + m_cttrLeft + m_cttrRight*/, sizeA()/* + m_cttrBottom*/);
-//      else
-//        glViewport(0 + m_cttrLeft, c_height - sizeB() - m_cttrTop, sizeA()/* + m_cttrLeft + m_cttrRight*/, sizeB()/* + m_cttrBottom*/);
-//    }
     if (!m_rawResizeModeNoScaled)
     {
-      switch (m_viewAlign)
-      {
-      case DVA_LEFT:
-        if (m_dataDimmSwitchAB)
-          glViewport(0 + m_cttrLeft, c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
-        else
-          glViewport(0 + m_cttrLeft, c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
-        break;
-      case DVA_CENTER:
-        if (m_dataDimmSwitchAB)
-          glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - (int)sizeB())/2, c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
-        else
-          glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - (int)sizeA())/2, c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
-        break;
-      case DVA_RIGHT:
-        if (m_dataDimmSwitchAB)
-          glViewport(c_width - m_cttrRight - (int)sizeB(), c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
-        else
-          glViewport(c_width - m_cttrRight - (int)sizeA(), c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
-        break;
-      default:
-        break;
-      }
+      dcgeometry_t dch = this->geometryHorz();
+      dcgeometry_t dcv = this->geometryVert();
+      glViewport(dch.cttr_pre + dch.viewalign_pre, c_height - (dcv.cttr_pre + dcv.viewalign_pre + dcv.length), dch.length, dcv.length);
     }
     
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -803,9 +777,6 @@ void DrawQWidget::resizeGL(int w, int h)
   c_width = w = /*qRound*/(w * c_dpr);
   c_height = h = /*qRound*/(h * c_dpr);
   
-//  c_width = w;
-//  c_height = h;
-//  qDebug()<<m_cttrLeft<<m_cttrTop<<m_cttrRight<<m_cttrBottom;
 #if 1
   QMargins ms(contentsMargins());
   if (ms.left() != m_cttrLeft || ms.top() != m_cttrTop || ms.right() != m_cttrRight || ms.bottom() != m_cttrBottom)
@@ -838,27 +809,18 @@ void DrawQWidget::resizeGL(int w, int h)
   
   if (m_rawResizeModeNoScaled)
   {
-    switch (m_viewAlign)
-    {
-    case DVA_LEFT:
-      if (m_dataDimmSwitchAB)
-        glViewport(0 + m_cttrLeft, c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
-      else
-        glViewport(0 + m_cttrLeft, c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
-      break;
-    case DVA_CENTER:
-      if (m_dataDimmSwitchAB)
-        glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - (int)sizeB())/2, c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
-      else
-        glViewport(0 + m_cttrLeft + (c_width - m_cttrLeft - m_cttrRight - (int)sizeA())/2, c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
-      break;
-    case DVA_RIGHT:
-      if (m_dataDimmSwitchAB)
-        glViewport(c_width - m_cttrRight - (int)sizeB(), c_height - (int)sizeA() - m_cttrTop, (int)sizeB()/* + m_cttrLeft + m_cttrRight*/, (int)sizeA()/* + m_cttrBottom*/);
-      else
-        glViewport(c_width - m_cttrRight - (int)sizeA(), c_height - (int)sizeB() - m_cttrTop, (int)sizeA()/* + m_cttrLeft + m_cttrRight*/, (int)sizeB()/* + m_cttrBottom*/);
-      break;
-    }
+    dcgeometry_t dch = this->geometryHorz();
+    dcgeometry_t dcv = this->geometryVert();
+    glViewport( dch.cttr_pre + dch.viewalign_pre, c_height - (dcv.cttr_pre + dcv.viewalign_pre + dcv.length), dch.length, dcv.length);
+    
+//    if (m_dataDimmSwitchAB)
+//      glViewport(0 + m_cttrLeft + m_viewAlignHorz*(c_width - m_cttrLeft - m_cttrRight - (int)sizeB()), 
+//                              c_height - (int)sizeA() - m_cttrTop, 
+//                              (int)sizeB(), (int)sizeA());
+//    else
+//      glViewport(0 + m_cttrLeft + m_viewAlignHorz*(c_width - m_cttrLeft - m_cttrRight - (int)sizeA()), 
+//                              c_height - (int)sizeB() - m_cttrTop, 
+//                              (int)sizeA(), (int)sizeB());
   }
   m_doclearbackground = true;
   pendResize(false);
@@ -894,14 +856,13 @@ void DrawQWidget::resizeGL(int w, int h)
 ////  *actualheight = dimmB*scalingB;
 //}
 
-void DrawQWidget::fitSize(int width_in, int height_in, dcsizecd_t* dc_horz, dcsizecd_t* dc_vert) const
+void DrawQWidget::fitSize(int width_in, int height_in, dcsizecd_t* sz_horz, dcsizecd_t* sz_vert, dcgeometry_t* gm_horz, dcgeometry_t* gm_vert) const
 {
   width_in *= c_dpr;
   height_in *= c_dpr;
   
   width_in -= m_cttrLeft + m_cttrRight;
   height_in -= m_cttrTop + m_cttrBottom;
-  
   
   int wsizeA = m_dataDimmSwitchAB? height_in : width_in;
   int wsizeB = m_dataDimmSwitchAB? width_in : height_in;
@@ -910,15 +871,40 @@ void DrawQWidget::fitSize(int width_in, int height_in, dcsizecd_t* dc_horz, dcsi
   sizeAndScaleHint(wsizeA/m_splitterA, wsizeB/m_splitterB, &dcA.dimm, &dcB.dimm, &dcA.scaling, &dcB.scaling);
   dcA.splitter = m_splitterA;
   dcB.splitter = m_splitterB;
+  
   if (m_dataDimmSwitchAB)
   {
-    *dc_horz = dcB;
-    *dc_vert = dcA;
+    if (sz_horz) *sz_horz = dcB;
+    if (sz_vert) *sz_vert = dcA;
+    if (gm_horz)
+    {
+      int rest = width_in - (int)length(dcB);
+      if (rest <= 0)  *gm_horz = { m_cttrLeft, 0, int(length(dcB)), 0, m_cttrRight }; 
+      else{ int rh = int(rest*m_viewAlignHorz); *gm_horz = { m_cttrLeft, rh, int(length(dcB)), rest - rh, m_cttrRight };  }
+    }
+    if (gm_vert)
+    {
+      int rest = height_in - (int)length(dcA);
+      if (rest <= 0) *gm_vert = { m_cttrTop, 0, int(length(dcA)), 0, m_cttrBottom };
+      else{ int rv = int(rest*m_viewAlignVert); *gm_vert = { m_cttrTop, rv, int(length(dcA)), rest - rv, m_cttrBottom };  }
+    }
   }
   else
   {
-    *dc_horz = dcA;
-    *dc_vert = dcB;
+    if (sz_horz) *sz_horz = dcA;
+    if (sz_vert) *sz_vert = dcB;
+    if (gm_horz)
+    {
+      int rest = width_in - (int)length(dcA);
+      if (rest <= 0)  *gm_horz = { m_cttrLeft, 0, int(length(dcA)), 0, m_cttrRight }; 
+      else{ int rh = int(rest*m_viewAlignHorz); *gm_horz = { m_cttrLeft, rh, int(length(dcA)), rest - rh, m_cttrRight };  }
+    }
+    if (gm_vert)
+    {
+      int rest = height_in - (int)length(dcB);
+      if (rest <= 0) *gm_vert = { m_cttrTop, 0, int(length(dcB)), 0, m_cttrBottom };
+      else{ int rv = int(rest*m_viewAlignVert); *gm_vert = { m_cttrTop, rv, int(length(dcB)), rest - rv, m_cttrBottom };  }
+    }
   }
 }
 
@@ -1258,6 +1244,22 @@ int   DrawQWidget::scrollValue() const
 unsigned int DrawQWidget::lmSize() const
 {
   return m_matrixLmSize;
+}
+
+dcgeometry_t DrawQWidget::geometryHorz() const
+{
+  int rest = c_width - m_cttrLeft - m_cttrRight - (int)sizeHorz();
+  if (rest <= 0) return { m_cttrLeft, 0, int(sizeHorz()), 0, m_cttrRight }; 
+  int rh = int(rest*m_viewAlignHorz);
+  return { m_cttrLeft, rh, int(sizeHorz()), rest - rh, m_cttrRight }; 
+}
+
+dcgeometry_t DrawQWidget::geometryVert() const
+{
+  int rest = c_height - m_cttrTop - m_cttrBottom - (int)sizeVert();
+  if (rest <= 0) return { m_cttrTop, 0, int(sizeVert()), 0, m_cttrBottom }; 
+  int rv = int(rest*m_viewAlignVert);
+  return { m_cttrTop, rv, int(sizeVert()), rest - rv, m_cttrBottom }; 
 }
 
 void  DrawQWidget::scrollDataTo(int)

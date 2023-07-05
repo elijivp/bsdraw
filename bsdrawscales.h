@@ -45,7 +45,7 @@ protected:
   {
     ATTACHED_TO atto;
     int atto_begin, atto_end;
-    int segm_pre, segm_main, segm_post, segm_over;
+    int segm_pre, segm_main, segm_post;
     int segment_full;
     bool mirrored;
     int ex_scaling;
@@ -53,13 +53,13 @@ protected:
     bool operator==(const uarea_t& cmp) const
     {
       return cmp.atto == atto && cmp.atto_begin == atto_begin && cmp.atto_end == atto_end && 
-          cmp.segm_pre == segm_pre && cmp.segm_main == segm_main && cmp.segm_post == segm_post && cmp.segm_over == segm_over && 
+          cmp.segm_pre == segm_pre && cmp.segm_main == segm_main && cmp.segm_post == segm_post && 
           cmp.mirrored == mirrored && cmp.ex_scaling == ex_scaling;
     }
     bool operator!=(const uarea_t& cmp) const
     {
       return cmp.atto != atto || cmp.atto_begin != atto_begin || cmp.atto_end != atto_end || 
-          cmp.segm_pre != segm_pre || cmp.segm_main != segm_main || cmp.segm_post != segm_post || cmp.segm_over != segm_over || 
+          cmp.segm_pre != segm_pre || cmp.segm_main != segm_main || cmp.segm_post != segm_post || 
           cmp.mirrored != mirrored || cmp.ex_scaling != ex_scaling;
     }
   };

@@ -74,7 +74,6 @@ struct dcsizecd_t        /// drawcore size components (for 1) direction
 
 inline unsigned int length(const dcsizecd_t& s){ return s.dimm*s.scaling*s.splitter; }
 
-
 //#########################
 
 
@@ -120,8 +119,6 @@ protected:
   enum  CLEARSOURCE     { CS_WIDGET, CS_PALETTE, CS_MANUAL };
   bool                  m_doclearbackground;
   CLEARSOURCE           m_clearsource;
-protected:
-  DRAWVIEWALIGN         m_viewAlign;
 protected:
   enum  GROUNDTYPE      { GND_NONE, GND_DOMAIN, GND_SDP, GND_ASSISTFLOATTABLE };
   GROUNDTYPE            m_groundType;
@@ -222,7 +219,6 @@ public:
                                                         m_scalingBMin(1), m_scalingBMax(0), m_scalingIsSynced(false),
                                                         m_dataTextureInterp(false),
                                                         m_ppal(nullptr), m_ppaldiscretise(false), m_doclearbackground(true), m_clearsource(CS_WIDGET), 
-                                                        m_viewAlign(DVA_LEFT),
                                                         m_groundType(GND_NONE), m_groundData(nullptr), m_groundDataFastFree(true),
                                                         m_groundMipMapping(false), m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
                                                         m_postOverpattern(overpattern_off()), m_postOverpatternOpacity(0.0f), 
@@ -321,8 +317,6 @@ public:
   dcsizecd_t            sizeComponentsB() const { return { m_dataDimmB, m_scalingB, m_splitterB }; }
   dcsizecd_t            sizeComponentsHorz() const { return m_dataDimmSwitchAB? sizeComponentsB() : sizeComponentsA(); }
   dcsizecd_t            sizeComponentsVert() const { return m_dataDimmSwitchAB? sizeComponentsA() : sizeComponentsB(); }
-
-
   
   bool                  isSplittedA() const { return ((m_splitPortions >> 8)&0xFF) == 0; }
   bool                  isSplittedB() const { return ((m_splitPortions >> 8)&0xFF) != 0; }
@@ -578,9 +572,6 @@ public:
     setImpulse(idt);
   }
   const impulsedata_t& impulse() const { return m_postImpulse; }
-  
-  void  setViewAlign(DRAWVIEWALIGN dva){  m_viewAlign = dva; callWidgetUpdate(); }
-  DRAWVIEWALIGN  viewAlign() const {  return m_viewAlign; }
 public:
   
   void  setOrientation(ORIENTATION orient)

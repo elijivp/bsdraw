@@ -34,6 +34,19 @@
 class QScrollBar;
 inline QColor bsqcolor(unsigned int v){ return QColor((v)&0xFF, (v>>8)&0xFF, (v>>16)&0xFF); }
 
+////////////
+
+struct dcgeometry_t
+{
+  int  cttr_pre;           // left/top
+  int  viewalign_pre;      // left/top
+  int  length;             // width/height
+  int  viewalign_post;     // left/top
+  int  cttr_post;          // left/top
+};
+
+//////////////
+
 
 class DrawQWidget: public QOpenGLWidget, protected QOpenGLFunctions, public DrawCore
 {
@@ -60,6 +73,9 @@ protected:
   int                     m_cttrLeft, m_cttrTop, m_cttrRight, m_cttrBottom;
   float                   c_dpr, c_dpr_inv;
   int                     c_width, c_height;
+protected:
+  float                   m_viewAlignHorz;
+  float                   m_viewAlignVert;
   float                   m_viewTurn;
 protected:
   enum  { HT_MATRIX=0, HT_PAL, HT_GND, HT_OVERLAYSSTART,      HT_OVERLAYSGLLIMIT=96 };
@@ -72,9 +88,14 @@ public:
   void  compileShaderNow();
   void  compileWhenInitializeGL(bool cflag);
   void  connectScrollBar(QScrollBar*, bool staticView=false, bool setOrientation=true);
-//  void  fitSize(int width_in, int height_in, int* actualwidth, int* actualheight) const;
-  void  fitSize(int width_in, int height_in, dcsizecd_t* dc_horz, dcsizecd_t* dc_vert) const;
+  void  fitSize(int width_in, int height_in, dcsizecd_t* sz_horz, dcsizecd_t* sz_vert, dcgeometry_t* gm_horz, dcgeometry_t* gm_vert) const;
   float devicePixelRatio() const{ return c_dpr; }
+public:
+  void    setViewAlign(float dvaHorz, float dvaVert){  m_viewAlignHorz = dvaHorz; m_viewAlignVert = dvaVert; callWidgetUpdate(); }
+  void    setViewAlignHorz(float dva){  m_viewAlignHorz = dva; callWidgetUpdate(); }
+  float   viewAlignHorz() const {  return m_viewAlignHorz; }
+  void    setViewAlignVert(float dva){  m_viewAlignVert = dva; callWidgetUpdate(); }
+  float   viewAlignVert() const {  return m_viewAlignVert; }
 public slots:
   void    slot_compileShader();
   void    slot_setScalingA(int);
@@ -151,6 +172,9 @@ private:
 public:
   virtual  int    scrollValue() const;
   unsigned int    lmSize() const;
+public:
+  dcgeometry_t          geometryHorz() const;
+  dcgeometry_t          geometryVert() const;
 public slots:
   virtual void    scrollDataTo(int);
   virtual void    scrollDataToAbs(int);

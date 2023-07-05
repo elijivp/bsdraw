@@ -285,7 +285,7 @@ public:
             fmg.push( 
   //                      "float fmix_self = abs(b_coord_ns - fy_ns[1]);" SHNL
   //                      "fmix_self = 1.0 / (1.0 + fmix_self*2.0);" SHNL
-  //                      "fmix_self = fmix_self + specsmooth*2.0*(0.25-(fmix_self-0.5)*(fmix_self-0.5));" SHNL    /// 2.0 - decay
+  //                      "fmix_self = fmix_self + specsmooth*2.0*(0.25-(fmix_self-0.5)*(fmix_self-0.5));" SHNL    /// 2.0 - gap
                         "float fmix_self = abs(b_coord_ns - fy_ns[1]);" SHNL
                         "fmix_self = (1.0-fmix_self + fmix_self*(0.25+specsmooth*0.375))*step(fmix_self, 2.0);" SHNL
                   
@@ -300,10 +300,10 @@ public:
                         "fmix_prev = fmix_prev*step(0.0, fmix_prev)*(1.0 - step(1.0, fmix_prev));" SHNL
                         "fmix_next = fmix_next*step(0.0, fmix_next)*(1.0 - step(1.0, fmix_next));" SHNL
                         "float fmix_rej = step(1.0, fsig_prev*fsig_next)*0.25;" SHNL
-  //                      "fmix_prev = fmix_prev + specsmooth*2.0*(0.36-(fmix_prev-0.6)*(fmix_prev-0.6));"    // 2.0 - decay
-  //                      "fmix_next = fmix_next + specsmooth*2.0*(0.36-(fmix_next-0.6)*(fmix_next-0.6));"    // 2.0 - decay
-                        "fmix_prev = fmix_prev + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_prev-0.5)*(fmix_prev-0.5));" SHNL    /// 2.0 - decay
-                        "fmix_next = fmix_next + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_next-0.5)*(fmix_next-0.5));" SHNL    /// 2.0 - decay
+  //                      "fmix_prev = fmix_prev + specsmooth*2.0*(0.36-(fmix_prev-0.6)*(fmix_prev-0.6));"    // 2.0 - gap
+  //                      "fmix_next = fmix_next + specsmooth*2.0*(0.36-(fmix_next-0.6)*(fmix_next-0.6));"    // 2.0 - gap
+                        "fmix_prev = fmix_prev + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_prev-0.5)*(fmix_prev-0.5));" SHNL    /// 2.0 - gap
+                        "fmix_next = fmix_next + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_next-0.5)*(fmix_next-0.5));" SHNL    /// 2.0 - gap
                         "fmix_prev = mix(fmix_prev, 1.0, step(1.0, fmix_prev));" SHNL
                         "fmix_next = mix(fmix_next, 1.0, step(1.0, fmix_next));" SHNL
                     
@@ -324,8 +324,8 @@ public:
                         "fmix_prev = fmix_prev*step(0.0, fmix_prev)*(1.0 - step(1.0, fmix_prev));" SHNL   /// shot is not in (->0)
                         "fmix_next = fmix_next*step(0.0, fmix_next)*(1.0 - step(1.0, fmix_next));" SHNL   /// shot is not in (->0)
                         "float fmix_rej = step(1.0, fsig_prev*fsig_next)*0.25;" SHNL
-                        "fmix_prev = fmix_prev + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_prev-0.5)*(fmix_prev-0.5));" SHNL    /// 2.0 - decay
-                        "fmix_next = fmix_next + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_next-0.5)*(fmix_next-0.5));" SHNL    /// 2.0 - decay
+                        "fmix_prev = fmix_prev + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_prev-0.5)*(fmix_prev-0.5));" SHNL    /// 2.0 - gap
+                        "fmix_next = fmix_next + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_next-0.5)*(fmix_next-0.5));" SHNL    /// 2.0 - gap
                         "fmix_prev = mix(fmix_prev, 0.2, (1.0-step(fmix_prev, 0.0))*step(fmix_prev, 0.2));" SHNL    /// 0.2 level for all 0..0.2
                         "fmix_next = mix(fmix_next, 0.2, (1.0-step(fmix_next, 0.0))*step(fmix_next, 0.2));" SHNL    /// 0.2 level for all 0..0.2
                         "fmix_prev = mix(fmix_prev, 1.0, step(1.0, fmix_prev));" SHNL
@@ -345,8 +345,8 @@ public:
                         "fmix_prev = fmix_prev*step(0.0, fmix_prev)*(1.0 - step(1.0, fmix_prev));" SHNL
                         "fmix_next = fmix_next*step(0.0, fmix_next)*(1.0 - step(1.0, fmix_next));" SHNL
                         "float fmix_rej = step(1.0, fsig_prev*fsig_next)*0.25;" SHNL
-                        "fmix_prev = fmix_prev + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_prev-0.5)*(fmix_prev-0.5));" SHNL    /// 2.0 - decay
-                        "fmix_next = fmix_next + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_next-0.5)*(fmix_next-0.5));" SHNL    /// 2.0 - decay
+                        "fmix_prev = fmix_prev + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_prev-0.5)*(fmix_prev-0.5));" SHNL    /// 2.0 - gap
+                        "fmix_next = fmix_next + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_next-0.5)*(fmix_next-0.5));" SHNL    /// 2.0 - gap
                         "fmix_prev = mix(fmix_prev, 1.0, step(1.0, fmix_prev));" SHNL
                         "fmix_next = mix(fmix_next, 1.0, step(1.0, fmix_next));" SHNL
                     

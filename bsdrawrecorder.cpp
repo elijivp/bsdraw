@@ -222,6 +222,36 @@ void DrawRecorderPaged::updatePageModified()
   DrawQWidget::vmanUpData();
 }
 
+void DrawRecorderPaged::swapPages(int p1, int p2)
+{
+  if (p1 == p2)
+    return;
+  
+  MemExpand2D::mem_t tmp = m_pages[p1];
+  m_pages[p1] = m_pages[p2];
+  m_pages[p2] = tmp;
+  
+  if (m_pagehole == p1 || m_pagehole == p2)
+    updatePageModified();
+}
+
+void DrawRecorderPaged::swapPagesNoUpdate(int p1, int p2)
+{
+  if (p1 == p2)
+    return;
+  MemExpand2D::mem_t tmp = m_pages[p1];
+  m_pages[p1] = m_pages[p2];
+  m_pages[p2] = tmp;
+}
+
+void DrawRecorderPaged::clearPage(int p)
+{
+  if (p != m_pagehole)
+    m_pages[p].filled = 0;
+  else
+    DrawRecorder::clearData(); // for self
+}
+
 void DrawRecorderPaged::clearAllPages()
 {
   for (int i=0; i<m_pagescount; i++)

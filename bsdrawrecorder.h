@@ -73,6 +73,10 @@ public:
   void                    switchPageNoUpdate(int idx);  // for setData immediately
   void                    updatePageModified();
   
+  void                    swapPages(int p1, int p2);
+  void                    swapPagesNoUpdate(int p1, int p2);
+  
+  void                    clearPage(int p);
   void                    clearAllPages();
 public slots:
   void              slt_switchPage(int idx);          // implicitlyUpdated = true

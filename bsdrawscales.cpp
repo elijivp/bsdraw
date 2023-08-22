@@ -2713,11 +2713,12 @@ class MarginElement;
 class DrawBars_impl
 {
 public:
-  DrawBars_impl():
+  DrawBars_impl(): 
     c_mirroredHorz(false), c_mirroredVert(false),
     main_opacity(0.0f), drawBoundsUpdater(false), drawCoreInited(false)
   {
   }
+  
   int           c_hint_draw_width, c_hint_draw_height;
   bool          c_mirroredHorz, c_mirroredVert;
   
@@ -2795,6 +2796,7 @@ public:
                                         c_height,
                                         c_mirroredVert, c_scalingVert
                                       };
+    
     if (UF_LEFT != -1 && areaVert.segm_main > 0)
       for (int i=0; i<elems[0].count(); i++)
       {
@@ -3010,7 +3012,7 @@ inline bool isDrawPaletteCP(int cp)
 DrawBars::DrawBars(DrawQWidget* pdraw, COLORS colorsPolicy, QWidget *parent) : QWidget(parent), pDraw(pdraw), pTool(nullptr)
 {
   this->setAutoFillBackground(false);
-  pImpl = new DrawBars_impl();
+  pImpl = new DrawBars_impl;
   setColorPolicy(colorsPolicy);
 
 //  pImpl->rakoflag = false;
@@ -4002,10 +4004,11 @@ void DrawBars::resizeEvent(QResizeEvent* event)
   
   if (/*isVisible() && */height() > 2 && width() > 2)
   {
-    pImpl->c_width_dva = dsHorz.cttr_pre + dsHorz.viewalign_pre;
-    pImpl->c_width_dvb = dsHorz.cttr_post + dsHorz.viewalign_post;
-    pImpl->c_height_dva = dsVert.cttr_pre + dsVert.viewalign_pre;
-    pImpl->c_height_dvb = dsVert.cttr_post + dsVert.viewalign_post;
+    float dpr = pDraw->devicePixelRatio();
+    pImpl->c_width_dva = dsHorz.cttr_pre + dsHorz.viewalign_pre/dpr;
+    pImpl->c_width_dvb = dsHorz.cttr_post + dsHorz.viewalign_post/dpr;
+    pImpl->c_height_dva = dsVert.cttr_pre + dsVert.viewalign_pre/dpr;
+    pImpl->c_height_dvb = dsVert.cttr_post + dsVert.viewalign_post/dpr;
     pImpl->reupdateBars(MarginElement::UF_RESIZE, MarginElement::UF_RESIZE, MarginElement::UF_RESIZE, MarginElement::UF_RESIZE);
   }
   else

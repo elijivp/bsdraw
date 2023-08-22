@@ -1018,7 +1018,7 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
     ct.fx_ovl = ct.fx_rel;
     ct.fy_ovl = ct.fy_rel;
   }
-#else   /// floating calculations
+#elif 0   /// floating calculations
   float singleDimmWidth = sizeHorz();
   float singleDimmHeight = sizeVert();
   float totalDimmWidth = singleDimmWidth * (m_dataDimmSwitchAB? m_splitterB : m_splitterA);
@@ -1056,6 +1056,48 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
     ct.fx_ovl = ct.fx_rel;
     ct.fy_ovl = ct.fy_rel;
   }
+#else
+  dcgeometry_t dch = this->geometryHorz();
+  dcgeometry_t dcv = this->geometryVert();
+  
+  float singleDimmWidth = dch.length;
+  float singleDimmHeight = dcv.length;
+  float totalDimmWidth = singleDimmWidth * (m_dataDimmSwitchAB? m_splitterB : m_splitterA);
+  float totalDimmHeight = singleDimmHeight * (m_dataDimmSwitchAB? m_splitterA : m_splitterB);
+  
+  float fx = (x*c_dpr - (dch.cttr_pre + dch.viewalign_pre));
+  float fy = (y*c_dpr - (dcv.cttr_pre + dcv.viewalign_pre));
+  
+  if (isPress[oreact] == false)
+  {
+    if (fx < 0)  fx = 0; else if (fx >= totalDimmWidth) fx = totalDimmWidth - 1;
+    if (fy < 0)  fy = 0; else if (fy >= totalDimmHeight) fy = totalDimmHeight - 1;
+  }
+  else if (fx >= totalDimmWidth || fy >= totalDimmHeight)
+    return;
+
+  coordstriumv_t ct;
+  ct.fx_pix = fx;
+  ct.fy_pix = fy;
+  if (orientationTransposed(m_orient))
+  {
+    ct.fx_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
+    ct.fy_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
+    ct.fx_rel = singleDimmHeight <=1 ? 0 : (ct.fx_ovl - int(ct.fx_ovl/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
+    ct.fy_rel = singleDimmWidth <= 1? 0 : (ct.fy_ovl - int(ct.fy_ovl/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
+    ct.fx_ovl = ct.fx_rel;
+    ct.fy_ovl = ct.fy_rel;
+  }
+  else
+  {
+    ct.fx_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
+    ct.fy_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
+    ct.fx_rel = singleDimmWidth <= 1? 0 : (ct.fx_ovl - int(ct.fx_ovl/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
+    ct.fy_rel = singleDimmHeight <= 1? 0 : (ct.fy_ovl - int(ct.fy_ovl/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
+    ct.fx_ovl = ct.fx_rel;
+    ct.fy_ovl = ct.fy_rel;
+  }
+  //glViewport( dch.cttr_pre + dch.viewalign_pre, c_height - (dcv.cttr_pre + dcv.viewalign_pre + dcv.length), dch.length, dcv.length);
 #endif
   
   bool doStop = false, doUpdate = false;

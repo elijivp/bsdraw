@@ -53,15 +53,14 @@ public:
 class OImageOriginal: public Ovldraw_Image, public OVLCoordsDynamic, public OVLDimms2Dynamic
 {
 protected:
+  float           m_anch_lr01, m_anch_bt01;
 public:
-//  enum  { ANC_LEFT 
-public:
-  OImageOriginal(QImage* image, IMAGECONVERT icvt, COORDINATION cn, float x, float y, float mult_w=1.0f, float mult_h=1.0f);
-  OImageOriginal(QImage* image, IMAGECONVERT icvt, OVLCoordsStatic* pcoords, float offset_x, float offset_y, float mult_w=1.0f, float mult_h=1.0f);
-  OImageOriginal(QImage* image, IMAGECONVERT icvt, int anchor, float mult_w=1.0f, float mult_h=1.0f);
+  OImageOriginal(QImage* image, IMAGECONVERT icvt, COORDINATION cn, float x, float y, 
+                                      float mult_w=1.0f, float mult_h=1.0f, float anch_lr01=0.0f, float anch_bt01=0.0f);
+  OImageOriginal(QImage* image, IMAGECONVERT icvt, OVLCoordsStatic* pcoords, float offset_x, float offset_y, 
+                                      float mult_w=1.0f, float mult_h=1.0f, float anch_lr01=0.0f, float anch_bt01=0.0f);
 protected:
   virtual int     fshOVCoords(int overlay, bool switchedab, char* to) const;
-  int             m_anchor;
 };
 
 class OImageStretched: public Ovldraw_Image, public OVLCoordsStatic, public OVLDimms2Dynamic

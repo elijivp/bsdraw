@@ -45,23 +45,28 @@ protected:
   ovlcoords_t*    ptdrops;
   dmtype_arr_t _dm_coords;
   unsigned int  ptCount;
-//  float         c_x, c_y;
 public:
   OPolyLine(unsigned int countPointsMax, const linestyle_t& kls=linestyle_solid(1,1,1));
 protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 public:
   unsigned int count() const { return ptCount; }
-  void  setPointsCount(unsigned int newCount);
-  void  setPoint(int idx, float x, float y);
+  void  clear(bool update=true);
+  void  setPointsCount(unsigned int newCount, bool update=true);
+  void  setPoint(int idx, float x, float y, bool update=true);
   void  updatePoints();
 };
 
 class ODropLine: public OPolyLine, public IOverlayReactor
 {
   bool          followMoving;
+  bool          firstFixed;
 public:
   ODropLine(unsigned int maxpoints, bool lastFollowsMouse=true, const linestyle_t& kls=linestyle_solid(1,1,1));
+  ODropLine(unsigned int maxpoints, float start_x, float start_y, bool lastFollowsMouse=true, const linestyle_t& kls=linestyle_solid(1,1,1));
+public:
+  void    fixStartPoint(float start_x, float start_y, bool update=true);
+  void    unfixStartPoint();
 protected:
   virtual IOverlayReactor*  reactor() { return this; }
   virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool *doStop);

@@ -4923,7 +4923,7 @@ void MainWindow::createOverlaySTD(int id)
         else
           draws[i]->ovlPushBack(draws[0]->ovlGet(ovl_visir));
         QImage img(img_path_sprite);
-        draws[i]->ovlPushBack(new OImageOriginal(&img, OVLQImage::IC_AUTO, CR_PIXEL, -24, 0, 0.2f, 0.2f), ovl_visir);
+        draws[i]->ovlPushBack(new OImageOriginal(&img, OVLQImage::IC_AUTO, CR_PIXEL, /*-24*/0, 0, 0.2f, 0.2f), ovl_visir);
       }
       break;
     }
@@ -4936,7 +4936,7 @@ void MainWindow::createOverlaySTD(int id)
     case COS_BACKGROUND:
     {
       QImage  img(img_path_normal);
-      Ovldraw* ovl = new OImageOriginal(&img, OVLQImage::IC_AUTO, 1);
+      Ovldraw* ovl = new OImageOriginal(&img, OVLQImage::IC_AUTO, CR_RELATIVE, 0.0f, 0.0f);
       ovl->setSlice(0.0f);
       draws[i]->ovlPushBack(ovl);
       break;

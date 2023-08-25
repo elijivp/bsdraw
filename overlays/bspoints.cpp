@@ -127,15 +127,29 @@ int OPolyLine::fshOVCoords(int overlay, bool switchedab, char *to) const
   return ocg.written();
 }
 
-void  OPolyLine::setPointsCount(unsigned int newCount)
+void OPolyLine::clear(bool update)
 {
-  ptCount = newCount;
+  setPointsCount(0, update);
 }
 
-void  OPolyLine::setPoint(int idx, float x, float y)
+void  OPolyLine::setPointsCount(unsigned int newCount, bool update)
+{
+  if (newCount <= ptCountMax)
+  {
+    ptCount = newCount;
+    if (update)
+      updateParameter(false, true);
+  }
+}
+
+void  OPolyLine::setPoint(int idx, float x, float y, bool update)
 {
   if (idx < ptCountMax)
+  {
     ptdrops[idx] = ovlcoords_t(x, y);
+    if (update)
+      updateParameter(false, true);
+  }
 }
 
 void  OPolyLine::updatePoints()
@@ -144,8 +158,33 @@ void  OPolyLine::updatePoints()
 }
 
 ////////////////////////////////
-ODropLine::ODropLine(unsigned int maxpoints, bool lastFollowsMouse, const linestyle_t& kls): OPolyLine(maxpoints, kls), followMoving(lastFollowsMouse)
+ODropLine::ODropLine(unsigned int maxpoints, bool lastFollowsMouse, const linestyle_t& kls): OPolyLine(maxpoints, kls), followMoving(lastFollowsMouse), firstFixed(false)
 {
+}
+ODropLine::ODropLine(unsigned int maxpoints, float start_x, float start_y, bool lastFollowsMouse, const linestyle_t& kls): OPolyLine(maxpoints, kls), 
+      followMoving(lastFollowsMouse)
+{
+  fixStartPoint(start_x, start_y, false);
+}
+
+void ODropLine::fixStartPoint(float start_x, float start_y, bool update)
+{
+  if (ptCountMax > 0)
+  {
+    firstFixed = true;
+    ptdrops[0].x = start_x;
+    ptdrops[0].y = start_y;
+    if (ptCount == 0)
+      ptCount = 1;
+    
+    if (update)
+      updateParameter(false, true);
+  }
+}
+
+void ODropLine::unfixStartPoint()
+{
+  firstFixed = false;
 }
 
 bool ODropLine::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool*)
@@ -179,6 +218,11 @@ bool ODropLine::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriu
     }
     m_coords.x /= ptCount;
     m_coords.y /= ptCount;
+  }
+  else if (oreact == ORM_RMPRESS)
+  {
+    ptCount = firstFixed ? 1 : 0;
+    result = true;
   }
   return result;
 }

@@ -2812,7 +2812,8 @@ public:
     if (UF_RIGHT != -1 && areaVert.segm_main > 0)
       for (int i=0; i<elems[1].count(); i++)
       {
-        int apt = c_width - 1 - ttr[AT_RIGHT].c_size + 1 + elems[1][i].offset;
+//        int apt = c_width - 1 - ttr[AT_RIGHT].c_size + 1 + elems[1][i].offset;    DAFUQ + 1
+        int apt = c_width - 1 - ttr[AT_RIGHT].c_size + elems[1][i].offset;
         areaVert.atto_begin = apt;
         areaVert.atto_end = apt + elems[1][i].length;
         areaVert.mirrored = elems[1][i].miralg == MIRALG_IGNORE? elems[1][i].miralg == MIRALG_INVERT? true : false : elems[1][i].miralg == MIRALG_INVERT? !c_mirroredVert : c_mirroredVert;
@@ -2841,7 +2842,8 @@ public:
     if (UF_BOTTOM != -1 && areaHorz.segm_main > 0)
       for (int i=0; i<elems[3].count(); i++)
       {
-        int apt = c_height - 1 - ttr[AT_BOTTOM].c_size + 1 + elems[3][i].offset;
+//        int apt = c_height - 1 - ttr[AT_BOTTOM].c_size + 1 + elems[3][i].offset;    DAFUQ + 1
+        int apt = c_height - 1 - ttr[AT_BOTTOM].c_size + elems[3][i].offset;
         areaHorz.atto_begin = apt;
         areaHorz.atto_end = apt + elems[3][i].length;
         areaHorz.mirrored = elems[3][i].miralg == MIRALG_IGNORE? elems[3][i].miralg == MIRALG_INVERT? true : false : elems[3][i].miralg == MIRALG_INVERT? !c_mirroredHorz : c_mirroredHorz;

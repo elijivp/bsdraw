@@ -54,6 +54,7 @@ public:
   void  clear(bool update=true);
   void  setPointsCount(unsigned int newCount, bool update=true);
   void  setPoint(int idx, float x, float y, bool update=true);
+  void  point(int idx, float* x, float* y) const;
   void  updatePoints();
 };
 

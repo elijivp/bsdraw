@@ -152,6 +152,15 @@ void  OPolyLine::setPoint(int idx, float x, float y, bool update)
   }
 }
 
+void OPolyLine::point(int idx, float* x, float* y) const
+{
+  if (idx < ptCountMax)
+  {
+    *x = ptdrops[idx].x;
+    *y = ptdrops[idx].y;
+  }
+}
+
 void  OPolyLine::updatePoints()
 {
   updateParameter(false, true);

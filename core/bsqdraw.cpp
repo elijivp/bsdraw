@@ -1104,7 +1104,7 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
   if (m_proactive)  m_proactive->reactionMouse(this, oreact, &ct, &doStop);
   if (!doStop)
     for (int i=int(m_overlaysCount)-1; i>=0; i--)
-      if (m_overlays[i].prct)
+      if (m_overlays[i].prct && (m_overlays[i].prct_bans & ORB_MOUSE) == 0)
       {
         if (m_overlays[i].prct->overlayReactionMouse(oreact, &ct, &doStop))
         {
@@ -1181,7 +1181,7 @@ void DrawQWidget::keyPressEvent(QKeyEvent* event)
   if (m_proactive)  m_proactive->reactionKey(this, key, modifiers, &doStop);
   if (!doStop)
     for (int i=int(m_overlaysCount)-1; i>=0; i--)
-      if (m_overlays[i].prct)
+      if (m_overlays[i].prct && (m_overlays[i].prct_bans & ORB_KEYBOARD) == 0)
       {
         if (m_overlays[i].prct->overlayReactionKey(key, modifiers, &doStop))
         {

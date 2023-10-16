@@ -175,12 +175,14 @@ protected:
     int                 type;
     union {     int     drivenid;    }  details;
   };
+  enum  REACTOR_BANS    { ORB_KEYBOARD=0x1, ORB_MOUSE=0x2 };
   
   struct overlays_t
   {
     Ovldraw*          povl;
     OVL_ORIENTATION       orient;
     IOverlayReactor*      prct;
+    unsigned int          prct_bans;
     unsigned int          ponger_reinit;
     unsigned int          ponger_update;
     int                   outloc;
@@ -192,6 +194,7 @@ protected:
       povl = p;
       orient = o;
       prct = povl->reactor();
+      prct_bans = 0;
       ponger_reinit = ponger_update = 0;
       outloc = -1;
 //      if (uf_count) delete []uf_arr;
@@ -200,7 +203,7 @@ protected:
       olinks.type = msstruct_t::MS_SELF;
     }
     void                _setdriven(int driverid){ olinks.type = msstruct_t::MS_DRIVEN;  olinks.details.drivenid = driverid; }
-    overlays_t(): povl(nullptr), prct(nullptr), uf_count(0){}
+    overlays_t(): povl(nullptr), prct(nullptr), prct_bans(0), uf_count(0){}
 //    ~overlays_t() { if (uf_count) delete[]uf_arr; }
   }                     m_overlays[OVLLIMIT];
   unsigned int          m_overlaysCount;
@@ -678,6 +681,18 @@ public:
     if (m_overlaysCount == 0)
       return nullptr;
     return m_overlays[m_overlaysCount - 1].povl;
+  }
+  void     ovlReactionsEnableAll(int ovl)
+  {
+    ovl -= 1;
+    if (ovl < 0 || (unsigned int)ovl >= m_overlaysCount) return;
+    m_overlays[ovl].prct_bans = 0;
+  }
+  void     ovlReactionsDisableAll(int ovl)
+  {
+    ovl -= 1;
+    if (ovl < 0 || (unsigned int)ovl >= m_overlaysCount) return;
+    m_overlays[ovl].prct_bans = 0xFFFFFFFF;
   }
   Ovldraw* ovlPopBack()
   {

@@ -230,8 +230,12 @@ bool ODropLine::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriu
   }
   else if (oreact == ORM_RMPRESS)
   {
-    ptCount = firstFixed ? 1 : 0;
-    result = true;
+    unsigned int ptLimit = firstFixed ? 1 : 0;
+    if (ptCount > ptLimit)
+    {
+      ptCount -= 1;
+      result = true;
+    }
   }
   return result;
 }

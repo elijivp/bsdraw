@@ -127,6 +127,7 @@ struct dmtype_2d_t
 {
   unsigned int  w, len;
   const float*  data;
+  bool          linsmooth;
 };
 
 struct dmtype_image_t
@@ -518,6 +519,10 @@ enum  OVL_REACTION_MOUSE {
   ORM_LMPRESS, ORM_LMMOVE, ORM_LMRELEASE, ORM_LMDOUBLE,
   ORM_RMPRESS, ORM_RMMOVE, ORM_RMRELEASE
 };
+enum  OVL_REACTION_WHEEL { 
+  ORW_AWAY, ORW_TOWARD, 
+  ORW_FORWARD=ORW_AWAY, ORW_BACKWARD=ORW_TOWARD
+};
 enum  OVL_MODIFIER_KEYBOARD {  OMK_NONE=0, OMK_SHIFT=2, OMK_CONTROL=4, OMK_ALT=8 };
 
 struct coordstriumv_t
@@ -534,12 +539,20 @@ struct coordstriumv_ex_t: coordstriumv_t
   int     ex_count_rows, ex_count_columns;
 };
 
+struct coordstriumv_wheel_t: coordstriumv_t
+{
+  float   angle;
+  int     delta_x;
+  int     delta_y;
+};
+
 
 class IOverlayReactor
 {
 public:
   virtual void  overlayReactionVisible(bool /*visible*/){}    // nothrow
   virtual bool  overlayReactionMouse(OVL_REACTION_MOUSE, const coordstriumv_t*, bool* /*doStop*/){  return false; }   // return doUPDATE
+  virtual bool  overlayReactionWheel(OVL_REACTION_WHEEL, const coordstriumv_t*, bool* /*doStop*/){  return false; }   // return doUPDATE
   virtual bool  overlayReactionKey(int /*key*/, int /*modifiersOMK*/, bool* /*doStop*/){  return false; }             // return doUPDATE
   virtual ~IOverlayReactor(){}
 };

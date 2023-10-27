@@ -51,7 +51,6 @@ protected:
   virtual int fshOVCoords(int overlay, bool switchedab, char* to) const;
 private:
   dmtype_arr_t      m_dm_coords;
-  dmtype_arr_t      m_dm_form;
   COORDINATION      m_featcn;
   float             m_figsize, m_figopc;
 public:

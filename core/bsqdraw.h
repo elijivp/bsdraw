@@ -165,8 +165,12 @@ protected:
   virtual void mouseReleaseEvent(QMouseEvent *event);
   virtual void mouseMoveEvent(QMouseEvent *event);
   virtual void mouseDoubleClickEvent(QMouseEvent *);
+#if QT_CONFIG(wheelevent)
+  virtual void wheelEvent(QWheelEvent *event);
+#endif
 //  virtual void resizeEvent(QResizeEvent *event); no need. we afterreact in resizeGL method
   virtual void keyPressEvent(QKeyEvent *event);
+  virtual void showEvent(QShowEvent*);
 private:
   void  store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y);
 public:

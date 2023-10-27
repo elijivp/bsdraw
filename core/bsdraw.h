@@ -59,6 +59,7 @@ class DrawEventReactor
 {
 public:
   virtual bool  reactionMouse(class DrawQWidget*, OVL_REACTION_MOUSE, const coordstriumv_t*, bool* /*doStop*/){  return false; }
+  virtual bool  reactionWheel(class DrawQWidget*, OVL_REACTION_WHEEL, const coordstriumv_t*, bool* /*doStop*/){  return false; }
   virtual bool  reactionKey(class DrawQWidget*, int /*key*/, int /*modifiersOMK*/, bool* /*doStop*/){  return false; }
   virtual ~DrawEventReactor(){}
 };

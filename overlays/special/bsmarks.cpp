@@ -227,6 +227,7 @@ OTrass::OTrass(unsigned int trasslimit, unsigned int linestotal, const IPalette*
   dm_trass.w = trass_limit;
   dm_trass.len = tlines_frame;
   dm_trass.data = &tlines_texture[(TPS*trass_limit)*(tlines_total-1)];
+  dm_trass.linsmooth = false;
   appendUniform(DT_2D3F, &dm_trass);
 //  vv_markups = new int[trass_limit];
 //  memset(vv_markups, 0, sizeof(int)*trasslimit);

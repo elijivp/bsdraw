@@ -23,19 +23,21 @@ public:
   virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 300 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
   virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
                                          const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
-                                         unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
+                                         ovlfraginfo_t ovlsinfo[], unsigned int ovlscount,
+                                         locbackinfo_t locbackinfo[], unsigned int* locbackcount,
+                                         char* to) const
   {
-    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
-    fmg.push( "uniform highp sampler2D texground;"
-              "uniform highp int       lenground;" );
+    globvarinfo_t globvars[] = {  { DT_SAMP4, "sdpsampler" }  };
+    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, sizeof(globvars)/sizeof(globvars[0]), globvars, ovlscount, ovlsinfo);
+    fmg.getLocbacks(locbackinfo, locbackcount);
     fmg.main_begin(FshDrawConstructor::INIT_BYVALUE, m_bckclr, orient, fsp);
     
-    fmg.push(   "vec4 pixsdp = texture(texground, abc_coords).rgba;" );
+    fmg.push(   "vec4 pixsdp = texture(sdpsampler, abc_coords).rgba;" );
     
     if (m_mode == MODE_NONE)
     {
       fmg.push(   "result = mix(result, pixsdp.bgr, pixsdp.a);"
-//                  "float value = texture(texdata, vec2(domain, 0.0)).r;"  // domain /float(lenground-1)
+//                  "float value = texture(datasampler, vec2(domain, 0.0)).r;"  // domain /float(lenground-1)
 //                  "dvalue = max(dvalue, value);"
 //                  "post_mask[0] = mix(1.0, post_mask[0], step( value , post_mask[1]));"
                   );
@@ -44,9 +46,9 @@ public:
     {
       fmg.push(
                   "float marker = mod(pixsdp[2]*255.0, 4.0)*16.0 + mod(pixsdp[1]*255.0, 4.0)*4.0 + mod(pixsdp[0]*255.0, 4.0);"
-                  "float value = texture(texdata, vec2((marker - 1.0)/float(lenground-1), 0.0)).r;"
-                  "value = palrange[0] + (palrange[1] - palrange[0])*value;"
-                  "vec3  mmc = texture(texpalette, vec2(value, 0.0)).rgb;"
+                  "float value = texture(datasampler, vec2((marker - 1.0)/float(dataportionsize-1), 0.0)).r;"
+                  "value = paletrange[0] + (paletrange[1] - paletrange[0])*value;"
+                  "vec3  mmc = texture(paletsampler, vec2(value, 0.0)).rgb;"
                   "result = mix(mix(result, pixsdp.bgr, pixsdp.a), mmc, 1.0 - step(marker, 0.0));"
   //                "result = pixsdp.bgr;"
   //                "mixwell = pixsdp.a;"
@@ -57,6 +59,8 @@ public:
                   );
     }
     fmg.main_end(fsp, fspopacity);
+    
+    qDebug()<<to;
     return fmg.written();
   }
 };
@@ -70,10 +74,10 @@ void DrawSDPicture::reConstructor(unsigned int samplesHorz, unsigned int samples
   m_dataDimmB = samplesVert;
   m_portionSize = SDPSIZE_MARKER;
   
-  m_groundType = GND_SDP;
-  m_groundData = m_pImage->bits();
-  m_groundDataWidth = m_pImage->width();
-  m_groundDataHeight = m_pImage->height();
+  m_sdpData = m_pImage->bits();
+  m_sdpDataWidth = m_pImage->width();
+  m_sdpDataHeight = m_pImage->height();
+  m_sdpMipMapping = false;
   
   deployMemory();
 }
@@ -125,6 +129,37 @@ DrawSDPicture::~DrawSDPicture()
 bool DrawSDPicture::isNull() const
 {
   return m_pImage->isNull();
+}
+
+void  DrawSDPicture::setMipMapping(bool v)
+{ 
+  m_sdpMipMapping = v;
+  DrawQWidget::vmanUpSec();
+}
+bool  DrawSDPicture::mipMapping() const
+{
+  return m_sdpMipMapping;
+}
+
+
+void DrawSDPicture::processGlLocation(int /*secidx*/, int /*secflags*/, int loc, int TEX)
+{
+  glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, m_sdpDataWidth, m_sdpDataHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_sdpData);
+//    if (m_sdpMipMapping) glGenerateMipmap( GL_TEXTURE_2D );
+  
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_sdpMipMapping? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+  glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+  
+  glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+  glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+  glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+  glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+  
+  m_ShaderProgram.setUniformValue(loc, TEX);
 }
 
 void DrawSDPicture::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const

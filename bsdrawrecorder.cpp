@@ -2,11 +2,51 @@
 /// Input: 1D array who moves in top of draw
 /// Created By: Elijah Vlasov
 #include "bsdrawrecorder.h"
-#include "core/sheigen/bsshei2d.h"
+
+#include "core/sheigen/bsshgenmain.h"
+
+class SheiGeneratorRecorder: public ISheiGenerator
+{
+public:
+  virtual const char*   shaderName() const {  return "2DREC"; }
+  virtual int           portionMeshType() const { return PMT_PSEUDO2D; }
+  virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
+  virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
+  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 700 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
+  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
+                                         const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
+                                         ovlfraginfo_t ovlsinfo[], unsigned int ovlscount, 
+                                         locbackinfo_t locbackinfo[], unsigned int* locbackcount,
+                                         char* to) const
+  {
+    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, 0, nullptr, ovlscount, ovlsinfo);
+    fmg.getLocbacks(locbackinfo, locbackcount);
+    fmg.main_begin(FshDrawConstructor::INITBACK_BYPALETTE, 0, orient, fsp); //FshDrawConstructor::INITBACK_BYZERO
+    fmg.cintvar("allocatedPortions", (int)allocatedPortions);
+    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<dataportions; i++)" : "int i = explicitPortion;" );
+    fmg.push("{");
+    {
+      fmg.value2D("float value");
+      fmg.push("dvalue = max(dvalue, value);");
+      fmg.push("value = paletrange[0] + (paletrange[1] - paletrange[0])*value;" );
+      if ( splitPortions == SP_NONE )
+        fmg.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );
+      else if (splitPortions & SPFLAG_COLORSPLIT)
+        fmg.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" );
+      else
+        fmg.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" );
+      
+      fmg.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" );
+    }
+    fmg.push("}");
+    fmg.main_end(fsp, fspopacity);
+    return fmg.written();
+  }
+};
 
 DrawRecorder::DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory, 
                            unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions, unsigned int resizeLimit): 
-  DrawQWidget(DATEX_15D, new SheiGeneratorBright(SheiGeneratorBright::DS_NONE), portions, orient, splitPortions),
+  DrawQWidget(DATEX_15D, new SheiGeneratorRecorder, portions, orient, splitPortions),
   m_filldirection(FILL_DEFAULT), m_stopped(0), m_memory(portions, samplesHorz, linesMemory), m_resizelim(resizeLimit)
 {
   m_dataDimmA = samplesHorz;

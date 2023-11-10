@@ -51,12 +51,17 @@ struct dcgeometry_t
 class DrawQWidget: public QOpenGLWidget, protected QOpenGLFunctions, public DrawCore
 {
   Q_OBJECT
-  enum  SHEIFIELD  {  SF_DATA, SF_PALETTE, 
-                      SF_DOMAIN, SF_GROUND=SF_DOMAIN, SF_PORTIONSIZE, 
-                      SF_COUNTPORTIONS, SF_DIMM_A, SF_DIMM_B, SF_CHNL_SCALER_A, SF_CHNL_SCALER_B,
-                      SF_DATABOUNDS, SF_COLORRANGE, SF_VIEW_TURN,
-                      _SF_COUNT
-                   };
+  enum  SHEIFIELD  {  
+    SF_DATASAMPLER, SF_DATADIMM_A, SF_DATADIMM_B, SF_DATAPORTIONS, SF_DATAPORTIONSIZE, SF_DATARANGE, 
+    SF_SCALER_A, SF_SCALER_B,
+    SF_PALETSAMPLER, SF_PALETRANGE,
+    _SF_COUNT
+  };
+  enum  {   MAX_OPTIONALS=32,  MAX_TEXTURES=96 };
+//    SF_DOMAIN, SF_GROUND=SF_DOMAIN, SF_PORTIONSIZE, 
+//    SF_VIEW_TURN,
+//    _SF_COUNT
+//                   };
 protected:
   bool                    m_compileOnInitializeGL; /// true by default
   char*                   m_vshmem, *m_fshmem;
@@ -64,7 +69,14 @@ protected:
   ISheiGenerator*         m_pcsh;
   int                     m_portionMeshType;
     
-  int                     m_locations[_SF_COUNT];
+  int                     m_locationPrimary[_SF_COUNT];
+  struct locbackaft_t
+  {
+    int     location;
+    bool    istexture;
+  }                       m_locationSecondary[MAX_OPTIONALS];
+  unsigned int            m_locationSecondaryCount;
+  
   QOpenGLShaderProgram    m_ShaderProgram;
   float                   m_SurfaceVertex[8];
 protected:
@@ -78,9 +90,8 @@ protected:
   float                   m_viewAlignVert;
   float                   m_viewTurn;
 protected:
-  enum  { HT_MATRIX=0, HT_PAL, HT_GND, HT_OVERLAYSSTART,      HT_OVERLAYSGLLIMIT=96 };
-  unsigned int            m_texAll[HT_OVERLAYSGLLIMIT];
-  unsigned int            m_texOvlCount;
+  unsigned int            m_textures[MAX_TEXTURES];
+  unsigned int            m_texturesCount;
 public:
   DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions=SP_NONE);
   ~DrawQWidget();
@@ -154,6 +165,8 @@ protected:
   void    initializeGL();
   void    paintGL();
   void    resizeGL(int w, int h);
+protected:
+  virtual void    processGlLocation(int secidx, int secflags, int loc, int TEX){}
 protected:
   virtual void callWidgetUpdate();
   virtual void innerRescale();

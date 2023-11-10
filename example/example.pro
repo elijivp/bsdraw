@@ -84,7 +84,6 @@ HEADERS  += \
     ../bsdrawintensity.h \
     ../bsdrawrecorder.h \
     ../core/bsqdraw.h \
-    ../core/sheigen/bsshei2d.h \
     ../overlays/bsgrid.h \
     ../overlays/bspoints.h \
     ../overlays/bstextstatic.h \

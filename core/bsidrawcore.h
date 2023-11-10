@@ -100,10 +100,11 @@ enum  DTYPE       /// Trace/simple shader datatypes
               DT_ARR,   DT_ARR2,  DT_ARR3, DT_ARR4, 
               DT_ARRI, DT_ARRI2, DT_ARRI3, DT_ARRI4, 
               DT_1I, DT_2I, DT_3I, DT_4I,
-              DT_SAMP4, DT_2D3F, DT_TEXTURE, DT_PALETTE    // >= DT_SAMP4 are textures
+                  _DT_TEXTURES_BEGIN,
+              DT_SAMP4=_DT_TEXTURES_BEGIN, DT_2D3F, DT_TEXTURE, DT_PALETTE
 };
 
-inline bool dtIsTexture(DTYPE dtype) { return dtype >= DT_SAMP4; }
+inline bool dtIsTexture(DTYPE dtype) { return dtype >= _DT_TEXTURES_BEGIN; }
 
 struct dmtype_t
 {
@@ -182,7 +183,7 @@ private:
   struct  _ioverlay_repaintable_t
   {
     int                       idoverlay;
-    IOvldrawFriendly*     repaintable;
+    IOvldrawFriendly*         repaintable;
     bool                      delowner;
   }                 m_drawers[MAXDRAWERS];
   unsigned int      m_drawersCount;
@@ -622,6 +623,12 @@ struct ovlfraginfo_t
   OVL_ORIENTATION   orient;
 };
 
+struct locbackinfo_t
+{
+  char              varname[128];
+  bool              istexture;
+};
+
 class ISheiGenerator
 {
 public:
@@ -631,12 +638,40 @@ public:
   virtual   unsigned int  shfragment_pendingSize(const impulsedata_t&, unsigned int ovlscount) const =0;
   virtual   unsigned int  shfragment_store(unsigned int allocPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
                                            const impulsedata_t&, const overpattern_t&, float, 
-                                           unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const =0;
+                                           ovlfraginfo_t ovlsinfo[], unsigned int ovlscount,
+                                           locbackinfo_t locbackinfo[], unsigned int* locbackcount,
+                                           char* to) const =0;
   
 public:
   enum      { PMT_PSEUDO2D, PMT_FORCE1D }; /// PORTION_MESH_TYPE
   virtual   int           portionMeshType() const =0;
   virtual   ~ISheiGenerator(){}
 };
+
+
+//enum  SHEIFIELD  
+//{  
+//  SF_DATASAMPLER, 
+//  SF_PALETSAMPLER, 
+//  SF_DOMAIN, 
+//  SF_DATAPORTIONS,
+//  SF_DATADIMM_A,
+//  SF_DATADIMM_B,
+//  SF_SCALER_A,
+//  SF_SCALER_B,
+//  SF_PORTIONSIZE, 
+//  SF_DATARANGE,
+//  SF_PALETRANGE,
+//  SF_VIEW_TURN,
+//  _SF_COUNT
+//};
+
+//static const char*  g_sheigen_core_vars[][2] = {
+//  { "uniform highp sampler2D  datasampler;", "datasampler" },
+//  { "uniform highp int        datadimm_a;", "datadimm_a" },
+  
+    
+//  }
+//}
 
 #endif // BSDRAWDEF_H

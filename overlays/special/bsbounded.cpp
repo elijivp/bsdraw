@@ -10,12 +10,12 @@ OLevel::OLevel(float value, const linestyle_t& linestyle):
 
 int OLevel::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_DATABOUNDS); //databounds
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_DATABOUNDS); //datarange
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   ocg.goto_normed();
   {
     ocg.var_const_fixed("value", m_value);
-    ocg.push("int zerooffset = int(((value-databounds[0])/(databounds[1]-databounds[0]))*ov_ibounds.y);");
+    ocg.push("int zerooffset = int(((value-datarange[0])/(datarange[1]-datarange[0]))*ov_ibounds.y);");
     ocg.trace_linehorz_l(nullptr, nullptr, "zerooffset", nullptr);
   }
   ocg.goto_func_end(true);
@@ -39,12 +39,12 @@ void OLevelVariable::setLevel(float v, bool update)
 
 int OLevelVariable::fshOVCoords(int overlay, bool switchedab, char *to) const
 {
-  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_DATABOUNDS); //databounds
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_DATABOUNDS); //datarange
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   ocg.goto_normed();
   {
     ocg.param_alias("value");
-    ocg.push("int zerooffset = int(((value-databounds[0])/(databounds[1]-databounds[0]))*ov_ibounds.y + 0.49);");
+    ocg.push("int zerooffset = int(((value-datarange[0])/(datarange[1]-datarange[0]))*ov_ibounds.y + 0.49);");
     ocg.trace_linehorz_l(nullptr, nullptr, "zerooffset", nullptr);
   }
   ocg.goto_func_end(true);
@@ -81,7 +81,7 @@ void ORecLine::increment(bool activate, bool update)
 
 int ORecLine::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
-  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_DATABOUNDS); //databounds
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, FshOVCoordsConstructor::OINC_DATABOUNDS); //datarange
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
 //  ocg.goto_normed();
   {
@@ -228,7 +228,7 @@ int _OLevelSet::fshOVCoords(int overlay, bool switchedab, char* to) const
     {
       ocg.push("oc[i] = "); ocg.param_get(); ocg.push("[i];");
       if (m_static == false)
-        ocg.push("oc[i][1] = (oc[i][1] - databounds[0])/(databounds[1]-databounds[0]);");
+        ocg.push("oc[i][1] = (oc[i][1] - datarange[0])/(datarange[1]-datarange[0]);");
       
       if (m_lt == LT_HORZ) //_BYLEFT || m_lt == LT_HORZ_BYRIGHT)
       {

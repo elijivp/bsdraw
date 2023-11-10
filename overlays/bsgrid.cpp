@@ -67,9 +67,9 @@ int OGridRegular::fshOVCoords(int overlay, bool switchedab, char *to) const
     if (m_gridtype == EGO_REGULAR_B || m_gridtype == EGO_RISK_B)
     {
       if (switchedab)
-        ocg.goto_normed("vec2((ioffset[1]-databounds[0])/(databounds[1]-databounds[0]), 0.0)", step_xys_px);
+        ocg.goto_normed("vec2((ioffset[1]-datarange[0])/(datarange[1]-datarange[0]), 0.0)", step_xys_px);
       else
-        ocg.goto_normed("vec2(0.0, (ioffset[1]-databounds[0])/(databounds[1]-databounds[0]))", step_xys_px);
+        ocg.goto_normed("vec2(0.0, (ioffset[1]-datarange[0])/(datarange[1]-datarange[0]))", step_xys_px);
     }
     else
       ocg.goto_normed();
@@ -110,7 +110,7 @@ int OGridRegular::fshOVCoords(int overlay, bool switchedab, char *to) const
     {
       ocg.var_fixed("grid_step", m_stepsize);
       if (m_gridtype == EGO_REGULAR_B || m_gridtype == EGO_RISK_B)
-        ocg.push("grid_step = grid_step/(databounds[1]-databounds[0]);");
+        ocg.push("grid_step = grid_step/(datarange[1]-datarange[0]);");
       
       int step_xys_01 = ocg.register_xyscaler_01(m_additcn == CR_SAME? coords_type_t::getCoordination() : m_additcn);
       

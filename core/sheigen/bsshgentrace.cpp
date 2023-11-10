@@ -65,7 +65,7 @@ FshOVCoordsConstructor::FshOVCoordsConstructor(const _Ovldraw::uniforms_t &ufms,
                                             "vec2  randvec2(vec2 co){ return vec2(fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453), fract(sin(dot(co.yx ,vec2(12.9898,78.233))) * 43758.5453)); }" SHNL;
     if (ocg_include_bits & OINC_RANDOM){      memcpy(&m_to[m_offset], _overinc_random, sizeof(_overinc_random)-1);  m_offset += sizeof(_overinc_random) - 1;   }
     
-    static const char _overinc_bounds[] =   "uniform highp vec2   databounds;"  SHNL;
+    static const char _overinc_bounds[] =   "uniform highp vec2   datarange;"  SHNL;
     if (ocg_include_bits & OINC_DATABOUNDS){  memcpy(&m_to[m_offset], _overinc_bounds, sizeof(_overinc_bounds)-1);  m_offset += sizeof(_overinc_bounds) - 1;   }
   }
     

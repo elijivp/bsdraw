@@ -7,6 +7,10 @@
 
 #include "../bsidrawcore.h"
 
+#if !defined SHNL && !defined NO_USE_SHNL
+#define SHNL "\n"
+#endif
+
 class VshMainGenerator1D
 {
 public:
@@ -21,6 +25,12 @@ public:
   unsigned int operator()(char* to);
 };
 
+struct globvarinfo_t
+{
+  DTYPE           type;
+  const char*     name;
+};
+
 class FshDrawConstructor
 {
   const char*                         m_writebase;
@@ -33,6 +43,8 @@ class FshDrawConstructor
   
   ORIENTATION                         m_orient;
   
+  unsigned int                        m_c_locbackscount;
+  locbackinfo_t                       m_c_locbacks[96];
   unsigned int                        m_ovlscount;
   const ovlfraginfo_t*                m_ovls;
   
@@ -40,8 +52,10 @@ class FshDrawConstructor
 public:
   static unsigned int basePendingSize(const impulsedata_t& imp, unsigned int ovlscount);
 public:
-  FshDrawConstructor(char* deststring, unsigned int allocatedPortions, SPLITPORTIONS splitPortions, const impulsedata_t& imp, unsigned int ovlscount, ovlfraginfo_t ovlsinfo[]);
+  FshDrawConstructor(char* deststring, unsigned int allocatedPortions, SPLITPORTIONS splitPortions, const impulsedata_t& imp, 
+                            unsigned int globscount, globvarinfo_t* globsinfo, unsigned int ovlscount, ovlfraginfo_t* ovlsinfo);
   unsigned int  written() const { return (unsigned int)m_offset; }
+  void          getLocbacks(locbackinfo_t* locbacks, unsigned int* locbackscount) const ; 
 private:
   void  _main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp); /// initresult: 0-none, 1-by zero, 2-by backcolor
 public:

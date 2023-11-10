@@ -24,8 +24,12 @@ enum { SDPSIZE_NONE =0, SDPSIZE_MARKER=63 };
 /// Dont Forget: setData accept pointer to 63 floats
 class DrawSDPicture: public DrawQWidget
 {
-  QImage*     m_pImage;
-  bool        m_allowNoscaledResize;
+  QImage*       m_pImage;
+  bool          m_allowNoscaledResize;
+protected:
+  void*         m_sdpData;
+  unsigned int  m_sdpDataWidth, m_sdpDataHeight;
+  bool          m_sdpMipMapping;
 protected:
   void  reConstructor(unsigned int samplesHorz, unsigned int samplesVert);
 public:
@@ -39,6 +43,10 @@ public:
   const QImage*     getImage() const { return m_pImage; }
   
   bool              isNull() const;
+  void              setMipMapping(bool v);
+  bool              mipMapping() const;
+protected:
+  virtual void            processGlLocation(int secidx, int secflags, int loc, int TEX);
 public:
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
   virtual unsigned int    colorBack() const;

@@ -54,9 +54,12 @@ public:
 public:
   virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
                                          const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
-                                         unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
+                                         ovlfraginfo_t ovlsinfo[], unsigned int ovlscount,
+                                         locbackinfo_t locbackinfo[], unsigned int* locbackcount,
+                                         char* to) const
   {
-    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
+    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, 0, nullptr, ovlscount, ovlsinfo);
+    fmg.getLocbacks(locbackinfo, locbackcount);
     fmg.main_begin(FshDrawConstructor::INIT_BYVALUE, m_bckclr, orient, fsp);
     fmg.push("ivec2 icoords = ivec2(abc_coords*(ab_ibounds));" SHNL);
     
@@ -79,26 +82,26 @@ public:
 //      fmg.cintvar("allocatedPortions", (int)m_allocatedPortions);
 //      switch (m_cpolicy)
 //      {
-//      case CP_MONO:               fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(i);" SHNL); break;
-//      case CP_PAINTED:             fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 1.0 - VALCLR);" SHNL); break;
-//      case CP_PAINTED_GROSS:       fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 1.0 - sqrt(VALCLR));" SHNL); break;
-//      case CP_PAINTED_SYMMETRIC:   fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(i + 0.5 - abs(VALCLR - 0.5) );" SHNL); break;
-//      case CP_REPAINTED:                fmg.push("float portionColor = (palrange[1] - (palrange[1] - palrange[0])*(float(i)/float(allocatedPortions)))*VALCLR;" SHNL); break;
-//      case CP_PALETTE:           fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
-//      case CP_PALETTE_SPLIT:      fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*float(i)/float(allocatedPortions)*b_coord_ns/ab_fndimms.y;" SHNL); break;
+//      case CP_MONO:               fmg.push("float portionColor = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(i);" SHNL); break;
+//      case CP_PAINTED:             fmg.push("float portionColor = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(i + 1.0 - VALCLR);" SHNL); break;
+//      case CP_PAINTED_GROSS:       fmg.push("float portionColor = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(i + 1.0 - sqrt(VALCLR));" SHNL); break;
+//      case CP_PAINTED_SYMMETRIC:   fmg.push("float portionColor = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(i + 0.5 - abs(VALCLR - 0.5) );" SHNL); break;
+//      case CP_REPAINTED:                fmg.push("float portionColor = (paletrange[1] - (paletrange[1] - paletrange[0])*(float(i)/float(allocatedPortions)))*VALCLR;" SHNL); break;
+//      case CP_PALETTE:           fmg.push("float portionColor = paletrange[0] + (paletrange[1] - paletrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
+//      case CP_PALETTE_SPLIT:      fmg.push("float portionColor = paletrange[1] - (paletrange[1] - paletrange[0])*float(i)/float(allocatedPortions)*b_coord_ns/ab_fndimms.y;" SHNL); break;
 //      }
 //    }
 //    else
 //    {
 //      switch (m_cpolicy)
 //      {
-//      case CP_MONO:               fmg.push("float portionColor = palrange[1];" SHNL); break;
-//      case CP_PAINTED:             fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*VALCLR;" SHNL); break;
-//      case CP_PAINTED_GROSS:       fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*sqrt(VALCLR);" SHNL); break;
-//      case CP_PAINTED_SYMMETRIC:   fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
-//      case CP_REPAINTED:                fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*(1.0 - VALCLR);" SHNL); break;
-//      case CP_PALETTE:           fmg.push("float portionColor = palrange[0] + (palrange[1] - palrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
-//      case CP_PALETTE_SPLIT:      fmg.push("float portionColor = palrange[1] - (palrange[1] - palrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
+//      case CP_MONO:               fmg.push("float portionColor = paletrange[1];" SHNL); break;
+//      case CP_PAINTED:             fmg.push("float portionColor = paletrange[1] - (paletrange[1] - paletrange[0])*VALCLR;" SHNL); break;
+//      case CP_PAINTED_GROSS:       fmg.push("float portionColor = paletrange[1] - (paletrange[1] - paletrange[0])*sqrt(VALCLR);" SHNL); break;
+//      case CP_PAINTED_SYMMETRIC:   fmg.push("float portionColor = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
+//      case CP_REPAINTED:                fmg.push("float portionColor = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - VALCLR);" SHNL); break;
+//      case CP_PALETTE:           fmg.push("float portionColor = paletrange[0] + (paletrange[1] - paletrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
+//      case CP_PALETTE_SPLIT:      fmg.push("float portionColor = paletrange[1] - (paletrange[1] - paletrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
 //      }
 //    }
     
@@ -107,27 +110,27 @@ public:
       fmg.cintvar("allocatedPortions", (int)m_allocatedPortions);
       switch (m_cpolicy)
       {
-      case CP_MONO:                 fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i);" SHNL); break;
-      case CP_PAINTED:              fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - VALCLR);" SHNL); break;
-      case CP_PAINTED_GROSS:        fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - sqrt(VALCLR));" SHNL); break;
-      case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 0.5 - abs(VALCLR - 0.5));" SHNL); break;
-      case CP_REPAINTED:            fmg.push("float porc = (palrange[1] - (palrange[1] - palrange[0])*(float(allocatedPortions - 1 - i)/float(allocatedPortions)))*VALCLR;" SHNL); break;
+      case CP_MONO:                 fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i);" SHNL); break;
+      case CP_PAINTED:              fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - VALCLR);" SHNL); break;
+      case CP_PAINTED_GROSS:        fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - sqrt(VALCLR));" SHNL); break;
+      case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 0.5 - abs(VALCLR - 0.5));" SHNL); break;
+      case CP_REPAINTED:            fmg.push("float porc = (paletrange[1] - (paletrange[1] - paletrange[0])*(float(allocatedPortions - 1 - i)/float(allocatedPortions)))*VALCLR;" SHNL); break;
         
-      case CP_PALETTE:              fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
-      case CP_PALETTE_SPLIT:        fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])/float(allocatedPortions)*(i + b_coord_ns/ab_fndimms.y);" SHNL); break;
+      case CP_PALETTE:              fmg.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
+      case CP_PALETTE_SPLIT:        fmg.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])/float(allocatedPortions)*(i + b_coord_ns/ab_fndimms.y);" SHNL); break;
       }
     }
     else
     {
       switch (m_cpolicy)
       {
-      case CP_MONO:                 fmg.push("float porc = palrange[1];" SHNL); break;
-      case CP_PAINTED:              fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - VALCLR);" SHNL); break;
-      case CP_PAINTED_GROSS:        fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*sqrt(1.0 - VALCLR);" SHNL); break;
-      case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
-      case CP_REPAINTED:            fmg.push("float porc = palrange[1] - (palrange[1] - palrange[0])*(1.0 - VALCLR);" SHNL); break;
+      case CP_MONO:                 fmg.push("float porc = paletrange[1];" SHNL); break;
+      case CP_PAINTED:              fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - VALCLR);" SHNL); break;
+      case CP_PAINTED_GROSS:        fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*sqrt(1.0 - VALCLR);" SHNL); break;
+      case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
+      case CP_REPAINTED:            fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - VALCLR);" SHNL); break;
         
-      case CP_PALETTE: case CP_PALETTE_SPLIT:      fmg.push("float porc = palrange[0] + (palrange[1] - palrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
+      case CP_PALETTE: case CP_PALETTE_SPLIT:      fmg.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
       }
     }
     
@@ -192,7 +195,7 @@ public:
     fmg.push(   
                 "mixwell = mixwell*step(distwell, 7.0)*(1.0-distwell/1.5);" SHNL
                 "mixwell = max(0.0, mixwell);" SHNL
-                "vec3  colorGraph = texture(texpalette, vec2(porc, 0.0)).rgb;" SHNL
+                "vec3  colorGraph = texture(paletsampler, vec2(porc, 0.0)).rgb;" SHNL
                 "result = mix(result, colorGraph, mixwell);" SHNL
     );
     
@@ -217,15 +220,18 @@ public:
 public:
   virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
                                          const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
-                                         unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
+                                         ovlfraginfo_t ovlsinfo[], unsigned int ovlscount,
+                                         locbackinfo_t locbackinfo[], unsigned int* locbackcount,
+                                         char* to) const
   {
-    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
+    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, 0, nullptr, ovlscount, ovlsinfo);
+    fmg.getLocbacks(locbackinfo, locbackcount);
     fmg.main_begin(FshDrawConstructor::INIT_BYVALUE, m_bckclr, orient, fsp);
     fmg.push( "ivec2 icoords = ivec2(abc_coords*(ab_ibounds));" SHNL);
     
     fmg.cfloatvar("portionColor", m_value);
     fmg.push( "float distwell = 0.0;"  SHNL );
-    fmg.push( "vec3  colorGraph = texture(texpalette, vec2(palrange[0] + (palrange[1] - palrange[0])*portionColor, 0.0)).rgb;" SHNL
+    fmg.push( "vec3  colorGraph = texture(paletsampler, vec2(paletrange[0] + (paletrange[1] - paletrange[0])*portionColor, 0.0)).rgb;" SHNL
               "result = mix(result, colorGraph, mixwell);" SHNL
     );
     

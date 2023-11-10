@@ -34,7 +34,7 @@ public:
   DrawIntensityUpsizeA(unsigned int samplesAmin, unsigned int samplesAmax, unsigned int samplesB, unsigned int portions=1, ORIENTATION orient=OR_LRBT, SPLITPORTIONS splitPortions=SP_NONE);
 public:
   virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
-  virtual int           sizeAndScaleChanged(bool changedDimmA, bool changedDimmB);
+  virtual int           sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool changedScalingA, bool changedScalingB);
 };
 class DrawIntensityUpsizeB: public DrawQWidget
 {
@@ -44,7 +44,7 @@ public:
   DrawIntensityUpsizeB(unsigned int samplesA, unsigned int samplesBmin, unsigned int samplesBmax, unsigned int portions=1, ORIENTATION orient=OR_LRBT, SPLITPORTIONS splitPortions=SP_NONE);
 public:
   virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
-  virtual int           sizeAndScaleChanged(bool changedDimmA, bool changedDimmB);
+  virtual int           sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool changedScalingA, bool changedScalingB);
 };
 
 

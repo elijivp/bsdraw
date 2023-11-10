@@ -355,7 +355,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     DrawQWidget* pdraws[countROWS][countCOLUMNS];
     // 1st row, domain 1: little crosses
     {
-      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT, true);
+      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT);
       DIDomain& ddm = *dd->domain();
       const int crossRows = SAMPLES/10;
       const int crossColumns = LINES/10;
@@ -379,7 +379,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     }
     // 1st row, domain 2: chessboard
     {
-      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT, true);
+      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT);
       DIDomain& ddm = *dd->domain();
       const int cc = 20;
       for (int r2=0; r2<LINES/cc/2; r2++)
@@ -404,7 +404,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     }
     // 2nd row, domain 1: spiral
     {
-      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT, true);
+      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT);
       DIDomain& ddm = *dd->domain();
       const int maxspiral = SAMPLES*6;
       const unsigned int outsider = 18500;
@@ -425,7 +425,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     }
     // 2nd row, domain 2: multispiral
     {
-      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT, true);
+      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT);
       DIDomain& ddm = *dd->domain();
       const int maxspiral = 600;
       const unsigned int outsider = 9000;
@@ -1036,7 +1036,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(3, 3);
     draws[0] = new DrawIntensity(SAMPLES, LINES, 1);
     draws[0]->ovlPushBack(new OTextColored("Intensity", CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, 0x00000000, 0x77FFFFFF, 0x00000000));
-    draws[3] = new DrawDomain(SAMPLES, LINES, 1, false, OR_LRBT, true);
+    draws[3] = new DrawDomain(SAMPLES, LINES, 1, false, OR_LRBT);
     draws[3]->ovlPushBack(new OTextColored("Domain", CR_XABS_YREL_NOSCALED, 10.0f, 0.05f, 12, 0x00000000, 0x77FFFFFF, 0x00000000));
     {
       DIDomain& ddm = *((DrawDomain*)draws[3])->domain();
@@ -1092,7 +1092,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     overpattern_t dpmcontour = overpattern_thrs_minus(OP_LINELEFTBOTTOM, 0.0f, 0);
     draws[0] = new DrawIntensity(SAMPLES, LINES, 1);
     draws[0]->setOverpattern(dpmcontour);
-    draws[3] = new DrawDomain(SAMPLES, LINES, 1, false, OR_LRBT, true);
+    draws[3] = new DrawDomain(SAMPLES, LINES, 1, false, OR_LRBT);
     draws[3]->setOverpattern(dpmcontour);
     {
       DIDomain& ddm = *((DrawDomain*)draws[3])->domain();
@@ -1205,7 +1205,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     syncscaling = 5;
     {
-      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT, true);
+      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT);
       DIDomain& ddm = *dd->domain();
       for (int i=0; i<8; i++)
       {
@@ -1224,7 +1224,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       draws[0] = dd;
     }
     {
-      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT, true);
+      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT);
       DIDomain& ddm = *dd->domain();
       for (int j=0; j<SAMPLES + LINES; j++)
       {
@@ -1241,7 +1241,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       draws[1] = dd;
     }
     {
-      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT, true);
+      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT);
       DIDomain& ddm = *dd->domain();
       const int maxspiral = 600;
       const unsigned int outsider = 1700;
@@ -1260,7 +1260,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       draws[2] = dd;
     }
     {
-      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT, true);
+      DrawDomain* dd = new DrawDomain(SAMPLES, LINES, PORTIONS, false, OR_LRBT);
       DIDomain& ddm = *dd->domain();
       const int maxspiral = 600;
       const unsigned int outsider = 6000;

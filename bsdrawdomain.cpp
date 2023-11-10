@@ -5,18 +5,72 @@
 #include "bsdrawdomain.h"
 
 #include <memory.h>
-#include "core/sheigen/bsshei2d.h"
+
+
+#include "core/sheigen/bsshgenmain.h"
+
+class SheiGeneratorDomain: public ISheiGenerator
+{
+public:
+  bool      isBckgrndDomain;
+public:
+  SheiGeneratorDomain(bool isbackgrounddomain): isBckgrndDomain(isbackgrounddomain) {}
+  virtual const char*   shaderName() const {  return "DOMAIN"; }
+  virtual int           portionMeshType() const { return PMT_PSEUDO2D; }
+  virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
+  virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
+  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 700 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
+  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
+                                         const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
+                                         ovlfraginfo_t ovlsinfo[], unsigned int ovlscount, 
+                                         locbackinfo_t locbackinfo[], unsigned int* locbackcount,
+                                         char* to) const
+  {
+    globvarinfo_t globvars[] = {  { DT_SAMP4, "dmnsampler" }  };
+    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, sizeof(globvars)/sizeof(globvars[0]), globvars, ovlscount, ovlsinfo);
+    fmg.getLocbacks(locbackinfo, locbackcount);
+
+    fmg.main_begin(FshDrawConstructor::INITBACK_BYPALETTE, 0, orient, fsp); //FshDrawConstructor::INITBACK_BYZERO
+    fmg.cintvar("allocatedPortions", (int)allocatedPortions);
+    fmg.push("float domain = texture(dmnsampler, abc_coords).r / float(dataportionsize+1);");
+    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<dataportions; i++)" : "int i = explicitPortion;" );
+    fmg.push( "{" );
+    {
+      if (isBckgrndDomain)
+        fmg.push("float value = texture(datasampler, vec2(domain, 0.0)).r;");  // domain /float(dmnlen-1)
+      else
+        fmg.push("float value = texture(datasampler, vec2(domain, 0.0)).r * (1-step(domain, 0.0));");    // /float(dmnlen-1)
+      
+      fmg.push(  "dvalue = max(dvalue, value);");
+      fmg.push(  "value = paletrange[0] + (paletrange[1] - paletrange[0])*value;" );
+      
+      if ( splitPortions == SP_NONE )
+        fmg.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );
+      else if (splitPortions & SPFLAG_COLORSPLIT)
+        fmg.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" );
+//        fmg.push("result.rgb = mix(texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1))).rgb, result.rgb, step(countPortions, float(explicitPortion)));" );
+      else
+        fmg.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" );
+      
+      fmg.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" );
+    }
+    fmg.push( "}" );
+    
+    fmg.main_end(fsp, fspopacity);
+    return fmg.written();
+  }
+};
 
 #if !defined DIDOMAIN_CHECKBOUNDS_ASSERT && !defined DIDOMAIN_CHECKBOUNDS_CONDITION && !defined DIDOMAIN_CHECKBOUNDS_IGNORE
 #define DIDOMAIN_CHECKBOUNDS_ASSERT
 #endif
 
 
-void DIDomain::_init(unsigned int width, unsigned int height, bool incbackground, unsigned int* count, float* dataptr)
+void DIDomain::_init(unsigned int width, unsigned int height, bool incbackdmn, unsigned int* count, float* dataptr)
 {
   m_width = width;
   m_height = height;
-  m_incBackground = incbackground;
+  m_incBackground = incbackdmn;
   m_count = count;
   m_dataptr = dataptr;
 }
@@ -221,8 +275,8 @@ void DIDomain::excludePixel(int r, int c)
 
 /////////////////////////////////////////////////////////////////////////
 
-DrawDomain::DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, bool isBckgrndDomain, ORIENTATION orient, bool holdmemorytilltheend): 
-  DrawQWidget(DATEX_DD, new SheiGeneratorBright(isBckgrndDomain? SheiGeneratorBright::DS_DOMSTD : SheiGeneratorBright::DS_DOMBLACK), portions, orient)
+DrawDomain::DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, bool isBckgrndDomain, ORIENTATION orient): 
+  DrawQWidget(DATEX_DD, new SheiGeneratorDomain(isBckgrndDomain), portions, orient)
 {
   m_dataDimmA = samplesHorz;
   m_dataDimmB = samplesVert;
@@ -230,50 +284,66 @@ DrawDomain::DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsig
   deployMemory(total*portions);
   m_portionSize = 1;
   
-  m_groundType = GND_DOMAIN;
-  m_groundData = new float[total];
-  memset(m_groundData, 0, total*sizeof(float));
-  m_groundDataFastFree = !holdmemorytilltheend;
-  
-  m_domain._init(m_dataDimmA, m_dataDimmB, isBckgrndDomain, &m_portionSize, (float*)m_groundData);
+  m_dmnData = new float[total];
+  memset(m_dmnData, 0, total*sizeof(float));
+  m_domain._init(m_dataDimmA, m_dataDimmB, isBckgrndDomain, &m_portionSize, (float*)m_dmnData);
 }
 
-DrawDomain::DrawDomain(const DIDomain &cpy, unsigned int portions, ORIENTATION orient, bool holdmemorytilltheend): 
-  DrawQWidget(DATEX_DD, new SheiGeneratorBright(cpy.isBackgroundDomain()? SheiGeneratorBright::DS_DOMSTD : SheiGeneratorBright::DS_DOMBLACK), portions, orient)
+DrawDomain::DrawDomain(const DIDomain &cpy, unsigned int portions, ORIENTATION orient): 
+  DrawQWidget(DATEX_DD, new SheiGeneratorDomain(cpy.isBackgroundDomain()), portions, orient)
 {
   m_dataDimmA = cpy.m_width;
   m_dataDimmB = cpy.m_height;
   unsigned int total = m_dataDimmA*m_dataDimmB;
   deployMemory(total*portions);
   
-  m_groundType = GND_DOMAIN;
-  m_groundData = new float[total];
-  memcpy(m_groundData, cpy.m_dataptr, total*sizeof(float));
+  m_dmnData = new float[total];
+  memcpy(m_dmnData, cpy.m_dataptr, total*sizeof(float));
   m_portionSize = *cpy.m_count;
-  m_groundDataFastFree = !holdmemorytilltheend;
  
-  m_domain._init(m_dataDimmA, m_dataDimmB, cpy.isBackgroundDomain(), &m_portionSize, (float*)m_groundData);
+  m_domain._init(m_dataDimmA, m_dataDimmB, cpy.isBackgroundDomain(), &m_portionSize, (float*)m_dmnData);
 }
 
 DrawDomain::~DrawDomain()
 {
-  if (m_groundData != nullptr)
-    delete [](float*)m_groundData;
+  if (m_dmnData != nullptr)
+    delete [](float*)m_dmnData;
 }
 
 DIDomain *DrawDomain::domain()
 {
-  return m_groundData == NULL? 0 : &m_domain;  
+  return m_dmnData == NULL? 0 : &m_domain;  
 }
 
 const DIDomain *DrawDomain::domain() const
 {
-  return m_groundData == NULL? 0 : &m_domain;  
+  return m_dmnData == NULL? 0 : &m_domain;  
 }
 
 unsigned int DrawDomain::domainsCount() const
 {
   return m_portionSize;
+}
+
+void DrawDomain::processGlLocation(int /*secidx*/, int /*secflags*/, int loc, int TEX)
+{
+  { 
+    glTexImage2D(   GL_TEXTURE_2D, 0, 
+#if QT_VERSION >= 0x050000
+                    GL_R32F, 
+#elif QT_VERSION >= 0x040000
+                    GL_RED, 
+#endif
+                    m_dataDimmA, m_dataDimmB, 0, GL_RED, GL_FLOAT, (float*)m_dmnData);
+//          glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          
+    if (m_dmnMipMapping) glGenerateMipmap( GL_TEXTURE_2D );
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_dmnMipMapping? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    m_ShaderProgram.setUniformValue(loc, TEX);
+  }
 }
 
 void DrawDomain::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const

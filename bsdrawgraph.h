@@ -52,7 +52,7 @@ public:
   DrawGraphUpsizeA(unsigned int minsamples, unsigned int maxsamples, unsigned int graphs, const graphopts_t& graphopts, const coloropts_t& copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SP_NONE);
 public:
   virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
-  virtual int           sizeAndScaleChanged(bool changedDimmA, bool changedDimmB);
+  virtual int           sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool changedScalingA, bool changedScalingB);
 };
 
 /// 2D graph with data append
@@ -107,7 +107,7 @@ public:
 public:
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
 protected:
-  virtual int             sizeAndScaleChanged(bool changedDimmA, bool changedDimmB);
+  virtual int             sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool changedScalingA, bool changedScalingB);
 protected:
           void            fillMatrix();
           void            clampFilloffset();

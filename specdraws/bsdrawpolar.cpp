@@ -25,9 +25,12 @@ public:
   virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 1800 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
   virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
                                          const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
-                                         unsigned int ovlscount, ovlfraginfo_t ovlsinfo[], char* to) const
+                                         ovlfraginfo_t ovlsinfo[], unsigned int ovlscount,
+                                         locbackinfo_t locbackinfo[], unsigned int* locbackcount,
+                                         char* to) const
   {
-    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, ovlscount, ovlsinfo);
+    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, 0, nullptr, ovlscount, ovlsinfo);
+    fmg.getLocbacks(locbackinfo, locbackcount);
     fmg.push("uniform highp float viewturn;");
     fmg.main_begin(FshDrawConstructor::INIT_BYVALUE, m_bckclr, orient, fsp, m_samplesHorz, m_samplesVert);
     fmg.cintvar("allocatedPortions", (int)allocatedPortions);
@@ -57,19 +60,19 @@ public:
              "lenarcscal[2] = step(lenarcscal[0], 1.0);"
              );
     
-    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<portions; i++)" : "int i = explicitPortion;" );
+    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<dataportions; i++)" : "int i = explicitPortion;" );
     fmg.push( "{" );
     {
       fmg.value2D("float value", "datacoords");
-      fmg.push("value = palrange[0] + (palrange[1] - palrange[0])*value;");
+      fmg.push("value = paletrange[0] + (paletrange[1] - paletrange[0])*value;");
       fmg.push("dvalue = max(dvalue, value);");
       
       if ( splitPortions == SP_NONE )
-        fmg.push( "result = mix(result, result + texture(texpalette, vec2(value, float(i)/(allocatedPortions-1) )).rgb, lenarcscal[2]);"
+        fmg.push( "result = mix(result, result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb, lenarcscal[2]);"
 //                  "result = mix(result, vec3(0), step(float(immod.x), 3.0)*step(3.0, float(immod.x)));"
                   );
       else
-        fmg.push( "result = mix(result, texture(texpalette, vec2(value, 0.0)).rgb, (1.0 - step(countPortions, float(explicitPortion)))*lenarcscal[2]  );" );
+        fmg.push( "result = mix(result, texture(paletsampler, vec2(value, 0.0)).rgb, (1.0 - step(countPortions, float(explicitPortion)))*lenarcscal[2]  );" );
 
 //      fmg.push("post_mask[0] = mix(post_mask[0], 1.0, (1.0 - step(value, post_mask[1]))*lenarcscal[2] );" );
       fmg.push("post_mask[0] = mix(post_mask[0], 1.0, (1.0 - step(value, post_mask[1]))*lenarcscal[2] );"
@@ -233,7 +236,7 @@ void DrawPolar::turn(float rotate01)
   if (m_viewTurn != rotate01)
   {
     m_viewTurn = rotate01;
-    m_bitmaskPendingChanges |= PC_DATA | PC_SIZE | PC_PARAMS;
+    m_bitmaskPendingChanges |= PC_DATA | PC_DATADIMMS | PC_DATAPORTS | PC_DATARANGE | PC_PALETTEPARAMS;
   //    if (m_spDivider != 0)
     if (m_splitterA > 1 || m_splitterB > 1)
       innerRescale();

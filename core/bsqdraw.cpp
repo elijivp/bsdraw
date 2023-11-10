@@ -41,20 +41,18 @@ int OvldrawEmpty::fshColor(int overlay, char* to) const
 
 DrawQWidget::DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): 
   DrawCore(datex, portions, orient, splitPortions),
-  m_compileOnInitializeGL(true), m_vshalloc(0), m_fshalloc(0), m_pcsh(pcsh), 
+  m_compileOnInitializeGL(true), m_vshalloc(0), m_fshalloc(0), m_pcsh(pcsh), m_locationSecondaryCount(0),
   m_matrixLmSize(0), m_sbStatic(false), 
   m_cttrLeft(0), m_cttrTop(0), m_cttrRight(0), m_cttrBottom(0), c_width(0), c_height(0), 
   m_viewAlignHorz(0.0f), m_viewAlignVert(0.0f), 
   m_viewTurn(0),
-  m_texOvlCount(0)
+  m_texturesCount(0)
 {
-  m_ppal = &palette_creature;
-  m_ppaldiscretise = palette_creature.paletteDiscretion();
-  m_bitmaskPendingChanges |= PC_PALETTE;
-  
+  m_paletptr = &palette_creature;
+  m_paletdiscretise = palette_creature.paletteDiscretion();
   
   for (int i=0; i<_SF_COUNT; i++)
-    m_locations[i] = -1;
+    m_locationPrimary[i] = -1;
   
   m_portionMeshType = splitPortions == SP_NONE? m_pcsh->portionMeshType() : ISheiGenerator::PMT_FORCE1D;  // ntf: strange, non-intuitive
   
@@ -207,7 +205,10 @@ void DrawQWidget::initCollectAndCompileShader()
     m_fshmem = new char[m_fshalloc];
   }
   
+  
   /// store
+  unsigned int locbackcount=0;
+  locbackinfo_t locbackinfo[96];
   {
     ovlfraginfo_t ovlsinfo[OVLLIMIT];
     for (unsigned int i=0; i<m_overlaysCount; i++)
@@ -221,7 +222,9 @@ void DrawQWidget::initCollectAndCompileShader()
     }
     unsigned int fsh_written = m_pcsh->shfragment_store(m_allocatedPortions, m_orient, m_splitPortions, 
                                                         m_postImpulse, m_postOverpattern, m_postOverpatternOpacity, 
-                                                        m_overlaysCount, ovlsinfo, m_fshmem);
+                                                        ovlsinfo, m_overlaysCount, 
+                                                        locbackinfo, &locbackcount,
+                                                        m_fshmem);
     
 //    qDebug()<<m_pcsh->shaderName()<<" fragment size "<<fsh_written<<" (had"<<m_fshalloc<<")";
     Q_ASSERT(fsh_written <= m_fshalloc);
@@ -270,28 +273,53 @@ void DrawQWidget::initCollectAndCompileShader()
   
 //  m_ShaderProgram.bindAttributeLocation("vertices", 0); ???
   
+  m_texturesCount = 0;
+  
   if (m_ShaderProgram.link())
   {
-    static const char* vd_corresponding_array[] = { "texdata", "texpalette", "texground", "lenground", "portions",
-                                      "texdatadimm_a", "texdatadimm_b", "scaler_a", "scaler_b", "databounds", "palrange",
-                                      "viewturn" };
+    static const char* vd_corresponding_array[] = 
+    { 
+      "datasampler", "datadimm_a", "datadimm_b", "dataportions", "dataportionsize", "datarange", 
+      "scaler_a", "scaler_b", 
+      "paletsampler", "paletrange"
+    };
     
     Q_ASSERT(_SF_COUNT == sizeof(vd_corresponding_array)/sizeof(const char*));
     for (int i=0; i<_SF_COUNT; i++)
     {
-      const char* vd = vd_corresponding_array[i];
-      m_locations[i] = vd != 0? m_ShaderProgram.uniformLocation(vd) : -1;
-    }    
+      m_locationPrimary[i] = m_ShaderProgram.uniformLocation(vd_corresponding_array[i]);
+//      qDebug()<<i<<"????? "<<m_locationPrimary[i];
+    }
     
-    /// 2. Init ovl locations and textures
+    if (m_locationPrimary[SF_DATASAMPLER] != -1)
+      glGenTextures(1, &m_textures[m_texturesCount++]);
+    if (m_locationPrimary[SF_PALETSAMPLER] != -1)
+      glGenTextures(1, &m_textures[m_texturesCount++]);
+    
+    /// 2. Init additional locations and textures
+    for (unsigned int i=0; i<locbackcount; i++)
+    {
+      m_locationSecondary[i].location = m_ShaderProgram.uniformLocation(locbackinfo[i].varname);
+      m_locationSecondary[i].istexture = locbackinfo[i].istexture;
+      //qDebug()<<locbackinfo[i].varname<<locbackinfo[i].istexture<<m_locationSecondary[i].location<<m_texturesCount;
+      if (m_locationSecondary[i].istexture)
+        glGenTextures(1, &m_textures[m_texturesCount++]);
+    }
+    m_locationSecondaryCount = locbackcount;
+    
+    
+    /// 3. Init ovl locations and textures
     {
       char _tempvd[64];
-      unsigned int  texNew[HT_OVERLAYSGLLIMIT - HT_OVERLAYSSTART];
+#ifdef OLDOVLTEX
+      unsigned int  texNew[MAX_TEXTURES];
       unsigned int  texNewCount=0;
+#endif
       for (unsigned int i=0; i<m_overlaysCount; i++)
       {
         fastpaced_settings(_tempvd, i+1);
         m_overlays[i].outloc = m_ShaderProgram.uniformLocation(_tempvd);                  /// ! cannot hide by upcount
+        m_overlays[i].texcount = 0;
         _Ovldraw::uniforms_t  uf = m_overlays[i].povl->uniforms();
         for (unsigned int j=0; j<uf.count; j++)
         {
@@ -306,26 +334,31 @@ void DrawQWidget::initCollectAndCompileShader()
           m_overlays[i].uf_arr[j].dataptr = uf.arr[j].dataptr;
           if (dtIsTexture(dtype))
           {
+#ifdef OLDOVLTEX
             if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit() || 
                 m_overlays[i].ponger_update < m_overlays[i].povl->pingerUpdate())
             {
-              m_overlays[i].uf_arr[j].tex_idx = HT_OVERLAYSSTART + texNewCount;
+              m_overlays[i].uf_arr[j].tex_idx = m_texturesCount + texNewCount;
               glGenTextures(1, &texNew[texNewCount++]);
             }
             else
-              texNew[texNewCount++] = m_texAll[m_overlays[i].uf_arr[j].tex_idx];
-            Q_ASSERT(texNewCount <= HT_OVERLAYSGLLIMIT - HT_OVERLAYSSTART);
+              texNew[texNewCount++] = m_textures[m_overlays[i].uf_arr[j].tex_idx];    // ????????
+#else
+            m_overlays[i].texcount += 1;
+            glGenTextures(1, &m_textures[m_texturesCount++]);
+#endif
           }
         }
         m_overlays[i].ponger_reinit = m_overlays[i].ponger_update = 0;
       }
-      m_texOvlCount = HT_OVERLAYSSTART;
+#ifdef OLDOVLTEX
       for (unsigned int i=0; i<texNewCount; i++)
-        m_texAll[m_texOvlCount++] = texNew[i];
+        m_textures[m_texturesCount++] = texNew[i];
+#endif
     } // init ovl
     
     unpend(PC_INIT);
-    m_bitmaskPendingChanges |= (m_groundData == nullptr? 0 : PC_GROUND) | PC_SIZE | PC_DATA | PC_PARAMS | PC_PARAMSOVL;
+    m_bitmaskPendingChanges |= PC_DATA | PC_DATADIMMS | PC_DATAPORTS | PC_DATARANGE | PC_PALETTE | PC_PALETTEPARAMS | PC_SEC | PC_PARAMSOVL;
     
   } /// link
   
@@ -347,9 +380,6 @@ void DrawQWidget::initializeGL()
   m_SurfaceVertex[6] =  1.0f; m_SurfaceVertex[7] =  1.0f;
   
   initializeOpenGLFunctions();
-  glGenTextures(1, &m_texAll[HT_MATRIX]); /// matrix
-  glGenTextures(1, &m_texAll[HT_PAL]);  /// palette
-  glGenTextures(1, &m_texAll[HT_GND]);  /// ground: domain/SDP(specialy destroyed picture)
 
   if (m_clearsource == CS_WIDGET)
   {
@@ -365,8 +395,8 @@ void DrawQWidget::initializeGL()
   if (m_compileOnInitializeGL)
     initCollectAndCompileShader();
   
-  m_bitmaskPendingChanges |= PC_SIZE | PC_DATA | PC_PARAMS | PC_PARAMSOVL; 
-//  qDebug("GL: initialized. %04x", m_bitmaskPendingChanges);
+  m_bitmaskPendingChanges |= PC_DATA | PC_DATADIMMS | PC_DATAPORTS | PC_DATARANGE | PC_PALETTEPARAMS | PC_SEC | PC_PARAMSOVL; 
+  //qDebug()<<"InitGL: "<<m_compileOnInitializeGL<<QString::number(m_bitmaskPendingChanges, 2);
   
   glDisable(GL_DEPTH_TEST);
   {
@@ -412,19 +442,14 @@ void DrawQWidget::paintGL()
 //    glDisable(GL_BLEND);
 //    glDisable(GL_ALPHA_TEST);
   }
-  
-//  if (!havePending())
-//  {
-//    static int ctr=0;
-//    qDebug()<<"EMMM"<<ctr++;
-//  }
 //    glEnable(GL_BLEND);
   
-  
-  
+//  qDebug()<<"PaintGL: "<<m_compileOnInitializeGL<<QString::number(m_bitmaskPendingChanges, 2);
+//  bool on_init = false;
   if (havePendOn(PC_INIT, m_bitmaskPendingChanges))
   {
     initCollectAndCompileShader();
+//    on_init = true;
   }
   int bitmaskPendingChanges = m_bitmaskPendingChanges;
   unpendAll();
@@ -437,243 +462,205 @@ void DrawQWidget::paintGL()
 //    qDebug()<<"clearing clr"<<m_clearcolor[0]<<m_clearcolor[1]<<m_clearcolor[2];
   }
   
-  {
-    int loc;
-    if ((loc = m_locations[SF_DATA]) != -1)
-    {      
-      glActiveTexture(GL_TEXTURE0 + HT_MATRIX);
-      glBindTexture(GL_TEXTURE_2D, m_texAll[HT_MATRIX]);
-      if (havePendOn(PC_DATA, bitmaskPendingChanges) || havePendOn(PC_SIZE, bitmaskPendingChanges))
-      {
-        GLsizei dataDimmA = m_dataDimmA;
-        GLsizei dataDimmB = m_dataDimmB;
-        if (m_datex == DATEX_1D || m_datex == DATEX_DD)
-        {
-          dataDimmB = 1;
-          dataDimmA = m_portionSize;
-        }
-        else if (m_datex == DATEX_POLAR)
-        {
-          dataDimmB = dataDimmB / 2;
-          dataDimmA = m_portionSize / dataDimmB;
-        }
-        if (havePendOn(PC_DATA, bitmaskPendingChanges) || m_datex == DATEX_15D)
-        {
-          unsigned int total = dataDimmA*dataDimmB*m_countPortions;
-          for (unsigned int i=0; i<total; i++)
-            m_dataStorageCached[i] = m_dataStorage[i] * m_loc_k + m_loc_b;
-        }
-        glTexImage2D(   GL_TEXTURE_2D, 0, 
-#if QT_VERSION >= 0x050000
-                        GL_R32F, 
-#elif QT_VERSION >= 0x040000
-                        GL_RED, 
-#endif
-                        dataDimmA, dataDimmB*m_countPortions, 0, GL_RED, GL_FLOAT, m_dataStorageCached);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_dataTextureInterp? GL_LINEAR : GL_NEAREST);  // GL_LINEAR
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_dataTextureInterp? GL_LINEAR : GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // GL_CLAMP_TO_EDGE
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        
-        
-        if ((loc = m_locations[SF_DATABOUNDS]) != -1)     m_ShaderProgram.setUniformValue(loc, (const QVector2D&)m_bounds);
-        
-      }
-      m_ShaderProgram.setUniformValue(loc, HT_MATRIX);
-    }
-         
-    if ((loc = m_locations[SF_PALETTE]) != -1)
+  int loc;
+  unsigned int CORR_TEX = 0;
+  
+  if ((loc = m_locationPrimary[SF_DATASAMPLER]) != -1)
+  {      
+    glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+    glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
+    if (havePendOn(PC_DATA, bitmaskPendingChanges) || havePendOn(PC_DATADIMMS, bitmaskPendingChanges))
     {
-      glActiveTexture(GL_TEXTURE0 + HT_PAL);
-      glBindTexture(GL_TEXTURE_2D, m_texAll[HT_PAL]);
-      if (m_ppal && havePendOn(PC_PALETTE, bitmaskPendingChanges))
-      {
-//        palettePrepare(m_ppal, m_ppaldiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_countPortions != 0? m_countPortions : 1);
-        palettePrepare(m_ppal, m_ppaldiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_allocatedPortions != 0? m_allocatedPortions : 1);
-        if (m_clearsource == CS_PALETTE)
-          _colorCvt(this->colorBack());
-      }
-      m_ShaderProgram.setUniformValue(loc, HT_PAL);
-    }
-    
-    if ((loc = m_locations[SF_GROUND]) != -1)
-    {
-      glActiveTexture(GL_TEXTURE0 + HT_GND);
-      glBindTexture(GL_TEXTURE_2D, m_texAll[HT_GND]);
       
-      if (havePendOn(PC_GROUND, bitmaskPendingChanges))
+      GLsizei textureLengthA = m_dataDimmA;
+      GLsizei textureLengthB = m_dataDimmB;
+      if (m_datex == DATEX_1D || m_datex == DATEX_DD)
       {
-        switch (m_groundType)
-        {
-        case GND_DOMAIN:
-        {
-          float* groundData = (float*)m_groundData;
-          float* groundDataCached=m_groundDataFastFree? groundData : new float[m_dataDimmA*m_dataDimmB];
-          for (unsigned int i=0; i<m_dataDimmA*m_dataDimmB; i++)
-            groundDataCached[i] = groundData[i] / (m_portionSize+1);
-        
-          glTexImage2D(   GL_TEXTURE_2D, 0, 
+        textureLengthB = 1;
+        textureLengthA = m_portionSize;
+      }
+      else if (m_datex == DATEX_POLAR)
+      {
+        textureLengthB = textureLengthB / 2;
+        textureLengthA = m_portionSize / textureLengthB;
+      }
+      if (havePendOn(PC_DATA, bitmaskPendingChanges) || m_datex == DATEX_15D)
+      {
+        unsigned int total = textureLengthA*textureLengthB*m_countPortions;
+        for (unsigned int i=0; i<total; i++)
+          m_dataStorageCached[i] = m_dataStorage[i] * m_loc_k + m_loc_b;
+      }
+      glTexImage2D(   GL_TEXTURE_2D, 0, 
 #if QT_VERSION >= 0x050000
-                          GL_R32F, 
+                      GL_R32F, 
 #elif QT_VERSION >= 0x040000
-                          GL_RED, 
+                      GL_RED, 
 #endif
-                          m_dataDimmA, m_dataDimmB, 0, GL_RED, GL_FLOAT, groundDataCached);
-  //          glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          
-          if (m_groundMipMapping) glGenerateMipmap( GL_TEXTURE_2D );
-          
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_groundMipMapping? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-          
-          delete []groundDataCached;
-          if (m_groundDataFastFree)
-            m_groundData = nullptr;
-          break;
-        }
-        case GND_SDP: 
-        {
-          glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, m_groundDataWidth, m_groundDataHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_groundData);
-          if (m_groundMipMapping) glGenerateMipmap( GL_TEXTURE_2D );
-          
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_groundMipMapping? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-          
-          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-          break;
-        }
-        case GND_ASSISTFLOATTABLE:
-        {
-          glTexImage2D(  GL_TEXTURE_2D, 0, 
- #if QT_VERSION >= 0x050000
-                           GL_R32F, 
- #elif QT_VERSION >= 0x040000
-                           GL_RED, 
- #endif
-                         m_groundDataWidth, m_groundDataHeight, 0, GL_RGBA, GL_FLOAT, m_groundData);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-          
-          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-          break;
-        }
-        default:  Q_ASSERT(havePendOn(PC_GROUND, bitmaskPendingChanges) && m_groundType != GND_NONE); break;
-        }
-      } // if pend on ground
-      m_ShaderProgram.setUniformValue(loc, HT_GND);
+                      textureLengthA, textureLengthB*m_countPortions, 0, GL_RED, GL_FLOAT, m_dataStorageCached);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_dataTextureInterp? GL_LINEAR : GL_NEAREST);  // GL_LINEAR
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_dataTextureInterp? GL_LINEAR : GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // GL_CLAMP_TO_EDGE
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      
+      m_ShaderProgram.setUniformValue(loc, CORR_TEX);
     }
-    
-    if (havePendOn(PC_GROUND, bitmaskPendingChanges))
+    CORR_TEX++;
+  }
+  
+  if (havePendOn(PC_DATADIMMS, bitmaskPendingChanges)/* || m_datex == DATEX_15D*/)
+  {
+    if ((loc = m_locationPrimary[SF_DATADIMM_A]) != -1)        m_ShaderProgram.setUniformValue(loc, m_dataDimmA);
+    if ((loc = m_locationPrimary[SF_DATADIMM_B]) != -1)        m_ShaderProgram.setUniformValue(loc, m_dataDimmB);
+    if ((loc = m_locationPrimary[SF_SCALER_A]) != -1)          m_ShaderProgram.setUniformValue(loc, m_scalingA);
+    if ((loc = m_locationPrimary[SF_SCALER_B]) != -1)          m_ShaderProgram.setUniformValue(loc, m_scalingB);
+  }
+  if (havePendOn(PC_DATAPORTS, bitmaskPendingChanges))
+  {
+    if ((loc = m_locationPrimary[SF_DATAPORTIONS]) != -1)      m_ShaderProgram.setUniformValue(loc, m_countPortions);
+    if ((loc = m_locationPrimary[SF_DATAPORTIONSIZE]) != -1)   m_ShaderProgram.setUniformValue(loc, m_portionSize);
+  }
+  if (havePendOn(PC_DATARANGE, bitmaskPendingChanges))
+  {
+    if ((loc = m_locationPrimary[SF_DATARANGE]) != -1)         m_ShaderProgram.setUniformValue(loc, (const QVector2D&)m_bounds);
+  }
+  
+  if ((loc = m_locationPrimary[SF_PALETSAMPLER]) != -1)
+  {
+    glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+    glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
+    if (m_paletptr && havePendOn(PC_PALETTE, bitmaskPendingChanges))
     {
-      if ((loc = m_locations[SF_PORTIONSIZE]) != -1)
+//        palettePrepare(m_paletptr, m_paletdiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_countPortions != 0? m_countPortions : 1);
+      palettePrepare(m_paletptr, m_paletdiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_allocatedPortions != 0? m_allocatedPortions : 1);
+      if (m_clearsource == CS_PALETTE)
+        _colorCvt(this->colorBack());
+      m_ShaderProgram.setUniformValue(loc, CORR_TEX);
+    }
+    CORR_TEX++;
+    
+    if (havePendOn(PC_PALETTEPARAMS, bitmaskPendingChanges))
+    {
+      if ((loc = m_locationPrimary[SF_PALETRANGE]) != -1)     m_ShaderProgram.setUniformValue(loc, *(const QVector2D*)this->m_paletrange);
+    }
+  }
+  
+  for (unsigned int i=0; i<m_locationSecondaryCount; i++)
+  {
+    if (m_locationSecondary[i].istexture)
+    {
+      glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+      glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
+//      qDebug()<<m_pcsh->shaderName()<<QString::number(bitmaskPendingChanges,16)<<havePendOn(PC_SEC, bitmaskPendingChanges)<<QString::number(secPendingFlags(bitmaskPendingChanges), 16);
+      if (havePendOn(PC_SEC, bitmaskPendingChanges))
+        processGlLocation(i, secPendingFlags(bitmaskPendingChanges), m_locationSecondary[i].location, CORR_TEX);
+      CORR_TEX++;
+    }
+    else
+    {
+      if (havePendOn(PC_SEC, bitmaskPendingChanges))
+        processGlLocation(i, secPendingFlags(bitmaskPendingChanges), m_locationSecondary[i].location, -1);
+    }
+  }
+  
+  
+#ifndef OLDOVLTEX
+  if (!havePendOn(PC_PARAMSOVL, bitmaskPendingChanges))
+  {
+    for (unsigned int o=0; o<m_overlaysCount; o++)
+    {
+      for (unsigned int i=0; i<m_overlays[o].texcount; i++)
       {
-        m_ShaderProgram.setUniformValue(loc, m_portionSize);
+        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+        glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
+        CORR_TEX++;
       }
     }
-    
-    if (havePendOn(PC_SIZE, bitmaskPendingChanges))
+  }
+  else
+  {
+    for (unsigned int o=0; o<m_overlaysCount; o++)
     {
-      if ((loc = m_locations[SF_DIMM_A]) != -1)         m_ShaderProgram.setUniformValue(loc, m_dataDimmA);
-      if ((loc = m_locations[SF_DIMM_B]) != -1)         m_ShaderProgram.setUniformValue(loc, m_dataDimmB);
-      if ((loc = m_locations[SF_CHNL_SCALER_A]) != -1)  m_ShaderProgram.setUniformValue(loc, m_scalingA);
-      if ((loc = m_locations[SF_CHNL_SCALER_B]) != -1)  m_ShaderProgram.setUniformValue(loc, m_scalingB);
-    }
-    
-    if (havePendOn(PC_PARAMS, bitmaskPendingChanges))
-    {
-      if ((loc = m_locations[SF_COUNTPORTIONS]) != -1)  m_ShaderProgram.setUniformValue(loc, this->m_countPortions);
-      if ((loc = m_locations[SF_VIEW_TURN]) != -1)      m_ShaderProgram.setUniformValue(loc, this->m_viewTurn);
-      if ((loc = m_locations[SF_COLORRANGE]) != -1)     m_ShaderProgram.setUniformValue(loc, *(const QVector2D*)this->m_ppalrange);
-    }
-    
-//    qDebug()<<"PRE";
-    for (unsigned int i=0; i<m_texOvlCount; i++)
-    {
-      glActiveTexture(GL_TEXTURE0 + HT_OVERLAYSSTART + i);
-      glBindTexture(GL_TEXTURE_2D, m_texAll[HT_OVERLAYSSTART + i]);
-//      qDebug()<<i<<HT_OVERLAYSSTART + i;
-    }
-//    qDebug()<<"POST";
-    
-    if (havePendOn(PC_PARAMSOVL, bitmaskPendingChanges))
-    {
-      for (unsigned int i=0; i<m_overlaysCount; i++)
+      overlay_t& ovl = m_overlays[o];
+      
+      if (ovl.ponger_reinit < ovl.povl->pingerReinit() || ovl.ponger_update < ovl.povl->pingerUpdate())
       {
-        if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit() || 
-            m_overlays[i].ponger_update < m_overlays[i].povl->pingerUpdate())
+        
+        if ((loc = ovl.outloc) != -1)
+          m_ShaderProgram.setUniformValue(loc, QVector4D(ovl.povl->isVisible()? ovl.povl->getOpacity() : 1.0f, 
+                                                         ovl.povl->getThickness(), 
+                                                         ovl.povl->getSliceLL(), ovl.povl->getSliceHL()));
+        
+        for (unsigned int i=0; i<ovl.uf_count; i++)
         {
-          if ((loc = m_overlays[i].outloc) != -1)
-            m_ShaderProgram.setUniformValue(loc, QVector4D(m_overlays[i].povl->isVisible()? m_overlays[i].povl->getOpacity() : 1.0f, 
-                                                           m_overlays[i].povl->getThickness(), 
-                                                           m_overlays[i].povl->getSliceLL(), m_overlays[i].povl->getSliceHL()));
-          
-          for (unsigned int j=0; j<m_overlays[i].uf_count; j++)
-          {
-            uniform_located_t& ufm = m_overlays[i].uf_arr[j];
-            int         loc = ufm.location;
-            const void* data = ufm.dataptr;
-            switch (ufm.type) {
-              case DT_1F: m_ShaderProgram.setUniformValue(loc, *(const GLfloat*)data); break;
-              case DT_2F: m_ShaderProgram.setUniformValue(loc, *(const QVector2D*)data); break;
-              case DT_3F: m_ShaderProgram.setUniformValue(loc, *(const QVector3D*)data); break;
-              case DT_4F: m_ShaderProgram.setUniformValue(loc, *(const QVector4D*)data); break;
-              case DT_1I: m_ShaderProgram.setUniformValue(loc, *(const GLint*)data); break;
-//              case DT_3I: m_ShaderProgram.setUniformValue(loc, *(QSize*)data); break;
-//                case DT_2I: m_ShaderProgram.setUniformValue(loc, *(QSize*)data); break;
-              case DT_ARR: case DT_ARR2: case DT_ARR3: case DT_ARR4:
-              case DT_ARRI: case DT_ARRI2: case DT_ARRI3: case DT_ARRI4:
+          const uniform_located_t& ufm = ovl.uf_arr[i];
+          loc = ufm.location;
+          switch (ufm.type) {
+            case DT_1F: m_ShaderProgram.setUniformValue(loc, *(const GLfloat*)ufm.dataptr); break;
+            case DT_2F: m_ShaderProgram.setUniformValue(loc, *(const QVector2D*)ufm.dataptr); break;
+            case DT_3F: m_ShaderProgram.setUniformValue(loc, *(const QVector3D*)ufm.dataptr); break;
+            case DT_4F: m_ShaderProgram.setUniformValue(loc, *(const QVector4D*)ufm.dataptr); break;
+            case DT_1I: m_ShaderProgram.setUniformValue(loc, *(const GLint*)ufm.dataptr); break;
+//            case DT_2I: m_ShaderProgram.setUniformValue(loc, *(const QPoint*)ufm.dataptr); break;
+  //              case DT_3I: m_ShaderProgram.setUniformValue(loc, *(QSize*)ufm.dataptr); break;
+  //                case DT_2I: m_ShaderProgram.setUniformValue(loc, *(QSize*)ufm.dataptr); break;
+            case DT_ARR: case DT_ARR2: case DT_ARR3: case DT_ARR4:
+            case DT_ARRI: case DT_ARRI2: case DT_ARRI3: case DT_ARRI4:
+            {
+              const dmtype_arr_t* parr = (const dmtype_arr_t*)ufm.dataptr;
+              switch (ufm.type)
               {
-                const dmtype_arr_t* parr = (const dmtype_arr_t*)data;
-                switch (ufm.type)
-                {
-                case DT_ARR : m_ShaderProgram.setUniformValueArray(loc, (const GLfloat*)parr->data, parr->count, 1); break;
-                case DT_ARR2: m_ShaderProgram.setUniformValueArray(loc, (const QVector2D*)parr->data, parr->count); break;
-                case DT_ARR3: m_ShaderProgram.setUniformValueArray(loc, (const QVector3D*)parr->data, parr->count); break;
-                case DT_ARR4: m_ShaderProgram.setUniformValueArray(loc, (const QVector4D*)parr->data, parr->count); break;
-                case DT_ARRI : m_ShaderProgram.setUniformValueArray(loc, (const int*)parr->data, parr->count); break;
-//                  case DT_ARRI2: m_ShaderProgram.setUniformValueArray(loc, (const QVector2D*)parr->data, parr->count); break;
-//                  case DT_ARRI3: m_ShaderProgram.setUniformValueArray(loc, (const QVector3D*)parr->data, parr->count); break;
-//                  case DT_ARRI4: m_ShaderProgram.setUniformValueArray(loc, (const QVector4D*)parr->data, parr->count); break;
-                }
-                break;
+              case DT_ARR : m_ShaderProgram.setUniformValueArray(loc, (const GLfloat*)parr->data, parr->count, 1); break;
+              case DT_ARR2: m_ShaderProgram.setUniformValueArray(loc, (const QVector2D*)parr->data, parr->count); break;
+              case DT_ARR3: m_ShaderProgram.setUniformValueArray(loc, (const QVector3D*)parr->data, parr->count); break;
+              case DT_ARR4: m_ShaderProgram.setUniformValueArray(loc, (const QVector4D*)parr->data, parr->count); break;
+              case DT_ARRI : m_ShaderProgram.setUniformValueArray(loc, (const int*)parr->data, parr->count); break;
+  //                  case DT_ARRI2: m_ShaderProgram.setUniformValueArray(loc, (const QVector2D*)parr->data, parr->count); break;
+  //                  case DT_ARRI3: m_ShaderProgram.setUniformValueArray(loc, (const QVector3D*)parr->data, parr->count); break;
+  //                  case DT_ARRI4: m_ShaderProgram.setUniformValueArray(loc, (const QVector4D*)parr->data, parr->count); break;
               }
-              case DT_SAMP4:
+              break;
+            }
+            case DT_SAMP4: case DT_2D3F: case DT_TEXTURE: case DT_PALETTE:
+            {
+              glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+              glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
+              
+              if (ufm.type == DT_SAMP4)
               {
-                const dmtype_sampler_t* psampler = (const dmtype_sampler_t*)data;
-//                qDebug()<<"__"<<i<<"/"<<m_overlaysCount<<"("<<m_overlays[i].uf_count<<")"<<ufm.tex_idx<<"   lim="<<psampler->count;
-                glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
-                //  if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())    its not a classic texture!
+                const dmtype_sampler_t* psampler = (const dmtype_sampler_t*)ufm.dataptr;
                 glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, GLsizei(psampler->count), 1, 0, GL_RGBA, GL_FLOAT, psampler->data);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
-                break;
               }
-              case DT_2D3F:
+              else if (ufm.type == DT_2D3F)
               {
+                const dmtype_2d_t* pimage = (const dmtype_2d_t*)ufm.dataptr;
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, pimage->linsmooth ? GL_LINEAR : GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, pimage->linsmooth ? GL_LINEAR : GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+                glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+                
+                glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+                glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+                glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+                glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+                
+                GLint   gl_internalFormat = GL_RGB32F;
+                GLenum  gl_format = GL_RGB;
+                GLenum  gl_texture_type = GL_FLOAT;
+                glTexImage2D(  GL_TEXTURE_2D, 0, gl_internalFormat, pimage->w, pimage->len, 0, gl_format, gl_texture_type, pimage->data);
+              }
+              else if (ufm.type == DT_TEXTURE)
+              {
+                const dmtype_image_t* pimage = (const dmtype_image_t*)ufm.dataptr;
+                if (pimage->type != dmtype_image_t::NONE)
                 {
-                  glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
-                  const dmtype_2d_t* pimage = (const dmtype_2d_t*)data;
-                  
-                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, pimage->linsmooth ? GL_LINEAR : GL_NEAREST);
-                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, pimage->linsmooth ? GL_LINEAR : GL_NEAREST);
+                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
                   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
                   glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
@@ -684,95 +671,224 @@ void DrawQWidget::paintGL()
                   glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
                   glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
                   
-                  GLint   gl_internalFormat = GL_RGB32F;
-                  GLenum  gl_format = GL_RGB;
-                  GLenum  gl_texture_type = GL_FLOAT;
-                  glTexImage2D(  GL_TEXTURE_2D, 0, gl_internalFormat, pimage->w, pimage->len, 0, gl_format, gl_texture_type, pimage->data);
-                  m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
-                }
-                break;
-              }
-              case DT_TEXTURE:
-              {
-//                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
-                {
-                  glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
-//                  glBindTexture(GL_TEXTURE_2D, m_textures[ufm.tex_idx]);
-                  const dmtype_image_t* pimage = (const dmtype_image_t*)data;
+                  GLint   gl_internalFormat;
+                  GLenum  gl_format;
+                  GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
                   
-                  if (pimage->type != dmtype_image_t::NONE)
-                  {
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                    glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-                    glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-                    
-                    glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-                    glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-                    glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-                    glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-                    
-                    GLint   gl_internalFormat;
-                    GLenum  gl_format;
-                    GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
-                    
-#if QT_VERSION >= 0x050000
-                    glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-                    glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
-                    if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
-                    else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA8;   gl_format = GL_RGBA;   }
-                    else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_ALPHA8;   gl_format = GL_ALPHA;   }
-#elif QT_VERSION >= 0x040000
-                    if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
-                    else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
-                    else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
-#endif
-                    glTexImage2D(  GL_TEXTURE_2D, 0, gl_internalFormat, pimage->w, pimage->h, 0, gl_format, gl_texture_type, pimage->data);
-                  }
-                  m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
-                }
-                break;
+  #if QT_VERSION >= 0x050000
+                  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+                  glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
+                  if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
+                  else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA8;   gl_format = GL_RGBA;   }
+                  else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_ALPHA8;   gl_format = GL_ALPHA;   }
+  #elif QT_VERSION >= 0x040000
+                  if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
+                  else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
+                  else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
+  #endif
+                  glTexImage2D(  GL_TEXTURE_2D, 0, gl_internalFormat, pimage->w, pimage->h, 0, gl_format, gl_texture_type, pimage->data);
+                } //if
               }
-              case DT_PALETTE:
+              else if (ufm.type == DT_PALETTE)
               {
-//                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
-                {
-                  glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
-                  const dmtype_palette_t* cdp = (const dmtype_palette_t*)ufm.dataptr;
-                  palettePrepare(cdp->ppal, cdp->discrete, 1);
-                  m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
-                }
-                break;
+                const dmtype_palette_t* cdp = (const dmtype_palette_t*)ufm.dataptr;
+                palettePrepare(cdp->ppal, cdp->discrete, 1);
               }
-              default:
-              qDebug()<<"BSDraw failure: unknown parameter type!";
+              
+              m_ShaderProgram.setUniformValue(loc, CORR_TEX);
+              CORR_TEX++;
               break;
             }
-          } // for ov_ufs
-          m_overlays[i].ponger_reinit = m_overlays[i].povl->pingerReinit();
-          m_overlays[i].ponger_update = m_overlays[i].povl->pingerUpdate();
-        } // if upcount
-      } // for overlays
-    }
-    m_ShaderProgram.enableAttributeArray(0);
-    m_ShaderProgram.setAttributeArray(0, GL_FLOAT, m_SurfaceVertex, 2);
-    
-    if (!m_rawResizeModeNoScaled)
-    {
-      dcgeometry_t dch = this->geometryHorz();
-      dcgeometry_t dcv = this->geometryVert();
-      glViewport(dch.cttr_pre + dch.viewalign_pre, c_height - (dcv.cttr_pre + dcv.viewalign_pre + dcv.length), dch.length, dcv.length);
-    }
-    
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    m_ShaderProgram.disableAttributeArray(0);
-    
-//    unpendAll();
-    for (unsigned int i=0; i<m_texOvlCount; i++)
-      glBindTexture(GL_TEXTURE_2D, 0);
+            default:
+            qDebug()<<"BSDraw failure: unknown parameter type!";
+            break;
+          }
+        } // for ov_ufs
+        ovl.ponger_reinit = ovl.povl->pingerReinit();
+        ovl.ponger_update = ovl.povl->pingerUpdate();
+      } // if upcount
+      else
+      {
+        for (unsigned int i=0; i<ovl.texcount; i++)
+        {
+          glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+          glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
+          CORR_TEX++;
+        }
+      }
+    } // for overlays
+  } // else
+#else
+  for (unsigned int i=CORR_TEX; i<m_texturesCount; i++)
+  {
+    glActiveTexture(GL_TEXTURE0 + i);
+    glBindTexture(GL_TEXTURE_2D, m_textures[i]);
   }
+  
+  if (havePendOn(PC_PARAMSOVL, bitmaskPendingChanges))
+  {
+    for (unsigned int i=0; i<m_overlaysCount; i++)
+    {
+      if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit() || 
+          m_overlays[i].ponger_update < m_overlays[i].povl->pingerUpdate())
+      {
+        if ((loc = m_overlays[i].outloc) != -1)
+          m_ShaderProgram.setUniformValue(loc, QVector4D(m_overlays[i].povl->isVisible()? m_overlays[i].povl->getOpacity() : 1.0f, 
+                                                         m_overlays[i].povl->getThickness(), 
+                                                         m_overlays[i].povl->getSliceLL(), m_overlays[i].povl->getSliceHL()));
+        
+        for (unsigned int j=0; j<m_overlays[i].uf_count; j++)
+        {
+          uniform_located_t& ufm = m_overlays[i].uf_arr[j];
+          int         loc = ufm.location;
+          const void* data = ufm.dataptr;
+          switch (ufm.type) {
+            case DT_1F: m_ShaderProgram.setUniformValue(loc, *(const GLfloat*)data); break;
+            case DT_2F: m_ShaderProgram.setUniformValue(loc, *(const QVector2D*)data); break;
+            case DT_3F: m_ShaderProgram.setUniformValue(loc, *(const QVector3D*)data); break;
+            case DT_4F: m_ShaderProgram.setUniformValue(loc, *(const QVector4D*)data); break;
+            case DT_1I: m_ShaderProgram.setUniformValue(loc, *(const GLint*)data); break;
+//              case DT_3I: m_ShaderProgram.setUniformValue(loc, *(QSize*)data); break;
+//                case DT_2I: m_ShaderProgram.setUniformValue(loc, *(QSize*)data); break;
+            case DT_ARR: case DT_ARR2: case DT_ARR3: case DT_ARR4:
+            case DT_ARRI: case DT_ARRI2: case DT_ARRI3: case DT_ARRI4:
+            {
+              const dmtype_arr_t* parr = (const dmtype_arr_t*)data;
+              switch (ufm.type)
+              {
+              case DT_ARR : m_ShaderProgram.setUniformValueArray(loc, (const GLfloat*)parr->data, parr->count, 1); break;
+              case DT_ARR2: m_ShaderProgram.setUniformValueArray(loc, (const QVector2D*)parr->data, parr->count); break;
+              case DT_ARR3: m_ShaderProgram.setUniformValueArray(loc, (const QVector3D*)parr->data, parr->count); break;
+              case DT_ARR4: m_ShaderProgram.setUniformValueArray(loc, (const QVector4D*)parr->data, parr->count); break;
+              case DT_ARRI : m_ShaderProgram.setUniformValueArray(loc, (const int*)parr->data, parr->count); break;
+//                  case DT_ARRI2: m_ShaderProgram.setUniformValueArray(loc, (const QVector2D*)parr->data, parr->count); break;
+//                  case DT_ARRI3: m_ShaderProgram.setUniformValueArray(loc, (const QVector3D*)parr->data, parr->count); break;
+//                  case DT_ARRI4: m_ShaderProgram.setUniformValueArray(loc, (const QVector4D*)parr->data, parr->count); break;
+              }
+              break;
+            }
+            case DT_SAMP4:
+            {
+              const dmtype_sampler_t* psampler = (const dmtype_sampler_t*)data;
+//                qDebug()<<"__"<<i<<"/"<<m_overlaysCount<<"("<<m_overlays[i].uf_count<<")"<<ufm.tex_idx<<"   lim="<<psampler->count;
+              glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
+              //  if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())    its not a classic texture!
+              glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, GLsizei(psampler->count), 1, 0, GL_RGBA, GL_FLOAT, psampler->data);
+              glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+              glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+              glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+              glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+              m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
+              break;
+            }
+            case DT_2D3F:
+            {
+              {
+                glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
+                const dmtype_2d_t* pimage = (const dmtype_2d_t*)data;
+                
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, pimage->linsmooth ? GL_LINEAR : GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, pimage->linsmooth ? GL_LINEAR : GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+                glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+                
+                glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+                glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+                glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+                glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+                
+                GLint   gl_internalFormat = GL_RGB32F;
+                GLenum  gl_format = GL_RGB;
+                GLenum  gl_texture_type = GL_FLOAT;
+                glTexImage2D(  GL_TEXTURE_2D, 0, gl_internalFormat, pimage->w, pimage->len, 0, gl_format, gl_texture_type, pimage->data);
+                m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
+              }
+              break;
+            }
+            case DT_TEXTURE:
+            {
+//                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
+              {
+                glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
+//                  glBindTexture(GL_TEXTURE_2D, m_textures[ufm.tex_idx]);
+                const dmtype_image_t* pimage = (const dmtype_image_t*)data;
+                
+                if (pimage->type != dmtype_image_t::NONE)
+                {
+                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                  glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+                  glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+                  
+                  glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+                  glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+                  glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+                  glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+                  
+                  GLint   gl_internalFormat;
+                  GLenum  gl_format;
+                  GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
+                  
+#if QT_VERSION >= 0x050000
+                  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+                  glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
+                  if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
+                  else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA8;   gl_format = GL_RGBA;   }
+                  else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_ALPHA8;   gl_format = GL_ALPHA;   }
+#elif QT_VERSION >= 0x040000
+                  if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
+                  else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
+                  else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
+#endif
+                  glTexImage2D(  GL_TEXTURE_2D, 0, gl_internalFormat, pimage->w, pimage->h, 0, gl_format, gl_texture_type, pimage->data);
+                }
+                m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
+              }
+              break;
+            }
+            case DT_PALETTE:
+            {
+//                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
+              {
+                glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
+                const dmtype_palette_t* cdp = (const dmtype_palette_t*)ufm.dataptr;
+                palettePrepare(cdp->ppal, cdp->discrete, 1);
+                m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
+              }
+              break;
+            }
+            default:
+            qDebug()<<"BSDraw failure: unknown parameter type!";
+            break;
+          }
+        } // for ov_ufs
+        m_overlays[i].ponger_reinit = m_overlays[i].povl->pingerReinit();
+        m_overlays[i].ponger_update = m_overlays[i].povl->pingerUpdate();
+      } // if upcount
+    } // for overlays
+  }
+#endif
+  
+  m_ShaderProgram.enableAttributeArray(0);
+  m_ShaderProgram.setAttributeArray(0, GL_FLOAT, m_SurfaceVertex, 2);
+  
+  if (!m_rawResizeModeNoScaled)
+  {
+    dcgeometry_t dch = this->geometryHorz();
+    dcgeometry_t dcv = this->geometryVert();
+    glViewport(dch.cttr_pre + dch.viewalign_pre, c_height - (dcv.cttr_pre + dcv.viewalign_pre + dcv.length), dch.length, dcv.length);
+  }
+  
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+  m_ShaderProgram.disableAttributeArray(0);
+  
+//    unpendAll();
+  for (unsigned int i=0; i<m_texturesCount; i++)
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void DrawQWidget::resizeGL(int w, int h)
@@ -1790,3 +1906,100 @@ bool BSQSelectorB::reactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, c
     ct.fy_ovl = ct.fy_rel;
   }
 #endif
+
+
+
+    
+    //    if ((loc = m_locationPrimary[SF_GROUND]) != -1)
+    //    {
+    //      glActiveTexture(GL_TEXTURE0 + HT_GND);
+    //      glBindTexture(GL_TEXTURE_2D, m_texAll[HT_GND]);
+          
+    //      if (havePendOn(PC_GROUND, bitmaskPendingChanges))
+    //      {
+    //        switch (m_groundType)
+    //        {
+    //        case GND_DOMAIN:
+    //        {
+    //          float* groundData = (float*)m_groundData;
+    //          float* groundDataCached=m_groundDataFastFree? groundData : new float[m_dataDimmA*m_dataDimmB];
+    //          for (unsigned int i=0; i<m_dataDimmA*m_dataDimmB; i++)
+    //            groundDataCached[i] = groundData[i] / (m_portionSize+1);
+            
+    //          glTexImage2D(   GL_TEXTURE_2D, 0, 
+    //#if QT_VERSION >= 0x050000
+    //                          GL_R32F, 
+    //#elif QT_VERSION >= 0x040000
+    //                          GL_RED, 
+    //#endif
+    //                          m_dataDimmA, m_dataDimmB, 0, GL_RED, GL_FLOAT, groundDataCached);
+    //  //          glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          
+    //          if (m_groundMipMapping) glGenerateMipmap( GL_TEXTURE_2D );
+              
+    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_groundMipMapping? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
+    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+              
+    //          delete []groundDataCached;
+    //          if (m_groundDataFastFree)
+    //            m_groundData = nullptr;
+    //          break;
+    //        }
+    //        case GND_SDP: 
+    //        {
+    //          glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, m_groundDataWidth, m_groundDataHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_groundData);
+    //          if (m_groundMipMapping) glGenerateMipmap( GL_TEXTURE_2D );
+              
+    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_groundMipMapping? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
+    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    //          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+    //          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+              
+    //          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+    //          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+    //          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+    //          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+    //          break;
+    //        }
+    //        case GND_ASSISTFLOATTABLE:
+    //        {
+    //          glTexImage2D(  GL_TEXTURE_2D, 0, 
+    // #if QT_VERSION >= 0x050000
+    //                           GL_R32F, 
+    // #elif QT_VERSION >= 0x040000
+    //                           GL_RED, 
+    // #endif
+    //                         m_groundDataWidth, m_groundDataHeight, 0, GL_RGBA, GL_FLOAT, m_groundData);
+    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    //          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+    //          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+              
+    //          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+    //          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+    //          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+    //          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+    //          break;
+    //        }
+    //        default:  Q_ASSERT(havePendOn(PC_GROUND, bitmaskPendingChanges) && m_groundType != GND_NONE); break;
+    //        }
+    //      } // if pend on ground
+    //      m_ShaderProgram.setUniformValue(loc, HT_GND);
+    //    }
+    //    if (havePendOn(PC_GROUND, bitmaskPendingChanges))
+    //    {
+    //      if ((loc = m_locationPrimary[SF_PORTIONSIZE]) != -1)
+    //      {
+    //        m_ShaderProgram.setUniformValue(loc, m_portionSize);
+    //      }
+    //    }
+    //    if (havePendOn(PC_PARAMS, bitmaskPendingChanges))
+    //    {
+    //      if ((loc = m_locationPrimary[SF_VIEW_TURN]) != -1)      m_ShaderProgram.setUniformValue(loc, this->m_viewTurn);
+    //    }
+    

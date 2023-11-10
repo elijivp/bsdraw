@@ -7,6 +7,10 @@
 
 #include "../bsoverlay.h"
 
+#if !defined SHNL && !defined NO_USE_SHNL
+#define SHNL "\n"
+#endif
+
 struct _bs_unzip_t
 {
   int           type;     /// 0 - off, 1 - static, 2 - dynamic

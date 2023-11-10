@@ -70,19 +70,24 @@ public:
 
 class DrawDomain: public DrawQWidget
 {
-public:
 protected:
-  DIDomain m_domain;
+  DIDomain              m_domain;
+protected:
+  void*                 m_dmnData;
+  unsigned int          m_dmnDataWidth, m_dmnDataHeight;
+  bool                  m_dmnMipMapping;
 public:
-  DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions=1, bool isBckgrndDomain=true, ORIENTATION orient=OR_LRBT, bool holdmemorytilltheend=false);
-  DrawDomain(const DIDomain& cpy, unsigned int portions=1, ORIENTATION orient=OR_LRBT, bool holdmemorytilltheend=false);
+  DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions=1, bool isBckgrndDomain=true, ORIENTATION orient=OR_LRBT);
+  DrawDomain(const DIDomain& cpy, unsigned int portions=1, ORIENTATION orient=OR_LRBT);
   ~DrawDomain();
 public:
   DIDomain*         domain();         /// NULL if data was cleared (holdmemtilltheend was turned on in constructor and first draw invoked PC_GROUND)
   const DIDomain*   domain() const;   /// --//--
   unsigned int      domainsCount() const;
 protected:
-  virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
+  virtual void      processGlLocation(int secidx, int secflags, int loc, int TEX);
+protected:
+  virtual void      sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
 };
 
 #endif // DRAWDOMAIN_H

@@ -3022,12 +3022,13 @@ DrawBars::DrawBars(DrawQWidget* pdraw, COLORS colorsPolicy, QWidget *parent) : Q
 
   pDraw->setParent(this);
   pDraw->move(pImpl->ttr[AT_LEFT].summ, pImpl->ttr[AT_TOP].summ);
-  pDraw->show();
+//  pDraw->show();
   
   pImpl->c_mirroredHorz = orientationMirroredHorz(pDraw->orientation());
   pImpl->c_mirroredVert = orientationMirroredVert(pDraw->orientation());
   
-  QSize sdraw = pDraw->size()/* * pDraw->devicePixelRatio()*/;
+//  QSize sdraw = pDraw->size()/* * pDraw->devicePixelRatio()*/;
+  QSize sdraw = pDraw->minimumSize();
   pImpl->c_hint_draw_width = sdraw.width();
   pImpl->c_hint_draw_height = sdraw.height();
   

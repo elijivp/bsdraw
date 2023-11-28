@@ -3013,7 +3013,9 @@ inline bool isDrawPaletteCP(int cp)
 
 DrawBars::DrawBars(DrawQWidget* pdraw, COLORS colorsPolicy, QWidget *parent) : QWidget(parent), pDraw(pdraw), pTool(nullptr)
 {
+  this->setUpdatesEnabled(false);
   this->setAutoFillBackground(false);
+  
   pImpl = new DrawBars_impl;
   setColorPolicy(colorsPolicy);
 
@@ -3042,9 +3044,8 @@ DrawBars::DrawBars(DrawQWidget* pdraw, COLORS colorsPolicy, QWidget *parent) : Q
 #ifdef RAKOFLAG
   pImpl->rakoflag = true;
 #endif
-  
-  
 //  setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+  this->setUpdatesEnabled(true);
 }
 
 DrawBars::~DrawBars()

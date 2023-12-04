@@ -26,6 +26,8 @@ struct scpoint_t
 
 #define ETOP_CAST(x)  float(short(((x & 0xff00) >> 8) | ((x & 0x00ff) << 8)))
 
+#define DMETERS
+
 enum  { PB_LOW, PB_GAP_LOW, PB_GAP_HIGH, PB_HIGH };
 
 class DrawMapExPrivate
@@ -58,7 +60,11 @@ public:
   
   float                 range() const { return basicrange/zoom; }
   
+#ifdef DMETERS
+  float                 mdx, mdy;
+#else
   float                 view_dx, view_dy;
+#endif
   
   float                 c_gab_dist_byx, c_gab_dist_byy;
   float                 c_gab_dist_byx_low, c_gab_dist_byx_high;
@@ -101,35 +107,6 @@ public:
                                   { DT_3F,    "mapdepbord" },
     };
     
-/*
-     * {
-    y1 -= MAP_Y_SIZE/2;
-    y2 -= MAP_Y_SIZE/2;
-//    qDebug()<<fabs(x1-x2)<<y1<<y2<<"          ";
-    int iy1, iy2;
-    bool po1, po2;
-    if (y1 < 0 && y2 < 0)       {  iy1 = -qRound(y1);  iy2 = -qRound(y2); po1 = true; po2 = true; }
-    else if (y1 >= 0 && y2 < 0) {  iy1 = qRound(y1);   iy2 = -qRound(y2); po1 = true; po2 = false; }
-    else if (y1 < 0 && y2 >= 0) {  iy1 = -qRound(y1);  iy2 = -qRound(y2); po1 = false; po2 = true; }
-    else                        {  iy1 = qRound(y1);   iy2 = qRound(y2);  po1 = true; po2 = true;  }
-    
-    double dlon = (x2 - x1)*dln*M_PI/180.0;
-    
-    double cos_lat1 = dds[iy1].cos_;
-    double cos_lat2 = dds[iy2].cos_;
-    double sin_lat1 = po1 ? dds[iy1].sin_ : -dds[iy1].sin_;
-    double sin_lat2 = po2 ? dds[iy2].sin_ : -dds[iy2].sin_;
-    
-    double cp1 = cos_lat1*sin_lat2 - sin_lat1*cos_lat2*cos(dlon);
-    double cp2 = cos_lat2*sin(dlon);
-    double tn = sqrt(cp1*cp1 + cp2*cp2)/(sin_lat1*sin_lat2 + cos_lat1*cos_lat2*cos(dlon));
-    
-    const double DEFAULT_EARTH_RADIUS = 6378137;
-    float result = atan(tn)*DEFAULT_EARTH_RADIUS;
-    return result;
-  }
-*/    
-    
     FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, sizeof(globvars)/sizeof(globvars[0]), globvars, ovlscount, ovlsinfo);
     fmg.getLocbacks(locbackinfo, locbackcount);
     fmg.main_begin(FshDrawConstructor::INITBACK_BYPALETTE, 0, orient, fsp); //FshDrawConstructor::INITBACK_BYZERO
@@ -137,48 +114,29 @@ public:
     fmg.cintvar("iterations", iterations);
     fmg.cfloatvar("ee2rad", 1/60.0*M_PI/180.0);
     
-    fmg.push("vec2 ptc = vec2(ddcc[0] + ddcc[2], ddcc[1] + ddcc[3]);" SHNL);
-   
-#if 0
-    fmg.push("float cos1 = cos((ptc.y - vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float sin1 = sin((ptc.y - vertsize/2.0)*ee2rad);" SHNL);
+#ifdef DMETERS
+    fmg.push("vec2 ptc = vec2(ddcc[2], ddcc[3]);" SHNL);
+    
+    fmg.push("float dvert = float(ab_ibounds.y)/float(ab_ibounds.x);" SHNL);
+    fmg.push("float ea=6378000;" SHNL);
+    fmg.push("float eb=6357000;" SHNL);
+    
     fmg.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
-    fmg.push("float cos2 = cos((ptc.y + yside - vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float sin2 = sin((ptc.y + yside - vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float dy = 6378137*atan( abs(cos1*sin2 - sin1*cos2), (sin1*sin2 + cos1*cos2) );" SHNL);
+    fmg.push("float latM = (ptc.y + yside/2 - vertsize/2.0)*ee2rad;" SHNL);
+    fmg.push("float cosM = cos(latM);  float sinM = sin(latM);" SHNL);
+    fmg.push("float mympart = sqrt((ea*cosM)*(ea*cosM) + (eb*sinM)*(eb*sinM));" SHNL);
+    fmg.push("float MyM=(ea*eb)*(ea*eb)/(mympart*mympart*mympart);" SHNL);
+    fmg.push("float dy = MyM*ee2rad;" SHNL);
+    fmg.push("float yd = (1.0 - xy_coords.y - 0.5)*range*dvert / dy;" SHNL);  // /1855
     
-    fmg.push("float yd = (1.0 - xy_coords.y - 0.5)*range / dy;" SHNL);
-    fmg.push("cos2 = cos((ptc.y + yd - vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("sin2 = sin((ptc.y + yd - vertsize/2.0)*ee2rad);" SHNL);
-    
-#if 0
-    fmg.push("float tgtdist = length(xy_coords - vec2(0.5))*range;" SHNL);
-    fmg.push("float xds = 1.4*mapbound_a/2.0;" SHNL);
-#else
+    fmg.push("float latT = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
+    fmg.push("float cosT = cos(latT);  float sinT = sin(latT);" SHNL);
+    fmg.push("float Ny=(ea*ea)/sqrt((ea*cosT)*(ea*cosT) + (eb*sinT)*(eb*sinT));" SHNL);
     fmg.push("float tgtdist = abs(xy_coords.x - 0.5)*range;" SHNL);
-    fmg.push("cos1 = cos2;" SHNL);
-    fmg.push("sin1 = sin2;" SHNL);
-    fmg.push("float xds = mapbound_a/2.0;" SHNL);
-#endif
+    fmg.push("float dx = (Ny*cos((ddcc[3]-vertsize/2.0)*ee2rad)*ee2rad);" SHNL);
+    fmg.push("float xd = tgtdist/dx*sign(xy_coords.x - 0.5);" SHNL);
     
-    fmg.push("float xside = 2*step(0.5, xy_coords.x) - 1;" SHNL);
-    fmg.push("float xd = xds;" SHNL);
-    fmg.push("for (int i=0; i<iterations; i++)" SHNL
-             "{" SHNL
-    );
-    {
-      fmg.push("float dlon = xd*ee2rad;" SHNL); //*abs(cos(xd*ee2rad*6))
-      fmg.push("float cp1 = cos1*sin2 - sin1*cos2*cos(dlon);" SHNL);
-      fmg.push("float cp2 = cos2*sin(dlon);" SHNL);
-      fmg.push("float carad = atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin2 + cos1*cos2*cos(dlon)) );" SHNL);
-      fmg.push("float curdist = 6378137*carad;" SHNL);
-      fmg.push("xds = xds/2;" SHNL);
-      fmg.push("xd = xd + xds*sign(tgtdist - curdist);" SHNL);
-    }
-    fmg.push("}" SHNL);
-    fmg.push("xd = xd*sign(xy_coords.x - 0.5);" SHNL);
-    
-    fmg.push("vec2  eecoords = vec2(ddcc[0] + xd + mapbound_a/2.0, ddcc[1] + yd + mapbound_b/2.0);" SHNL);
+    fmg.push("vec2  eecoords = vec2(ddcc[0]/dx + xd + mapbound_a/2.0, ddcc[1]/dy + yd + mapbound_b/2.0);" SHNL);
     fmg.push("vec2  tcoords = eecoords/vec2(mapbound_a, mapbound_b);" SHNL);  // + cc.xy
     
     fmg.push("vec3  mpx = texture(mapsampler, tcoords).rgb;" SHNL);
@@ -189,6 +147,8 @@ public:
     fmg.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
     fmg.push("result = result + texture(paletsampler, vec2(dvalue, 0.0)).rgb;" SHNL);
 #else
+    fmg.push("vec2 ptc = vec2(ddcc[0] + ddcc[2], ddcc[1] + ddcc[3]);" SHNL);
+    
     fmg.push("float dvert = float(ab_ibounds.y)/float(ab_ibounds.x);" SHNL);
     fmg.push("float ea=6378000;" SHNL);
     fmg.push("float eb=6357000;" SHNL);
@@ -299,8 +259,13 @@ DrawMapEx::DrawMapEx(const char* mappath, int map_x_size, int map_y_size, unsign
   pImpl->zoom = 1.0;
   pImpl->center.ex = 0;
   pImpl->center.ey = 0;
+#ifdef DMETERS
+  pImpl->mdx = 0;
+  pImpl->mdy = 0;
+#else
   pImpl->view_dx = 0;
   pImpl->view_dy = 0;
+#endif
   
   pImpl->cc01[0] = 0.0f;
   pImpl->cc01[1] = 0.0f;
@@ -446,6 +411,27 @@ void DrawMapEx::setZoomByRange(float range, bool update)
     DrawQWidget::vmanUpSec(BIT_SET_ON(UP_RANGE));
 }
 
+
+bool DrawMapEx::inCenter() const
+{
+#ifdef DMETERS
+  return pImpl->mdx == 0.0f && pImpl->mdy == 0.0f;
+#else
+  return pImpl->view_dx == 0.0f && pImpl->view_dy == 0.0f;
+#endif
+}
+
+void DrawMapEx::goCenter()
+{
+#ifdef DMETERS
+  viewToMM(0,0);
+#else
+  viewToLL(0.0, 0.0);
+#endif
+}
+
+
+
 float DrawMapEx::zeroLevel() const
 {
   return pImpl->mapbnd[0];
@@ -509,10 +495,52 @@ void DrawMapEx::setProflimitAuto(bool update)
 }
 
 
+void DrawMapEx::coordsLL(double* plat, double* plon) const
+{
+  *plat = pImpl->center.lat;
+  *plon = pImpl->center.lon;
+}
+
+#ifdef DMETERS
+
+float DrawMapEx::metersInPixel() const
+{
+  return pImpl->range()/float(sizeHorz());
+}
+
+
+void DrawMapEx::viewToMM(float x, float y, bool update)
+{
+  pImpl->mdx = x;
+  pImpl->mdy = y;
+  pImpl->cc01[0] = pImpl->mdx;
+  pImpl->cc01[1] = pImpl->mdy;
+  pImpl->cc01[2] = pImpl->center.ex;
+  pImpl->cc01[3] = pImpl->center.ey;
+  
+  if (update)
+    DrawQWidget::vmanUpSec(BIT_SET_ON(UP_COORDS));
+}
+
+void DrawMapEx::viewToMMRel(float dx, float dy, bool update)
+{
+  viewToMM(pImpl->mdx + dx, pImpl->mdy + dy, update);
+}
+
+void DrawMapEx::relpos(float* x01, float* y01) const
+{
+  *x01 = 0.5f - pImpl->mdx/this->metersInPixel()/this->sizeHorz();
+  *y01 = 0.5f + pImpl->mdy/this->metersInPixel()/this->sizeVert();
+}
+
+
+#else
+
 void      DrawMapEx::viewToLL(double lat, double lon, bool update)
 {
   viewToLLRel(pImpl->center.lat - lat, pImpl->center.lon - lon, update);
 }
+
 void      DrawMapEx::viewToLLRel(double dlat, double dlon, bool update)
 {
   pImpl->view_dx = dlon / pImpl->delta_lon;
@@ -561,11 +589,16 @@ void      DrawMapEx::coordsOfViewCenter(float* px, float* py) const
   *px = pImpl->view_dx;
   *py = pImpl->view_dy;
 }
+#endif
 
 float DrawMapEx::depthByPIX(float xpix, float ypix, bool* valid) const
 { 
   float xy[2] = { xpix/sizeHorz(), ypix/sizeVert() };
+#ifdef DMETERS
+  float ptc[2] = { pImpl->center.ex, pImpl->center.ey };
+#else
   float ptc[2] = { pImpl->center.ex + pImpl->view_dx, pImpl->center.ey + pImpl->view_dy };
+#endif
   float vertsize = pImpl->MAP_Y_SIZE;
   const float ee2rad = 1/60.0*M_PI/180.0;
   
@@ -613,10 +646,16 @@ float DrawMapEx::depthByPIX(float xpix, float ypix, bool* valid) const
   float cosT = cos(latT);  float sinT = sin(latT);
   float Ny=(ea*ea)/sqrt((ea*cosT)*(ea*cosT) + (eb*sinT)*(eb*sinT));
   float tgtdist = abs(xy[0] - 0.5)*pImpl->range();
-  float xd = tgtdist/(Ny*cos((pImpl->center.ey-vertsize/2.0)*ee2rad)*ee2rad)*(xy[0] < 0.5f ? -1 : xy[0] > 0.5f ? 1 : 0);
+  float dx = Ny*cos((pImpl->center.ey-vertsize/2.0)*ee2rad)*ee2rad;
+  float xd = tgtdist/dx*(xy[0] < 0.5f ? -1 : xy[0] > 0.5f ? 1 : 0);
   
+#ifdef DMETERS
+  int x = pImpl->LIMIT_WIDTH/2 + xd + pImpl->mdx/dx;
+  int y = pImpl->LIMIT_HEIGHT/2 + yd + pImpl->mdy/dy;
+#else
   int x = pImpl->LIMIT_WIDTH/2 + pImpl->view_dx + xd;
   int y = pImpl->LIMIT_HEIGHT/2 + pImpl->view_dy + yd;
+#endif
 #endif
   bool inside = true; 
   if (x < 0){ x = 0; inside = false; }
@@ -774,6 +813,21 @@ bool MapExReactorMove::reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, 
   float y = ct->fy_pix;
   if (orm == ORM_LMPRESS || orm == ORM_LMMOVE)
   {
+#ifdef DMETERS
+    if (orm == ORM_LMMOVE)
+    {
+      self->viewToMMRel((lx - x)*self->metersInPixel(), (ly - y)*self->metersInPixel());
+    }
+    lx = x;
+    ly = y;
+    if (orm == ORM_LMMOVE)
+    {
+      double lat, lon;
+      self->coordsLL(&lat, &lon);
+      emit coordsChanged(lat, lon);
+    }
+    return true;
+#else
     if (orm == ORM_LMMOVE)
       self->viewToRel(lx - x, ly - y);
 //      self->viewToRel((lx - x)/self->zoom(), (ly - y)/self->zoom());
@@ -786,6 +840,7 @@ bool MapExReactorMove::reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, 
       emit coordsChanged(lat, lon);
     }
     return true;
+#endif
   }
   else if (orm == ORM_RMPRESS)
   {
@@ -1240,4 +1295,57 @@ bool MapExReactorMove::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, 
     fmg.push("xds = xds/2;" SHNL);
     fmg.push("xd = xd + mix(-xds, xds, step(abs(curdist), xtgtdist))*mix(1, -1, step(0.5, xy_coords.x));" SHNL);
     fmg.push("}" SHNL);
+#endif
+
+    
+    
+#if 0
+    fmg.push("float cos1 = cos((ptc.y - vertsize/2.0)*ee2rad);" SHNL);
+    fmg.push("float sin1 = sin((ptc.y - vertsize/2.0)*ee2rad);" SHNL);
+    fmg.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
+    fmg.push("float cos2 = cos((ptc.y + yside - vertsize/2.0)*ee2rad);" SHNL);
+    fmg.push("float sin2 = sin((ptc.y + yside - vertsize/2.0)*ee2rad);" SHNL);
+    fmg.push("float dy = 6378137*atan( abs(cos1*sin2 - sin1*cos2), (sin1*sin2 + cos1*cos2) );" SHNL);
+    
+    fmg.push("float yd = (1.0 - xy_coords.y - 0.5)*range / dy;" SHNL);
+    fmg.push("cos2 = cos((ptc.y + yd - vertsize/2.0)*ee2rad);" SHNL);
+    fmg.push("sin2 = sin((ptc.y + yd - vertsize/2.0)*ee2rad);" SHNL);
+    
+#if 0
+    fmg.push("float tgtdist = length(xy_coords - vec2(0.5))*range;" SHNL);
+    fmg.push("float xds = 1.4*mapbound_a/2.0;" SHNL);
+#else
+    fmg.push("float tgtdist = abs(xy_coords.x - 0.5)*range;" SHNL);
+    fmg.push("cos1 = cos2;" SHNL);
+    fmg.push("sin1 = sin2;" SHNL);
+    fmg.push("float xds = mapbound_a/2.0;" SHNL);
+#endif
+    
+    fmg.push("float xside = 2*step(0.5, xy_coords.x) - 1;" SHNL);
+    fmg.push("float xd = xds;" SHNL);
+    fmg.push("for (int i=0; i<iterations; i++)" SHNL
+             "{" SHNL
+    );
+    {
+      fmg.push("float dlon = xd*ee2rad;" SHNL); //*abs(cos(xd*ee2rad*6))
+      fmg.push("float cp1 = cos1*sin2 - sin1*cos2*cos(dlon);" SHNL);
+      fmg.push("float cp2 = cos2*sin(dlon);" SHNL);
+      fmg.push("float carad = atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin2 + cos1*cos2*cos(dlon)) );" SHNL);
+      fmg.push("float curdist = 6378137*carad;" SHNL);
+      fmg.push("xds = xds/2;" SHNL);
+      fmg.push("xd = xd + xds*sign(tgtdist - curdist);" SHNL);
+    }
+    fmg.push("}" SHNL);
+    fmg.push("xd = xd*sign(xy_coords.x - 0.5);" SHNL);
+    
+    fmg.push("vec2  eecoords = vec2(ddcc[0] + xd + mapbound_a/2.0, ddcc[1] + yd + mapbound_b/2.0);" SHNL);
+    fmg.push("vec2  tcoords = eecoords/vec2(mapbound_a, mapbound_b);" SHNL);  // + cc.xy
+    
+    fmg.push("vec3  mpx = texture(mapsampler, tcoords).rgb;" SHNL);
+    fmg.push("float level = mpx[0] + mapdepbord[0];" SHNL);
+    fmg.push("dvalue = mix(  mappalbord[0] + (mappalbord[1] - mappalbord[0])*(1.0 - level/mapdepbord[1]), "
+                            "mappalbord[2] + (mappalbord[3] - mappalbord[2])*(level/mapdepbord[2]),"
+                            "step(0.0, level) );" SHNL);
+    fmg.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
+    fmg.push("result = result + texture(paletsampler, vec2(dvalue, 0.0)).rgb;" SHNL);
 #endif

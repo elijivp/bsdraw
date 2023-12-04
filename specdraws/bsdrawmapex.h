@@ -23,6 +23,9 @@ public:
   void        setZoom(float zoom, bool update = true);
   void        setZoomByRange(float range, bool update = true);
   
+  bool        inCenter() const;
+  void        goCenter();
+  
   float       zeroLevel() const;
   void        setZeroLevel(float floor, bool update = true);
   
@@ -33,6 +36,11 @@ public:
   void        setProflimitSurfAuto(bool update = true);
   void        setProflimitAuto(bool update = true);
 public:
+  float       metersInPixel() const ;
+  void        coordsLL(double* plat, double* plon) const;
+  void        viewToMM(float x, float y, bool update = true);
+  void        viewToMMRel(float dx, float dy, bool update = true);
+  
   void        viewToLL(double lat, double lon, bool update = true);
   void        viewToLLRel(double dlat, double dlon, bool update = true);
   void        viewToRel(float dx, float dy, bool update = true);
@@ -40,7 +48,9 @@ public:
   void        coordsEEOfViewCenter(float* px, float* py) const;
   void        coordsOfViewCenter(float* px, float* py) const;
 public:
-  float depthByPIX(float xpix, float ypix, bool* valid=nullptr) const;
+  void        relpos(float* x01, float* y01) const;
+public:
+  float       depthByPIX(float xpix, float ypix, bool* valid=nullptr) const;
 public:
   void        coordsOOByPix(float px, float py, float* pdx, float* pdy) const;    // OO - own, own
   float       distanceOO(float x1, float y1, float x2, float y2) const;    // OO - own, own

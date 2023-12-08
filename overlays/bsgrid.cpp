@@ -310,6 +310,47 @@ int         OGridCells::fshOVCoords(int overlay, bool switchedab, char* to) cons
 
 /********************************************/
 
+OGridSuperCells::OGridSuperCells(COORDINATION cr_start, float cx, float cy, float cellw, float cellh, const linestyle_t& linestyle):
+  Ovldraw_ColorTraced(linestyle), OVLCoordsDynamic(cr_start, cx,cy), OVLDimmsOff()
+{
+  celldimms[0] = cellw;
+  celldimms[1] = cellh;
+  appendUniform(DT_2F, celldimms);
+}
+
+void OGridSuperCells::setDimms(float cellw, float cellh, bool update)
+{
+  celldimms[0] = cellw;
+  celldimms[1] = cellh;
+  updateParameter(false, update);
+}
+
+int OGridSuperCells::fshOVCoords(int overlay, bool switchedab, char* to) const
+{
+  FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to, 0);
+  ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
+  
+  ocg.goto_normed();
+  ocg.param_alias("reldimms");
+  ocg.push( "vec2   cellsizepix = vec2((ov_ibounds.x-1)*reldimms.x, (ov_ibounds.y-1)*reldimms.y);");
+  ocg.push( "ivec2  optiid = ivec2(inormed.x/cellsizepix.x + sign(inormed.x)*0.5, inormed.y/cellsizepix.y + sign(inormed.y)*0.5);");
+  {
+    ocg.push( "float iddx = cellsizepix.x*optiid.x;");
+    ocg.trace_2linevert_c(nullptr, nullptr, "iddx", nullptr);
+  }
+  
+  {
+    ocg.push( "float iddy = cellsizepix.y*optiid.y;");
+    ocg.trace_2linehorz_c(nullptr, nullptr, "iddy", nullptr);
+  }
+  
+  ocg.goto_func_end(true);
+  return ocg.written();
+}
+
+
+/*********************************************************/
+
 OChannelSeparator::OChannelSeparator(color3f_t color, float curver, int channels):  Ovldraw_ColorDomestic (color),
   m_curver(curver), m_count(channels)
 {

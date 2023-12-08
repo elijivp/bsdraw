@@ -74,6 +74,16 @@ protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };
 
+class OGridSuperCells: public Ovldraw_ColorTraced, public OVLCoordsDynamic, public OVLDimmsOff
+{
+  float celldimms[2];
+public:
+  OGridSuperCells(COORDINATION cr_start, float cx, float cy, float cellw, float cellh, const linestyle_t& linestyle);
+  void  setDimms(float cellw, float cellh, bool update=true);
+protected:
+  virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
+};
+
 
 /// 
 class OChannelSeparator: public Ovldraw_ColorDomestic, public OVLCoordsOff, public OVLDimmsOff

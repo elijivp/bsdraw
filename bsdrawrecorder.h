@@ -69,6 +69,7 @@ public:
   unsigned int  countPages() const { return m_pagescount; }
 public:
   virtual void            implicitSetData(const float*);
+  virtual void            implicitClearData();
   void                    switchPage(int idx, bool currentPageImplicitlyModified);
   void                    switchPageNoUpdate(int idx);  // for setData immediately
   void                    updatePageModified();
@@ -76,7 +77,7 @@ public:
   void                    swapPages(int p1, int p2);
   void                    swapPagesNoUpdate(int p1, int p2);
   
-  void                    clearPage(int p);
+//  void                    clearPage(int p);
   void                    clearAllPages();
 public slots:
   void              slt_switchPage(int idx);          // implicitlyUpdated = true

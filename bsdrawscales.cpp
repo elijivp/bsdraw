@@ -2651,45 +2651,43 @@ private:
     
     if (miniPerMaxi && qAbs(fpxStep)/(miniPerMaxi+1) > 5 && m > 2)
     {
-      countMini = m;
       l2 = area.atto_begin + (area.atto == AT_LEFT || area.atto == AT_TOP? -(mlenmini-1) : (mlenmini-1));
       float step2 = fpxStep/(miniPerMaxi+1);
       
       float pxMini = fpxFirst;
-      int   oddplus = 0, ncount=(m-2-1)*(miniPerMaxi + 1);
-//        if (MVORIG)
+//      int   prefirst = 0, ncount=(m-1-2)*(miniPerMaxi + 1);
+      int   prefirst = 0, ncount=(m-2-1)*(miniPerMaxi+1)+1;   // -2 is for beg/end, -1 is for mul(miniPerMaxi+1), +1 is for fair ending
+      if ((fpxFirst - pxBegin + 1) / step2 >= 2)
       {
-        if ((fpxFirst - pxBegin + 1) / step2 >= 2)
-        {
-          pxMini -= int((fpxFirst - pxBegin) / step2) * step2;
-          oddplus = (fpxFirst - pxBegin) / step2;
-          ncount += oddplus;
-        }
-        if ((pxEnd - fpxLast + 1) / step2 >= 2)
-        {
-          ncount += (pxEnd - fpxLast + 1) / step2;
-        }
+        prefirst = (fpxFirst - pxBegin + 1) / step2;
+        pxMini -= prefirst * step2;
+        ncount += prefirst;
+        //qDebug()<<"Add begin: "<<prefirst;
       }
+      if ((pxEnd - fpxLast + 1) / step2 >= 2)
+      {
+        //qDebug()<<"Add end: "<<int((pxEnd - fpxLast + 1) / step2);
+        ncount += (pxEnd - fpxLast + 1) / step2;
+      }
+      int memlimit = countMaxiTotal + (countMaxiTotal-1)*miniPerMaxi;
       for (int i=0; i<ncount; i++)
       {
-        if ((i - oddplus) % (miniPerMaxi+1) == 0)
+        if ((i - prefirst) % (miniPerMaxi+1) == 0)
           continue;
+        Q_ASSERT(m <= memlimit);        
         int offs = int  ( round == 0  ? qRound(pxMini + i*step2) : 
                           round == 1  ? pxMini + i*step2 : 
-                                        pxMini + (i*step2) + 1  );
-//        ua_marks[m].anchor = area.atto == AT_LEFT || area.atto == AT_RIGHT ? QPoint(l1, offs) : QPoint(offs, l1);
+                                        pxMini + (i*step2) + 1);
         if (area.atto == AT_LEFT)         ua_marks[m].rect.setCoords(l2, offs, l1, offs);
         else if (area.atto == AT_RIGHT)   ua_marks[m].rect.setCoords(l1, offs, l2, offs);
         else if (area.atto == AT_TOP)     ua_marks[m].rect.setCoords(offs, l2, offs, l1);
         else if (area.atto == AT_BOTTOM)  ua_marks[m].rect.setCoords(offs, l1, offs, l2);
         m++;
       }
-      countMini = m - countMini;
+      countMini = m - countMaxiNoted;
     }
     else
       countMini = 0;
-    Q_ASSERT(m <= countMaxiTotal + (countMaxiTotal-1)*miniPerMaxi);
-//    qDebug()<<m<<countMaxiTotal + (countMaxiTotal-1)*miniPerMaxi;
   }
 };
 MarginEXMarks::~MarginEXMarks()
@@ -3024,6 +3022,12 @@ DrawBars::DrawBars(DrawQWidget* pdraw, COLORS colorsPolicy, QWidget *parent) : Q
 
   pDraw->setParent(this);
   pDraw->move(pImpl->ttr[AT_LEFT].summ, pImpl->ttr[AT_TOP].summ);
+  QSize size = pdraw->minimumSize();
+  {
+    if (size.width() < pdraw->sizeHorz())    size.setWidth(pdraw->sizeHorz());
+    if (size.height() < pdraw->sizeVert())    size.setHeight(pdraw->sizeVert());
+  }
+  pDraw->setMinimumSize(size);    // TADAM!
 //  pDraw->show();
   
   pImpl->c_mirroredHorz = orientationMirroredHorz(pDraw->orientation());

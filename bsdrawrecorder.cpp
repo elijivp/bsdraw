@@ -234,6 +234,11 @@ void DrawRecorderPaged::implicitSetData(const float* data)
   m_memory.onSetData(data);
   if (m_sbStatic && m_stopped != 0) m_stopped++;
 }
+void DrawRecorderPaged::implicitClearData()
+{
+  m_memory.onClearData();
+//  if (m_sbStatic && m_stopped != 0) m_stopped++;
+}
 
 void DrawRecorderPaged::switchPage(int idx, bool currentPageImplicitlyModified)
 {
@@ -284,13 +289,13 @@ void DrawRecorderPaged::swapPagesNoUpdate(int p1, int p2)
   m_pages[p2] = tmp;
 }
 
-void DrawRecorderPaged::clearPage(int p)
-{
-  if (p != m_pagehole)
-    m_pages[p].filled = 0;
-  else
-    DrawRecorder::clearData(); // for self
-}
+//void DrawRecorderPaged::clearPage(int p)
+//{
+//  if (p != m_pagehole)
+//    m_pages[p].filled = 0;
+//  else
+//    DrawRecorder::clearData(); // for self
+//}
 
 void DrawRecorderPaged::clearAllPages()
 {

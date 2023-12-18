@@ -3603,15 +3603,15 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           for (unsigned int i=0; i<drawscount; i++)
           {
             pdbs[i] = new DrawBars(draws[i]);
-            int count = 33;
+            int count = 10;
             int pixstep = 40;
             float ownboundLL = 0.0f;
-            float ownboundHL = 14.0f;
+            float ownboundHL = 15.0f;
             
             ATTACHED_TO ats[] = { AT_LEFT, AT_TOP };
             for (int a=0; a<sizeof(ats)/sizeof(ATTACHED_TO); a++)
             {
-              scs[scscount++] = pdbs[i]->addScaleNativeOwnbounds(ats[a], flags[i], ownboundLL, ownboundHL, 0.025f, 0, count, pixstep, 4);
+              scs[scscount++] = pdbs[i]->addScaleNativeOwnbounds(ats[a], flags[i], ownboundLL, ownboundHL, 1.5f, 0, count, pixstep, 9);
               scs[scscount++] = pdbs[i]->addScalePixstepOwnbounds(ats[a], flags[i], ownboundLL, ownboundHL, count, pixstep, 4);
               scs[scscount++] = pdbs[i]->addScaleSymmetricOwnbounds(ats[a], flags[i], ownboundLL, ownboundHL, count, pixstep, 4);
             }

@@ -1221,7 +1221,11 @@ void DrawQWidget::wheelEvent(QWheelEvent* event)
   float totalDimmWidth = singleDimmWidth * (m_dataDimmSwitchAB? m_splitterB : m_splitterA);
   float totalDimmHeight = singleDimmHeight * (m_dataDimmSwitchAB? m_splitterA : m_splitterB);
   
+#if QT_VERSION < 6
   QPoint pos = event->pos();
+#else
+  QPoint pos = event->angleDelta();
+#endif
   float fx = (pos.x()*c_dpr - (dch.cttr_pre + dch.viewalign_pre));
   float fy = (pos.y()*c_dpr - (dcv.cttr_pre + dcv.viewalign_pre));
   if (fx >= totalDimmWidth || fy >= totalDimmHeight)

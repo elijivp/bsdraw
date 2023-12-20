@@ -305,8 +305,12 @@ public:
 
   unsigned int          scalingA() const { return m_scalingA; }
   unsigned int          scalingB() const { return m_scalingB; }
+  unsigned int          scalingAMin() const { return m_scalingAMin; }
+  unsigned int          scalingBMin() const { return m_scalingBMin; }
   unsigned int          scalingHorz() const { return m_dataDimmSwitchAB? m_scalingB : m_scalingA; }
   unsigned int          scalingVert() const { return m_dataDimmSwitchAB? m_scalingA : m_scalingB; }
+  unsigned int          scalingHorzMin() const { return m_dataDimmSwitchAB? m_scalingBMin : m_scalingAMin; }
+  unsigned int          scalingVertMin() const { return m_dataDimmSwitchAB? m_scalingAMin : m_scalingBMin; }
 
   unsigned int          splitterA() const { return m_splitterA; }
   unsigned int          splitterB() const { return m_splitterB; }
@@ -507,7 +511,7 @@ public:
     if (portionsLessThanAlocated > m_allocatedPortions)
       portionsLessThanAlocated = m_allocatedPortions;
     m_countPortions = (unsigned int)portionsLessThanAlocated;
-    m_bitmaskPendingChanges |= PC_DATA | PC_DATADIMMS;
+    m_bitmaskPendingChanges |= PC_DATA | PC_DATAPORTS;
 //    if (m_spDivider != 0)
     if (m_splitterA > 1 || m_splitterB > 1)
       innerRescale();

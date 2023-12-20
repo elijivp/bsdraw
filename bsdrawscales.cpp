@@ -3022,19 +3022,19 @@ DrawBars::DrawBars(DrawQWidget* pdraw, COLORS colorsPolicy, QWidget *parent) : Q
 
   pDraw->setParent(this);
   pDraw->move(pImpl->ttr[AT_LEFT].summ, pImpl->ttr[AT_TOP].summ);
-  QSize size = pdraw->minimumSize();
+  QSize sdraw = pdraw->minimumSize();
   {
-    if (size.width() < pdraw->sizeHorz())    size.setWidth(pdraw->sizeHorz());
-    if (size.height() < pdraw->sizeVert())    size.setHeight(pdraw->sizeVert());
+    int wmin = pdraw->sizeDataHorz() * pdraw->scalingHorzMin();
+    int hmin = pdraw->sizeDataVert() * pdraw->scalingVertMin();
+    if (sdraw.width() < wmin)     sdraw.setWidth(wmin);
+    if (sdraw.height() < hmin)    sdraw.setHeight(hmin);
   }
-  pDraw->setMinimumSize(size);    // TADAM!
+  pDraw->setMinimumSize(sdraw);    // TADAM!
 //  pDraw->show();
   
   pImpl->c_mirroredHorz = orientationMirroredHorz(pDraw->orientation());
   pImpl->c_mirroredVert = orientationMirroredVert(pDraw->orientation());
   
-//  QSize sdraw = pDraw->size()/* * pDraw->devicePixelRatio()*/;
-  QSize sdraw = pDraw->minimumSize();
   pImpl->c_hint_draw_width = sdraw.width();
   pImpl->c_hint_draw_height = sdraw.height();
   
@@ -3947,8 +3947,8 @@ QSize DrawBars::minimumSizeHint() const
 //  return QSize(pImpl->c_width_margins + pImpl->ttr[AT_LEFT].c_size + pImpl->c_hint_draw_width + pImpl->ttr[AT_RIGHT].c_size, 
 //               pImpl->c_height_margins + pImpl->ttr[AT_TOP].c_size + pImpl->c_hint_draw_height + pImpl->ttr[AT_BOTTOM].c_size);
   
-  int dw = qMax(pImpl->c_hint_draw_width, int(pDraw->minimumWidth()*pDraw->devicePixelRatio()));
-  int dh = qMax(pImpl->c_hint_draw_height, int(pDraw->minimumHeight()*pDraw->devicePixelRatio()));
+  int dw = qMax(pImpl->c_hint_draw_width, int(pDraw->minimumWidth()));
+  int dh = qMax(pImpl->c_hint_draw_height, int(pDraw->minimumHeight()));    // *pDraw->devicePixelRatio() a kakogo hrena??
   return QSize(pImpl->c_margins.left() + pImpl->ttr[AT_LEFT].c_size + dw + pImpl->ttr[AT_RIGHT].c_size + pImpl->c_margins.right(), 
                pImpl->c_margins.top() + pImpl->ttr[AT_TOP].c_size + dh + pImpl->ttr[AT_BOTTOM].c_size + pImpl->c_margins.bottom());
 }

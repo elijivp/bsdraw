@@ -679,7 +679,7 @@ void DrawQWidget::paintGL()
           for (int r=0; r<LAY; r++)
           {
             const TFTarea&  area = m_holders[t]->tftarea[r];
-            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, r, width, height, 1, gl_format, gl_texture_type, area.img->constBits());
+            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, r, width, height, 1, gl_format, gl_texture_type, area.ctx_img->constBits());
           }
           glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
           glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -724,7 +724,7 @@ void DrawQWidget::paintGL()
   #endif
           const TFTarea&  area = m_holders[t]->tftarea;
           qDebug()<<"IMAGE ASSIGNED!"<<width<<height;
-          glTexImage2D(GL_TEXTURE_2D, 0, gl_internalFormat, width, height, 0, gl_format, gl_texture_type, area.img->constBits());
+          glTexImage2D(GL_TEXTURE_2D, 0, gl_internalFormat, width, height, 0, gl_format, gl_texture_type, area.ctx_img->constBits());
           
           m_holders[t]->ponger = m_holders[t]->pinger;
         }
@@ -1488,24 +1488,27 @@ int DrawQWidget::_tft_allocHolder(QFont font)
       m_holders[i]->pinger = 1;
       m_holders[i]->_location = -1;
       
-      QFontMetrics qfm(font);
-      m_holders[i]->record_width = qfm.averageCharWidth() * TFT_TEXTMAXLEN + 2;
-      m_holders[i]->record_ht = qfm.ascent();
-      m_holders[i]->record_hb = qfm.descent();
-      m_holders[i]->record_ld = qfm.leading();
-      m_holders[i]->record_height = qfm.height() + qfm.leading() + 2;
+      m_holders[i]->ctx_metrix = new QFontMetrics(font);
+      m_holders[i]->record_width = m_holders[i]->ctx_metrix->averageCharWidth() * TFT_TEXTMAXLEN + 2;
+      m_holders[i]->record_ht = m_holders[i]->ctx_metrix->ascent();
+      m_holders[i]->record_hb = m_holders[i]->ctx_metrix->descent();
+      m_holders[i]->record_ld = m_holders[i]->ctx_metrix->leading();
+      m_holders[i]->record_height = m_holders[i]->ctx_metrix->height() + m_holders[i]->ctx_metrix->leading() + 2;
       
       m_holders[i]->recordslimit = 1080 / m_holders[i]->record_height;
+      
+      m_holders[i]->ctx_painter = nullptr;
+      
 #ifndef BSGLSLOLD
       {
         TFTarea area;
-        area.img = _tft_allocateImage(m_holders[i]->record_width, m_holders[i]->record_height*m_holders[i]->recordslimit);
+        area.ctx_img = _tft_allocateImage(m_holders[i]->record_width, m_holders[i]->record_height*m_holders[i]->recordslimit);
         area.records = new TFTrecord[m_holders[i]->recordslimit];
         area.recordscount = 0;
         m_holders[i]->tftarea.push_back(area);
       }
 #else
-      m_holders[i]->tftarea.img = _tft_allocateImage(m_holders[i]->record_width, m_holders[i]->record_height*m_holders[i]->recordslimit);
+      m_holders[i]->tftarea.ctx_img = _tft_allocateImage(m_holders[i]->record_width, m_holders[i]->record_height*m_holders[i]->recordslimit);
       m_holders[i]->tftarea.records = new TFTrecord[m_holders[i]->recordslimit];
       m_holders[i]->tftarea.recordscount = 0;
 #endif
@@ -1522,7 +1525,7 @@ int DrawQWidget::_tft_pushRecord(DrawQWidget::TFTholder* holder, const char* tex
   if (holder->tftarea.back().recordscount >= holder->recordslimit)
   {
     TFTarea area;
-    area.img = _tft_allocateImage(holder->record_width, holder->record_height*holder->recordslimit);
+    area.ctx_img = _tft_allocateImage(holder->record_width, holder->record_height*holder->recordslimit);
     area.records = new TFTrecord[holder->recordslimit];
     area.recordscount = 0;
     holder->tftarea.push_back(area);
@@ -1537,22 +1540,26 @@ int DrawQWidget::_tft_pushRecord(DrawQWidget::TFTholder* holder, const char* tex
   TFTrecord* tftrec = &tftar.records[rid_loc];
   strncpy(tftrec->text, text, TFT_TEXTMAXLEN);
   QFontMetrics qfm(holder->font);
-  tftrec->width = qfm.horizontalAdvance(tftrec->text);
+  tftrec->width = holder->ctx_metrix->horizontalAdvance(tftrec->text);
+  
+  if (holder->ctx_painter == nullptr)
   {
-    QPainter ptr(tftar.img);
-//    ptr.begin()
-    ptr.setBrush(QBrush(QColor(0,0,0)));
-    ptr.setPen(QColor(0,0,0));
-    ptr.setFont(holder->font);
-    //QFont("Ubuntu", 24)
-//    qDebug()<<rid_loc*holder->c_record_height;
-    ptr.drawText(1, holder->record_height*holder->recordslimit - rid_loc*holder->record_height - holder->record_hb, /*Qt::AlignLeft | Qt::AlignBottom, */text);
-//    ptr.drawText(10, 10, text);
+    holder->ctx_painter = new QPainter(tftar.ctx_img);
+    holder->ctx_painter->setBrush(QBrush(QColor(0,0,0)));
+    holder->ctx_painter->setPen(QColor(0,0,0));
+    holder->ctx_painter->setFont(holder->font);
   }
+  else
+    holder->ctx_painter->begin(tftar.ctx_img);
+  {
+    holder->ctx_painter->drawText(1, holder->record_height*holder->recordslimit - rid_loc*holder->record_height - holder->record_hb, /*Qt::AlignLeft | Qt::AlignBottom, */text);
+  }
+  holder->ctx_painter->end();
+  
   holder->pinger += 1;
   
 //  QLabel* lbl = new QLabel();
-//  lbl->setPixmap(QPixmap::fromImage(*tftar.img));
+//  lbl->setPixmap(QPixmap::fromImage(*tftar.ctx_img));
 //  lbl->show();
 #ifndef BSGLSLOLD
   return (holder->tftarea.size()-1)*holder->recordslimit + rid_loc;
@@ -1564,9 +1571,7 @@ int DrawQWidget::_tft_pushRecord(DrawQWidget::TFTholder* holder, const char* tex
 QImage* DrawQWidget::_tft_allocateImage(int width, int height)
 {
   QImage* img = new QImage(width, height, QImage::Format_ARGB32);
-//  img->detach();
   img->fill(Qt::transparent);
-//  img->fill(0xFFFFFFFF);
   return img;
 }
 
@@ -2211,7 +2216,7 @@ bool BSQSelectorB::reactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, c
           for (int r=0; r<LAY; r++)
           {
             const TFTarea&  area = m_holders[t]->tftarea[r];
-            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, r, width, height, 1, gl_format, gl_texture_type, area.img->constBits());
+            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, r, width, height, 1, gl_format, gl_texture_type, area.ctx_img->constBits());
           }
           glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
           glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -2255,7 +2260,7 @@ bool BSQSelectorB::reactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, c
   #endif
           const TFTarea&  area = m_holders[t]->tftarea;
           qDebug()<<"IMAGE ASSIGNED!"<<width<<height;
-          glTexImage2D(GL_TEXTURE_2D, 0, gl_internalFormat, width, height, 0, gl_format, gl_texture_type, area.img->constBits());
+          glTexImage2D(GL_TEXTURE_2D, 0, gl_internalFormat, width, height, 0, gl_format, gl_texture_type, area.ctx_img->constBits());
           
           m_holders[t]->ponger = m_holders[t]->pinger;
         }

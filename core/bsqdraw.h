@@ -37,6 +37,7 @@
 
 class QScrollBar;
 class QImage;
+class QPainter;
 inline QColor bsqcolor(unsigned int v){ return QColor((v)&0xFF, (v>>8)&0xFF, (v>>16)&0xFF); }
 
 ////////////
@@ -311,7 +312,7 @@ public:
   };
   struct  TFTarea
   {
-    QImage*                 img;
+    QImage*                 ctx_img;
     TFTrecord*              records;
     int                     recordscount;
   };
@@ -322,26 +323,30 @@ public:
     int                     recordslimit;   // by font
     int                     record_width;
     int                     record_height, record_ht, record_hb, record_ld;
-    std::vector<TFTslot>    tftslots;
+    
+    QFontMetrics*           ctx_metrix;
+    QPainter*               ctx_painter;
 #ifndef BSGLSLOLD
     std::vector<TFTarea>    tftarea;
 #else
     TFTarea                 tftarea;
 #endif
     
-    int           pinger;
-    int           ponger;
-    int           _location;
-    char          _varname[64];
+    std::vector<TFTslot>    tftslots;
+    
+    int                     pinger;
+    int                     ponger;
+    int                     _location;
+    char                    _varname[64];
   };
   
 private:
   int           m_holder_current = -1;
   TFTholder*    m_holders[TFT_HOLDERS];
-  int  _tft_allocHolder(QFont font);
-  int  _tft_pushRecord(TFTholder*  holder, const char* text);
-  QImage*     _tft_allocateImage(int width, int height);
-  TFTholder*  _tft_inf_takeHolder();
+  int           _tft_allocHolder(QFont font);
+  int           _tft_pushRecord(TFTholder*  holder, const char* text);
+  QImage*       _tft_allocateImage(int width, int height);
+  TFTholder*    _tft_inf_takeHolder();
 public:
   TFTslotpass   tftPushBack(const char* text, COORDINATION cr, float fx, float fy, bool isstatic=true);
 //public:

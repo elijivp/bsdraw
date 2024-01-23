@@ -410,18 +410,18 @@ inline linestyle_t    linestyle_update_inverse(linestyle_t ls, int inv){   ls.r 
 ////////////////////////////////////////////////////////////////////////////////
 
 
-struct impulsedata_t
+struct datasubmesh_t
 {
   enum { MAXCOEFFS = 31 };
-  enum IMPULSE_TYPE {     IR_OFF, IR_A_COEFF, IR_A_COEFF_NOSCALED, IR_A_BORDERS, IR_A_BORDERS_FIXEDCOUNT, IR_A_BORDERS_SMART, 
+  enum TYPE         {     IR_OFF, IR_A_COEFF, IR_A_COEFF_NOSCALED, IR_A_BORDERS, IR_A_BORDERS_FIXEDCOUNT, IR_A_BORDERS_SMART, 
                                   IR_B_COEFF, IR_B_COEFF_NOSCALED, IR_B_BORDERS, IR_B_BORDERS_FIXEDCOUNT, IR_B_BORDERS_SMART
                     };
-  int type;
-  int count;      // for IR_X_COEFF and IR_X_COEFF_NOSCALED - count of coeffs. For IR_X_BORDERS+ - minimal scaling for activation
-  int central;    // for IR_X_COEFF and IR_X_COEFF_NOSCALED - central coeff. For IR_X_BORDERS+ - starter count for activation scaling
+  int   type;
+  int   count;      // for IR_X_COEFF and IR_X_COEFF_NOSCALED - count of coeffs. For IR_X_BORDERS+ - minimal scaling for activation
+  int   central;    // for IR_X_COEFF and IR_X_COEFF_NOSCALED - central coeff. For IR_X_BORDERS+ - starter count for activation scaling
   
-  enum  FLAGS { F_DEFAULT=0, F_CYCLED=0x1, F_CLAMPTOP=0x2, F_CLAMPBOT=0x4 };
-  int flags;
+  enum FLAGS { F_DEFAULT=0, F_CYCLED=0x1, F_CLAMPTOP=0x2, F_CLAMPBOT=0x4 };
+  int   flags;
   float coeff[MAXCOEFFS]; // for IR_X_COEFF and IR_X_COEFF_NOSCALED - coeffs pack. For IR_X_BORDERS - only 1st special coeff
 };
 
@@ -617,17 +617,43 @@ public:
 /////////////////////////////////////////////
 
 
+struct shuniformdesc_t
+{
+  char              varname[128];
+  DTYPE             type;
+};
+
+struct tftslot_t
+{
+  COORDINATION      cr;
+  float             fx,fy;
+  float             scale;
+  float             rotate;
+};
+
+struct tftfraginfo_t
+{
+  int               texid;
+  int               texcount;
+  
+  int               recordslimit;
+  int               recordwidth;
+  int               recordheight;
+  int               textwidth;
+  int               recordid;
+  
+  int               varid;
+  bool              isstatic;
+  tftslot_t         slotdata;
+};
+
 struct ovlfraginfo_t
 {
   int               link;
   OVL_ORIENTATION   orient;
 };
 
-struct locbackinfo_t
-{
-  char              varname[128];
-  bool              istexture;
-};
+class FshDrawComposer;
 
 class ISheiGenerator
 {
@@ -635,12 +661,9 @@ public:
   virtual   const char*   shaderName() const =0;
   virtual   unsigned int  shvertex_pendingSize() const =0;
   virtual   unsigned int  shvertex_store(char* to) const =0;
-  virtual   unsigned int  shfragment_pendingSize(const impulsedata_t&, unsigned int ovlscount) const =0;
-  virtual   unsigned int  shfragment_store(unsigned int allocPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
-                                           const impulsedata_t&, const overpattern_t&, float, 
-                                           ovlfraginfo_t ovlsinfo[], unsigned int ovlscount,
-                                           locbackinfo_t locbackinfo[], unsigned int* locbackcount,
-                                           char* to) const =0;
+  virtual   unsigned int  shfragment_pendingSize() const =0;
+  virtual   unsigned int  shfragment_uniforms(shuniformdesc_t* lbarr, unsigned int limit)=0;
+  virtual   void          shfragment_store(FshDrawComposer& fdc) const =0;
   
 public:
   enum      { PMT_PSEUDO2D, PMT_FORCE1D }; /// PORTION_MESH_TYPE
@@ -649,29 +672,10 @@ public:
 };
 
 
-//enum  SHEIFIELD  
-//{  
-//  SF_DATASAMPLER, 
-//  SF_PALETSAMPLER, 
-//  SF_DOMAIN, 
-//  SF_DATAPORTIONS,
-//  SF_DATADIMM_A,
-//  SF_DATADIMM_B,
-//  SF_SCALER_A,
-//  SF_SCALER_B,
-//  SF_PORTIONSIZE, 
-//  SF_DATARANGE,
-//  SF_PALETRANGE,
-//  SF_VIEW_TURN,
-//  _SF_COUNT
-//};
-
-//static const char*  g_sheigen_core_vars[][2] = {
-//  { "uniform highp sampler2D  datasampler;", "datasampler" },
-//  { "uniform highp int        datadimm_a;", "datadimm_a" },
-  
-    
-//  }
-//}
+enum  SHCOLOR_EMPTY_MODE
+{ 
+  SEM_MANUAL,
+  SEM_PALETTE
+};
 
 #endif // BSDRAWDEF_H

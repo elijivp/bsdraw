@@ -33,7 +33,6 @@ public:
   ~DrawPolar();
 public:
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
-  virtual unsigned int    colorBack() const;
 public slots:
   void    turn(float rotate01);
   void    turnDegree(float rotateDeg);

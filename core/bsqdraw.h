@@ -17,7 +17,11 @@
 #include <QVector>
 #if QT_VERSION >= 0x050000
 #include <QOpenGLWidget>
+#ifndef BSGLSLOLD
+#include <QOpenGLFunctions_4_2_Core>
+#else
 #include <QOpenGLFunctions>
+#endif
 #include <QOpenGLShaderProgram>
 #elif QT_VERSION >= 0x040000
 #include <QGLWidget>
@@ -32,6 +36,7 @@
 #endif
 
 class QScrollBar;
+class QImage;
 inline QColor bsqcolor(unsigned int v){ return QColor((v)&0xFF, (v>>8)&0xFF, (v>>16)&0xFF); }
 
 ////////////
@@ -48,7 +53,13 @@ struct dcgeometry_t
 //////////////
 
 
-class DrawQWidget: public QOpenGLWidget, protected QOpenGLFunctions, public DrawCore
+class DrawQWidget:  public QOpenGLWidget, 
+#ifndef BSGLSLOLD
+                    protected QOpenGLFunctions_4_2_Core, 
+#else
+                    protected QOpenGLFunctions,
+#endif
+                    public DrawCore
 {
   Q_OBJECT
   enum  SHEIFIELD  {  
@@ -93,7 +104,8 @@ protected:
   unsigned int            m_textures[MAX_TEXTURES];
   unsigned int            m_texturesCount;
 public:
-  DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions=SP_NONE);
+  DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int portions, 
+              ORIENTATION orient, SPLITPORTIONS splitPortions, unsigned int emptycolor);
   ~DrawQWidget();
   
   void  compileShaderNow();
@@ -259,6 +271,92 @@ protected:
     unsigned int  total() const { return pt; }  // in floats
     float*        rawData() { return m_extendeddataarr; }
   };
+public:
+  enum  { TFT_HOLDERS=16, TFT_MAXAREA=32, TFT_TEXTMAXLEN=64 };
+  
+  struct  TFTslot
+  {
+    int           recid;
+    bool          isstatic;
+    tftslot_t     slotinfo;
+    
+    int           pinger;   // only for dynamic
+    int           ponger;   // only for dynamic
+    int           _location_i, _location_c;
+    char          _varname_i[64], _varname_c[64];
+  };
+  
+  class   TFTrecpass
+  {
+    int           hoid;
+    int           recid;
+  };
+  class   TFTslotpass
+  {
+    DrawQWidget*  pdraw;
+    int           hoid;
+    int           sloid;
+    friend class  DrawQWidget;
+    TFTslotpass(DrawQWidget* _pdraw, int hid, int sid): pdraw(_pdraw), hoid(hid), sloid(sid){}
+  public:
+    TFTslotpass(const TFTslotpass& cpy): pdraw(cpy.pdraw), hoid(cpy.hoid), sloid(cpy.sloid) {}
+//    void    move(float fx, float fy){ tslot.fx = fx;  tslot.fy = fy;  /*tslot.pdraw->*/ }
+//    void    rotate(float a){  tslot.rotate = a; /**/ }
+  };
+  
+  struct  TFTrecord
+  {
+    char  text[TFT_TEXTMAXLEN+1];
+    int   width;
+  };
+  struct  TFTarea
+  {
+    QImage*                 img;
+    TFTrecord*              records;
+    int                     recordscount;
+  };
+  
+  struct  TFTholder
+  {
+    QFont                   font;
+    int                     recordslimit;   // by font
+    int                     record_width;
+    int                     record_height, record_ht, record_hb, record_ld;
+    std::vector<TFTslot>    tftslots;
+#ifndef BSGLSLOLD
+    std::vector<TFTarea>    tftarea;
+#else
+    TFTarea                 tftarea;
+#endif
+    
+    int           pinger;
+    int           ponger;
+    int           _location;
+    char          _varname[64];
+  };
+  
+private:
+  int           m_holder_current = -1;
+  TFTholder*    m_holders[TFT_HOLDERS];
+  int  _tft_allocHolder(QFont font);
+  int  _tft_pushRecord(TFTholder*  holder, const char* text);
+  QImage*     _tft_allocateImage(int width, int height);
+  TFTholder*  _tft_inf_takeHolder();
+public:
+  TFTslotpass   tftPushBack(const char* text, COORDINATION cr, float fx, float fy, bool isstatic=true);
+//public:
+//  TFTrecpass    tftPushHolding(const QFont& font);
+public:
+  int           tftCountRecords(int hoid) const;
+  int           tftCountSlots(int hoid) const; 
+  int           tftRecordsPerArea(int hoid);
+  int           tftRecordForSlot(int hoid, int sloid) const;
+public: // tft operations
+  bool          tftMove(int hoid, int sloid, float fx, float fy);
+  bool          tftRotate(int hoid, int sloid, float anglerad);
+  bool          tftSwitch(int hoid, int sloid, int recid);
+  
+public:
 };
 
 class BSQClickerXY: public QObject, public DrawEventReactor

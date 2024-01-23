@@ -9,6 +9,7 @@
 #include "bsqdraw.h"
 
 #include "../palettes/bspalettes_std.h"
+#include "sheigen/bsshgenmain.h"
 
 #if QT_VERSION >= 0x050000
 #include <QApplication>
@@ -16,6 +17,7 @@
 #endif
 
 #include <QMouseEvent>
+#include <QPainter>
 #include <QResizeEvent>
 #if QT_CONFIG(wheelevent)
 #include <QWheelEvent>
@@ -39,8 +41,8 @@ int OvldrawEmpty::fshColor(int overlay, char* to) const
 
 ///////////////////////////////////////
 
-DrawQWidget::DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): 
-  DrawCore(datex, portions, orient, splitPortions),
+DrawQWidget::DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions, unsigned int emptycolor): 
+  DrawCore(datex, portions, orient, splitPortions, emptycolor),
   m_compileOnInitializeGL(true), m_vshalloc(0), m_fshalloc(0), m_pcsh(pcsh), m_locationSecondaryCount(0),
   m_matrixLmSize(0), m_sbStatic(false), 
   m_cttrLeft(0), m_cttrTop(0), m_cttrRight(0), m_cttrBottom(0), c_width(0), c_height(0), 
@@ -53,6 +55,9 @@ DrawQWidget::DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int
   
   for (int i=0; i<_SF_COUNT; i++)
     m_locationPrimary[i] = -1;
+  
+  for (int i=0; i<TFT_HOLDERS; i++)
+    m_holders[i] = nullptr;
   
   m_portionMeshType = splitPortions == SP_NONE? m_pcsh->portionMeshType() : ISheiGenerator::PMT_FORCE1D;  // ntf: strange, non-intuitive
   
@@ -100,7 +105,8 @@ void DrawQWidget::compileWhenInitializeGL(bool cflag)
   m_compileOnInitializeGL = cflag;
 }
 
-inline const char*  fastpaced_settings(char* tmpbuf, unsigned int ovl)
+
+inline const char*  fastpaced_ovl_settings(char* tmpbuf, unsigned int ovl)
 {
   /// EQuals: srintf(_tempvd, "ovl_otss_%d", i + 1);
   static char chset[] = {'0','1','2','3','4','5','6','7','8','9'};
@@ -116,7 +122,7 @@ inline const char*  fastpaced_settings(char* tmpbuf, unsigned int ovl)
   return tmpbuf;
 }
 
-inline const char*  fastpaced_opm(char* tmpbuf, unsigned int ovl, unsigned int subpos)
+inline const char*  fastpaced_ovl_opm(char* tmpbuf, unsigned int ovl, unsigned int subpos)
 {
   /// EQuals: srintf(_tempvd, "opm%d_%d", i + 1, j);
   static char chset[] = {'0','1','2','3','4','5','6','7','8','9'};
@@ -124,16 +130,16 @@ inline const char*  fastpaced_opm(char* tmpbuf, unsigned int ovl, unsigned int s
   char* p = tmpbuf;
   while (*base)  *p++ = *base++;
   static char fhset[] = { '_', '\0' };
+  unsigned int ids[] = { ovl, subpos };
   for (int j=0; j<2; j++)
   {
     for (int i=2; i>=0; i--)
     {
-      *(p+i) = chset[ovl % 10];
-      ovl /= 10;
+      *(p+i) = chset[ids[j] % 10];
+      ids[j] /= 10;
     }
     p += 3;
     *p++ = fhset[j];
-    ovl = subpos;
   }
   return tmpbuf;
 }
@@ -197,7 +203,12 @@ void DrawQWidget::initCollectAndCompileShader()
   
   /// 2. Fragment shader
   /// mem alloc
-  unsigned int fshps = m_pcsh->shfragment_pendingSize(m_postImpulse, m_overlaysCount);
+  unsigned int fshps = m_pcsh->shfragment_pendingSize();
+  fshps +=  FshDrawMain::basePendingSize(m_datasubmesh, m_overlaysCount);
+  for (unsigned int t=0; t<TFT_HOLDERS; t++)
+    if (m_holders[t] != nullptr)
+      fshps += m_holders[t]->tftslots.size()*512;
+        
   if (m_fshalloc < fshps)
   {
     if (m_fshalloc)  delete []m_fshmem;
@@ -207,8 +218,71 @@ void DrawQWidget::initCollectAndCompileShader()
   
   
   /// store
-  unsigned int locbackcount=0;
-  locbackinfo_t locbackinfo[96];
+  FshDrawMain fdm(m_fshmem, m_splitPortions, m_datasubmesh);
+  fdm.generic_decls_begin(m_overlaysCount);
+  unsigned int    additufm_count=0;
+  shuniformdesc_t additufm_desc[96];
+  {
+    additufm_count = m_pcsh->shfragment_uniforms(additufm_desc, sizeof(additufm_desc)/sizeof(shuniformdesc_t));
+    for (unsigned int i=0; i<additufm_count; i++)
+      fdm.generic_decls_add(additufm_desc[i].type, additufm_desc[i].varname);
+  }
+  {
+    for (unsigned int t=0; t<TFT_HOLDERS; t++)
+    {
+      if (m_holders[t] == nullptr)  continue;
+      m_holders[t]->_location = -1;
+      fdm.generic_decls_add_tftareas(t, m_holders[t]->_varname);
+      
+      for (unsigned int i=0; i<m_holders[t]->tftslots.size(); i++)
+      {
+        m_holders[t]->tftslots[i]._location_i = -1;
+        m_holders[t]->tftslots[i]._location_c = -1;
+        if (m_holders[t]->tftslots[i].isstatic)
+        {
+          m_holders[t]->tftslots[i]._varname_i[0] = '\0';
+          m_holders[t]->tftslots[i]._varname_c[0] = '\0';
+        }
+        else
+          fdm.generic_decls_add_tftdynamicvar(t, i, m_holders[t]->tftslots[i]._varname_i, m_holders[t]->tftslots[i]._varname_c);
+      }
+    }
+  }
+  
+  fdm.generic_main_begin(m_allocatedPortions, m_orient, m_emptycolor, m_overpattern);
+  
+  m_pcsh->shfragment_store(fdm);
+  
+  {
+    fdm.generic_main_process_fsp(m_overpattern, m_overpatternOpacity);
+  }
+  {
+    fdm.generic_main_prepare_tft();
+    for (unsigned int t=0; t<TFT_HOLDERS; t++)
+    {
+      if (m_holders[t] == nullptr)
+        continue;
+      for (unsigned int i=0; i<m_holders[t]->tftslots.size(); i++)
+      {
+        int recid_short = m_holders[t]->tftslots[i].recid % m_holders[t]->recordslimit;
+#ifndef BSGLSLOLD
+        int areaid =  m_holders[t]->tftslots[i].recid / m_holders[t]->recordslimit;
+        tftfraginfo_t tfi = {  int(t), int(m_holders[t]->tftarea.size()),
+                               m_holders[t]->recordslimit, m_holders[t]->record_width, m_holders[t]->record_height, m_holders[t]->tftarea[areaid].records[recid_short].width, 
+                                        m_holders[t]->tftslots[i].recid,
+                               int(i), m_holders[t]->tftslots[i].isstatic, m_holders[t]->tftslots[i].slotinfo
+        };
+#else
+        tftfraginfo_t tfi = {  int(t), 1,
+                               m_holders[t]->recordslimit, m_holders[t]->record_width, m_holders[t]->record_height, m_holders[t]->tftarea.records[recid_short].width, 
+                                        m_holders[t]->tftslots[i].recid,
+                               int(i), m_holders[t]->tftslots[i].isstatic, m_holders[t]->tftslots[i].slotinfo
+        };
+#endif
+        fdm.generic_main_process_tft(tfi);
+      }
+    }
+  }
   {
     ovlfraginfo_t ovlsinfo[OVLLIMIT];
     for (unsigned int i=0; i<m_overlaysCount; i++)
@@ -220,16 +294,11 @@ void DrawQWidget::initCollectAndCompileShader()
       
       ovlsinfo[i].orient = m_overlays[i].orient;
     }
-    unsigned int fsh_written = m_pcsh->shfragment_store(m_allocatedPortions, m_orient, m_splitPortions, 
-                                                        m_postImpulse, m_postOverpattern, m_postOverpatternOpacity, 
-                                                        ovlsinfo, m_overlaysCount, 
-                                                        locbackinfo, &locbackcount,
-                                                        m_fshmem);
-    
-//    qDebug()<<m_pcsh->shaderName()<<" fragment size "<<fsh_written<<" (had"<<m_fshalloc<<")";
-    Q_ASSERT(fsh_written <= m_fshalloc);
-//    Q_UNUSED(fsh_written);
+    fdm.generic_main_process_overlays(m_orient, m_overlaysCount, ovlsinfo);
   }
+//    qDebug()<<m_pcsh->shaderName()<<" fragment size "<<fsh_written<<" (had"<<m_fshalloc<<")";
+  Q_ASSERT(fdm.written() <= m_fshalloc);
+  
   if (!m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, m_fshmem))
   {
     qDebug()<<Q_FUNC_INFO<<"... fragment shader failure!";
@@ -243,7 +312,10 @@ void DrawQWidget::initCollectAndCompileShader()
     fout.write((const char*)m_fshmem);
     fout.write((const char*)"\n\n\n\n");
 #endif
+
+    //////////////////////////////
 //    qDebug()<<m_fshmem;
+    //////////////////////////////
   
   char  ovlshaderbuf[8192*2];
   for (unsigned int i=0; i<m_overlaysCount; i++)
@@ -297,33 +369,55 @@ void DrawQWidget::initCollectAndCompileShader()
       glGenTextures(1, &m_textures[m_texturesCount++]);
     
     /// 2. Init additional locations and textures
-    for (unsigned int i=0; i<locbackcount; i++)
+    Q_ASSERT(additufm_count <= MAX_OPTIONALS);
+    for (unsigned int i=0; i<additufm_count; i++)
     {
-      m_locationSecondary[i].location = m_ShaderProgram.uniformLocation(locbackinfo[i].varname);
-      m_locationSecondary[i].istexture = locbackinfo[i].istexture;
-      //qDebug()<<locbackinfo[i].varname<<locbackinfo[i].istexture<<m_locationSecondary[i].location<<m_texturesCount;
+      m_locationSecondary[i].location = m_ShaderProgram.uniformLocation(additufm_desc[i].varname);
+      m_locationSecondary[i].istexture = additufm_desc[i].type >= _DT_TEXTURES_BEGIN;
+      //qDebug()<<additufm_desc[i].varname<<additufm_desc[i].istexture<<m_locationSecondary[i].location<<m_texturesCount;
       if (m_locationSecondary[i].istexture)
         glGenTextures(1, &m_textures[m_texturesCount++]);
     }
-    m_locationSecondaryCount = locbackcount;
+    m_locationSecondaryCount = additufm_count;
     
     
-    /// 3. Init ovl locations and textures
+    /// 3. Init tft locations and textures
+    {
+      for (unsigned int t=0; t<TFT_HOLDERS; t++)
+      {
+        if (m_holders[t] == nullptr)  continue;
+        
+        glGenTextures(1, &m_textures[m_texturesCount++]);
+        m_holders[t]->_location = m_ShaderProgram.uniformLocation(m_holders[t]->_varname);
+        m_holders[t]->ponger = 0;
+        
+        for (unsigned int i=0; i<m_holders[t]->tftslots.size(); i++)
+        {
+          if (m_holders[t]->tftslots[i]._varname_i[0] != '\0')
+            m_holders[t]->tftslots[i]._location_i = m_ShaderProgram.uniformLocation(m_holders[t]->tftslots[i]._varname_i);
+          else
+            m_holders[t]->tftslots[i]._location_i = -1;
+          if (m_holders[t]->tftslots[i]._varname_c[0] != '\0')
+            m_holders[t]->tftslots[i]._location_c = m_ShaderProgram.uniformLocation(m_holders[t]->tftslots[i]._varname_c);
+          else
+            m_holders[t]->tftslots[i]._location_c = -1;
+          m_holders[t]->tftslots[i].ponger = 0;
+        }
+      }
+    }
+    
+    /// 4. Init ovl locations and textures
     {
       char _tempvd[64];
-#ifdef OLDOVLTEX
-      unsigned int  texNew[MAX_TEXTURES];
-      unsigned int  texNewCount=0;
-#endif
       for (unsigned int i=0; i<m_overlaysCount; i++)
       {
-        fastpaced_settings(_tempvd, i+1);
+        fastpaced_ovl_settings(_tempvd, i+1);
         m_overlays[i].outloc = m_ShaderProgram.uniformLocation(_tempvd);                  /// ! cannot hide by upcount
         m_overlays[i].texcount = 0;
         _Ovldraw::uniforms_t  uf = m_overlays[i].povl->uniforms();
         for (unsigned int j=0; j<uf.count; j++)
         {
-          fastpaced_opm(_tempvd, i+1, j);
+          fastpaced_ovl_opm(_tempvd, i+1, j);
           m_overlays[i].uf_arr[j].location = m_ShaderProgram.uniformLocation(_tempvd);
           if (m_overlays[i].uf_arr[j].location == -1)
           {
@@ -334,31 +428,18 @@ void DrawQWidget::initCollectAndCompileShader()
           m_overlays[i].uf_arr[j].dataptr = uf.arr[j].dataptr;
           if (dtIsTexture(dtype))
           {
-#ifdef OLDOVLTEX
-            if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit() || 
-                m_overlays[i].ponger_update < m_overlays[i].povl->pingerUpdate())
-            {
-              m_overlays[i].uf_arr[j].tex_idx = m_texturesCount + texNewCount;
-              glGenTextures(1, &texNew[texNewCount++]);
-            }
-            else
-              texNew[texNewCount++] = m_textures[m_overlays[i].uf_arr[j].tex_idx];    // ????????
-#else
             m_overlays[i].texcount += 1;
             glGenTextures(1, &m_textures[m_texturesCount++]);
-#endif
           }
         }
         m_overlays[i].ponger_reinit = m_overlays[i].ponger_update = 0;
       }
-#ifdef OLDOVLTEX
-      for (unsigned int i=0; i<texNewCount; i++)
-        m_textures[m_texturesCount++] = texNew[i];
-#endif
     } // init ovl
     
     unpend(PC_INIT);
-    m_bitmaskPendingChanges |= PC_DATA | PC_DATADIMMS | PC_DATAPORTS | PC_DATARANGE | PC_PALETTE | PC_PALETTEPARAMS | PC_SEC | PC_PARAMSOVL;
+    m_bitmaskPendingChanges |= PC_DATA | PC_DATADIMMS | PC_DATAPORTS | PC_DATARANGE | PC_PALETTE | PC_PALETTEPARAMS | PC_SEC | 
+                              PC_PARAMSOVL | 
+                              PC_TFT_TEXTURE | PC_TFT_PARAMS;
     
   } /// link
   
@@ -395,7 +476,9 @@ void DrawQWidget::initializeGL()
   if (m_compileOnInitializeGL)
     initCollectAndCompileShader();
   
-  m_bitmaskPendingChanges |= PC_DATA | PC_DATADIMMS | PC_DATAPORTS | PC_DATARANGE | PC_PALETTEPARAMS | PC_SEC | PC_PARAMSOVL; 
+  m_bitmaskPendingChanges |= PC_DATA | PC_DATADIMMS | PC_DATAPORTS | PC_DATARANGE | PC_PALETTE | PC_PALETTEPARAMS | PC_SEC | 
+                              PC_PARAMSOVL |
+                              PC_TFT_TEXTURE | PC_TFT_PARAMS; 
   //qDebug()<<"InitGL: "<<m_compileOnInitializeGL<<QString::number(m_bitmaskPendingChanges, 2);
   
   glDisable(GL_DEPTH_TEST);
@@ -445,11 +528,11 @@ void DrawQWidget::paintGL()
 //    glEnable(GL_BLEND);
   
 //  qDebug()<<"PaintGL: "<<m_compileOnInitializeGL<<QString::number(m_bitmaskPendingChanges, 2);
-//  bool on_init = false;
+  bool forceSubPendOn = false;
   if (havePendOn(PC_INIT, m_bitmaskPendingChanges))
   {
     initCollectAndCompileShader();
-//    on_init = true;
+    forceSubPendOn = true;
   }
   int bitmaskPendingChanges = m_bitmaskPendingChanges;
   unpendAll();
@@ -562,8 +645,123 @@ void DrawQWidget::paintGL()
     }
   }
   
+  for (unsigned int t=0; t<TFT_HOLDERS; t++)
+  {
+    if (m_holders[t] == nullptr)
+      continue;
+    
+    if ((loc = m_holders[t]->_location) != -1)
+    {
+#ifndef BSGLSLOLD
+      glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+      glBindTexture(GL_TEXTURE_2D_ARRAY, m_textures[CORR_TEX]);
+#else
+      glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+      glBindTexture(GL_TEXTURE, m_textures[CORR_TEX]);
+#endif
+    
+      if (havePendOn(PC_TFT_TEXTURE, bitmaskPendingChanges))
+      {
+        const GLint   gl_internalFormat = GL_RGBA8;
+        const GLenum  gl_format = GL_RGBA;
+        const GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
+        int width = m_holders[t]->record_width;
+        int height = m_holders[t]->record_height * m_holders[t]->recordslimit;
+//        qDebug()<<m_holders[t]->ponger<<m_holders[t]->pinger<<m_holders[t]->_location;
+#ifndef BSGLSLOLD
+        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, m_textures[CORR_TEX]);
+        bool  subPendOn = forceSubPendOn || (m_holders[t]->ponger != m_holders[t]->pinger);
+        if (subPendOn)
+        {
+          int LAY = m_holders[t]->tftarea.size();
+          glTexStorage3D(  GL_TEXTURE_2D_ARRAY, LAY, gl_internalFormat, width, height, LAY);
+          for (int r=0; r<LAY; r++)
+          {
+            const TFTarea&  area = m_holders[t]->tftarea[r];
+            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, r, width, height, 1, gl_format, gl_texture_type, area.img->constBits());
+          }
+          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+          
+          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+  #if QT_VERSION >= 0x050000
+          glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+          glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
+  #endif
+          glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+          
+          m_holders[t]->ponger = m_holders[t]->pinger;
+        }
+#else
+        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+        glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
+        bool  subPendOn = forceSubPendOn || (m_holders[t]->ponger != m_holders[t]->pinger);
+        if (subPendOn)
+        {
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+          
+          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+          
+  #if QT_VERSION >= 0x050000
+          glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+          glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
+  #endif
+          const TFTarea&  area = m_holders[t]->tftarea;
+          qDebug()<<"IMAGE ASSIGNED!"<<width<<height;
+          glTexImage2D(GL_TEXTURE_2D, 0, gl_internalFormat, width, height, 0, gl_format, gl_texture_type, area.img->constBits());
+          
+          m_holders[t]->ponger = m_holders[t]->pinger;
+        }
+#endif
+        m_ShaderProgram.setUniformValue(loc, CORR_TEX);
+      } // if loc
+    } // if havePend
+    CORR_TEX++;
+  }
   
-#ifndef OLDOVLTEX
+  if (havePendOn(PC_TFT_PARAMS, bitmaskPendingChanges))
+  {
+    for (unsigned int t=0; t<TFT_HOLDERS; t++)
+    {
+      if (m_holders[t] == nullptr)
+        continue;
+      for (unsigned int i=0; i<m_holders[t]->tftslots.size(); i++)
+      {
+        bool  subPendOn = forceSubPendOn || (m_holders[t]->tftslots[i].ponger != m_holders[t]->tftslots[i].pinger);
+        if (subPendOn)
+        {
+          if ((loc = m_holders[t]->tftslots[i]._location_i) != -1)
+            m_ShaderProgram.setUniformValue(loc, GLint(m_holders[t]->tftslots[i].recid));
+          
+          if ((loc = m_holders[t]->tftslots[i]._location_c) != -1)
+          {
+            float arr[] = { m_holders[t]->tftslots[i].slotinfo.fx, m_holders[t]->tftslots[i].slotinfo.fy, 
+                            m_holders[t]->tftslots[i].slotinfo.scale, m_holders[t]->tftslots[i].slotinfo.rotate };
+            m_ShaderProgram.setUniformValue(loc, *(const QVector4D*)arr);
+          }
+          m_holders[t]->tftslots[i].ponger = m_holders[t]->tftslots[i].pinger;
+        }
+      }
+    } // for
+  }
+  
+  
   if (!havePendOn(PC_PARAMSOVL, bitmaskPendingChanges))
   {
     for (unsigned int o=0; o<m_overlaysCount; o++)
@@ -582,7 +780,8 @@ void DrawQWidget::paintGL()
     {
       overlay_t& ovl = m_overlays[o];
       
-      if (ovl.ponger_reinit < ovl.povl->pingerReinit() || ovl.ponger_update < ovl.povl->pingerUpdate())
+      bool  subPendOn = forceSubPendOn || (ovl.ponger_reinit < ovl.povl->pingerReinit()) || (ovl.ponger_update < ovl.povl->pingerUpdate());
+      if (subPendOn)
       {
         
         if ((loc = ovl.outloc) != -1)
@@ -718,161 +917,8 @@ void DrawQWidget::paintGL()
       }
     } // for overlays
   } // else
-#else
-  for (unsigned int i=CORR_TEX; i<m_texturesCount; i++)
-  {
-    glActiveTexture(GL_TEXTURE0 + i);
-    glBindTexture(GL_TEXTURE_2D, m_textures[i]);
-  }
   
-  if (havePendOn(PC_PARAMSOVL, bitmaskPendingChanges))
-  {
-    for (unsigned int i=0; i<m_overlaysCount; i++)
-    {
-      if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit() || 
-          m_overlays[i].ponger_update < m_overlays[i].povl->pingerUpdate())
-      {
-        if ((loc = m_overlays[i].outloc) != -1)
-          m_ShaderProgram.setUniformValue(loc, QVector4D(m_overlays[i].povl->isVisible()? m_overlays[i].povl->getOpacity() : 1.0f, 
-                                                         m_overlays[i].povl->getThickness(), 
-                                                         m_overlays[i].povl->getSliceLL(), m_overlays[i].povl->getSliceHL()));
-        
-        for (unsigned int j=0; j<m_overlays[i].uf_count; j++)
-        {
-          uniform_located_t& ufm = m_overlays[i].uf_arr[j];
-          int         loc = ufm.location;
-          const void* data = ufm.dataptr;
-          switch (ufm.type) {
-            case DT_1F: m_ShaderProgram.setUniformValue(loc, *(const GLfloat*)data); break;
-            case DT_2F: m_ShaderProgram.setUniformValue(loc, *(const QVector2D*)data); break;
-            case DT_3F: m_ShaderProgram.setUniformValue(loc, *(const QVector3D*)data); break;
-            case DT_4F: m_ShaderProgram.setUniformValue(loc, *(const QVector4D*)data); break;
-            case DT_1I: m_ShaderProgram.setUniformValue(loc, *(const GLint*)data); break;
-//              case DT_3I: m_ShaderProgram.setUniformValue(loc, *(QSize*)data); break;
-//                case DT_2I: m_ShaderProgram.setUniformValue(loc, *(QSize*)data); break;
-            case DT_ARR: case DT_ARR2: case DT_ARR3: case DT_ARR4:
-            case DT_ARRI: case DT_ARRI2: case DT_ARRI3: case DT_ARRI4:
-            {
-              const dmtype_arr_t* parr = (const dmtype_arr_t*)data;
-              switch (ufm.type)
-              {
-              case DT_ARR : m_ShaderProgram.setUniformValueArray(loc, (const GLfloat*)parr->data, parr->count, 1); break;
-              case DT_ARR2: m_ShaderProgram.setUniformValueArray(loc, (const QVector2D*)parr->data, parr->count); break;
-              case DT_ARR3: m_ShaderProgram.setUniformValueArray(loc, (const QVector3D*)parr->data, parr->count); break;
-              case DT_ARR4: m_ShaderProgram.setUniformValueArray(loc, (const QVector4D*)parr->data, parr->count); break;
-              case DT_ARRI : m_ShaderProgram.setUniformValueArray(loc, (const int*)parr->data, parr->count); break;
-//                  case DT_ARRI2: m_ShaderProgram.setUniformValueArray(loc, (const QVector2D*)parr->data, parr->count); break;
-//                  case DT_ARRI3: m_ShaderProgram.setUniformValueArray(loc, (const QVector3D*)parr->data, parr->count); break;
-//                  case DT_ARRI4: m_ShaderProgram.setUniformValueArray(loc, (const QVector4D*)parr->data, parr->count); break;
-              }
-              break;
-            }
-            case DT_SAMP4:
-            {
-              const dmtype_sampler_t* psampler = (const dmtype_sampler_t*)data;
-//                qDebug()<<"__"<<i<<"/"<<m_overlaysCount<<"("<<m_overlays[i].uf_count<<")"<<ufm.tex_idx<<"   lim="<<psampler->count;
-              glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
-              //  if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())    its not a classic texture!
-              glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, GLsizei(psampler->count), 1, 0, GL_RGBA, GL_FLOAT, psampler->data);
-              glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-              glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-              glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-              glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-              m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
-              break;
-            }
-            case DT_2D3F:
-            {
-              {
-                glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
-                const dmtype_2d_t* pimage = (const dmtype_2d_t*)data;
-                
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, pimage->linsmooth ? GL_LINEAR : GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, pimage->linsmooth ? GL_LINEAR : GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-                glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-                
-                glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-                glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-                glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-                glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-                
-                GLint   gl_internalFormat = GL_RGB32F;
-                GLenum  gl_format = GL_RGB;
-                GLenum  gl_texture_type = GL_FLOAT;
-                glTexImage2D(  GL_TEXTURE_2D, 0, gl_internalFormat, pimage->w, pimage->len, 0, gl_format, gl_texture_type, pimage->data);
-                m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
-              }
-              break;
-            }
-            case DT_TEXTURE:
-            {
-//                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
-              {
-                glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
-//                  glBindTexture(GL_TEXTURE_2D, m_textures[ufm.tex_idx]);
-                const dmtype_image_t* pimage = (const dmtype_image_t*)data;
-                
-                if (pimage->type != dmtype_image_t::NONE)
-                {
-                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                  glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-                  glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-                  
-                  glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-                  glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-                  glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-                  glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-                  
-                  GLint   gl_internalFormat;
-                  GLenum  gl_format;
-                  GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
-                  
-#if QT_VERSION >= 0x050000
-                  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-                  glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
-                  if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
-                  else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA8;   gl_format = GL_RGBA;   }
-                  else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_ALPHA8;   gl_format = GL_ALPHA;   }
-#elif QT_VERSION >= 0x040000
-                  if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
-                  else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
-                  else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_RGBA;   gl_format = GL_RGBA;   }
-#endif
-                  glTexImage2D(  GL_TEXTURE_2D, 0, gl_internalFormat, pimage->w, pimage->h, 0, gl_format, gl_texture_type, pimage->data);
-                }
-                m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
-              }
-              break;
-            }
-            case DT_PALETTE:
-            {
-//                if (m_overlays[i].ponger_reinit < m_overlays[i].povl->pingerReinit())
-              {
-                glActiveTexture(GL_TEXTURE0 + ufm.tex_idx);
-                const dmtype_palette_t* cdp = (const dmtype_palette_t*)ufm.dataptr;
-                palettePrepare(cdp->ppal, cdp->discrete, 1);
-                m_ShaderProgram.setUniformValue(loc, ufm.tex_idx);
-              }
-              break;
-            }
-            default:
-            qDebug()<<"BSDraw failure: unknown parameter type!";
-            break;
-          }
-        } // for ov_ufs
-        m_overlays[i].ponger_reinit = m_overlays[i].povl->pingerReinit();
-        m_overlays[i].ponger_update = m_overlays[i].povl->pingerUpdate();
-      } // if upcount
-    } // for overlays
-  }
-#endif
-  
+
   m_ShaderProgram.enableAttributeArray(0);
   m_ShaderProgram.setAttributeArray(0, GL_FLOAT, m_SurfaceVertex, 2);
   
@@ -1427,7 +1473,216 @@ void DrawQWidget::scrollDataToAbs(int)
 {
 }
 
+
+
 ////////////////////////////////////////////////////////////////////////////////
+
+int DrawQWidget::_tft_allocHolder(QFont font)
+{
+  for (int i=0; i<TFT_HOLDERS; i++)
+    if (m_holders[i] == nullptr)
+    {
+      m_holders[i] = new TFTholder;
+      m_holders[i]->font = font;
+      m_holders[i]->ponger = 0;
+      m_holders[i]->pinger = 1;
+      m_holders[i]->_location = -1;
+      
+      QFontMetrics qfm(font);
+      m_holders[i]->record_width = qfm.averageCharWidth() * TFT_TEXTMAXLEN + 2;
+      m_holders[i]->record_ht = qfm.ascent();
+      m_holders[i]->record_hb = qfm.descent();
+      m_holders[i]->record_ld = qfm.leading();
+      m_holders[i]->record_height = qfm.height() + qfm.leading() + 2;
+      
+      m_holders[i]->recordslimit = 1080 / m_holders[i]->record_height;
+#ifndef BSGLSLOLD
+      {
+        TFTarea area;
+        area.img = _tft_allocateImage(m_holders[i]->record_width, m_holders[i]->record_height*m_holders[i]->recordslimit);
+        area.records = new TFTrecord[m_holders[i]->recordslimit];
+        area.recordscount = 0;
+        m_holders[i]->tftarea.push_back(area);
+      }
+#else
+      m_holders[i]->tftarea.img = _tft_allocateImage(m_holders[i]->record_width, m_holders[i]->record_height*m_holders[i]->recordslimit);
+      m_holders[i]->tftarea.records = new TFTrecord[m_holders[i]->recordslimit];
+      m_holders[i]->tftarea.recordscount = 0;
+#endif
+      return i;
+    }
+  return -1;
+}
+
+#include <QLabel>
+
+int DrawQWidget::_tft_pushRecord(DrawQWidget::TFTholder* holder, const char* text)
+{
+#ifndef BSGLSLOLD
+  if (holder->tftarea.back().recordscount >= holder->recordslimit)
+  {
+    TFTarea area;
+    area.img = _tft_allocateImage(holder->record_width, holder->record_height*holder->recordslimit);
+    area.records = new TFTrecord[holder->recordslimit];
+    area.recordscount = 0;
+    holder->tftarea.push_back(area);
+  }
+  TFTarea& tftar = holder->tftarea.back();
+#else
+  if (holder->tftarea.recordscount >= holder->recordslimit)
+    return -1;
+  TFTarea& tftar = holder->tftarea;
+#endif
+  int rid_loc = tftar.recordscount++;
+  TFTrecord* tftrec = &tftar.records[rid_loc];
+  strncpy(tftrec->text, text, TFT_TEXTMAXLEN);
+  QFontMetrics qfm(holder->font);
+  tftrec->width = qfm.horizontalAdvance(tftrec->text);
+  {
+    QPainter ptr(tftar.img);
+//    ptr.begin()
+    ptr.setBrush(QBrush(QColor(0,0,0)));
+    ptr.setPen(QColor(0,0,0));
+    ptr.setFont(holder->font);
+    //QFont("Ubuntu", 24)
+//    qDebug()<<rid_loc*holder->c_record_height;
+    ptr.drawText(1, holder->record_height*holder->recordslimit - rid_loc*holder->record_height - holder->record_hb, /*Qt::AlignLeft | Qt::AlignBottom, */text);
+//    ptr.drawText(10, 10, text);
+  }
+  holder->pinger += 1;
+  
+//  QLabel* lbl = new QLabel();
+//  lbl->setPixmap(QPixmap::fromImage(*tftar.img));
+//  lbl->show();
+#ifndef BSGLSLOLD
+  return (holder->tftarea.size()-1)*holder->recordslimit + rid_loc;
+#else  
+  return rid_loc;
+#endif
+}
+
+QImage* DrawQWidget::_tft_allocateImage(int width, int height)
+{
+  QImage* img = new QImage(width, height, QImage::Format_ARGB32);
+//  img->detach();
+  img->fill(Qt::transparent);
+//  img->fill(0xFFFFFFFF);
+  return img;
+}
+
+DrawQWidget::TFTslotpass DrawQWidget::tftPushBack(const char* text, COORDINATION cr, float fx, float fy, bool isstatic)
+{
+  if (m_holder_current == -1)
+    m_holder_current = _tft_allocHolder(font());
+  
+  int recid = _tft_pushRecord(m_holders[m_holder_current], text);
+  TFTslot ts;
+  ts.isstatic = isstatic;
+  ts.recid = recid;
+  ts.slotinfo.cr = cr;
+  ts.slotinfo.fx = fx;
+  ts.slotinfo.fy = fy;
+  ts.slotinfo.rotate = 0.0f;
+  ts.slotinfo.scale = 1.0f;
+  if (ts.isstatic)
+  {
+    ts.pinger = 0;
+    ts.ponger = 0;
+  }
+  else
+  {
+    ts.pinger = 1;
+    ts.ponger = 0;
+  }
+  m_holders[m_holder_current]->tftslots.push_back(ts);
+  int sid = m_holders[m_holder_current]->tftslots.size()-1;  
+  if (recid != -1)
+  {
+    m_bitmaskPendingChanges |= PC_INIT | PC_TFT_TEXTURE | PC_TFT_PARAMS;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+  }
+  return TFTslotpass(this, m_holder_current, sid);
+}
+
+int DrawQWidget::tftCountRecords(int hoid) const
+{
+  Q_ASSERT(hoid < TFT_HOLDERS);
+  if (m_holders[hoid] == nullptr)
+    return 0;
+#ifndef BSGLSLOLD  
+  return (m_holders[hoid]->tftarea.size()-1)*m_holders[hoid]->recordslimit + m_holders[hoid]->tftarea.back().recordscount;
+#else
+  return m_holders[hoid]->tftarea.recordscount;
+#endif
+}
+
+int DrawQWidget::tftCountSlots(int hoid) const
+{
+  Q_ASSERT(hoid < TFT_HOLDERS);
+  if (m_holders[hoid] == nullptr)
+    return 0;
+  return m_holders[hoid]->tftslots.size();
+}
+
+int DrawQWidget::tftRecordsPerArea(int hoid)
+{
+  Q_ASSERT(hoid < TFT_HOLDERS);
+  if (m_holders[hoid] == nullptr)
+    return 0;
+  return m_holders[hoid]->recordslimit;
+}
+
+int DrawQWidget::tftRecordForSlot(int hoid, int sloid) const
+{
+  Q_ASSERT(hoid < TFT_HOLDERS);
+  if (m_holders[hoid] == nullptr)
+    return -1;
+  if (sloid >= m_holders[hoid]->tftslots.size())
+    return -1;
+  return m_holders[hoid]->tftslots[sloid].recid;
+}
+
+bool DrawQWidget::tftMove(int hoid, int sloid, float fx, float fy)
+{
+  Q_ASSERT(hoid < TFT_HOLDERS);
+  if (m_holders[hoid] == nullptr)
+    return false;
+  if (sloid >= m_holders[hoid]->tftslots.size())
+    return false;
+  if (m_holders[hoid]->tftslots[sloid].isstatic)
+    return false;
+  m_holders[hoid]->tftslots[sloid].slotinfo.fx = fx;
+  m_holders[hoid]->tftslots[sloid].slotinfo.fy = fy;
+  {
+    m_holders[hoid]->tftslots[sloid].pinger += 1;
+    m_bitmaskPendingChanges |= PC_TFT_PARAMS;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+  }
+  return true;
+}
+
+bool DrawQWidget::tftSwitch(int hoid, int sloid, int recid)
+{
+  Q_ASSERT(hoid < TFT_HOLDERS);
+  if (m_holders[hoid] == nullptr)
+    return false;
+  if (sloid >= m_holders[hoid]->tftslots.size())
+    return false;
+  if (m_holders[hoid]->tftslots[sloid].isstatic)
+    return false;
+  m_holders[hoid]->tftslots[sloid].recid = recid;
+  {
+    m_holders[hoid]->tftslots[sloid].pinger += 1;
+    m_bitmaskPendingChanges |= PC_TFT_PARAMS;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+  }
+  return true;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 
 DrawQWidget::MemExpand2D::MemExpand2D(unsigned int portionsCount, unsigned int portionSize, unsigned int linesMemory): pc(portionsCount), ps(portionSize), memoryLines(linesMemory)
 {
@@ -1911,99 +2166,102 @@ bool BSQSelectorB::reactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, c
   }
 #endif
 
-
-
     
-    //    if ((loc = m_locationPrimary[SF_GROUND]) != -1)
-    //    {
-    //      glActiveTexture(GL_TEXTURE0 + HT_GND);
-    //      glBindTexture(GL_TEXTURE_2D, m_texAll[HT_GND]);
+#if 0
+    qDebug()<<"CTX: "<<CORR_TEX;
+    if (!havePendOn(PC_TFT_TEXTURE, bitmaskPendingChanges))
+    {
+      qDebug()<<"!hpo";
+      for (unsigned int t=0; t<TFT_HOLDERS; t++)
+      {
+        if (m_holders[t] == nullptr)
+          continue;
+        qDebug()<<m_holders[t]->ponger<<m_holders[t]->pinger<<m_holders[t]->_location;
+  #ifndef BSGLSLOLD
+        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, m_textures[CORR_TEX]);
+  #else
+        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+        glBindTexture(GL_TEXTURE, m_textures[CORR_TEX]);
+  #endif
+        CORR_TEX++;
+      }
+    }
+    else
+    {
+      qDebug()<<"hpo";
+      for (unsigned int t=0; t<TFT_HOLDERS; t++)
+      {
+        if (m_holders[t] == nullptr)
+          continue;
+        const GLint   gl_internalFormat = GL_RGBA8;
+        const GLenum  gl_format = GL_RGBA;
+        const GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
+        int width = m_holders[t]->record_width;
+        int height = m_holders[t]->record_height * m_holders[t]->recordslimit;
+        qDebug()<<m_holders[t]->ponger<<m_holders[t]->pinger<<m_holders[t]->_location;
+      
+  #ifndef BSGLSLOLD
+        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, m_textures[CORR_TEX]);
+        if (m_holders[t]->ponger != m_holders[t]->pinger)
+        {
+          int LAY = m_holders[t]->tftarea.size();
+          glTexStorage3D(  GL_TEXTURE_2D_ARRAY, LAY, gl_internalFormat, width, height, LAY);
+          for (int r=0; r<LAY; r++)
+          {
+            const TFTarea&  area = m_holders[t]->tftarea[r];
+            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, r, width, height, 1, gl_format, gl_texture_type, area.img->constBits());
+          }
+          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
           
-    //      if (havePendOn(PC_GROUND, bitmaskPendingChanges))
-    //      {
-    //        switch (m_groundType)
-    //        {
-    //        case GND_DOMAIN:
-    //        {
-    //          float* groundData = (float*)m_groundData;
-    //          float* groundDataCached=m_groundDataFastFree? groundData : new float[m_dataDimmA*m_dataDimmB];
-    //          for (unsigned int i=0; i<m_dataDimmA*m_dataDimmB; i++)
-    //            groundDataCached[i] = groundData[i] / (m_portionSize+1);
-            
-    //          glTexImage2D(   GL_TEXTURE_2D, 0, 
-    //#if QT_VERSION >= 0x050000
-    //                          GL_R32F, 
-    //#elif QT_VERSION >= 0x040000
-    //                          GL_RED, 
-    //#endif
-    //                          m_dataDimmA, m_dataDimmB, 0, GL_RED, GL_FLOAT, groundDataCached);
-    //  //          glPixelStorei(GL_UNPACK_ALIGNMENT, 4);          
-    //          if (m_groundMipMapping) glGenerateMipmap( GL_TEXTURE_2D );
-              
-    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_groundMipMapping? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
-    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-              
-    //          delete []groundDataCached;
-    //          if (m_groundDataFastFree)
-    //            m_groundData = nullptr;
-    //          break;
-    //        }
-    //        case GND_SDP: 
-    //        {
-    //          glTexImage2D(  GL_TEXTURE_2D, 0, GL_RGBA, m_groundDataWidth, m_groundDataHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_groundData);
-    //          if (m_groundMipMapping) glGenerateMipmap( GL_TEXTURE_2D );
-              
-    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_groundMipMapping? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST);
-    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    //          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-    //          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-              
-    //          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-    //          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-    //          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-    //          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-    //          break;
-    //        }
-    //        case GND_ASSISTFLOATTABLE:
-    //        {
-    //          glTexImage2D(  GL_TEXTURE_2D, 0, 
-    // #if QT_VERSION >= 0x050000
-    //                           GL_R32F, 
-    // #elif QT_VERSION >= 0x040000
-    //                           GL_RED, 
-    // #endif
-    //                         m_groundDataWidth, m_groundDataHeight, 0, GL_RGBA, GL_FLOAT, m_groundData);
-    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    //          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    //          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-    //          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-              
-    //          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-    //          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-    //          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-    //          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-    //          break;
-    //        }
-    //        default:  Q_ASSERT(havePendOn(PC_GROUND, bitmaskPendingChanges) && m_groundType != GND_NONE); break;
-    //        }
-    //      } // if pend on ground
-    //      m_ShaderProgram.setUniformValue(loc, HT_GND);
-    //    }
-    //    if (havePendOn(PC_GROUND, bitmaskPendingChanges))
-    //    {
-    //      if ((loc = m_locationPrimary[SF_PORTIONSIZE]) != -1)
-    //      {
-    //        m_ShaderProgram.setUniformValue(loc, m_portionSize);
-    //      }
-    //    }
-    //    if (havePendOn(PC_PARAMS, bitmaskPendingChanges))
-    //    {
-    //      if ((loc = m_locationPrimary[SF_VIEW_TURN]) != -1)      m_ShaderProgram.setUniformValue(loc, this->m_viewTurn);
-    //    }
-    
+          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+  #if QT_VERSION >= 0x050000
+          glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+          glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
+  #endif
+          glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+          
+          m_holders[t]->ponger = m_holders[t]->pinger;
+        }
+  #else
+        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+        glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
+        if (m_holders[t]->ponger != m_holders[t]->pinger)
+        {
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+          
+          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+          
+  #if QT_VERSION >= 0x050000
+          glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+          glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
+  #endif
+          const TFTarea&  area = m_holders[t]->tftarea;
+          qDebug()<<"IMAGE ASSIGNED!"<<width<<height;
+          glTexImage2D(GL_TEXTURE_2D, 0, gl_internalFormat, width, height, 0, gl_format, gl_texture_type, area.img->constBits());
+          
+          m_holders[t]->ponger = m_holders[t]->pinger;
+        }
+  #endif
+        m_ShaderProgram.setUniformValue(m_holders[t]->_location, CORR_TEX);
+        CORR_TEX++;
+      }
+    }
+#endif

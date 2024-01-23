@@ -27,21 +27,13 @@ public:
   virtual int           portionMeshType() const{  return PMT_FORCE1D; }
   virtual unsigned int  shvertex_pendingSize() const { return VshMainGenerator1D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const { return VshMainGenerator1D()(to); }
-  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 5000 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
-  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, 
-                                         ORIENTATION orient, SPLITPORTIONS splitGraphs,
-                                         const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
-                                         ovlfraginfo_t ovlsinfo[], unsigned int ovlscount,
-                                         locbackinfo_t locbackinfo[], unsigned int* locbackcount,
-                                         char* to) const
+  virtual unsigned int  shfragment_pendingSize() const { return 8192; }
+  virtual unsigned int  shfragment_uniforms(shuniformdesc_t*, unsigned int){ return 0; }
+  virtual void          shfragment_store(FshDrawComposer& fdc) const
   {
-    FshDrawConstructor fmg(to, allocatedPortions, splitGraphs, imp, 0, nullptr, ovlscount, ovlsinfo);
-    fmg.getLocbacks(locbackinfo, locbackcount);
-    fmg.main_begin( coloropts.backcolor != 0xFFFFFFFF? FshDrawConstructor::INIT_BYVALUE : FshDrawConstructor::INIT_BYPALETTE, 
-                    coloropts.backcolor, orient, fsp);
-    fmg.push("mixwell = 0.0;");
+    fdc.push("mixwell = 0.0;");
     
-    fmg.cfloatvar("specopc", 1.0f - (graphopts.opacity > 1.0f? 1.0f : graphopts.opacity < 0.0f? 0.0f : graphopts.opacity));
+    fdc.cfloatvar("specopc", 1.0f - (graphopts.opacity > 1.0f? 1.0f : graphopts.opacity < 0.0f? 0.0f : graphopts.opacity));
     
     static const char graph_locals[] = 
                                       "vec2  ab_fndimms = vec2(datadimm_a, datadimm_b);" SHNL
@@ -49,7 +41,7 @@ public:
                                       "float b_coord = abc_coords.y*ab_fbounds.y;" SHNL   /// ! no floor.
                                       "float b_coord_ns = floor(abc_coords.y*ab_fndimms.y);" SHNL
                                     ;
-    fmg.push(graph_locals);
+    fdc.push(graph_locals);
     {
       bool isDots = graphopts.graphtype == GT_DOTS;
       bool isHistogram = graphopts.graphtype == GT_HISTOGRAM || 
@@ -61,10 +53,10 @@ public:
       bool isInterp = graphopts.graphtype == GT_LINTERP || graphopts.graphtype == GT_LINTERPSMOOTH;
       
       if (isHistogram)
-        fmg.push("vec4 neib = vec4(0.0, 0.0, 0.0, 0.0);" SHNL);  /// min, max, max_allow
+        fdc.push("vec4 neib = vec4(0.0, 0.0, 0.0, 0.0);" SHNL);  /// min, max, max_allow
       
       if (isHistogram || isInterp)
-        fmg.cfloatvar("specsmooth", graphopts.smooth < -0.5f? -0.5f : graphopts.smooth);
+        fdc.cfloatvar("specsmooth", graphopts.smooth < -0.5f? -0.5f : graphopts.smooth);
       
       bool deinterpSL = graphopts.descaling == DE_LINTERP_SCALINGLEFT || graphopts.descaling == DE_SINTERP || graphopts.descaling == DE_QINTERP;
       bool deinterpSC = graphopts.descaling == DE_LINTERP_SCALINGCENTER;
@@ -79,9 +71,9 @@ public:
       
       if (needDots == 1)
       {
-        fmg.push( "vec3  fx = vec3(abc_coords.x, abc_coords.x, abc_coords.x);" SHNL );
-        fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
-        fmg.push(
+        fdc.push( "vec3  fx = vec3(abc_coords.x, abc_coords.x, abc_coords.x);" SHNL );
+        fdc.push( fdc.splits() == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
+        fdc.push(
                   "{" SHNL
                     "vec3   fy = vec3(getValue1D(i, fx[0]));" SHNL
 //                    "vec3   fy_ns = floor(fy*(ab_indimms.y-1));" SHNL
@@ -93,12 +85,12 @@ public:
       }
       else if (needDots == 3)
       {
-        fmg.push( "vec3 fx = vec3(float(max(abc_coords.x*ab_indimms.x, 1) - 1)/ab_indimms.x, "
+        fdc.push( "vec3 fx = vec3(float(max(abc_coords.x*ab_indimms.x, 1) - 1)/ab_indimms.x, "
                     "abc_coords.x, "
                     "float(min(abc_coords.x*ab_indimms.x, ab_indimms.x-1)  + 1)/ab_indimms.x);" SHNL
                   );
-        fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
-        fmg.push(
+        fdc.push( fdc.splits() == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
+        fdc.push(
                   "{" SHNL
                     "vec3  fy = vec3(getValue1D(i, fx[0]), getValue1D(i, fx[1]), getValue1D(i, fx[2]));" SHNL
 //                    "vec3  fy_ns = floor(fy*(ab_indimms.y-1));" SHNL
@@ -110,12 +102,12 @@ public:
       }
       else if (needDots == 4)
       {
-        fmg.push( "vec4 fx = vec4(float(max(abc_coords.x*ab_indimms.x, 1) - 1)/ab_indimms.x, abc_coords.x, " SHNL
+        fdc.push( "vec4 fx = vec4(float(max(abc_coords.x*ab_indimms.x, 1) - 1)/ab_indimms.x, abc_coords.x, " SHNL
                     "float(min(abc_coords.x*ab_indimms.x, ab_indimms.x-1)  + 1)/ab_indimms.x, " SHNL
                     "float(min(abc_coords.x*ab_indimms.x, ab_indimms.x-2)  + 2)/ab_indimms.x);" SHNL
                   );
-        fmg.push( splitGraphs == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
-        fmg.push(
+        fdc.push( fdc.splits() == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
+        fdc.push(
                   "{" SHNL
                     "vec4  fy = vec4(getValue1D(i, fx[0]), getValue1D(i, fx[1]), getValue1D(i, fx[2]), getValue1D(i, fx[3]));" SHNL
 //                    "vec4  fy_ns = floor(fy*(ab_indimms.y-1));" SHNL
@@ -134,11 +126,11 @@ public:
         if (graphopts.descaling == DE_LINTERP_SCALINGLEFT || graphopts.descaling == DE_LINTERP_SCALINGCENTER)
         {
           if (graphopts.descaling == DE_LINTERP_SCALINGLEFT)
-            fmg.push( "vec3 fds = vec3(immod.x/float(ab_iscaler.x)) + vec3(-1.0/ab_iscaler.x, 0.0, 1.0/ab_iscaler.x);" SHNL);
+            fdc.push( "vec3 fds = vec3(immod.x/float(ab_iscaler.x)) + vec3(-1.0/ab_iscaler.x, 0.0, 1.0/ab_iscaler.x);" SHNL);
           else if (graphopts.descaling == DE_LINTERP_SCALINGCENTER)
-            fmg.push( "vec3 fds = vec3((immod.x - ab_iscaler.x/2)/float(ab_iscaler.x)) + vec3(-1.0/ab_iscaler.x, 0.0, 1.0/ab_iscaler.x);" SHNL);
+            fdc.push( "vec3 fds = vec3((immod.x - ab_iscaler.x/2)/float(ab_iscaler.x)) + vec3(-1.0/ab_iscaler.x, 0.0, 1.0/ab_iscaler.x);" SHNL);
           
-          fmg.push( "fy_view = vec3(" SHNL    // fy_view*step(float(ab_iscaler.x), 1.0) + (1 - step(float(ab_iscaler.x), 1.0))*"
+          fdc.push( "fy_view = vec3(" SHNL    // fy_view*step(float(ab_iscaler.x), 1.0) + (1 - step(float(ab_iscaler.x), 1.0))*"
                                       "mix(iy_view[1] + (iy_view[1] - iy_view[0])*fds.x, iy_view[1] + (iy_view[2] - iy_view[1])*fds.x, step(0.0, fds.x))," SHNL
                                       "mix(iy_view[1] + (iy_view[1] - iy_view[0])*fds.y, iy_view[1] + (iy_view[2] - iy_view[1])*fds.y, step(0.0, fds.y))," SHNL
                                       "mix(iy_view[1] + (iy_view[1] - iy_view[0])*fds.z, iy_view[1] + (iy_view[2] - iy_view[1])*fds.z, step(0.0, fds.z))" SHNL
@@ -162,7 +154,7 @@ public:
 //                      "vec3(ify[1] - fsteps[2], ify[1], ify[1] + fsteps[1]*fcorr[1]),"
 //                "vec3(0.0, 0.0, 0.0),"
 #endif
-          fmg.push( 
+          fdc.push( 
                     "float corrector = clamp(0.5 + 0.5*(iy_view[1] - iy_view[0])/(iy_view[2] - iy_view[1]) + 0.0*(iy_view[2] - iy_view[1]), -4.0, 4.0);"
 //                    "float surrector = step(ab_iscaler.y*4.0, float(abs(iy_view[2] - iy_view[1])))*step(ab_iscaler.y*4.0, float(abs(iy_view[0] - iy_view[1])))*(step(float(sign((iy_view[2] - iy_view[1])*(iy_view[0] - iy_view[1]))), 0.0));"
                     "float surrector = 1.0;"
@@ -177,7 +169,7 @@ public:
                       "vec3(iy_view[1] - fsteps[2], iy_view[1], iy_view[1] + fsteps[1]*fcorr[2]),"
                       "step(fsteps.x, 0.0) );"
                     );
-//          fmg.push( 
+//          fdc.push( 
 //                    "float corrector = clamp(0.5 + 0.5*(iy_view[1] - iy_view[0])/(iy_view[2] - iy_view[1]) + 0.0*(iy_view[2] - iy_view[1]), -4.0, 4.0);"
 ////                    "float surrector = step(ab_iscaler.y*4.0, float(abs(iy_view[2] - iy_view[1])))*step(ab_iscaler.y*4.0, float(abs(iy_view[0] - iy_view[1])))*(step(float(sign((iy_view[2] - iy_view[1])*(iy_view[0] - iy_view[1]))), 0.0));"
 //                    "float surrector = 1.0;"
@@ -196,7 +188,7 @@ public:
 //                    );
         }
         else if (graphopts.descaling == DE_QINTERP)
-          fmg.push(              
+          fdc.push(              
                 "vec3 dd = vec3(iy_view[1] - iy_view[0], iy_view[2] - iy_view[1], iy_view[3] - iy_view[2]);" SHNL
                 "vec3 ss = vec3(sign(dd[0]), sign(dd[1]), sign(dd[2]));" SHNL
                 
@@ -230,11 +222,11 @@ public:
 
         
         if (needDots == 3)
-          fmg.push( "iy_view = ivec3(floor(fy_view));" SHNL
+          fdc.push( "iy_view = ivec3(floor(fy_view));" SHNL
                     "fy_ns = floor(fy_view/(ab_iscaler.y));" SHNL
                     );
         else
-          fmg.push( "iy_view = ivec4(floor(fy_view));" SHNL
+          fdc.push( "iy_view = ivec4(floor(fy_view));" SHNL
                     "fy_ns = floor(fy_view/(ab_iscaler.y));" SHNL
                     );
       }
@@ -245,21 +237,21 @@ public:
       if (isDots)
       {
         if (graphopts.dotsize == 0)
-          fmg.push( 
+          fdc.push( 
 //                      "float mixwellp = step(distance(fcoords_noscaled, vec2(fcoords_noscaled.x, fy_ns[1])), 0.0);" SHNL // ??? 0.0?
                       "float mixwellp = step(b_coord_ns, fy_ns[1])*step(fy_ns[1], b_coord_ns);" SHNL // ??? 0.0?
                       "post_mask[0] = post_mask[0]*(1.0 - mixwellp) + mixwellp;" SHNL
                     );
         else
-          fmg.push(   "float mixwellp = 0.0;" SHNL );
+          fdc.push(   "float mixwellp = 0.0;" SHNL );
         
-        fmg.push("float VALCLR = fy[1];" SHNL);
+        fdc.push("float VALCLR = fy[1];" SHNL);
       }
       else if (isInterp)
       {
         if (graphopts.smooth <= -0.99f)   /// special 8bit interp
         {
-          fmg.push( 
+          fdc.push( 
                     "float fmix_self = 1.0 - abs(b_coord_ns - fy_ns[1]);" SHNL
                     "float fmix_prev = (fy_ns[0] - b_coord_ns)/(fy_ns[0]-fy_ns[1]);" SHNL
                     "float fmix_next = (fy_ns[2] - b_coord_ns)/(fy_ns[2]-fy_ns[1]);" SHNL
@@ -272,7 +264,7 @@ public:
           if (graphopts.graphtype == GT_LINTERP)
           {
 #if 0                   /// default simple algo, with bad V-effect
-            fmg.push( 
+            fdc.push( 
                         "float fmix_self = 1.0 - abs(b_coord_ns - fy_ns[1])/(1.4*(1.0 + specsmooth));" SHNL
                   
                         "float fsig_prev = sign(fy_ns[0] - fy_ns[1]);" SHNL
@@ -285,7 +277,7 @@ public:
                         "fmix_next = fmix_next*(1.0 - step(1.0, fmix_next));" SHNL
                       );
 #elif 0                 /// advanced algo with nonsmooth line transition
-            fmg.push( 
+            fdc.push( 
   //                      "float fmix_self = abs(b_coord_ns - fy_ns[1]);" SHNL
   //                      "fmix_self = 1.0 / (1.0 + fmix_self*2.0);" SHNL
   //                      "fmix_self = fmix_self + specsmooth*2.0*(0.25-(fmix_self-0.5)*(fmix_self-0.5));" SHNL    /// 2.0 - gap
@@ -312,7 +304,7 @@ public:
                     
                         );
 #elif 1                 /// advanced algo with smooth line transition
-            fmg.push( 
+            fdc.push( 
                         "float fmix_self = abs(b_coord_ns - fy_ns[1]);" SHNL
                         "fmix_self = (1.0-fmix_self + fmix_self*(0.25+specsmooth*0.375))*step(fmix_self, 2.0);" SHNL  /// 0.25 shading
                   
@@ -335,7 +327,7 @@ public:
                         "fmix_next = mix(fmix_next, 1.0, step(1.0, fmix_next));" SHNL
                         );
 #else                 /// advanced algo with smooth line transition but bad V-effect destroys
-            fmg.push( 
+            fdc.push( 
                         "float fmix_self = abs(b_coord_ns - fy_ns[1]);" SHNL
                         "fmix_self = (1.0-fmix_self + fmix_self*(0.25+specsmooth*0.375))*step(fmix_self, 2.0);" SHNL
                   
@@ -358,7 +350,7 @@ public:
             }
             else if (graphopts.graphtype == GT_LINTERPSMOOTH)
             {
-              fmg.push( 
+              fdc.push( 
                           "float fsig_prev = sign(fy_ns[0] - fy_ns[1]);" SHNL
                           "float fsig_next = sign(fy_ns[2] - fy_ns[1]);" SHNL
                           "float fmix_prev = smoothstep(fy_ns[0] + fsig_prev, fy_ns[1], b_coord_ns);" SHNL
@@ -369,18 +361,18 @@ public:
                         );
             }
         }
-        fmg.push( 
+        fdc.push( 
                   "vec3 fhit = vec3(0.0, step(1.0, fmix_self), 0.0);" SHNL
                   "float mixwellp =  max(fhit.y, specopc*max(max(fmix_prev, fmix_next), fmix_self ));" SHNL
                   "fhit.x = 1.0 - step(mixwellp, 0.0);" SHNL
                   "float VALCLR = b_coord_ns / ab_fndimms.y;" SHNL
                  );
         if (graphopts.postrect == PR_VALUEAROUND || graphopts.postrect == PR_SUMMARY)
-          fmg.push("ivec2 fhit_rect = ivec2(min(min(fy_ns[0], fy_ns[2]), fy_ns[1]-1)*ab_iscaler.y, max(max(fy_ns[0], fy_ns[2]), fy_ns[1]+1)*ab_iscaler.y + ab_iscaler.y - 1);" SHNL);
+          fdc.push("ivec2 fhit_rect = ivec2(min(min(fy_ns[0], fy_ns[2]), fy_ns[1]-1)*ab_iscaler.y, max(max(fy_ns[0], fy_ns[2]), fy_ns[1]+1)*ab_iscaler.y + ab_iscaler.y - 1);" SHNL);
       } // interp
       else if (isHistogram)
       {
-        //        fmg.push(                 
+        //        fdc.push(                 
         //                  "vec3 fhit = vec3(sign(b_coord_ns - fy_ns[1]), 0.0, 0.0);" SHNL
         //                  "fhit.xy = vec2(step(fhit.x, 0.0), 1.0 - abs(fhit.x));" SHNL
         //                  "fhit.z = (1.0 - fhit.x)*specopc*(1.0 - clamp((b_coord_ns-fy_ns[1])/(1.0 + specsmooth*10.0), 0.0, 1.0));" SHNL
@@ -389,7 +381,7 @@ public:
                   
         //                  "float fneiprec = iy_view[1];" SHNL
         //                  );
-        fmg.push(                               
+        fdc.push(                               
                   "float fmix_max = max(fy_ns[0], fy_ns[2]); " SHNL
                   "float fy_addit = (fmix_max - fy_ns[1])*ab_iscaler.y;" SHNL
                   "fy_addit = fy_addit*step(0.0, fy_addit);" SHNL
@@ -409,10 +401,10 @@ public:
                   );
         
         if (graphopts.postrect == PR_VALUEAROUND || graphopts.postrect == PR_SUMMARY)
-          fmg.push("ivec2 fhit_rect = ivec2(0, int(fy_ns[1])*(ab_iscaler.y) + ab_iscaler.y - 1);" SHNL);
+          fdc.push("ivec2 fhit_rect = ivec2(0, int(fy_ns[1])*(ab_iscaler.y) + ab_iscaler.y - 1);" SHNL);
         
         if (graphopts.graphtype == GT_HISTOGRAM_MESH)
-          fmg.push( 
+          fdc.push( 
 //                    "mixwellp = mix(mixwellp*0.8, mix(mixwellp, 0.5*mixwellp, step(b_coord, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
 //                    "mixwellp = mix(mixwellp*0.6, mix(mixwellp, 0.4*mixwellp, step(b_coord, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
                     "mixwellp = mix(mixwellp*0.6, mix(mixwellp, 0.4*mixwellp, step(b_coord, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
@@ -420,13 +412,13 @@ public:
 //                    "fhit = fhit*step(neib[0], fneiprec);" SHNL
                     );
         else if (graphopts.graphtype == GT_HISTOGRAM_CROSSMAX)
-            fmg.push( "neib[1] = max(neib[1], fneiprec);" SHNL
+            fdc.push( "neib[1] = max(neib[1], fneiprec);" SHNL
                       "fneiprec = step(neib[1], fneiprec);" SHNL  /// reassign!!
                       "mixwellp = mixwellp*fneiprec;" SHNL
                       "fhit = fhit*fneiprec;" SHNL
                       );
         else if (graphopts.graphtype == GT_HISTOGRAM_CROSSMIN)
-            fmg.push( 
+            fdc.push( 
                       "neib[0] = mix(neib[0], fneiprec, step(neib[0], fneiprec)*(1.0 - fhit.x));" SHNL
                       "neib[1] = mix(fneiprec, neib[1], neib[2]*(1.0 - step(fneiprec, neib[1])*fhit.x));" SHNL
                       "neib[2] = mix(fhit.x, 1.0, neib[2]);" SHNL   /// + 0.0*fhit.z
@@ -437,23 +429,23 @@ public:
                       );
           
         if (coloropts.cpolicy != CP_REPAINTED)
-//          fmg.push("float VALCLR = clamp(b_coord_ns/fy[1], 0.0, 1.0);" SHNL);
-          fmg.push("float VALCLR = clamp(b_coord_ns/fy_ns[1], 0.0, 1.0);" SHNL);
+//          fdc.push("float VALCLR = clamp(b_coord_ns/fy[1], 0.0, 1.0);" SHNL);
+          fdc.push("float VALCLR = clamp(b_coord_ns/fy_ns[1], 0.0, 1.0);" SHNL);
         else
-          fmg.push("float VALCLR = fy[1];" SHNL);
+          fdc.push("float VALCLR = fy[1];" SHNL);
       } // histogram
       
       if (isInterp || isHistogram)
       {
         if (graphopts.postrect == PR_STANDARD)
-          fmg.push("post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL);
+          fdc.push("post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL);
         if (graphopts.postrect == PR_VALUEONLY)
-          fmg.push("post_mask[0] = post_mask[0]*(1.0 - fhit.y)*(1.0 - fhit.x) + fhit.y*fhit.x;" SHNL);
+          fdc.push("post_mask[0] = post_mask[0]*(1.0 - fhit.y)*(1.0 - fhit.x) + fhit.y*fhit.x;" SHNL);
         else if (graphopts.postrect == PR_VALUEAROUND)
-          fmg.push("post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL
+          fdc.push("post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL
                    "imrect.ga = int(1.0 - fhit.x)*imrect.ga + int(fhit.x)*ivec2(b_coord - fhit_rect[0], fhit_rect[1] - fhit_rect[0]);" SHNL);
         else if (graphopts.postrect == PR_SUMMARY)
-          fmg.push("post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL
+          fdc.push("post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL
                    "imrect.ga = int(1.0 - (fhit.x - fhit.y))*imrect.ga + int(fhit.x - fhit.y)*ivec2(b_coord - fhit_rect[0], fhit_rect[1] - fhit_rect[0]);" SHNL);
       }
       
@@ -467,35 +459,35 @@ public:
                                       "", ""  // DE_SINTERP, DE_QINTERP
                                     };
         if ((unsigned int)graphopts.descaling < sizeof(descaling)/sizeof(const char*))
-          fmg.push(descaling[int(graphopts.descaling)]);
+          fdc.push(descaling[int(graphopts.descaling)]);
       }
       
       if (graphopts.dotsize)
       {       
-        fmg.push( "{" SHNL
+        fdc.push( "{" SHNL
                     "float hscx = floor(ab_iscaler.x/2.0 + 0.49);" SHNL);
         if (graphopts.dotsize > 0)
-          fmg.cintvar("dotsize", graphopts.dotsize);
+          fdc.cintvar("dotsize", graphopts.dotsize);
         else
         {
-          fmg.cintvar("godot", -graphopts.dotsize - 1);
-          fmg.push("int dotsize = max(int(hscx) + godot, 0);" SHNL);
+          fdc.cintvar("godot", -graphopts.dotsize - 1);
+          fdc.push("int dotsize = max(int(hscx) + godot, 0);" SHNL);
         }
-        fmg.push("int dist_limit = int(max((dotsize-1) - hscx + 1, 0.0));" SHNL);
-        fmg.cfloatvar("dotsmooth", graphopts.dotsmooth);
+        fdc.push("int dist_limit = int(max((dotsize-1) - hscx + 1, 0.0));" SHNL);
+        fdc.cfloatvar("dotsmooth", graphopts.dotsmooth);
         
         if (deinterpSL)
         {
-          fmg.push("float demoded_x = float(abc_coords.x*ab_ibounds.x - immod.x)/ab_fbounds.x*ab_indimms.x + (step(ab_iscaler.x/2.0, float(immod.x)));" SHNL
+          fdc.push("float demoded_x = float(abc_coords.x*ab_ibounds.x - immod.x)/ab_fbounds.x*ab_indimms.x + (step(ab_iscaler.x/2.0, float(immod.x)));" SHNL
                    "float demoded_offs = ab_iscaler.x/2.0 - 0.5;" SHNL
                    );
         }
         else
-          fmg.push("float demoded_x = float(abc_coords.x*ab_ibounds.x - immod.x)/ab_fbounds.x*ab_indimms.x;" SHNL
+          fdc.push("float demoded_x = float(abc_coords.x*ab_ibounds.x - immod.x)/ab_fbounds.x*ab_indimms.x;" SHNL
                    "float demoded_offs = 0.0;" SHNL
                    );
         
-        fmg.push(   "for (int j=-dist_limit; j<=dist_limit; j++)" SHNL
+        fdc.push(   "for (int j=-dist_limit; j<=dist_limit; j++)" SHNL
                     "{" SHNL
                       "float o_fx = float(demoded_x + j)/ab_indimms.x;" SHNL
                       "float o_VALCLR = getValue1D(i, o_fx);" SHNL
@@ -510,53 +502,51 @@ public:
                   "}" SHNL);
       }
       
-      if (allocatedPortions > 1 && (splitGraphs & SPFLAG_COLORSPLIT) == 0)
+//      if (allocatedPortions > 1 && (fdc.splits() & SPFLAG_COLORSPLIT) == 0)
       {
-        fmg.cintvar("allocatedPortions", (int)allocatedPortions);
+//        fdc.cintvar("allocatedPortions", (int)allocatedPortions);
         switch (coloropts.cpolicy)
         {
-        case CP_MONO:                 fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i);" SHNL); break;
-        case CP_PAINTED:              fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - VALCLR);" SHNL); break;
-        case CP_PAINTED_GROSS:        fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - sqrt(VALCLR));" SHNL); break;
-        case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 0.5 - abs(VALCLR - 0.5));" SHNL); break;
-        case CP_REPAINTED:            fmg.push("float porc = (paletrange[1] - (paletrange[1] - paletrange[0])*(float(allocatedPortions - 1 - i)/float(allocatedPortions)))*VALCLR;" SHNL); break;
+        case CP_MONO:                 fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i);" SHNL); break;
+        case CP_PAINTED:              fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - VALCLR);" SHNL); break;
+        case CP_PAINTED_GROSS:        fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - sqrt(VALCLR));" SHNL); break;
+        case CP_PAINTED_SYMMETRIC:    fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 0.5 - abs(VALCLR - 0.5));" SHNL); break;
+        case CP_REPAINTED:            fdc.push("float porc = (paletrange[1] - (paletrange[1] - paletrange[0])*(float(allocatedPortions - 1 - i)/float(allocatedPortions)))*VALCLR;" SHNL); break;
           
-        case CP_PALETTE:              fmg.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
-        case CP_PALETTE_SPLIT:        fmg.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])/float(allocatedPortions)*(i + b_coord_ns/ab_fndimms.y);" SHNL); break;
+        case CP_PALETTE:              fdc.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
+        case CP_PALETTE_SPLIT:        fdc.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])/float(allocatedPortions)*(i + b_coord_ns/ab_fndimms.y);" SHNL); break;
         }
       }
-      else
-      {
-        switch (coloropts.cpolicy)
-        {
-        case CP_MONO:                 fmg.push("float porc = paletrange[1];" SHNL); break;
-        case CP_PAINTED:              fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - VALCLR);" SHNL); break;
-        case CP_PAINTED_GROSS:        fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*sqrt(1.0 - VALCLR);" SHNL); break;
-        case CP_PAINTED_SYMMETRIC:    fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
-        case CP_REPAINTED:            fmg.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - VALCLR);" SHNL); break;
+//      else
+//      {
+//        switch (coloropts.cpolicy)
+//        {
+//        case CP_MONO:                 fdc.push("float porc = paletrange[1];" SHNL); break;
+//        case CP_PAINTED:              fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - VALCLR);" SHNL); break;
+//        case CP_PAINTED_GROSS:        fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*sqrt(1.0 - VALCLR);" SHNL); break;
+//        case CP_PAINTED_SYMMETRIC:    fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
+//        case CP_REPAINTED:            fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - VALCLR);" SHNL); break;
           
-        case CP_PALETTE: case CP_PALETTE_SPLIT:      fmg.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
-        }
-      }
+//        case CP_PALETTE: case CP_PALETTE_SPLIT:      fdc.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
+//        }
+//      }
 
-      fmg.push(  "vec3  colorGraph = texture(paletsampler, vec2(porc, 0.0)).rgb;" SHNL );
+      fdc.push(  "vec3  colorGraph = texture(paletsampler, vec2(porc, 0.0)).rgb;" SHNL );
       
       if (graphopts.graphtype == GT_HISTOGRAM_LASTBACK)
-        fmg.push("result = mix(result, mix(colorGraph, backcolor, step(float(dataportions), float(i+1))), mixwellp);" SHNL );
+        fdc.push("result = mix(result, mix(colorGraph, backcolor, step(float(dataportions), float(i+1))), mixwellp);" SHNL );
       else if (graphopts.graphtype == GT_HISTOGRAM_SUM)
-        fmg.push("result = result + colorGraph*vec3(mixwellp);" SHNL );
+        fdc.push("result = result + colorGraph*vec3(mixwellp);" SHNL );
       else
-        fmg.push("result = mix(result, colorGraph, mixwellp);" SHNL );
+        fdc.push("result = mix(result, colorGraph, mixwellp);" SHNL );
       
-      fmg.push(  "mixwell = max(mixwell, mixwellp);" SHNL);
+      fdc.push(  "mixwell = max(mixwell, mixwellp);" SHNL);
       
-      fmg.push(  "dvalue = mix(fy[1], dvalue, step(abs(b_coord - dvalue), abs(b_coord - fy[1])) );" SHNL);
-      fmg.push("}" SHNL ); // for
+      fdc.push(  "dvalue = mix(fy[1], dvalue, step(abs(b_coord - dvalue), abs(b_coord - fy[1])) );" SHNL);
+      fdc.push("}" SHNL ); // for
       
-//      fmg.push("dvalue = mix(dvalue, b_coord, step(mixwell, 0.0));" SHNL);
+//      fdc.push("dvalue = mix(dvalue, b_coord, step(mixwell, 0.0));" SHNL);
     }
-    fmg.main_end(fsp, fspopacity);
-    return fmg.written();
   }
 };
 
@@ -566,7 +556,7 @@ SheiGeneratorGraph::~SheiGeneratorGraph()
 }
 
 DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, unsigned int memForDeploy, const graphopts_t& graphopts, const coloropts_t& coloropts, SPLITPORTIONS splitGraphs):
-  DrawQWidget(DATEX_1D, new SheiGeneratorGraph(graphopts, coloropts), graphs, OR_LRBT, splitGraphs)
+  DrawQWidget(DATEX_1D, new SheiGeneratorGraph(graphopts, coloropts), graphs, OR_LRBT, splitGraphs, coloropts.backcolor)
 {
   m_dataDimmA = samples;
   m_dataDimmB = 1;
@@ -592,11 +582,11 @@ void DrawGraph::reXtractDynrange(const coloropts_t& co)
 
 /// m_countPortions === graphs
 DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, const coloropts_t& copts, SPLITPORTIONS splitGraphs):
-  DrawQWidget(DATEX_1D, new SheiGeneratorGraph(graphopts_t::goInterp(0.0f, DE_LINTERP), copts), graphs, OR_LRBT, splitGraphs)
+  DrawQWidget(DATEX_1D, new SheiGeneratorGraph(graphopts_t::goInterp(0.0f, DE_LINTERP), copts), graphs, OR_LRBT, splitGraphs, copts.backcolor)
 //  ,m_graphopts(graphopts_t::goInterp(0.0f, DE_LINTERP)), m_coloropts(copts)
 { reConstructor(samples); reXtractDynrange(copts); }
 DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, const coloropts_t& copts, SPLITPORTIONS splitGraphs):
-  DrawQWidget(DATEX_1D, new SheiGeneratorGraph(graphopts, copts), graphs, OR_LRBT, splitGraphs)
+  DrawQWidget(DATEX_1D, new SheiGeneratorGraph(graphopts, copts), graphs, OR_LRBT, splitGraphs, copts.backcolor)
 //  ,m_graphopts(graphopts), m_coloropts(copts)
 { reConstructor(samples); reXtractDynrange(copts); }
 
@@ -633,14 +623,6 @@ void DrawGraph::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA
   *matrixDimmB = sizeB / *scalingB;
   if (*matrixDimmB == 0)
     *matrixDimmB = 1;
-}
-
-unsigned int DrawGraph::colorBack() const
-{
-  unsigned int bc = ((SheiGeneratorGraph*)m_pcsh)->coloropts.backcolor;
-  if (bc == 0xFFFFFFFF)
-    return DrawQWidget::colorBack();
-  return bc;
 }
 
 ////////////////////////////////////////////////////////////////

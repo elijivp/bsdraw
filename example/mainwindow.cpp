@@ -675,16 +675,16 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     const int countROWS = 5, countCOLUMNS = 2;
     DrawQWidget* pdraws[countROWS][countCOLUMNS];
-    impulsedata_t imp[] = { { impulsedata_t::IR_OFF },
-                            { impulsedata_t::IR_A_COEFF, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
-                            { impulsedata_t::IR_A_COEFF_NOSCALED, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
-                            { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 5, 4, 0, {} },
-                            { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 5, 8, 0, {} },
-                            { impulsedata_t::IR_A_BORDERS, 10, 4, 0, {0.0f} },
-                            { impulsedata_t::IR_A_BORDERS, 10, 4, 0, {0.2f} },
-                            { impulsedata_t::IR_A_BORDERS, 10, 8, 0, {0.4f} },
-                            { impulsedata_t::IR_A_BORDERS, 10, 4, 0, {0.8f} },
-                            { impulsedata_t::IR_A_BORDERS, 10, 4, 0, {1.0f} },
+    datasubmesh_t imp[] = { { datasubmesh_t::IR_OFF },
+                            { datasubmesh_t::IR_A_COEFF, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { datasubmesh_t::IR_A_COEFF_NOSCALED, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { datasubmesh_t::IR_A_BORDERS_FIXEDCOUNT, 5, 4, 0, {} },
+                            { datasubmesh_t::IR_A_BORDERS_FIXEDCOUNT, 5, 8, 0, {} },
+                            { datasubmesh_t::IR_A_BORDERS, 10, 4, 0, {0.0f} },
+                            { datasubmesh_t::IR_A_BORDERS, 10, 4, 0, {0.2f} },
+                            { datasubmesh_t::IR_A_BORDERS, 10, 8, 0, {0.4f} },
+                            { datasubmesh_t::IR_A_BORDERS, 10, 4, 0, {0.8f} },
+                            { datasubmesh_t::IR_A_BORDERS, 10, 4, 0, {1.0f} },
     };
     const char* cpnames[] = { "ORIGINAL", "COEFF", "COEFF_NOSCALED", "BORDERS_FIXED", "BORDERS_FIXED2",
                               "BORDERS c0.0f", "BORDERS c0.2f", "BORDERS c0.4f", "BORDERS c0.8f", "BORDERS c1.0f"
@@ -694,7 +694,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       for (unsigned int c=0; c<countCOLUMNS; c++)
       {
         pdraws[r][c] = new DrawIntensity(SAMPLES, LINES, 1);
-        pdraws[r][c]->setImpulse(imp[r*countCOLUMNS + c]);
+        pdraws[r][c]->setSubmesh(imp[r*countCOLUMNS + c]);
         pdraws[r][c]->setScalingLimitsB(50); // our single 2d-row now takes at least 50 pixels
         pdraws[r][c]->ovlPushBack(new OTextColored(otextopts_t(cpnames[r*countCOLUMNS + c], 0, 10,2,10,2), CR_RELATIVE, 0.05f, 0.05f, 8, 0x00000000, 0x11FFFFFF, 0x00000000));
       }
@@ -997,26 +997,50 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     DrawQWidget* pdraw = new DrawGraph(SAMPLES, PORTIONS, 
                                         graphopts_t::goInterp(0.45f, DE_LINTERP), 
-                                        coloropts_t::copts(CP_MONO, 0.0f, 0.75f));
-    // 2 overlays just for effects
+                                        coloropts_t::copts(CP_MONO, 0.0f, 0.75f, 0x00666666));
+    
+    
     {
-      pdraw->ovlPushBack(new OGridCells(24, 16, linestyle_white(0,1,1)));
-      pdraw->ovlGet(1)->setOpacity(0.9f);
-      pdraw->ovlPushBack(new OShadow(10,10,10,10, 0.75f, color3f_white()));
+      pdraw->tftPushBack("Hello Wogld!", CR_RELATIVE, 0.5f, 0.5f, true);
+//      pdraw->tftPushBack("ABCDEFGHIJKLMNOPQRSTUVWZYZ", CR_RELATIVE, 0.25f, 0.25f);
+//      pdraw->tftPushBack("SUPERTEST RECORD", CR_PIXEL, 100, 100);
+      int rpa = pdraw->tftRecordsPerArea(0);
+//      qDebug()<<rpa;
+      const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      int ctr = 0;
+//      int total = rpa + 10;
+      int total = 70;
+      for (int i=0; i<total; i++)
+      {
+        char buffer[56];
+        sprintf(buffer, "%c %d", alphabet[i/10 % sizeof(alphabet)], ctr++);
+        if (ctr >= 10)
+          ctr = 0;
+        pdraw->tftPushBack(buffer, CR_RELATIVE, 0.1f + 0.8f*i/float(total), 0.1f + 0.8f*i/float(total), false);
+      }
+      
+      
     }
+    
+//    // 2 overlays just for effects
+//    {
+//      pdraw->ovlPushBack(new OGridCells(24, 16, linestyle_white(0,1,1)));
+//      pdraw->ovlGet(1)->setOpacity(0.9f);
+//      pdraw->ovlPushBack(new OShadow(10,10,10,10, 0.75f, color3f_white()));
+//    }
     
     DrawBars* pdrawbars = new DrawBars(pdraw, DrawBars::CP_DEFAULT);
     pdrawbars->addScaleSymmetricEmpty(AT_RIGHT, 0, 32, 20, 4);
     
     // 4 pointers for all 4 sides, attached to one overlay
     {
-      MEWPointer* mpHL = pdrawbars->addPointerAbsoluteDrawbounds(AT_LEFT, DBF_NOTESINSIDE, 0.5f, 6, 0.0f, "°");
-      MEWPointer* mpHR = pdrawbars->addPointerAbsoluteDrawbounds(AT_RIGHT,  DBF_NOTESINSIDE, 0.5f, 0, 0.0f, "°");
-      MEWPointer* mpVT = pdrawbars->addPointerAbsoluteDrawbounds(AT_TOP, DBF_NOTESINSIDE, 0.5f, 6, 0.0f, "s");
-      MEWPointer* mpVB = pdrawbars->addPointerAbsoluteDrawbounds(AT_BOTTOM, DBF_NOTESINSIDE, 0.5f, 4, 0.0f, "s");
-      OActiveCursorCarrier4* oac = new OActiveCursorCarrier4(mpHL->createReactor(), mpHR->createReactor(), mpVB->createReactor(), mpVT->createReactor());
-      int oap = pdrawbars->getDraw()->ovlPushBack(oac);
-      pdrawbars->getDraw()->ovlPushBack(new OFLine(OFLine::LT_CROSS, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_red(1,0,0)), oap);
+//      MEWPointer* mpHL = pdrawbars->addPointerAbsoluteDrawbounds(AT_LEFT, DBF_NOTESINSIDE, 0.5f, 6, 0.0f, "°");
+//      MEWPointer* mpHR = pdrawbars->addPointerAbsoluteDrawbounds(AT_RIGHT,  DBF_NOTESINSIDE, 0.5f, 0, 0.0f, "°");
+//      MEWPointer* mpVT = pdrawbars->addPointerAbsoluteDrawbounds(AT_TOP, DBF_NOTESINSIDE, 0.5f, 6, 0.0f, "s");
+//      MEWPointer* mpVB = pdrawbars->addPointerAbsoluteDrawbounds(AT_BOTTOM, DBF_NOTESINSIDE, 0.5f, 4, 0.0f, "s");
+//      OActiveCursorCarrier4* oac = new OActiveCursorCarrier4(mpHL->createReactor(), mpHR->createReactor(), mpVB->createReactor(), mpVT->createReactor());
+//      int oap = pdrawbars->getDraw()->ovlPushBack(oac);
+//      pdrawbars->getDraw()->ovlPushBack(new OFLine(OFLine::LT_CROSS, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_red(1,0,0)), oap);
     }
     
     pdrawbars->addSpace(AT_BOTTOM, 8);
@@ -1326,18 +1350,18 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 1;
     PRECREATE(1, 1);
     syncscaling = LINES > 30? 0 : (30-LINES)*6;
-    impulsedata_t imp[] = { { impulsedata_t::IR_OFF },
-                            { impulsedata_t::IR_A_COEFF, 5, 5/2, 1, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
-//                            { impulsedata_t::IR_A_COEFF, 3, 3/2, 0, { 0.25f, 0.5f, 0.25f } },
-                            { impulsedata_t::IR_A_COEFF_NOSCALED, 5, 5/2, 1, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
-                            { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 4, 6, 1, {} },
-                            { impulsedata_t::IR_A_BORDERS, 2, 2, 1, {} },
+    datasubmesh_t imp[] = { { datasubmesh_t::IR_OFF },
+                            { datasubmesh_t::IR_A_COEFF, 5, 5/2, 1, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+//                            { datasubmesh_t::IR_A_COEFF, 3, 3/2, 0, { 0.25f, 0.5f, 0.25f } },
+                            { datasubmesh_t::IR_A_COEFF_NOSCALED, 5, 5/2, 1, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { datasubmesh_t::IR_A_BORDERS_FIXEDCOUNT, 4, 6, 1, {} },
+                            { datasubmesh_t::IR_A_BORDERS, 2, 2, 1, {} },
     };
     for (unsigned int i=0; i<drawscount; i++)
     {
 //      draws[i] = new DrawPolar(SAMPLES, LINES, PORTIONS, 0x00000000, SP_ROWS_LR_2);
       draws[i] = new DrawPolar(SAMPLES, LINES, PORTIONS, 0, 0.0f, 0x00000000, SP_NONE);
-      draws[i]->setImpulse(imp[1]);
+      draws[i]->setSubmesh(imp[1]);
     }
 //    sigtype = ST_GEN_NORM;
     sigtype = ST_MOVE;
@@ -1650,16 +1674,16 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 1;
     PRECREATE(5, 2);
     
-    impulsedata_t imp[] = { { impulsedata_t::IR_OFF },
-                            { impulsedata_t::IR_A_COEFF, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
-                            { impulsedata_t::IR_A_COEFF_NOSCALED, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
-                            { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 30, 4, 0, {} },
-                            { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 30, 8, 0, {} },
-                            { impulsedata_t::IR_A_BORDERS, 30, 4, 0, {0.0f} },
-                            { impulsedata_t::IR_A_BORDERS, 30, 4, 0, {0.2f} },
-                            { impulsedata_t::IR_A_BORDERS, 30, 8, 0, {0.4f} },
-                            { impulsedata_t::IR_A_BORDERS, 30, 4, 0, {0.8f} },
-                            { impulsedata_t::IR_A_BORDERS, 30, 4, 0, {1.0f} },
+    datasubmesh_t imp[] = { { datasubmesh_t::IR_OFF },
+                            { datasubmesh_t::IR_A_COEFF, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { datasubmesh_t::IR_A_COEFF_NOSCALED, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { datasubmesh_t::IR_A_BORDERS_FIXEDCOUNT, 30, 4, 0, {} },
+                            { datasubmesh_t::IR_A_BORDERS_FIXEDCOUNT, 30, 8, 0, {} },
+                            { datasubmesh_t::IR_A_BORDERS, 30, 4, 0, {0.0f} },
+                            { datasubmesh_t::IR_A_BORDERS, 30, 4, 0, {0.2f} },
+                            { datasubmesh_t::IR_A_BORDERS, 30, 8, 0, {0.4f} },
+                            { datasubmesh_t::IR_A_BORDERS, 30, 4, 0, {0.8f} },
+                            { datasubmesh_t::IR_A_BORDERS, 30, 4, 0, {1.0f} },
     };
     const char* cpnames[] = { "ORIGINAL", "COEFF", "COEFF_NOSCALED", "BORDERS_FIXED", "BORDERS_FIXED2",
                               "BORDERS c0.0f", "BORDERS c0.2f", "BORDERS c0.4f", "BORDERS c0.8f", "BORDERS c1.0f"
@@ -1668,7 +1692,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       for (unsigned int i=0; i<drcount; i++)
       {
         draws[c*drcount + i] = new DrawIntensity(SAMPLES, LINES, 1);
-        draws[c*drcount + i]->setImpulse(imp[c*drcount + i]);
+        draws[c*drcount + i]->setSubmesh(imp[c*drcount + i]);
         draws[c*drcount + i]->setScalingLimitsA(50);
         draws[c*drcount + i]->setScalingLimitsB(50);
         draws[c*drcount + i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[c*drcount + i], 0, 10,2,10,2), CR_RELATIVE, 0.05f, 0.05f, 8, 0x00000000, 0x11FFFFFF, 0x00000000));
@@ -1683,17 +1707,17 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 1;
     PRECREATE(1, 5);
     
-    impulsedata_t imp[] = { { impulsedata_t::IR_OFF },
-                            { impulsedata_t::IR_B_COEFF, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
-                            { impulsedata_t::IR_B_COEFF_NOSCALED, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
-                            { impulsedata_t::IR_B_BORDERS_FIXEDCOUNT, 30, 4, 0, {} },
-                            { impulsedata_t::IR_B_BORDERS, 30, 4, 0, {} },
+    datasubmesh_t imp[] = { { datasubmesh_t::IR_OFF },
+                            { datasubmesh_t::IR_B_COEFF, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { datasubmesh_t::IR_B_COEFF_NOSCALED, 5, 5/2, 0, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } },
+                            { datasubmesh_t::IR_B_BORDERS_FIXEDCOUNT, 30, 4, 0, {} },
+                            { datasubmesh_t::IR_B_BORDERS, 30, 4, 0, {} },
     };
     const char* cpnames[] = { "ORIGINAL", "COEFF", "COEFF_NOSCALED", "BORDERS_FIXED", "BORDERS", "" };
     for (unsigned int i=0; i<drawscount; i++)
     {
       draws[i] = new DrawIntensity(SAMPLES, LINES, 1);
-      draws[i]->setImpulse(imp[i]);
+      draws[i]->setSubmesh(imp[i]);
       draws[i]->setScalingLimitsA(50);
       draws[i]->setScalingLimitsB(50);
       draws[i]->ovlPushBack(new OTextColored(otextopts_t(cpnames[i], 0, 10,2,10,2), CR_RELATIVE, 0.05f, 0.05f, 8, 0x00000000, 0x11FFFFFF, 0x00000000));
@@ -2916,7 +2940,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         COLLAPSOR_END
                 
         COLLAPSOR_BEGIN("Impulse [scaling+]")
-          TAU_TEXT_ADD(0, "setImpulse()   when Scaling > 1", 0, Qt::AlignLeft)
+          TAU_TEXT_ADD(0, "setSubmesh()   when Scaling > 1", 0, Qt::AlignLeft)
           BS_SPACING(maincaption)
                 
             TauSetup upbtnoff("Off", 0, 0, BFS_CHECKED);
@@ -4605,6 +4629,22 @@ void  MainWindow::changeFeatures(int id)
       {
         draws[i]->setMinimumWidth(800);
       }
+      else if (MW_TEST == OVERVIEW_BARS_3)
+      {
+        {
+          int s1 = rand()/float(RAND_MAX)*(draws[i]->tftCountSlots(0)-1);
+          int s2 = rand()/float(RAND_MAX)*(draws[i]->tftCountSlots(0)-1);
+          int r1 = draws[i]->tftRecordForSlot(0, s2);
+          int r2 = draws[i]->tftRecordForSlot(0, s1);
+          qDebug()<<"Switching: "<<s1<<s2<<r1<<r2;
+          draws[i]->tftSwitch(0, s1, r1);
+          draws[i]->tftSwitch(0, s2, r2);
+        }
+        
+        draws[i]->tftMove(0, 0, rand()/float(RAND_MAX)*0.8f, 0.5f);
+        
+        
+      }
     }
     else if (id == BTF_UPDATEGEOMETRY)
     {
@@ -4718,39 +4758,39 @@ void MainWindow::changeInterpolation(int sigid)
 }
 
 
-static const impulsedata_t g_impulse_rec[2][12] = 
+static const datasubmesh_t g_submesh_rec[2][12] = 
 {  
   {
-    { impulsedata_t::IR_A_COEFF, 3, 1, 1, { 0.1f, 0.8f, 0.1f } } ,
-    { impulsedata_t::IR_A_COEFF, 3, 1, 1, { 0.28f, 0.44f, 0.28f } } ,
-    { impulsedata_t::IR_A_COEFF, 5, 2, 1, { 0.05f, 0.15f, 0.6f, 0.15f, 0.05f } } ,
-    { impulsedata_t::IR_A_COEFF, 5, 2, 1, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } } ,
+    { datasubmesh_t::IR_A_COEFF, 3, 1, 1, { 0.1f, 0.8f, 0.1f } } ,
+    { datasubmesh_t::IR_A_COEFF, 3, 1, 1, { 0.28f, 0.44f, 0.28f } } ,
+    { datasubmesh_t::IR_A_COEFF, 5, 2, 1, { 0.05f, 0.15f, 0.6f, 0.15f, 0.05f } } ,
+    { datasubmesh_t::IR_A_COEFF, 5, 2, 1, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } } ,
     
-    { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 3, 1, 1, {} } ,
-    { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 3, 2, 1, {} } ,
-    { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 3, 3, 1, {} } ,
-    { impulsedata_t::IR_A_BORDERS_FIXEDCOUNT, 3, 4, 1, {} } ,
+    { datasubmesh_t::IR_A_BORDERS_FIXEDCOUNT, 3, 1, 1, {} } ,
+    { datasubmesh_t::IR_A_BORDERS_FIXEDCOUNT, 3, 2, 1, {} } ,
+    { datasubmesh_t::IR_A_BORDERS_FIXEDCOUNT, 3, 3, 1, {} } ,
+    { datasubmesh_t::IR_A_BORDERS_FIXEDCOUNT, 3, 4, 1, {} } ,
 
-    { impulsedata_t::IR_A_BORDERS, 3, 1, 1, { 0.0f } } ,
-    { impulsedata_t::IR_A_BORDERS, 3, 2, 1, { 0.2f } } ,
-    { impulsedata_t::IR_A_BORDERS, 3, 6, 1, { 0.0f } } ,
-    { impulsedata_t::IR_A_BORDERS, 3, 2, 1, { 0.4f } }
+    { datasubmesh_t::IR_A_BORDERS, 3, 1, 1, { 0.0f } } ,
+    { datasubmesh_t::IR_A_BORDERS, 3, 2, 1, { 0.2f } } ,
+    { datasubmesh_t::IR_A_BORDERS, 3, 6, 1, { 0.0f } } ,
+    { datasubmesh_t::IR_A_BORDERS, 3, 2, 1, { 0.4f } }
   },
   {
-    { impulsedata_t::IR_B_COEFF, 3, 1, 1, { 0.1f, 0.8f, 0.1f } } ,
-    { impulsedata_t::IR_B_COEFF, 3, 1, 1, { 0.28f, 0.44f, 0.28f } } ,
-    { impulsedata_t::IR_B_COEFF, 5, 2, 1, { 0.05f, 0.15f, 0.6f, 0.15f, 0.05f } } ,
-    { impulsedata_t::IR_B_COEFF, 5, 2, 1, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } } ,
+    { datasubmesh_t::IR_B_COEFF, 3, 1, 1, { 0.1f, 0.8f, 0.1f } } ,
+    { datasubmesh_t::IR_B_COEFF, 3, 1, 1, { 0.28f, 0.44f, 0.28f } } ,
+    { datasubmesh_t::IR_B_COEFF, 5, 2, 1, { 0.05f, 0.15f, 0.6f, 0.15f, 0.05f } } ,
+    { datasubmesh_t::IR_B_COEFF, 5, 2, 1, { 0.1f, 0.2f, 0.4f, 0.2f, 0.1f } } ,
     
-    { impulsedata_t::IR_B_BORDERS_FIXEDCOUNT, 3, 1, 1, {} } ,
-    { impulsedata_t::IR_B_BORDERS_FIXEDCOUNT, 3, 2, 1, {} } ,
-    { impulsedata_t::IR_B_BORDERS_FIXEDCOUNT, 3, 3, 1, {} } ,
-    { impulsedata_t::IR_B_BORDERS_FIXEDCOUNT, 3, 4, 1, {} } ,
+    { datasubmesh_t::IR_B_BORDERS_FIXEDCOUNT, 3, 1, 1, {} } ,
+    { datasubmesh_t::IR_B_BORDERS_FIXEDCOUNT, 3, 2, 1, {} } ,
+    { datasubmesh_t::IR_B_BORDERS_FIXEDCOUNT, 3, 3, 1, {} } ,
+    { datasubmesh_t::IR_B_BORDERS_FIXEDCOUNT, 3, 4, 1, {} } ,
 
-    { impulsedata_t::IR_B_BORDERS, 3, 1, 1, { 0.0f } } ,
-    { impulsedata_t::IR_B_BORDERS, 3, 2, 1, { 0.2f } } ,
-    { impulsedata_t::IR_B_BORDERS, 3, 6, 1, { 0.0f } } ,
-    { impulsedata_t::IR_B_BORDERS, 3, 2, 1, { 0.4f } }
+    { datasubmesh_t::IR_B_BORDERS, 3, 1, 1, { 0.0f } } ,
+    { datasubmesh_t::IR_B_BORDERS, 3, 2, 1, { 0.2f } } ,
+    { datasubmesh_t::IR_B_BORDERS, 3, 6, 1, { 0.0f } } ,
+    { datasubmesh_t::IR_B_BORDERS, 3, 2, 1, { 0.4f } }
           }
 };
 
@@ -4758,14 +4798,14 @@ void MainWindow::changeImpulse(int v)
 {
   if (v == 0)
   {
-    const impulsedata_t impoff = { impulsedata_t::IR_OFF };
+    const datasubmesh_t impoff = { datasubmesh_t::IR_OFF };
     for (unsigned int i=0; i<drawscount; i++)
-      draws[i]->setImpulse(impoff);
+      draws[i]->setSubmesh(impoff);
   }
   else
   {
     for (unsigned int i=0; i<drawscount; i++)
-      draws[i]->setImpulse(((const impulsedata_t*)g_impulse_rec)[v-1]);
+      draws[i]->setSubmesh(((const datasubmesh_t*)g_submesh_rec)[v-1]);
   }
 }
 

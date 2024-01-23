@@ -12,38 +12,29 @@ class SheiGeneratorPolar: public ISheiGenerator
 {
 public:
   unsigned int  m_samplesHorz, m_samplesVert;
-  unsigned int  m_bckclr;
 public:
-  SheiGeneratorPolar(unsigned int samplesHorz, unsigned int samplesVert, unsigned int backgroundColor): 
-    m_samplesHorz(samplesHorz), m_samplesVert(samplesVert), m_bckclr(backgroundColor){}
+  SheiGeneratorPolar(unsigned int samplesHorz, unsigned int samplesVert): 
+    m_samplesHorz(samplesHorz), m_samplesVert(samplesVert){}
   ~SheiGeneratorPolar();
 public:
   virtual const char*   shaderName() const {  return "POLAR"; }
   virtual int           portionMeshType() const { return PMT_PSEUDO2D; }
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
-  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 1800 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
-  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
-                                         const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
-                                         ovlfraginfo_t ovlsinfo[], unsigned int ovlscount,
-                                         locbackinfo_t locbackinfo[], unsigned int* locbackcount,
-                                         char* to) const
+  virtual unsigned int  shfragment_pendingSize() const { return 1800; }
+  virtual unsigned int  shfragment_uniforms(shuniformdesc_t*, unsigned int){ return 0; }
+  virtual void          shfragment_store(FshDrawComposer& fdc) const
   {
-    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, 0, nullptr, ovlscount, ovlsinfo);
-    fmg.getLocbacks(locbackinfo, locbackcount);
-    fmg.push("uniform highp float viewturn;");
-    fmg.main_begin(FshDrawConstructor::INIT_BYVALUE, m_bckclr, orient, fsp, m_samplesHorz, m_samplesVert);
-    fmg.cintvar("allocatedPortions", (int)allocatedPortions);
-
-    fmg.push("vec3 mpi = vec3(3.14159265359, 1.57079632679, 6.28318530718);");
-    fmg.push("vec2 datacoords = (abc_coords - vec2(0.5, 0.5))*2;");
+    fdc.push("uniform highp float viewturn;");
+    fdc.push("vec3 mpi = vec3(3.14159265359, 1.57079632679, 6.28318530718);");
+    fdc.push("vec2 datacoords = (abc_coords - vec2(0.5, 0.5))*2;");
     
-    fmg.push("vec4 lenarcscal = vec4(length(datacoords), mpi[1] + atan(datacoords.x, datacoords.y) + mpi[2]*(1.0-step(0.0, datacoords.x))*(1.0 - step(0.0, datacoords.y)), 0.0, 0.0);"
+    fdc.push("vec4 lenarcscal = vec4(length(datacoords), mpi[1] + atan(datacoords.x, datacoords.y) + mpi[2]*(1.0-step(0.0, datacoords.x))*(1.0 - step(0.0, datacoords.y)), 0.0, 0.0);"
              "lenarcscal[1] = mod(lenarcscal[1] + viewturn*mpi[2], mpi[2]);"
              "dbounds.x = (mpi[2]*lenarcscal[0]*dbounds_noscaled.y*ab_iscaler.y);"
              );
     
-    fmg.push("lenarcscal[2] = max(dbounds.x/dbounds_noscaled.x, 1.0);"
+    fdc.push("lenarcscal[2] = max(dbounds.x/dbounds_noscaled.x, 1.0);"
              "lenarcscal[3] = lenarcscal[1]*lenarcscal[0]*dbounds.y*ab_iscaler.y;"
              "lenarcscal[3] = lenarcscal[3] - floor(lenarcscal[3]/lenarcscal[2])*lenarcscal[2];"
 //             "float tempo = 0.0*min(abs(datacoords.x/datacoords.y), abs(datacoords.y/datacoords.x));"
@@ -56,35 +47,33 @@ public:
              );
 
     
-    fmg.push("datacoords = vec2(lenarcscal[1]/mpi[2], lenarcscal[0]);"
+    fdc.push("datacoords = vec2(lenarcscal[1]/mpi[2], lenarcscal[0]);"
              "lenarcscal[2] = step(lenarcscal[0], 1.0);"
              );
     
-    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<dataportions; i++)" : "int i = explicitPortion;" );
-    fmg.push( "{" );
+    fdc.push( fdc.splits() == SP_NONE? "for (int i=0; i<dataportions; i++)" : "int i = explicitPortion;" );
+    fdc.push( "{" );
     {
-      fmg.value2D("float value", "datacoords");
-      fmg.push("value = paletrange[0] + (paletrange[1] - paletrange[0])*value;");
-      fmg.push("dvalue = max(dvalue, value);");
+      fdc.value2D("float value", "datacoords");
+      fdc.push("value = paletrange[0] + (paletrange[1] - paletrange[0])*value;");
+      fdc.push("dvalue = max(dvalue, value);");
       
-      if ( splitPortions == SP_NONE )
-        fmg.push( "result = mix(result, result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb, lenarcscal[2]);"
+      if ( fdc.splits() == SP_NONE )
+        fdc.push( "result = mix(result, result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb, lenarcscal[2]);"
 //                  "result = mix(result, vec3(0), step(float(immod.x), 3.0)*step(3.0, float(immod.x)));"
                   );
       else
-        fmg.push( "result = mix(result, texture(paletsampler, vec2(value, 0.0)).rgb, (1.0 - step(countPortions, float(explicitPortion)))*lenarcscal[2]  );" );
+        fdc.push( "result = mix(result, texture(paletsampler, vec2(value, 0.0)).rgb, (1.0 - step(countPortions, float(explicitPortion)))*lenarcscal[2]  );" );
 
-//      fmg.push("post_mask[0] = mix(post_mask[0], 1.0, (1.0 - step(value, post_mask[1]))*lenarcscal[2] );" );
-      fmg.push("post_mask[0] = mix(post_mask[0], 1.0, (1.0 - step(value, post_mask[1]))*lenarcscal[2] );"
+//      fdc.push("post_mask[0] = mix(post_mask[0], 1.0, (1.0 - step(value, post_mask[1]))*lenarcscal[2] );" );
+      fdc.push("post_mask[0] = mix(post_mask[0], 1.0, (1.0 - step(value, post_mask[1]))*lenarcscal[2] );"
                "post_mask[3] = mix(post_mask[3], 1.0, (1.0 - step(value, post_mask[1]))*lenarcscal[2] );"
                );
-//      fmg.push("post_mask[0] = mix(0.0, post_mask[0], lenarcscal[2] );" );
+//      fdc.push("post_mask[0] = mix(0.0, post_mask[0], lenarcscal[2] );" );
     }
-    fmg.push( "}" );
-    fmg.push("post_mask[3] = mix(0.0, post_mask[3], lenarcscal[2]);"
+    fdc.push( "}" );
+    fdc.push("post_mask[3] = mix(0.0, post_mask[3], lenarcscal[2]);"
              );
-    fmg.main_end(fsp, fspopacity);
-    return fmg.written();
   }
 };
 SheiGeneratorPolar::~SheiGeneratorPolar(){}
@@ -195,13 +184,13 @@ void DrawPolar::reConstructor(unsigned int samplesHorz, unsigned int samplesVert
 }
 
 DrawPolar::DrawPolar(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, unsigned int backgroundColor, SPLITPORTIONS splitGraphs):
-  DrawQWidget(DATEX_POLAR, new SheiGeneratorPolar(samplesHorz, samplesVert, backgroundColor), portions, OR_LRTB, splitGraphs)
+  DrawQWidget(DATEX_POLAR, new SheiGeneratorPolar(samplesHorz, samplesVert), portions, OR_LRTB, splitGraphs, backgroundColor)
 {
   reConstructor(samplesHorz, samplesVert);
 }
 
 DrawPolar::DrawPolar(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, float turn, float deltaScale01, unsigned int backgroundColor, SPLITPORTIONS splitGraphs):
-  DrawQWidget(DATEX_POLAR, new SheiGeneratorPolar(samplesHorz, samplesVert, backgroundColor), portions, OR_LRTB, splitGraphs), m_deltaScale(deltaScale01)
+  DrawQWidget(DATEX_POLAR, new SheiGeneratorPolar(samplesHorz, samplesVert), portions, OR_LRTB, splitGraphs, backgroundColor), m_deltaScale(deltaScale01)
 {
   reConstructor(samplesHorz, samplesVert);
   m_viewTurn = turn;
@@ -221,14 +210,6 @@ void DrawPolar::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA
   *scalingA = (unsigned int)sizeA <= m_dataDimmB? 1 : (sizeA / m_dataDimmB);  // only B
   *scalingB = (unsigned int)sizeB <= m_dataDimmB? 1 : (sizeB / m_dataDimmB);  // only B
   clampScaling(scalingA, scalingB);
-}
-
-unsigned int DrawPolar::colorBack() const
-{
-  unsigned int bc = ((SheiGeneratorPolar*)m_pcsh)->m_bckclr;
-  if (bc == 0xFFFFFFFF)
-    return DrawQWidget::colorBack();
-  return bc;
 }
 
 void DrawPolar::turn(float rotate01)

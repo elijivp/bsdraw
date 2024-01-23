@@ -12,41 +12,32 @@ public:
   virtual int           portionMeshType() const { return PMT_PSEUDO2D; }
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
-  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 700 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
-  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
-                                         const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
-                                         ovlfraginfo_t ovlsinfo[], unsigned int ovlscount, 
-                                         locbackinfo_t locbackinfo[], unsigned int* locbackcount,
-                                         char* to) const
+  virtual unsigned int  shfragment_pendingSize() const { return 2048; }
+  virtual unsigned int  shfragment_uniforms(shuniformdesc_t*, unsigned int){ return 0; }
+  virtual void          shfragment_store(FshDrawComposer& fdc) const
   {
-    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, 0, nullptr, ovlscount, ovlsinfo);
-    fmg.getLocbacks(locbackinfo, locbackcount);
-    fmg.main_begin(FshDrawConstructor::INITBACK_BYPALETTE, 0, orient, fsp); //FshDrawConstructor::INITBACK_BYZERO
-    fmg.cintvar("allocatedPortions", (int)allocatedPortions);
-    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
-    fmg.push("{");
+    fdc.push( fdc.splits() == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
+    fdc.push("{");
     {
-//      fmg.value2D("float value");
-//      fmg.push("dvalue = max(dvalue, value);");
-      fmg.value2D("dvalue");
-      fmg.push("float value = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
-      if ( splitPortions == SP_NONE )
-        fmg.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" SHNL);
-      else if (splitPortions & SPFLAG_COLORSPLIT)
-        fmg.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" SHNL);
+//      fdc.value2D("float value");
+//      fdc.push("dvalue = max(dvalue, value);");
+      fdc.value2D("dvalue");
+      fdc.push("float value = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
+      if ( fdc.splits() == SP_NONE )
+        fdc.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" SHNL);
+      else if (fdc.splits() & SPFLAG_COLORSPLIT)
+        fdc.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" SHNL);
       else
-        fmg.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" SHNL);
+        fdc.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" SHNL);
       
-      fmg.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" SHNL);
+      fdc.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" SHNL);
     }
-    fmg.push("}");
-    fmg.main_end(fsp, fspopacity);
-    return fmg.written();
+    fdc.push("}");
   }
 };
 
 DrawIntensity::DrawIntensity(unsigned int samplesA, unsigned int samplesB, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): 
-  DrawQWidget(DATEX_2D, new SheiGeneratorIntenisty, portions, orient, splitPortions)
+  DrawQWidget(DATEX_2D, new SheiGeneratorIntenisty, portions, orient, splitPortions, 0x00000000)
 {
   m_dataDimmA = samplesA;
   m_dataDimmB = samplesB;
@@ -68,7 +59,7 @@ void DrawIntensity::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixD
 ///
 
 DrawIntensityUpsizeA::DrawIntensityUpsizeA(unsigned int samplesAmin, unsigned int samplesAmax, unsigned int samplesB, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): 
-  DrawQWidget(DATEX_2D, new SheiGeneratorIntenisty, portions, orient, splitPortions), m_minA(samplesAmin), m_maxA(samplesAmax)
+  DrawQWidget(DATEX_2D, new SheiGeneratorIntenisty, portions, orient, splitPortions, 0x00000000), m_minA(samplesAmin), m_maxA(samplesAmax)
 {
   m_dataDimmA = samplesAmax;
   m_dataDimmB = samplesB;
@@ -102,7 +93,7 @@ int DrawIntensityUpsizeA::sizeAndScaleChanged(bool changedDimmA, bool /*changedD
 
 
 DrawIntensityUpsizeB::DrawIntensityUpsizeB(unsigned int samplesA, unsigned int samplesBmin, unsigned int samplesBmax, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): 
-  DrawQWidget(DATEX_2D, new SheiGeneratorIntenisty, portions, orient, splitPortions), m_minB(samplesBmin), m_maxB(samplesBmax)
+  DrawQWidget(DATEX_2D, new SheiGeneratorIntenisty, portions, orient, splitPortions, 0x00000000), m_minB(samplesBmin), m_maxB(samplesBmax)
 {
   m_dataDimmA = samplesA;
   m_dataDimmB = samplesBmax;

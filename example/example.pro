@@ -23,6 +23,8 @@ DEFINES += BSGLSLVER=130     # no "#version" string includes in shader if not de
 #DEFINES += BSGLSLVER=450     # no "#version" string includes in shader if not defined
 DEFINES += BS_TAU_PROPERTY_OFF
 
+#DEFINES += BSGLSLOLD
+
 TARGET = example
 TEMPLATE = app
 

@@ -41,7 +41,6 @@ public:
   DrawHint(float value, ORIENTATION orient=OR_LRTB, unsigned int backgroundColor=0xFFFFFFFF);
 public:
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
-  virtual unsigned int    colorBack() const;
 };
 
 #endif // DRAWCOREHINT_H

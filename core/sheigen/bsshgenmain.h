@@ -25,51 +25,28 @@ public:
   unsigned int operator()(char* to);
 };
 
-struct globvarinfo_t
-{
-  DTYPE           type;
-  const char*     name;
-};
+//struct globvarinfo_t
+//{
+//  DTYPE           type;
+//  const char*     name;
+//};
 
-class FshDrawConstructor
+class FshDrawComposer
 {
+protected:
   const char*                         m_writebase;
   char* const                         m_to;
-  unsigned int                        m_allocatedPortions;
   int                                 m_offset;
-  SPLITPORTIONS                       m_splitPortions;
   
-  impulsedata_t                       m_impulsegen;
+  SPLITPORTIONS                       m_split;
+  datasubmesh_t                       m_datasubmesh;
   
-  ORIENTATION                         m_orient;
-  
-  unsigned int                        m_c_locbackscount;
-  locbackinfo_t                       m_c_locbacks[96];
-  unsigned int                        m_ovlscount;
-  const ovlfraginfo_t*                m_ovls;
-  
-  enum  DATAMAPPING { DM_OFF, DM_ON  }  m_datamapped;
+  bool                                m_datamapped;
+protected:
+  FshDrawComposer(char* deststring, SPLITPORTIONS splits, const datasubmesh_t& imp);
 public:
-  static unsigned int basePendingSize(const impulsedata_t& imp, unsigned int ovlscount);
-public:
-  FshDrawConstructor(char* deststring, unsigned int allocatedPortions, SPLITPORTIONS splitPortions, const impulsedata_t& imp, 
-                            unsigned int globscount, globvarinfo_t* globsinfo, unsigned int ovlscount, ovlfraginfo_t* ovlsinfo);
+  SPLITPORTIONS splits() const { return m_split;  }
   unsigned int  written() const { return (unsigned int)m_offset; }
-  void          getLocbacks(locbackinfo_t* locbacks, unsigned int* locbackscount) const ; 
-private:
-  void  _main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp); /// initresult: 0-none, 1-by zero, 2-by backcolor
-public:
-  enum  { 
-    INITBACK_BYZERO,
-    INITBACK_BYVALUE,
-    INITBACK_BYPALETTE,
-    INIT_BYZERO,
-    INIT_BYVALUE,
-    INIT_BYPALETTE
-        };
-  void  main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp); /// initresult: 0-none, 1-by zero, 2-by backcolor
-  void  main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp, unsigned int dboundsA, unsigned int dboundsB); /// initresult: 0-none, 1-by zero, 2-by backcolor
-  void  main_end(const overpattern_t& fsp, float fspopacity);
 public:
   void  push(const char* text);
   void  pushin(const char* text); // guaranteed no SHNL at the end
@@ -81,7 +58,29 @@ public:
   void  cintvar(const char* name, int value1, int value2);
 public:
   void  value2D(const char* varname, const char* coordsname="abc_coords", const char* portionname="i");
-private:
+};
+
+class FshDrawMain: public FshDrawComposer
+{
+public:
+  static unsigned int basePendingSize(const datasubmesh_t& imp, unsigned int ovlscount);
+public:
+  FshDrawMain(char* deststring, SPLITPORTIONS splits, const datasubmesh_t& imp);
+  
+  void          generic_decls_begin(int ovlscount);
+  void          generic_decls_add(DTYPE, const char* name);
+  void          generic_decls_add_tftareas(int texid, char* result);
+  void          generic_decls_add_tftdynamicvar(int texid, int sloid, char* result_i, char* result_c);
+  
+  void          generic_main_begin(int allocatedPortions, ORIENTATION orient, unsigned int emptycolor, const overpattern_t& fsp);
+  
+//  void          generic_main_tftadd(const char* name, float arr[]);
+//  void          generic_main_process_tft(const char* holdingname, const char* varname, int record, int recordslimit, int arr[]);
+  void          generic_main_prepare_tft();
+  void          generic_main_process_tft(const tftfraginfo_t& tft);
+  
+  void          generic_main_process_fsp(const overpattern_t& fsp, float fspopacity);
+  void          generic_main_process_overlays(ORIENTATION orient, int ovlscount, const ovlfraginfo_t* ovls);
 };
 
 #endif // FSHDRAWCONSTRUCTOR_H

@@ -161,19 +161,323 @@ unsigned int VshMainGenerator2D::operator()(char *to)
   return sizeof(vertex_body);
 }
 
-
 /***********************************************************/
 
-unsigned int FshDrawConstructor::basePendingSize(const impulsedata_t& imp, unsigned int ovlscount)
+
+
+FshDrawComposer::FshDrawComposer(char* deststring, SPLITPORTIONS splits, const datasubmesh_t& imp): 
+  m_writebase(deststring), m_to(deststring), m_offset(0), m_split(splits), m_datasubmesh(imp),
+  m_datamapped(false)
+{
+}
+
+void FshDrawComposer::push(const char* text)
+{
+  while (*text != '\0')
+    m_to[m_offset++] = *text++;
+#ifdef AUTOSHNL
+  text = SHNL;
+  while (*text != '\0')
+    m_to[m_offset++] = *text++;
+#endif
+}
+
+void FshDrawComposer::pushin(const char* text)
+{
+  while (*text != '\0')
+    m_to[m_offset++] = *text++;
+}
+
+void FshDrawComposer::ccolor(const char *name, unsigned int value)
+{
+  float clr[3];
+  for (int i=0; i<3; i++)
+    clr[i] = ((value >> 8*i) & 0xFF) / 256.0;
+  m_offset += msprintf(&m_to[m_offset], "const vec3 %s = vec3(%F, %F, %F);" SHNL, name, clr[0], clr[1], clr[2]);
+}
+
+
+void FshDrawComposer::cfloatvar(const char *name, float value){  m_offset += msprintf(&m_to[m_offset], "const float %s = %f;" SHNL, name, value);  }
+void FshDrawComposer::cfloatvar(const char *name, float value1, float value2){  m_offset += msprintf(&m_to[m_offset], "const vec2 %s = vec2(%f, %f);" SHNL, name, value1, value2);  }
+void FshDrawComposer::cintvar(const char *name, int value){  m_offset += msprintf(&m_to[m_offset], "const int %s = %d;" SHNL, name, value);  }
+void FshDrawComposer::cintvar(const char *name, int value1, int value2){  m_offset += msprintf(&m_to[m_offset], "const ivec2 %s = ivec2(%d, %d);" SHNL, name, value1, value2);  }
+
+void FshDrawComposer::value2D(const char* varname, const char* coordsname, const char* portionname)
+{
+  if (m_datasubmesh.type == datasubmesh_t::IR_OFF)
+  {
+    m_offset += msprintf(&m_to[m_offset], "%s = texture(datasampler, vec2(%s.x, float(%s.y + float(%s))/float(dataportions))).r;" SHNL,
+                                          varname,                    coordsname, coordsname,   portionname);
+  }
+  
+                    /// A
+  
+  else if (m_datasubmesh.type == datasubmesh_t::IR_A_COEFF || m_datasubmesh.type == datasubmesh_t::IR_A_COEFF_NOSCALED)
+  {
+    m_offset += msprintf(&m_to[m_offset],  "vec3 loc_vv = vec3(0.0, 0.0, 0.0);" SHNL );
+                         
+    const char* scnosc = m_datamapped == false ? 
+                           m_datasubmesh.type == datasubmesh_t::IR_A_COEFF? "ab_ibounds" : "ab_indimms" :
+                           m_datasubmesh.type == datasubmesh_t::IR_A_COEFF? "dbounds" : "dbounds_noscaled";
+    
+    m_offset += msprintf(&m_to[m_offset],  "vec4 submeshgrad = vec4(0, %s.x*%s.x, 1.0/%s.x, float(%s.y + float(%s))/float(dataportions));" SHNL,
+                                                          coordsname,  scnosc,   scnosc,     coordsname,  portionname
+                        );
+    
+    const char* lvclamp = "loc_vv[2]";
+    if (m_datasubmesh.flags & datasubmesh_t::F_CLAMPTOP && m_datasubmesh.flags & datasubmesh_t::F_CLAMPBOT)
+      lvclamp = "clamp(loc_vv[2], 0.0, 1.0)";
+    else if (m_datasubmesh.flags & datasubmesh_t::F_CLAMPTOP)
+      lvclamp = "min(loc_vv[2], 1.0)";
+    else if (m_datasubmesh.flags & datasubmesh_t::F_CLAMPBOT)
+      lvclamp = "max(loc_vv[2], 0.0)";
+    
+    for (int i=0; i<m_datasubmesh.central; i++)
+    {
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = submeshgrad[1] - %d;" SHNL, -(i - m_datasubmesh.central));
+      if (m_datasubmesh.flags & datasubmesh_t::F_CYCLED)
+        m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], %s.x + loc_vv[1], 1.0 - step(0.0, loc_vv[1]));" SHNL, scnosc);
+        
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(datasampler, vec2(loc_vv[1]*submeshgrad[2], submeshgrad[3])).r;" SHNL);
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * %s;" SHNL,
+                                                                              m_datasubmesh.coeff[i], lvclamp);
+    }
+    
+    m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(datasampler, vec2(submeshgrad[1]*submeshgrad[2], submeshgrad[3])).r;" SHNL,
+                                                                              m_datasubmesh.coeff[m_datasubmesh.central]);
+    
+    for (int i=m_datasubmesh.central+1; i<m_datasubmesh.count; i++)
+    {
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = submeshgrad[1] + %d;" SHNL, i-m_datasubmesh.central);
+      if (m_datasubmesh.flags & datasubmesh_t::F_CYCLED)
+        m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s.x, 1.0 - step(loc_vv[1], %s.x));" SHNL, scnosc, scnosc );
+      
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(datasampler, vec2(loc_vv[1]*submeshgrad[2], submeshgrad[3])).r;" SHNL);
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * %s;" SHNL,
+                                                                              m_datasubmesh.coeff[i], lvclamp);
+    }
+    
+    m_offset += msprintf(&m_to[m_offset],  "%s = loc_vv[0];" SHNL, varname);
+  }
+  else if (m_datasubmesh.type == datasubmesh_t::IR_A_BORDERS || m_datasubmesh.type == datasubmesh_t::IR_A_BORDERS_FIXEDCOUNT || m_datasubmesh.type == datasubmesh_t::IR_A_BORDERS_SMART)
+  {    
+    const char* scnosc = m_datamapped == false? "ab_indimms.x" : "dbounds_noscaled.x";
+    m_offset += msprintf(&m_to[m_offset],  "vec4 submeshgrad = vec4(0, (%s.x*(%s)), 1.0/(%s), float(%s.y + float(%s))/float(dataportions));" SHNL,
+                                                                   coordsname,  scnosc,             scnosc,               coordsname,  portionname );
+    m_offset += msprintf(&m_to[m_offset],  "vec2 loc_vv = vec2(submeshgrad[1] - 1, submeshgrad[1] + 1);" SHNL );
+    if (m_datasubmesh.flags & datasubmesh_t::F_CYCLED)
+    {
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = mix(loc_vv[0], %s + loc_vv[0], 1.0 - step(0.0, loc_vv[0]));" SHNL, scnosc);
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s, 1.0 - step(loc_vv[1], %s));" SHNL, scnosc, scnosc);
+    }
+    
+    m_offset += msprintf(&m_to[m_offset], "submeshgrad[0] = texture(datasampler, vec2(%s.x, submeshgrad[3])).r;" SHNL, coordsname);
+    m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(texture(datasampler, vec2(loc_vv[0]*submeshgrad[2], submeshgrad[3])).r," SHNL
+                                                           "texture(datasampler, vec2(loc_vv[1]*submeshgrad[2], submeshgrad[3])).r);" SHNL);
+    
+    {
+      if (m_datasubmesh.type == datasubmesh_t::IR_A_BORDERS || m_datasubmesh.type == datasubmesh_t::IR_A_BORDERS_SMART)
+        m_offset += msprintf(&m_to[m_offset], "float submeshmix = (0.5 + float(imrect[0]))/float(imrect[2]+1);" SHNL);  // +1 !@!!!
+      else
+      {
+        double halfcent = m_datasubmesh.central/2.0;
+        m_offset += msprintf(&m_to[m_offset], "float submeshmix = (0.5 - 0.25/%F)*(-clamp(1.0 - (imrect[0])/%F, 0.0, 1.0) + clamp(1.0 - float(imrect[2]-imrect[0])/%F, 0.0, 1.0) );" SHNL,
+                              halfcent, halfcent, halfcent);
+      }
+    }
+    
+    float fc = m_datasubmesh.coeff[0];
+    if (fc < 0.0f)  fc = 0.0f;  else if (fc > 1.0f) fc = 1.0f;
+    
+    const char* igclamp = "submeshgrad[0]";
+    const char* lv0clamp = "loc_vv[0]", *lv1clamp = "loc_vv[1]";
+    if (m_datasubmesh.flags & datasubmesh_t::F_CLAMPTOP && m_datasubmesh.flags & datasubmesh_t::F_CLAMPBOT)
+    {
+      igclamp = "clamp(submeshgrad[0], 0.0, 1.0)"; lv0clamp = "clamp(loc_vv[0], 0.0, 1.0)"; lv1clamp = "clamp(loc_vv[1], 0.0, 1.0)";
+    }
+    else if (m_datasubmesh.flags & datasubmesh_t::F_CLAMPTOP)
+    { igclamp = "min(submeshgrad[0], 1.0)"; lv0clamp = "min(loc_vv[0], 1.0)"; lv1clamp = "min(loc_vv[1], 1.0)"; }
+    else if (m_datasubmesh.flags & datasubmesh_t::F_CLAMPBOT)
+    { igclamp = "max(submeshgrad[0], 0.0)"; lv0clamp = "max(loc_vv[0], 0.0)"; lv1clamp = "max(loc_vv[1], 0.0)"; }
+    
+    
+    if (m_datasubmesh.type == datasubmesh_t::IR_A_BORDERS || m_datasubmesh.type == datasubmesh_t::IR_A_BORDERS_FIXEDCOUNT)
+    {
+      m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(" SHNL
+                           "(0.5 - submeshmix + (submeshmix-1)*submeshmix*(1-2*submeshmix)*%F)*step(submeshmix, 0.5)*(%s - %s)," SHNL
+                           "(submeshmix - (submeshmix-1)*submeshmix*(1-2*submeshmix)*%F - 0.5)*step(0.5, submeshmix)*(%s - %s) " SHNL
+                                            ");" SHNL, fc*2, igclamp, lv0clamp, fc*2, igclamp, lv1clamp);
+    }
+    else
+    {
+      m_offset += msprintf(&m_to[m_offset], "vec2 loc_c = vec2("
+                              "%F*abs(submeshgrad[0]-loc_vv[0])/max(submeshgrad[0],loc_vv[0]),"
+                              "%F*abs(submeshgrad[0]-loc_vv[1])/max(submeshgrad[0],loc_vv[1])"
+                              ");" SHNL, 8*fc, 8*fc
+                           );
+      
+      m_offset += msprintf(&m_to[m_offset], "loc_c = vec2("
+                              "(0.5 - submeshmix + (submeshmix-1)*submeshmix*loc_c[0]),"
+                              "(submeshmix + (submeshmix-1)*submeshmix*loc_c[1] - 0.5)"
+                              ");" SHNL
+                           );
+      
+      m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(" SHNL
+                           "clamp(loc_c[0], 0.0, 1.0)*step(submeshmix, 0.5)*(%s - %s)," SHNL
+                           "clamp(loc_c[1], 0.0, 1.0)*step(0.5, submeshmix)*(%s - %s) " SHNL
+                                            ");" SHNL, igclamp, lv0clamp, igclamp, lv1clamp);
+    }
+    
+    m_offset += msprintf(&m_to[m_offset], "%s = submeshgrad[0] - step(%F, float(imrect[2]+1))*(loc_vv.x + loc_vv.y);" SHNL, 
+                                                                  varname, double(m_datasubmesh.count));
+
+  }
+  
+                          /// B
+  
+  else if (m_datasubmesh.type == datasubmesh_t::IR_B_COEFF || m_datasubmesh.type == datasubmesh_t::IR_B_COEFF_NOSCALED)
+  {
+    m_offset += msprintf(&m_to[m_offset],  "vec3 loc_vv = vec3(0.0, 0.0, 0.0);" SHNL );
+                         
+    const char* scnosc = m_datamapped == false ? 
+                           m_datasubmesh.type == datasubmesh_t::IR_B_COEFF? "ab_ibounds" : "ab_indimms" :
+                           m_datasubmesh.type == datasubmesh_t::IR_B_COEFF? "dbounds" : "dbounds_noscaled";
+    
+    m_offset += msprintf(&m_to[m_offset],  "vec4 submeshgrad = vec4(%s.x, %s.y*%s.y, 1.0/%s.y, %s);" SHNL, // float(%s.y + float(%s))/float(dataportions)
+                                                          coordsname,  coordsname,  scnosc,   scnosc,     portionname
+                        );
+    
+    const char* lvclamp = "loc_vv[2]";
+    if (m_datasubmesh.flags & datasubmesh_t::F_CLAMPTOP && m_datasubmesh.flags & datasubmesh_t::F_CLAMPBOT)
+      lvclamp = "clamp(loc_vv[2], 0.0, 1.0)";
+    else if (m_datasubmesh.flags & datasubmesh_t::F_CLAMPTOP)
+      lvclamp = "min(loc_vv[2], 1.0)";
+    else if (m_datasubmesh.flags & datasubmesh_t::F_CLAMPBOT)
+      lvclamp = "max(loc_vv[2], 0.0)";
+    
+    for (int i=0; i<m_datasubmesh.central; i++)
+    {
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = submeshgrad[1] - %d;" SHNL, -(i - m_datasubmesh.central));
+      if (m_datasubmesh.flags & datasubmesh_t::F_CYCLED)
+        m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], %s.y + loc_vv[1], 1.0 - step(0.0, loc_vv[1]));" SHNL, scnosc);
+        
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(datasampler, vec2(submeshgrad[0], (loc_vv[1]*submeshgrad[2] + submeshgrad[3])/float(dataportions))).r;" SHNL);
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * %s;" SHNL, m_datasubmesh.coeff[i], lvclamp);
+    }
+    
+    m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(datasampler, vec2(submeshgrad[0], (submeshgrad[1]*submeshgrad[2] + submeshgrad[3])/float(dataportions))).r;" SHNL,
+                                                                              m_datasubmesh.coeff[m_datasubmesh.central]);
+    
+    for (int i=m_datasubmesh.central+1; i<m_datasubmesh.count; i++)
+    {
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = submeshgrad[1] + %d;" SHNL, i-m_datasubmesh.central);
+      if (m_datasubmesh.flags & datasubmesh_t::F_CYCLED)
+        m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s.y, 1.0 - step(loc_vv[1], %s.y));" SHNL, scnosc, scnosc );
+      
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(datasampler, vec2(submeshgrad[0], (loc_vv[1]*submeshgrad[2] + submeshgrad[3])/float(dataportions))).r;" SHNL);
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * %s;" SHNL, m_datasubmesh.coeff[i], lvclamp);
+    }
+    
+    m_offset += msprintf(&m_to[m_offset],  "%s = loc_vv[0];" SHNL, varname);
+  }
+  else if (m_datasubmesh.type == datasubmesh_t::IR_B_BORDERS || m_datasubmesh.type == datasubmesh_t::IR_B_BORDERS_FIXEDCOUNT || m_datasubmesh.type == datasubmesh_t::IR_B_BORDERS_SMART)
+  {
+    
+    const char* scnosc = m_datamapped == false? "ab_indimms.y" : "dbounds_noscaled.y";
+    
+    m_offset += msprintf(&m_to[m_offset],  "vec4 submeshgrad = vec4(%s.x, (%s.y*(%s)), 1.0/(%s), float(%s));" SHNL,
+                                                           coordsname,  coordsname,  scnosc,  scnosc,  portionname );
+    
+    
+    m_offset += msprintf(&m_to[m_offset],  "vec3 loc_vv = vec3(submeshgrad[1] - 1, submeshgrad[1] + 1, 0.0);" SHNL );
+    if (m_datasubmesh.flags & datasubmesh_t::F_CYCLED)
+    {
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = mix(loc_vv[0], %s + loc_vv[0], 1.0 - step(0.0, loc_vv[0]));" SHNL, scnosc);
+      m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s, 1.0 - step(loc_vv[1], %s));" SHNL, scnosc, scnosc);
+    }
+    
+    m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(datasampler, vec2(submeshgrad[0], (%s.y + submeshgrad[3])/float(dataportions))).r;" SHNL, coordsname);
+    m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(texture(datasampler, vec2(submeshgrad[0], (loc_vv[0]*submeshgrad[2] + submeshgrad[3])/float(dataportions))).r," SHNL
+                                                           "texture(datasampler, vec2(submeshgrad[0], (loc_vv[1]*submeshgrad[2] + submeshgrad[3])/float(dataportions))).r);" SHNL);
+
+    {
+      double halfcent = m_datasubmesh.central/2.0;
+      if (m_datasubmesh.type == datasubmesh_t::IR_B_BORDERS || m_datasubmesh.type == datasubmesh_t::IR_B_BORDERS_SMART)
+        m_offset += msprintf(&m_to[m_offset], "float submeshmix = (0.5 + float(imrect[1]))/float(imrect[3]+1);" SHNL);  // +1 !@!!!
+      else
+      {
+        m_offset += msprintf(&m_to[m_offset], "float submeshmix = (0.5 - 0.25/%F)*(-clamp(1.0 - (imrect[1])/%F, 0.0, 1.0) + clamp(1.0 - float(imrect[3]-imrect[1])/%F, 0.0, 1.0) );" SHNL,
+                              halfcent, halfcent, halfcent
+                           );
+      }
+    }
+    
+    float fc = m_datasubmesh.coeff[0];
+    if (fc < 0.0f)  fc = 0.0f;  else if (fc > 1.0f) fc = 1.0f;
+    
+    const char* igclamp = "loc_vv[2]";
+    const char* lv0clamp = "loc_vv[0]", *lv1clamp = "loc_vv[1]";
+    if (m_datasubmesh.flags & datasubmesh_t::F_CLAMPTOP && m_datasubmesh.flags & datasubmesh_t::F_CLAMPBOT)
+    {
+      igclamp = "clamp(loc_vv[2], 0.0, 1.0)"; lv0clamp = "clamp(loc_vv[0], 0.0, 1.0)"; lv1clamp = "clamp(loc_vv[1], 0.0, 1.0)";
+    }
+    else if (m_datasubmesh.flags & datasubmesh_t::F_CLAMPTOP)
+    { igclamp = "min(loc_vv[2], 1.0)"; lv0clamp = "min(loc_vv[0], 1.0)"; lv1clamp = "min(loc_vv[1], 1.0)"; }
+    else if (m_datasubmesh.flags & datasubmesh_t::F_CLAMPBOT)
+    { igclamp = "max(loc_vv[2], 0.0)"; lv0clamp = "max(loc_vv[0], 0.0)"; lv1clamp = "max(loc_vv[1], 0.0)"; }
+    
+//    m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(" SHNL
+//                                            "-submeshmix*step(submeshmix, 0.0)*(%s - %s)/(1.0 - %f*(1.0+submeshmix))," SHNL
+//                                            " submeshmix*step(0.0, submeshmix)*(%s - %s)/(1.0 - %f*(1.0-submeshmix)) " SHNL
+//                                          ");" SHNL, igclamp, lv0clamp, fc, igclamp, lv1clamp, fc);
+    
+    if (m_datasubmesh.type == datasubmesh_t::IR_B_BORDERS || m_datasubmesh.type == datasubmesh_t::IR_B_BORDERS_FIXEDCOUNT)
+    {
+      m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(" SHNL
+                           "(0.5 - submeshmix + (submeshmix-1)*submeshmix*(1-2*submeshmix)*%F)*step(submeshmix, 0.5)*(%s - %s)," SHNL
+                           "(submeshmix - (submeshmix-1)*submeshmix*(1-2*submeshmix)*%F - 0.5)*step(0.5, submeshmix)*(%s - %s) " SHNL
+                                            ");" SHNL, fc*2, igclamp, lv0clamp, fc*2, igclamp, lv1clamp);
+    }
+    else
+    {
+      m_offset += msprintf(&m_to[m_offset], "vec2 loc_c = vec2("
+                              "%F*abs(submeshgrad[0]-loc_vv[0])/max(submeshgrad[0],loc_vv[0]),"
+                              "%F*abs(submeshgrad[0]-loc_vv[1])/max(submeshgrad[0],loc_vv[1])"
+                              ");" SHNL, 8*fc, 8*fc
+                           );
+      
+      m_offset += msprintf(&m_to[m_offset], "loc_c = vec2("
+                              "(0.5 - submeshmix + (submeshmix-1)*submeshmix*loc_c[0]),"
+                              "(submeshmix + (submeshmix-1)*submeshmix*loc_c[1] - 0.5)"
+                              ");" SHNL
+                           );
+      
+      m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(" SHNL
+                           "clamp(loc_c[0], 0.0, 1.0)*step(submeshmix, 0.5)*(%s - %s)," SHNL
+                           "clamp(loc_c[1], 0.0, 1.0)*step(0.5, submeshmix)*(%s - %s) " SHNL
+                                            ");" SHNL, igclamp, lv0clamp, igclamp, lv1clamp);
+    }
+    
+    m_offset += msprintf(&m_to[m_offset], "%s = loc_vv[2] - step(%F, float(imrect[3]))*(loc_vv.x + loc_vv.y);", varname, m_datasubmesh.count);
+  }
+}
+
+
+/***********************************************************/
+/***********************************************************/
+/***********************************************************/
+/***********************************************************/
+
+unsigned int FshDrawMain::basePendingSize(const datasubmesh_t& imp, unsigned int ovlscount)
 {
   unsigned int base = 2300 + ovlscount*1000;
   switch (imp.type)
   {
-  case impulsedata_t::IR_A_COEFF: case impulsedata_t::IR_A_COEFF_NOSCALED: case impulsedata_t::IR_B_COEFF: case impulsedata_t::IR_B_COEFF_NOSCALED:
+  case datasubmesh_t::IR_A_COEFF: case datasubmesh_t::IR_A_COEFF_NOSCALED: case datasubmesh_t::IR_B_COEFF: case datasubmesh_t::IR_B_COEFF_NOSCALED:
     base += 500 + imp.count*220;
     break;
-  case impulsedata_t::IR_A_BORDERS: case impulsedata_t::IR_A_BORDERS_FIXEDCOUNT: case impulsedata_t::IR_A_BORDERS_SMART: 
-  case impulsedata_t::IR_B_BORDERS: case impulsedata_t::IR_B_BORDERS_FIXEDCOUNT: case impulsedata_t::IR_B_BORDERS_SMART: 
+  case datasubmesh_t::IR_A_BORDERS: case datasubmesh_t::IR_A_BORDERS_FIXEDCOUNT: case datasubmesh_t::IR_A_BORDERS_SMART: 
+  case datasubmesh_t::IR_B_BORDERS: case datasubmesh_t::IR_B_BORDERS_FIXEDCOUNT: case datasubmesh_t::IR_B_BORDERS_SMART: 
     base += 1500;
     break;
   default: break;
@@ -181,9 +485,582 @@ unsigned int FshDrawConstructor::basePendingSize(const impulsedata_t& imp, unsig
   return base;
 }
 
-FshDrawConstructor::FshDrawConstructor(char *deststring, unsigned int allocatedPortions, SPLITPORTIONS splitPortions, const impulsedata_t& imp, 
+FshDrawMain::FshDrawMain(char* deststring, SPLITPORTIONS splits, const datasubmesh_t& imp): FshDrawComposer(deststring, splits, imp)  
+{
+}
+
+void FshDrawMain::generic_decls_begin(int ovlscount)
+{
+#ifdef BSGLSLVER
+  m_offset += msprintf(&m_to[m_offset],   "#version %d" SHNL, BSGLSLVER);
+#endif
+  static const char fsh_base[] =          "uniform highp sampler2D  datasampler;" SHNL
+                                          "uniform highp int        datadimm_a;" SHNL
+                                          "uniform highp int        datadimm_b;" SHNL
+                                          "uniform highp int        dataportions;" SHNL
+                                          "uniform highp int        dataportionsize;" SHNL
+                                          "uniform highp int        scaler_a;" SHNL
+                                          "uniform highp int        scaler_b;" SHNL
+                                          "uniform highp sampler2D  paletsampler;" SHNL
+                                          "uniform highp vec2       paletrange;" SHNL
+                                          "in highp vec2            coords;" SHNL
+#if defined BSGLSLVER && BSGLSLVER >= 420
+                                          "out vec4                 outcolor;" SHNL
+#endif
+                                          "float getValue1D(in int portion, in float x){  return texture(datasampler, vec2(x, float(portion)/(float(dataportions)-1.0))).r; }" SHNL
+                                          "float getValue2D(in int portion, in vec2  x){  return texture(datasampler, vec2(x.x, float(x.y + float(portion))/float(dataportions))).r; }" SHNL
+                                          "vec3  insider(int i, ivec2 ifromvec) { float scaled01 = float(i - ifromvec[0])/float(ifromvec[1] - sign(float(ifromvec[1])));\n\treturn vec3( step(0.0, scaled01)*(1.0-step(1.001, scaled01)), scaled01, sign(ifromvec[1])*ifromvec[1]); }" SHNL SHNL;
+  memcpy(&m_to[m_offset], fsh_base, sizeof(fsh_base) - 1);  m_offset += sizeof(fsh_base) - 1;
+  
+  for (unsigned int i=0; i<ovlscount; i++)
+  {
+    m_offset += msprintf(&m_to[m_offset], "uniform highp vec4 ovl_otss_%D;" SHNL
+                                          "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 shapeself);" SHNL
+                                          "vec3 overlayColor%d(in vec4 in_variant, in vec3 color);" SHNL,
+                        i+1, i+1, i+1);
+  }
+}
+
+void FshDrawMain::generic_decls_add(DTYPE type, const char* name)
+{
+  Q_ASSERT(type >= 0 && type <= sizeof(glsl_types)/sizeof(glsl_types[0]));
+  m_offset += msprintf(&m_to[m_offset], "uniform highp %s    %s;" SHNL, glsl_types[type], name);
+//  strcpy(m_c_locbacks[m_c_locbackscount].varname, name);
+//  m_c_locbacks[m_c_locbackscount].istexture = type >= _DT_TEXTURES_BEGIN;
+//  m_c_locbackscount += 1;
+  
+//  m_c_locbackscount = 0;
+//  for (unsigned int i=0; i<globscount; i++)
+//  {
+//    Q_ASSERT(globsinfo[i].type >= 0 && globsinfo[i].type <= sizeof(glsl_types)/sizeof(glsl_types[0]));
+//    m_offset += msprintf(&m_to[m_offset], "uniform highp %s    %s;" SHNL, glsl_types[globsinfo[i].type], globsinfo[i].name);
+//    strcpy(m_c_locbacks[m_c_locbackscount].varname, globsinfo[i].name);
+//    m_c_locbacks[m_c_locbackscount].istexture = globsinfo[i].type >= _DT_TEXTURES_BEGIN;
+//    m_c_locbackscount += 1;
+  //  }
+}
+
+void FshDrawMain::generic_decls_add_tftareas(int texid, char* result)
+{
+  msprintf(result, "tftholding_%d", texid);
+#ifndef BSGLSLOLD
+  m_offset += msprintf(&m_to[m_offset], "uniform highp sampler2DArray    %s;" SHNL, result);
+#else
+  m_offset += msprintf(&m_to[m_offset], "uniform highp sampler2D         %s;" SHNL, result);
+#endif
+}
+
+void FshDrawMain::generic_decls_add_tftdynamicvar(int texid, int sloid, char* result_i, char* result_c)
+{
+  msprintf(result_i, "tft_i_%d_%d", texid, sloid);
+  generic_decls_add(DT_1I, result_i);
+  msprintf(result_c, "tft_c_%d_%d", texid, sloid);
+  generic_decls_add(DT_4F, result_c);
+}
+
+void FshDrawMain::generic_main_begin(int allocatedPortions, ORIENTATION orient, unsigned int emptycolor, const overpattern_t& fsp)
+{
+  static const char fsh_main[] =  "void main()" SHNL
+                                  "{" SHNL
+                                    "float mixwell = 1.0;" SHNL
+                                    "float dvalue = 0.0;" SHNL
+                                    "vec4  ovl_cur_otss;" SHNL
+                                    "ivec2 ovl_transfer_pos;" SHNL
+                                    
+                                    "ivec2 ab_indimms = ivec2(datadimm_a, datadimm_b);" SHNL
+                                    "ivec2 ab_iscaler = ivec2(scaler_a, scaler_b);" SHNL
+                                    "ivec2 ab_ibounds = ab_indimms*ab_iscaler;" SHNL;
+  memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
+  
+  
+  
+  {
+    const char* rotaters[] = {              "",
+                                            "ab_coords.x = 1.0-ab_coords.x;",
+                                            "ab_coords.y = 1.0-ab_coords.y;",
+                                            "ab_coords.xy = vec2(1.0,1.0)-ab_coords.xy;",
+                                            "ab_coords.xy = vec2(1.0-ab_coords.y, ab_coords.x);",
+                                            "ab_coords.xy = ab_coords.yx;",
+                                            "ab_coords.xy = vec2(1.0,1.0)-ab_coords.yx;",
+                                            "ab_coords.xy = vec2(ab_coords.y, 1.0-ab_coords.x);"
+                                  };
+    
+    m_offset += msprintf(&m_to[m_offset], 
+                                    "vec2  xy_coords = vec2(coords.xy*0.5 + vec2(0.5,0.5));" SHNL     ///   non-oriented non-cell coords
+                                    "vec2  ab_coords = xy_coords;         %s    " SHNL                ///   oriented non-cell coords
+                                    "vec2  abc_coords = ab_coords;" SHNL                              ///   oriented cell coords
+                                , rotaters[orient]);
+  }
+  if (m_split == 0)
+  {
+    m_offset += msprintf(&m_to[m_offset],   
+                                    "ivec2 ispcell = ivec2(0,0);" SHNL
+                                    "ivec2 icells = ivec2(1,1);" SHNL
+                         );
+  }
+  else
+  {
+    int spRotator =   (m_split >> 16)&0xFF;   // 0 - BT/LR, 1 - TB/RL
+    int spDirection = (m_split >> 8)&0xFF;    // 0 - Columns, 1 - Rows
+    int spDivider =    m_split & 0xFF;
+    
+    if (spDivider == 1)
+    {
+      m_offset += msprintf(&m_to[m_offset],   "int explicitPortion = int(abc_coords.%1*%d);" SHNL
+                                              "abc_coords.%1 = abc_coords.%1 * %d - explicitPortion;" SHNL,
+                                              spDirection == 0? "y" : "x",
+                                              allocatedPortions, allocatedPortions
+                          );
+      if (spRotator)
+        m_offset += msprintf(&m_to[m_offset], "explicitPortion = %d - 1 - explicitPortion;" SHNL, allocatedPortions);
+      
+      if (spDirection == 0)
+        m_offset += msprintf(&m_to[m_offset], 
+                                    "ivec2 ispcell = ivec2(explicitPortion, 0);" SHNL
+                                    "ivec2 icells = ivec2(%d, 1);" SHNL
+                             , allocatedPortions
+                             );
+      else
+        m_offset += msprintf(&m_to[m_offset], 
+                                    "ivec2 ispcell = ivec2(0, explicitPortion);" SHNL
+                                    "ivec2 icells = ivec2(1, %d);" SHNL
+                             , allocatedPortions
+                             );
+    }
+    else
+    {
+      m_offset += msprintf(&m_to[m_offset],   "int    spDivider = %d;" SHNL, spDivider );        
+      m_offset += msprintf(&m_to[m_offset],   "ivec2  icells = ivec2(spDivider, %d/float(spDivider) + 0.99);" SHNL
+                                              "ivec2  ispcell = ivec2(abc_coords.x * icells[%1], abc_coords.y * icells[%2]);" SHNL
+                                              "int explicitPortion = ispcell[%1] + ispcell[%2]*spDivider;" SHNL
+                                              "abc_coords.x = abc_coords.x * icells[%1] - ispcell.x;" SHNL
+                                              "abc_coords.y = abc_coords.y * icells[%2] - ispcell.y;" SHNL,
+                                              allocatedPortions,
+                                              spDirection == 0? "0" : "1", 
+                                              spDirection == 0? "1" : "0"
+                          );
+    }
+    m_offset += msprintf(&m_to[m_offset],     "abc_coords = mix(abc_coords, vec2(-1.0), step(dataportions, float(explicitPortion)));" SHNL);
+  }
+  
+  m_offset += msprintf(&m_to[m_offset], "int allocatedPortions = %d;" SHNL, (int)allocatedPortions);
+  
+  
+  if (emptycolor != 0xFFFFFFFF)
+    this->ccolor("backcolor", emptycolor);
+  else
+    m_offset += msprintf(&m_to[m_offset],   "vec3  backcolor = texture(paletsampler, vec2(0.0, 0.0)).rgb;" SHNL);
+  
+  
+  
+  m_offset += msprintf(&m_to[m_offset],     "vec3  result = backcolor;" SHNL);
+  
+  
+  m_offset += msprintf(&m_to[m_offset],     "vec4  post_mask = vec4(0.0, %F, %F, %F);" SHNL, fsp.threshold, fsp.weight, 1.0f - fsp.smooth );   
+                                                              /// ppban, threshold, weight, smooth 
+
+  m_offset += msprintf(&m_to[m_offset],     "ivec2  immod = ivec2( int(mod(abc_coords.x*ab_ibounds.x, float(ab_iscaler.x))), int(mod(abc_coords.y*ab_ibounds.y, float(ab_iscaler.y))));" SHNL
+                                            "ivec4  imrect  = ivec4(immod.x, immod.y, ab_iscaler.x-1, ab_iscaler.y-1);" SHNL
+  );
+}
+
+//void FshDrawMain::generic_main_tftadd(const char* name, float arr[])
+//{
+//  m_offset += msprintf(&m_to[m_offset],     "vec4  %s = vec4(%F, %F, %F, %F);" SHNL, name, arr[0], arr[1], arr[2], arr[3]);
+//}
+
+//void FshDrawMain::generic_main_process_tft(const char* holdingname, const char* varname, int record, int recordslimit, int arr[])
+//{
+//#if 1
+//  float recone = 1.0f / recordslimit;
+//  m_offset += msprintf(&m_to[m_offset],     "{" SHNL
+//                                              "vec2  rc = vec2(ab_coords - vec2(%s.x, %s.y))*ab_ibounds + vec2(0.499);" SHNL, 
+//                                                varname, varname);
+//  m_offset += msprintf(&m_to[m_offset],       "float pc = rc.y/%f + 0.5;" SHNL,  float(arr[0]));
+//  m_offset += msprintf(&m_to[m_offset],       "vec2  tcoords = vec2((rc.x + 0.5*%f)/%f, 1.0 - (%d + pc)*%f);" SHNL,
+//                                                float(arr[1]), float(arr[2]),
+//                                                record, recone);
+//  m_offset += msprintf(&m_to[m_offset],       "vec4  ttc = texture(%s, tcoords).rgba;" SHNL
+//                                              "result = mix(result, ttc.rgb, ttc.a*step(0.0, pc)*step(pc, 1.0));" SHNL
+//                                            "}" SHNL,
+//                                                holdingname);
+//#else
+//  float recone = 1.0f / recordslimit;
+//  m_offset += msprintf(&m_to[m_offset],     "{" SHNL
+//                                              "vec2  rc = vec2( (ab_coords - vec2(%s.x, %s.y))*ab_ibounds + vec2(0.0) );" SHNL, 
+//                                                varname, varname);
+//  m_offset += msprintf(&m_to[m_offset],       "float pc = rc.y/%f + 0.5;" SHNL,  float(arr[0]));
+//  m_offset += msprintf(&m_to[m_offset],       "vec2  tcoords = vec2((rc.x + 0.5*%f)/%f, 1.0 - (%d + pc)*%f);" SHNL,
+//                                                float(arr[1]-1), float(arr[2]-1),
+//                                                record, recone);
+//  m_offset += msprintf(&m_to[m_offset],       "vec4  ttc = texture(%s, tcoords).rgba;" SHNL
+//                                              "result = mix(result, ttc.rgb, ttc.a*step(0.0, pc)*step(pc, 1.0));" SHNL
+//                                            "}" SHNL,
+//                                                holdingname);
+//#endif
+  
+//  /****************** TEST 
+//  m_offset += msprintf(&m_to[m_offset], "{" SHNL
+//                                          "vec2  rc = ab_coords*ab_ibounds;" SHNL
+//                                          "vec2  tcoords = vec2(rc.x/%F*%F/%F, 1.0 - (%F + (rc.y/%F)*%F));" SHNL,
+//                                          float(arr[2]-1), float(arr[2]-1), float(arr[3]-1),
+//                                          row*recone,  float(arr[1]-1), recone);
+//  m_offset += msprintf(&m_to[m_offset],   "vec4  ttc = texture(%s, tcoords).rgba;" SHNL
+//                                          "result = mix(result, ttc.rgb, ttc.a);" SHNL
+//                                        "}" SHNL,
+//                       holdingname
+//                       );
+//                       ***************************/
+  
+////  m_offset += msprintf(&m_to[m_offset], "{" SHNL
+////                                          "vec4  ttc = texture(%s, ab_coords).rgba;" SHNL
+////                                          "result = mix(result, ttc.rgb, ttc.a);" SHNL
+////                                        "}" SHNL,
+////                       holdingname
+////                       );
+//  //  qDebug()<<m_to;
+//}
+
+
+void FshDrawMain::generic_main_prepare_tft()
+{
+  
+}
+
+const char* cr_to_px_str(COORDINATION con)
+{
+//        ocall_ibounds = transposed ? "ab_indimms.yx*ab_iscaler.yx*icells.xy" : "ab_indimms.xy*ab_iscaler.xy*icells.yx";
+  Q_ASSERT(con != CR_SAME);
+  static const char* coordination[] = {  /// CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
+                                         "ab_iscaler",
+                                         "(ab_ibounds - ivec2(1))",
+                                         "ivec2(ab_iscaler.x, ab_ibounds.y-1)",
+                                         "ivec2(ab_ibounds.x-1, ab_iscaler.y)",
+                                         
+                                         ///  CR_ABSOLUTE_NOSCALED, CR_RELATIVE_NOSCALED, CR_XABS_YREL_NOSCALED, CR_XREL_YABS_NOSCALED
+                                         "ivec2(1, 1)",
+                                         "ivec2(ab_indimms.x-1, ab_indimms.y-1)",
+                                         "ivec2(1, ab_indimms.y-1)",
+                                         "ivec2(ab_indimms.x-1, 1)",
+                                         
+                                         ///  CR_XABS_YABS_NOSCALED_SCALED, CR_XABS_YABS_SCALED_NOSCALED, CR_XREL_YREL_NOSCALED_SCALED, CR_XREL_YREL_SCALED_NOSCALED, 
+                                         "ivec2(1, ab_iscaler.y)",
+                                         "ivec2(ab_iscaler.x, 1)",
+                                         "ivec2(ab_indimms.x-1, ab_ibounds.y-1)",
+                                         "ivec2(ab_ibounds.x-1, ab_indimms.y-1)",
+                                         
+                                         /// CR_XABS_YREL_NOSCALED_SCALED, CR_XABS_YREL_SCALED_NOSCALED, CR_XREL_YABS_NOSCALED_SCALED, CR_XREL_YABS_SCALED_NOSCALED,
+                                         "ivec2(1, ab_ibounds.y-1)",
+                                         "ivec2(ab_iscaler.x, ab_indimms.y-1)",
+                                         "ivec2(ab_ibounds.x-1, 1)",
+                                         "ivec2(ab_indimms.x-1, ab_iscaler.y)"
+                                      } ;
+  return coordination[con];
+}
+
+
+void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft)
+{
+  m_offset += msprintf(&m_to[m_offset],     "{" SHNL);
+  {
+    if (tft.isstatic)
+      m_offset += msprintf(&m_to[m_offset],     
+                                                "int  tft_rec = %d;" SHNL
+                                                "vec4 tft_slot = vec4(%F, %F, %F, %F);" SHNL, 
+                                                      tft.recordid/* / tft.recordslimit*/,
+                                                      tft.slotdata.fx, tft.slotdata.fy, tft.slotdata.scale, tft.slotdata.rotate);
+    else
+      m_offset += msprintf(&m_to[m_offset],     "int  tft_rec = tft_i_%d_%d;" SHNL
+                                                "vec4 tft_slot = tft_c_%d_%d;" SHNL, tft.texid, tft.varid, tft.texid, tft.varid);
+    
+    m_offset += msprintf(&m_to[m_offset],       "tft_slot.xy = tft_slot.xy*%s;" SHNL, cr_to_px_str(tft.slotdata.cr));
+    m_offset += msprintf(&m_to[m_offset],       "vec2  rc = ab_coords*ab_ibounds - tft_slot.xy + vec2(0.499);" SHNL);
+    
+    
+    float recone = 1.0f / tft.recordslimit;
+    m_offset += msprintf(&m_to[m_offset],       "float pc = rc.y/%f + 0.5;" SHNL,  float(tft.recordheight));
+#ifndef BSGLSLOLD
+    m_offset += msprintf(&m_to[m_offset],       "vec3  tcoords = vec3((rc.x + 0.5*%f)/%f, 1.0 - (mod(tft_rec,%d) + pc)*%f, float(tft_rec/%d)/%f);" SHNL,
+                                                  float(tft.textwidth), float(tft.recordwidth),
+                                                  tft.recordslimit, recone, tft.recordslimit, float(tft.texcount == 1? 1 : tft.texcount-1));
+#else
+    m_offset += msprintf(&m_to[m_offset],       "vec2  tcoords = vec2((rc.x + 0.5*%f)/%f, 1.0 - (tft_rec + pc)*%f);" SHNL,
+                                                  float(tft.textwidth), float(tft.recordwidth), recone);
+#endif
+    m_offset += msprintf(&m_to[m_offset],       "vec4  ttc = texture(tftholding_%d, tcoords).rgba;" SHNL
+                                                "result = mix(result, ttc.rgb, ttc.a*step(0.0, pc)*step(pc, 1.0));" SHNL,
+                                                  tft.texid);
+  }
+  m_offset += msprintf(&m_to[m_offset],     "}" SHNL);
+}
+
+void FshDrawMain::generic_main_process_fsp(const overpattern_t &fsp, float fspopacity)
+{
+  m_offset += msprintf(&m_to[m_offset], "" SHNL);
+  if (fsp.algo == overpattern_t::OALG_OFF || fsp.mask >= _OP_TOTAL)
+    m_offset += msprintf(&m_to[m_offset], "float ppb_in = 0.0;" SHNL);
+  else
+  {
+    if (fsp.masktype == overpattern_t::OMASK_INT)
+    {
+      const char* dmasks[] = {  
+        // OP_CONTOUR
+            "float ppb_in = sign(step(imrect.x, post_mask[2]) + step(imrect.y, post_mask[2])"
+                    " + step(imrect[2] - imrect.x, post_mask[2]) + step(imrect[3] - imrect.y, post_mask[2]));",
+        // OP_LINELEFT
+            "float ppb_in = step(imrect.x, post_mask[2]);",
+        // OP_LINERIGHT
+            "float ppb_in = step(imrect[2] - imrect.x, post_mask[2]);",
+        // OP_LINEBOTTOM
+            "float ppb_in = step(imrect.y, post_mask[2]);",
+        // OP_LINETOP
+            "float ppb_in = step(imrect[3] - imrect.y, post_mask[2]);",
+        // OP_LINELEFTRIGHT
+            "float ppb_in = sign(step(imrect.x, post_mask[2]) + step(imrect[2] - imrect.x, post_mask[2]));",
+        // OP_LINEBOTTOMTOP
+            "float ppb_in = sign(step(imrect.y, post_mask[2]) + step(imrect[3] - imrect.y, post_mask[2]));",
+        //  OP_LINELEFTBOTTOM
+            "float ppb_in = sign(step(imrect.x, post_mask[2])+step(imrect.y, post_mask[2]));",
+        //  OP_LINERIGHTBOTTOM
+            "float ppb_in = sign(step(imrect[2] - imrect.x, post_mask[2])+step(imrect.y, post_mask[2]));",
+        //  OP_LINELEFTTOP
+            "float ppb_in = sign(step(imrect.x, post_mask[2])+step(imrect[3] - imrect.y, post_mask[2]));",
+        // OP_LINERIGHTTOP 
+            "float ppb_in = sign(step(imrect[2] - imrect.x, post_mask[2])+step(imrect[3] - imrect.y, post_mask[2]));",
+        
+        // OP_GRID
+            "float ppb_in = sign(step(mod(1+imrect.x, 2 + post_mask[2]), 0.0) + step(mod(1+imrect.y, 2 + post_mask[2]), 0.0));", 
+        // OP_DOT
+            "float ppb_in = step(abs(imrect.x-imrect[2]/2), post_mask[2])*step(abs(imrect.y-imrect[3]/2), post_mask[2]);",
+        // OP_DOTLEFTBOTTOM
+            "float ppb_in = step(imrect.x, post_mask[2])*step(imrect.y, post_mask[2]);",
+        // OP_DOTCONTOUR
+            "float ppb_in = sign( "
+                                  "step(imrect.x, post_mask[2])*step(imrect.y, post_mask[2]) + "
+                                  "step(imrect[2]-imrect.x, post_mask[2])*step(imrect.y, post_mask[2]) + "
+                                  "step(imrect.x, post_mask[2])*step(imrect[3]-imrect.y, post_mask[2]) + "
+                                  "step(imrect[2]-imrect.x, post_mask[2])*step(imrect[3]-imrect.y, post_mask[2]));",
+        // OP_SHTRICHL
+            "float ppb_in = step(mod(abs(imrect.x - imrect.y), 3.0 + post_mask[2]), 0.0);", 
+        // OP_SHTRICHR
+            "float ppb_in = step(mod(abs(imrect.x - imrect[3] + imrect.y), 3.0 + post_mask[2]), 0.0);",
+        // OP_CROSS
+//            "float ppb_in = step(mod(float(imrect.x), 4.0),0.0)*step(mod(float(imrect.y), 4.0), 0.0) + mod(float(imrect.x),2.0)*mod(float(imrect.y),2.0);", 
+            "float ppb_in = step(mod(abs(imrect.x - imrect.y), 3.0 + post_mask[2]), 0.0) + step(mod(abs(imrect.x - imrect[3] + imrect.y), 3.0 + post_mask[2]), 0.0);", 
+        // OP_FILL
+            "float ppb_in = step(mod(abs(imrect.x - imrect.y), 2.0 + post_mask[2]) + mod(abs(imrect.x - imrect[3] - 1 + imrect.y), 2.0 + post_mask[2]), 0.0);", 
+        // OP_SQUARES
+            "float ppb_in = step(mod(abs(imrect.x - imrect.y) + abs(imrect.x - imrect[3] + 1 + imrect.y), 3.0 + 2.0*post_mask[2]), 0.0);"
+      };
+      m_offset += msprintf(&m_to[m_offset], "%s" SHNL, dmasks[fsp.mask >= _OP_TOTAL ? OP_CROSS : fsp.mask]);
+    }
+    else if (fsp.masktype == overpattern_t::OMASK_FLOAT)    // FLOATS
+    {
+      m_offset += msprintf(&m_to[m_offset], "vec2 ppb_dc = vec2(1.0 - 2.0*float(imrect.x)/imrect[2], 1.0 - 2.0*float(imrect.y)/imrect[3]);" SHNL);
+      
+      const char* dmasks_sigm[] = {  
+        // OPF_CIRCLE
+            "float ppb_in = dot(ppb_dc, ppb_dc) - post_mask[2];",
+        // OPF_CIRCLE_REV
+            "float ppb_in = (1.0 - post_mask[2])*(1.0 - post_mask[2]) - dot(ppb_dc, ppb_dc);",
+        // OPF_CROSSPUFF
+            "float ppb_in = dot(ppb_dc, ppb_dc)/2.0 + abs(abs(ppb_dc.y) - abs(ppb_dc.x))/(1.0 + dot(ppb_dc, ppb_dc)) - post_mask[2];",
+        // OPF_RHOMB
+            "float ppb_in = (abs(ppb_dc.x) + abs(ppb_dc.y) - post_mask[2]*2.0)/2.0;", //step(0.25 + post_mask[2]*0.05, ppb_dc.x + ppb_dc.y);", 
+        // OPF_SURIKEN
+            "float ppb_in = (abs(ppb_dc.x) + abs(ppb_dc.y) - post_mask[2]*2.0 + 2*abs(ppb_dc.x*ppb_dc.y))/2.0;",
+        // OPF_SURIKEN_REV
+            "float ppb_in = distance(vec2(0.0,0.0), vec2(1.0, 1.0) - abs(ppb_dc))/1.0 - 0.5 - post_mask[2];",
+        // OPF_DONUT 
+            "float ppb_in = abs( (1.0 - post_mask[2]/2.0)*(1.0 - post_mask[2]/2.0) - dot(ppb_dc, ppb_dc)) - 0.25;",
+        // OPF_CROSS
+            "float ppb_in = abs(abs(ppb_dc.x)-abs(ppb_dc.y)) - post_mask[2];",
+        // OPF_UMBRELLA
+            "float ppb_in = dot(ppb_dc, ppb_dc)/2.0 + abs((abs(ppb_dc.y) - abs(ppb_dc.x))*ppb_dc.x*ppb_dc.y) - post_mask[2];",
+        // OPF_HOURGLASS
+            "float ppb_in = (abs(ppb_dc.x)-abs(ppb_dc.y))/(1.0 + dot(ppb_dc, ppb_dc)) + (0.5-post_mask[2]);",
+        // OPF_STAR
+            "float ppb_in = abs((abs(ppb_dc.y) - abs(ppb_dc.x))*ppb_dc.x*ppb_dc.y)*8.0 - post_mask[2];",
+        // OPF_BULL
+            "float ppb_in = dot(ppb_dc, ppb_dc)/2.0 + abs(ppb_dc.y - ppb_dc.x)/(1.0 + dot(ppb_dc, ppb_dc)) - post_mask[2];",
+        // OPF_BULR
+            "float ppb_in = dot(ppb_dc, ppb_dc)/2.0 + abs(-ppb_dc.y - ppb_dc.x)/(1.0 + dot(ppb_dc, ppb_dc)) - post_mask[2];",
+        // OPF_CROSSHAIR
+            "float ppb_in = 10*abs(ppb_dc.x*ppb_dc.y) - abs(ppb_dc.x) - abs(ppb_dc.y) + 0.5 - post_mask[2];",
+        };
+      m_offset += msprintf(&m_to[m_offset], "%s" SHNL, dmasks_sigm[fsp.mask >= _OPF_TOTAL ? OPF_CROSS : fsp.mask]);
+      m_offset += msprintf(&m_to[m_offset], "ppb_in = clamp(ppb_in*(1.0+12.0*post_mask[3])/(1.0 + abs(ppb_in)*(1.0+12.0*post_mask[3]))*1.5 + 0.5, 0.0, 1.0);" SHNL);
+    }
+    else // ANGLEFIGURES
+    {
+//      m_offset += msprintf(&m_to[m_offset], "vec4 ppb_a4 = vec4("
+//                                            "distance(vec2(imrect.x, imrect.y), vec2(imrect[2]/2.0, imrect[3]/2.0)),"
+//                                            "distance(vec2(imrect[2] - 1 - imrect.x, imrect.y), vec2(imrect[2]/2.0, imrect[3]/2.0)),"
+//                                            "distance(vec2(imrect.x, imrect[3] - 1 - imrect.y), vec2(imrect[2]/2.0, imrect[3]/2.0)),"
+//                                            "distance(vec2(imrect[2] - 1 - imrect.x, imrect[3] - 1 - imrect.y), vec2(imrect[2]/2.0, imrect[3]/2.0))"
+//                                            ");" SHNL);
+      
+      m_offset += msprintf(&m_to[m_offset], "vec2 ppb_a2 = vec2("
+                                              "mix(float(imrect.x), float(imrect[2] - imrect.x), step(imrect[2]/2.0, float(imrect.x))),"
+                                              "mix(float(imrect.y), float(imrect[3] - imrect.y), step(imrect[3]/2.0, float(imrect.y)))"
+                                            ");"  SHNL
+                                            "ppb_a2 = ppb_a2 / vec2(imrect[2]/2.0, imrect[3]/2.0);" SHNL
+                           );
+      
+      const char* dmasks_anglefigures[] = {  
+        // OPA_PUFFHYPERB
+//            "vec2 ppb_cc = vec2(post_mask[2]*1.0/ppb_a2.x, post_mask[2]*1.0/ppb_a2.y);" //    ppb_cc = vec2(max(ppb_cc.x, ppb_a2.x), max(ppb_cc.y, ppb_a2.y));
+//            "float ppb_in = length(vec2(1.0) - ppb_cc)/length(vec2(1.0) - ppb_a2);",
+            "float ppb_in = 1.0 - (ppb_a2.x*ppb_a2.y - 1.0*post_mask[2])/length(vec2(1.0) - ppb_a2);",
+        // OPA_PUFFCIRCLE
+            "vec2 ppb_cc = vec2(max(post_mask[2], ppb_a2.x), max(post_mask[2], ppb_a2.y));"
+            "float ppb_in = (length(ppb_a2 - ppb_cc) - post_mask[2]) / post_mask[2];",
+        // OPA_PUFFCIRCLESPACED125
+            "vec2 ppb_cc = vec2(max(post_mask[2], ppb_a2.x), max(post_mask[2], ppb_a2.y));"
+            "float ppb_in = (length(ppb_a2 - ppb_cc)*1.25 - post_mask[2]) / post_mask[2];",
+        // OPA_PUFFCIRCLESPACED15
+            "vec2 ppb_cc = vec2(max(post_mask[2], ppb_a2.x), max(post_mask[2], ppb_a2.y));"
+            "float ppb_in = (length(ppb_a2 - ppb_cc)*1.5 - post_mask[2]) / post_mask[2];",
+        // OPA_PUFFCIRCLESPACED2
+            "vec2 ppb_cc = vec2(max(post_mask[2], ppb_a2.x), max(post_mask[2], ppb_a2.y));"
+            "float ppb_in = (length(ppb_a2 - ppb_cc)*2.0 - post_mask[2]) / post_mask[2];",
+        // OPA_PUFFCIRCLESPACED25
+            "vec2 ppb_cc = vec2(max(post_mask[2], ppb_a2.x), max(post_mask[2], ppb_a2.y));"
+            "float ppb_in = (length(ppb_a2 - ppb_cc)*2.5 - post_mask[2]) / post_mask[2];"
+        };
+      m_offset += msprintf(&m_to[m_offset], "%s" SHNL, dmasks_anglefigures[fsp.mask >= _OPA_TOTAL ? OPA_PUFFCIRCLE : fsp.mask]);
+      
+      //return 0.5f + 0.5f*(x-xpos)*speed/(1.0f + fabs(x-xpos)*speed);
+      m_offset += msprintf(&m_to[m_offset], "ppb_in = 0.5 + 0.5*(ppb_in*50*post_mask[3])/(1.0 + abs(ppb_in)*50*post_mask[3]);" SHNL);
+//      m_offset += msprintf(&m_to[m_offset], "ppb_in = clamp(ppb_in*(1.0+12.0*post_mask[3])/(1.0 + abs(ppb_in)*(1.0+12.0*post_mask[3]))*1.5 + 0.5, 0.0, 1.0);" SHNL);
+    }
+      
+    if (fsp.colorByPalette)
+    {
+      if (fsp.color.r == 0.0f)
+        m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = backcolor;" SHNL);
+      else
+        m_offset += msprintf(&m_to[m_offset], "vec3   ppb_color = texture(paletsampler, vec2(%F, 0.0)).rgb;" SHNL, fsp.color.r);
+    }
+    else
+    {
+      m_offset += msprintf(&m_to[m_offset],   "vec3   ppb_color = vec3(%F,%F,%F);" SHNL, fsp.color.r, fsp.color.g, fsp.color.b);
+    }
+    m_offset += msprintf(&m_to[m_offset],     "result = mix(result, ppb_color, ppb_in * %s * %F );" SHNL,
+                             fsp.algo == overpattern_t::OALG_THRS_PLUS?   "post_mask[0]" : 
+                             fsp.algo == overpattern_t::OALG_THRS_MINUS?  "(1.0 - post_mask[0])" : 
+                             fsp.algo == overpattern_t::OALG_ANY?         "1.0" : 
+                                                                          "0.0",
+                             1.0f - fspopacity
+                         );
+  } // if mask
+}
+
+void  FshDrawMain::generic_main_process_overlays(ORIENTATION orient, int ovlscount, const ovlfraginfo_t* ovls)
+{
+  static const char fsh_decltrace[] = "vec4 ovTrace;" SHNL;
+  memcpy(&m_to[m_offset], fsh_decltrace, sizeof(fsh_decltrace) - 1);  m_offset += sizeof(fsh_decltrace) - 1;
+ 
+  bool transposed = orientationTransposed(orient);
+  
+  for (unsigned int i=0; i<ovlscount; i++)
+  {
+    m_offset += msprintf(&m_to[m_offset],   "ovl_cur_otss = ovl_otss_%D;" SHNL    // opacity, thickness, slice
+                                            "ovl_transfer_pos = ivec2(0,0);" SHNL, i+1);
+    
+    
+    if (ovls[i].link >= 0)
+      m_offset += msprintf(&m_to[m_offset], "bool ovl_visible_%d = ovl_visible_%d && step(1.0, ovl_cur_otss[0]) != 1;" SHNL, i+1, ovls[i].link + 1 );
+    else
+      m_offset += msprintf(&m_to[m_offset], "bool ovl_visible_%d = step(1.0, ovl_cur_otss[0]) != 1;" SHNL, i+1 );
+    
+    const char* ovl_coords_oriented[] =
+    {
+      //  OO_INHERITED=0, OO_INHERITED_MIRROR_HORZ, OO_INHERITED_MIRROR_VERT, OO_INHERITED_MIRROR_BOTH,
+      "abc_coords", "vec2(1.0 - abc_coords.x, abc_coords.y)", "vec2(abc_coords.x, 1.0 - abc_coords.y)", "vec2(1.0 - abc_coords.x, 1.0 - abc_coords.y)", 
+      //  OO_AREA_LRBT, OO_AREA_RLBT, OO_AREA_LRTB, OO_AREA_RLTB, OO_AREA_TBLR, OO_AREA_BTLR, OO_AREA_TBRL, OO_AREA_BTRL,
+      "xy_coords", "vec2(1.0 - xy_coords.x, xy_coords.y)", "vec2(xy_coords.x, 1.0 - xy_coords.y)", "vec2(1.0 - xy_coords.x, 1.0 - xy_coords.y)", 
+      "vec2(1.0 - xy_coords.y, xy_coords.x)", "xy_coords.yx", "vec2(1.0 - xy_coords.y, 1.0 - xy_coords.x)", "vec2(xy_coords.y, 1.0 - xy_coords.x)",
+      //  OO_AREAOR, OO_AREAOR_MIRROR_HORZ, OO_AREAOR_MIRROR_VERT, OO_AREAOR_MIRROR_BOTH,
+      "ab_coords", "vec2(1.0 - ab_coords.x, ab_coords.y)", "vec2(ab_coords.x, 1.0 - ab_coords.y)", "vec2(1.0 - ab_coords.x, 1.0 - ab_coords.y)", 
+      // OO_SAME
+      ""
+    };
+    const char* ocall_indimms = nullptr, *ocall_iscaler = nullptr, *ocall_ibounds = nullptr;
+    const char* ocall_ovcoords = ovl_coords_oriented[ovls[i].orient];
+    if (ovls[i].orient < OO_AREA_LRBT)
+    {
+      ocall_indimms = "ab_indimms.xy";
+      ocall_iscaler = "ab_iscaler.xy";
+      ocall_ibounds = "ab_ibounds.xy"; 
+    }
+    else
+    {
+      if (ovls[i].orient == OO_AREA_LRBT || ovls[i].orient == OO_AREA_RLBT || ovls[i].orient == OO_AREA_LRTB || ovls[i].orient == OO_AREA_RLTB)
+      {
+        ocall_indimms = transposed ? "ab_indimms.yx" : "ab_indimms.xy";
+        ocall_iscaler = transposed ? "ab_iscaler.yx" : "ab_iscaler.xy";
+        ocall_ibounds = transposed ? "ab_indimms.yx*ab_iscaler.yx*icells.xy" : "ab_indimms.xy*ab_iscaler.xy*icells.yx";
+      }
+      else if (ovls[i].orient == OO_AREA_TBLR || ovls[i].orient == OO_AREA_BTLR || ovls[i].orient == OO_AREA_TBRL || ovls[i].orient == OO_AREA_BTRL)
+      {
+        ocall_indimms = transposed ? "ab_indimms.xy" : "ab_indimms.yx";
+        ocall_iscaler = transposed ? "ab_iscaler.xy" : "ab_iscaler.yx";
+        ocall_ibounds = transposed ? "ab_indimms.xy*ab_iscaler.xy*icells.yx" : "ab_indimms.yx*ab_iscaler.yx*icells.xy";
+      }
+      else if (ovls[i].orient == OO_AREAOR || ovls[i].orient == OO_AREAOR_MIRROR_HORZ || ovls[i].orient == OO_AREAOR_MIRROR_VERT || ovls[i].orient == OO_AREAOR_MIRROR_BOTH)
+      {
+        ocall_indimms = "ab_indimms.xy";
+        ocall_iscaler = "ab_iscaler.xy";
+        ocall_ibounds = transposed ? "ab_indimms.yx*ab_iscaler.yx*icells.xy" : "ab_indimms.xy*ab_iscaler.xy*icells.yx";
+      }
+      else
+        ;
+    }
+    
+    
+    m_offset += msprintf(&m_to[m_offset],   "if  (ovl_visible_%d)" SHNL
+                                            "{" SHNL
+                                               "ovTrace = overlayOVCoords%d(ispcell, %s, %s, %s, %s, ovl_cur_otss[1], "
+                                            , 
+                                            i+1, i+1, ocall_indimms, ocall_iscaler, ocall_ibounds, ocall_ovcoords
+                                            );
+    
+    if (ovls[i].link >= 0)
+      m_offset += msprintf(&m_to[m_offset],       "ovl_pos_%d, vec3(post_mask[0], post_mask[3], ppb_in), ovl_transfer_pos);" SHNL
+                                            , ovls[i].link + 1);
+    else
+      m_offset += msprintf(&m_to[m_offset],       "ivec2(0,0), vec3(post_mask[0], post_mask[3], ppb_in), ovl_transfer_pos);" SHNL );
+    
+    
+    m_offset += msprintf(&m_to[m_offset],     "if (sign(ovTrace[3]) != 0.0 && (step(mixwell, 0.0) == 1 || (step(dvalue, ovl_cur_otss[2]) == 0 && step(ovl_cur_otss[3], dvalue) == 0)) )" SHNL
+                                                "result = mix(result, overlayColor%d(ovTrace, result), 1.0 - ovl_cur_otss[0]);" SHNL
+                                            "}" SHNL
+                                            "ivec2 ovl_pos_%d = ovl_transfer_pos;" SHNL
+                                            , 
+                                            i+1, i+1);
+  }
+#if !defined BSGLSLVER || BSGLSLVER < 420
+  static const char fsh_end[] =   "gl_FragColor = vec4(result, 0.0);" SHNL "}" SHNL;
+#else
+  static const char fsh_end[] =   "outcolor = vec4(result, 0.0);" SHNL "}" SHNL;
+#endif
+//  static const char fsh_end[] =   "fragColor = vec4(result, 0.0);" SHNL "}" SHNL;
+  memcpy(&m_to[m_offset], fsh_end, sizeof(fsh_end) - 1); m_offset += sizeof(fsh_end) - 1;
+  m_to[m_offset++] = '\0';
+}
+
+
+
+
+
+
+
+#if 0
+
+FshDrawConstructor::FshDrawConstructor(char *deststring, unsigned int allocatedPortions, SPLITPORTIONS m_split, const datasubmesh_t& imp, 
                 unsigned int globscount, globvarinfo_t* globsinfo, unsigned int ovlscount, ovlfraginfo_t* ovlsinfo): 
-  m_writebase(deststring), m_to(deststring), m_allocatedPortions(allocatedPortions), m_offset(0), m_splitPortions(splitPortions), m_impulsegen(imp), 
+  m_writebase(deststring), m_to(deststring), m_allocatedPortions(allocatedPortions), m_offset(0), m_m_split(m_split), m_imp(imp), 
   m_c_locbackscount(0), m_ovlscount(ovlscount), m_ovls(ovlsinfo)
 {
 #ifdef BSGLSLVER
@@ -226,9 +1103,9 @@ FshDrawConstructor::FshDrawConstructor(char *deststring, unsigned int allocatedP
   }
 }
 
-void FshDrawConstructor::getLocbacks(locbackinfo_t* locbacks, unsigned int* locbackscount) const
+void FshDrawConstructor::getLocbacks(shuniformdesc_t* locbacks, unsigned int* locbackscount) const
 {
-  memcpy(locbacks, m_c_locbacks, sizeof(locbackinfo_t)*m_c_locbackscount);
+  memcpy(locbacks, m_c_locbacks, sizeof(shuniformdesc_t)*m_c_locbackscount);
   *locbackscount = m_c_locbackscount;
 }
 
@@ -269,7 +1146,7 @@ void FshDrawConstructor::_main_begin(int initback, unsigned int backcolor, ORIEN
                                 , rotaters[orient]);
   }
   
-  if (m_splitPortions == 0)
+  if (m_m_split == 0)
   {
     m_offset += msprintf(&m_to[m_offset],   
                                     "ivec2 ispcell = ivec2(0,0);" SHNL
@@ -278,9 +1155,9 @@ void FshDrawConstructor::_main_begin(int initback, unsigned int backcolor, ORIEN
   }
   else
   {
-    int spRotator =   (m_splitPortions >> 16)&0xFF;   // 0 - BT/LR, 1 - TB/RL
-    int spDirection = (m_splitPortions >> 8)&0xFF;    // 0 - Columns, 1 - Rows
-    int spDivider =    m_splitPortions&0xFF;
+    int spRotator =   (m_m_split >> 16)&0xFF;   // 0 - BT/LR, 1 - TB/RL
+    int spDirection = (m_m_split >> 8)&0xFF;    // 0 - Columns, 1 - Rows
+    int spDivider =    m_m_split&0xFF;
     
     if (spDivider == 1)
     {
@@ -338,30 +1215,30 @@ void FshDrawConstructor::_main_begin(int initback, unsigned int backcolor, ORIEN
                                                               /// ppban, threshold, weight, smooth
 }
 
-void FshDrawConstructor::main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp)
-{
-  _main_begin(initback, backcolor, orient, fsp);
+//void FshDrawConstructor::main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp)
+//{
+//  _main_begin(initback, backcolor, orient, fsp);
   
-//  m_offset += msprintf(&m_to[m_offset],     "ivec2  immod = ivec2( int(mod(fcoords.x, float(ab_iscaler.x))), int(mod(fcoords.y, float(ab_iscaler.y))));" SHNL
+////  m_offset += msprintf(&m_to[m_offset],     "ivec2  immod = ivec2( int(mod(fcoords.x, float(ab_iscaler.x))), int(mod(fcoords.y, float(ab_iscaler.y))));" SHNL
+////                                            "ivec4  imrect  = ivec4(immod.x, immod.y, ab_iscaler.x-1, ab_iscaler.y-1);" SHNL
+////                       );
+  
+//  m_offset += msprintf(&m_to[m_offset],     "ivec2  immod = ivec2( int(mod(abc_coords.x*ab_ibounds.x, float(ab_iscaler.x))), int(mod(abc_coords.y*ab_ibounds.y, float(ab_iscaler.y))));" SHNL
 //                                            "ivec4  imrect  = ivec4(immod.x, immod.y, ab_iscaler.x-1, ab_iscaler.y-1);" SHNL
 //                       );
-  
-  m_offset += msprintf(&m_to[m_offset],     "ivec2  immod = ivec2( int(mod(abc_coords.x*ab_ibounds.x, float(ab_iscaler.x))), int(mod(abc_coords.y*ab_ibounds.y, float(ab_iscaler.y))));" SHNL
-                                            "ivec4  imrect  = ivec4(immod.x, immod.y, ab_iscaler.x-1, ab_iscaler.y-1);" SHNL
-                       );
-  m_datamapped = DM_OFF;
-}
+//  m_datamapped = DM_OFF;
+//}
 
-void FshDrawConstructor::main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp, unsigned int dboundsA, unsigned int dboundsB)
-{
-  _main_begin(initback, backcolor, orient, fsp);
-  m_offset += msprintf(&m_to[m_offset],     "ivec2  dbounds_noscaled = ivec2(%d, %d);" SHNL
-                                            "vec2   dbounds = vec2(dbounds_noscaled);" SHNL
-                                            "ivec2  immod = ivec2(0,0);" SHNL
-                                            "ivec4  imrect = ivec4(0);" SHNL,
-                       dboundsA, dboundsB);
-  m_datamapped = DM_ON;
-}
+//void FshDrawConstructor::main_begin(int initback, unsigned int backcolor, ORIENTATION orient, const overpattern_t& fsp, unsigned int dboundsA, unsigned int dboundsB)
+//{
+//  _main_begin(initback, backcolor, orient, fsp);
+//  m_offset += msprintf(&m_to[m_offset],     "ivec2  dbounds_noscaled = ivec2(%d, %d);" SHNL
+//                                            "vec2   dbounds = vec2(dbounds_noscaled);" SHNL
+//                                            "ivec2  immod = ivec2(0,0);" SHNL
+//                                            "ivec4  imrect = ivec4(0);" SHNL,
+//                       dboundsA, dboundsB);
+//  m_datamapped = DM_ON;
+//}
 
 void FshDrawConstructor::main_end(const overpattern_t& fsp, float fspopacity)
 {
@@ -718,297 +1595,4 @@ void FshDrawConstructor::main_end(const overpattern_t& fsp, float fspopacity)
   m_to[m_offset++] = '\0';
 }
 
-void FshDrawConstructor::push(const char* text)
-{
-  while (*text != '\0')
-    m_to[m_offset++] = *text++;
-#ifdef AUTOSHNL
-  text = SHNL;
-  while (*text != '\0')
-    m_to[m_offset++] = *text++;
 #endif
-}
-
-void FshDrawConstructor::pushin(const char* text)
-{
-  while (*text != '\0')
-    m_to[m_offset++] = *text++;
-}
-
-void FshDrawConstructor::ccolor(const char *name, unsigned int value)
-{
-  float clr[3];
-  for (int i=0; i<3; i++)
-    clr[i] = ((value >> 8*i) & 0xFF) / 256.0;
-  m_offset += msprintf(&m_to[m_offset], "const vec3 %s = vec3(%F, %F, %F);" SHNL, name, clr[0], clr[1], clr[2]);
-}
-
-
-void FshDrawConstructor::cfloatvar(const char *name, float value){  m_offset += msprintf(&m_to[m_offset], "const float %s = %f;" SHNL, name, value);  }
-void FshDrawConstructor::cfloatvar(const char *name, float value1, float value2){  m_offset += msprintf(&m_to[m_offset], "const vec2 %s = vec2(%f, %f);" SHNL, name, value1, value2);  }
-void FshDrawConstructor::cintvar(const char *name, int value){  m_offset += msprintf(&m_to[m_offset], "const int %s = %d;" SHNL, name, value);  }
-void FshDrawConstructor::cintvar(const char *name, int value1, int value2){  m_offset += msprintf(&m_to[m_offset], "const ivec2 %s = ivec2(%d, %d);" SHNL, name, value1, value2);  }
-
-//#include <QDebug>
-
-
-
-void FshDrawConstructor::value2D(const char* varname, const char* coordsname, const char* portionname)
-{
-  if (m_impulsegen.type == impulsedata_t::IR_OFF)
-  {
-    m_offset += msprintf(&m_to[m_offset], "%s = texture(datasampler, vec2(%s.x, float(%s.y + float(%s))/float(dataportions))).r;" SHNL,
-                                          varname,                    coordsname, coordsname,   portionname);
-  }
-  
-                    /// A
-  
-  else if (m_impulsegen.type == impulsedata_t::IR_A_COEFF || m_impulsegen.type == impulsedata_t::IR_A_COEFF_NOSCALED)
-  {
-    m_offset += msprintf(&m_to[m_offset],  "vec3 loc_vv = vec3(0.0, 0.0, 0.0);" SHNL );
-                         
-    const char* scnosc = m_datamapped == DM_OFF ? 
-                           m_impulsegen.type == impulsedata_t::IR_A_COEFF? "ab_ibounds" : "ab_indimms" :
-                           m_impulsegen.type == impulsedata_t::IR_A_COEFF? "dbounds" : "dbounds_noscaled";
-    
-    m_offset += msprintf(&m_to[m_offset],  "vec4 impulsegrad = vec4(0, %s.x*%s.x, 1.0/%s.x, float(%s.y + float(%s))/float(dataportions));" SHNL,
-                                                          coordsname,  scnosc,   scnosc,     coordsname,  portionname
-                        );
-    
-    const char* lvclamp = "loc_vv[2]";
-    if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP && m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
-      lvclamp = "clamp(loc_vv[2], 0.0, 1.0)";
-    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP)
-      lvclamp = "min(loc_vv[2], 1.0)";
-    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
-      lvclamp = "max(loc_vv[2], 0.0)";
-    
-    for (int i=0; i<m_impulsegen.central; i++)
-    {
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = impulsegrad[1] - %d;" SHNL, -(i - m_impulsegen.central));
-      if (m_impulsegen.flags & impulsedata_t::F_CYCLED)
-        m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], %s.x + loc_vv[1], 1.0 - step(0.0, loc_vv[1]));" SHNL, scnosc);
-        
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(datasampler, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r;" SHNL);
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * %s;" SHNL,
-                                                                              m_impulsegen.coeff[i], lvclamp);
-    }
-    
-    m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(datasampler, vec2(impulsegrad[1]*impulsegrad[2], impulsegrad[3])).r;" SHNL,
-                                                                              m_impulsegen.coeff[m_impulsegen.central]);
-    
-    for (int i=m_impulsegen.central+1; i<m_impulsegen.count; i++)
-    {
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = impulsegrad[1] + %d;" SHNL, i-m_impulsegen.central);
-      if (m_impulsegen.flags & impulsedata_t::F_CYCLED)
-        m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s.x, 1.0 - step(loc_vv[1], %s.x));" SHNL, scnosc, scnosc );
-      
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(datasampler, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r;" SHNL);
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * %s;" SHNL,
-                                                                              m_impulsegen.coeff[i], lvclamp);
-    }
-    
-    m_offset += msprintf(&m_to[m_offset],  "%s = loc_vv[0];" SHNL, varname);
-  }
-  else if (m_impulsegen.type == impulsedata_t::IR_A_BORDERS || m_impulsegen.type == impulsedata_t::IR_A_BORDERS_FIXEDCOUNT || m_impulsegen.type == impulsedata_t::IR_A_BORDERS_SMART)
-  {    
-    const char* scnosc = m_datamapped == DM_OFF? "ab_indimms.x" : "dbounds_noscaled.x";
-    m_offset += msprintf(&m_to[m_offset],  "vec4 impulsegrad = vec4(0, (%s.x*(%s)), 1.0/(%s), float(%s.y + float(%s))/float(dataportions));" SHNL,
-                                                                   coordsname,  scnosc,             scnosc,               coordsname,  portionname );
-    m_offset += msprintf(&m_to[m_offset],  "vec2 loc_vv = vec2(impulsegrad[1] - 1, impulsegrad[1] + 1);" SHNL );
-    if (m_impulsegen.flags & impulsedata_t::F_CYCLED)
-    {
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = mix(loc_vv[0], %s + loc_vv[0], 1.0 - step(0.0, loc_vv[0]));" SHNL, scnosc);
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s, 1.0 - step(loc_vv[1], %s));" SHNL, scnosc, scnosc);
-    }
-    
-    m_offset += msprintf(&m_to[m_offset], "impulsegrad[0] = texture(datasampler, vec2(%s.x, impulsegrad[3])).r;" SHNL, coordsname);
-    m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(texture(datasampler, vec2(loc_vv[0]*impulsegrad[2], impulsegrad[3])).r," SHNL
-                                                           "texture(datasampler, vec2(loc_vv[1]*impulsegrad[2], impulsegrad[3])).r);" SHNL);
-    
-    {
-      if (m_impulsegen.type == impulsedata_t::IR_A_BORDERS || m_impulsegen.type == impulsedata_t::IR_A_BORDERS_SMART)
-        m_offset += msprintf(&m_to[m_offset], "float impulsemix = (0.5 + float(imrect[0]))/float(imrect[2]+1);" SHNL);  // +1 !@!!!
-      else
-      {
-        double halfcent = m_impulsegen.central/2.0;
-        m_offset += msprintf(&m_to[m_offset], "float impulsemix = (0.5 - 0.25/%F)*(-clamp(1.0 - (imrect[0])/%F, 0.0, 1.0) + clamp(1.0 - float(imrect[2]-imrect[0])/%F, 0.0, 1.0) );" SHNL,
-                              halfcent, halfcent, halfcent);
-      }
-    }
-    
-    float fc = m_impulsegen.coeff[0];
-    if (fc < 0.0f)  fc = 0.0f;  else if (fc > 1.0f) fc = 1.0f;
-    
-    const char* igclamp = "impulsegrad[0]";
-    const char* lv0clamp = "loc_vv[0]", *lv1clamp = "loc_vv[1]";
-    if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP && m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
-    {
-      igclamp = "clamp(impulsegrad[0], 0.0, 1.0)"; lv0clamp = "clamp(loc_vv[0], 0.0, 1.0)"; lv1clamp = "clamp(loc_vv[1], 0.0, 1.0)";
-    }
-    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP)
-    { igclamp = "min(impulsegrad[0], 1.0)"; lv0clamp = "min(loc_vv[0], 1.0)"; lv1clamp = "min(loc_vv[1], 1.0)"; }
-    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
-    { igclamp = "max(impulsegrad[0], 0.0)"; lv0clamp = "max(loc_vv[0], 0.0)"; lv1clamp = "max(loc_vv[1], 0.0)"; }
-    
-    
-    if (m_impulsegen.type == impulsedata_t::IR_A_BORDERS || m_impulsegen.type == impulsedata_t::IR_A_BORDERS_FIXEDCOUNT)
-    {
-      m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(" SHNL
-                           "(0.5 - impulsemix + (impulsemix-1)*impulsemix*(1-2*impulsemix)*%F)*step(impulsemix, 0.5)*(%s - %s)," SHNL
-                           "(impulsemix - (impulsemix-1)*impulsemix*(1-2*impulsemix)*%F - 0.5)*step(0.5, impulsemix)*(%s - %s) " SHNL
-                                            ");" SHNL, fc*2, igclamp, lv0clamp, fc*2, igclamp, lv1clamp);
-    }
-    else
-    {
-      m_offset += msprintf(&m_to[m_offset], "vec2 loc_c = vec2("
-                              "%F*abs(impulsegrad[0]-loc_vv[0])/max(impulsegrad[0],loc_vv[0]),"
-                              "%F*abs(impulsegrad[0]-loc_vv[1])/max(impulsegrad[0],loc_vv[1])"
-                              ");" SHNL, 8*fc, 8*fc
-                           );
-      
-      m_offset += msprintf(&m_to[m_offset], "loc_c = vec2("
-                              "(0.5 - impulsemix + (impulsemix-1)*impulsemix*loc_c[0]),"
-                              "(impulsemix + (impulsemix-1)*impulsemix*loc_c[1] - 0.5)"
-                              ");" SHNL
-                           );
-      
-      m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(" SHNL
-                           "clamp(loc_c[0], 0.0, 1.0)*step(impulsemix, 0.5)*(%s - %s)," SHNL
-                           "clamp(loc_c[1], 0.0, 1.0)*step(0.5, impulsemix)*(%s - %s) " SHNL
-                                            ");" SHNL, igclamp, lv0clamp, igclamp, lv1clamp);
-    }
-    
-    m_offset += msprintf(&m_to[m_offset], "%s = impulsegrad[0] - step(%F, float(imrect[2]+1))*(loc_vv.x + loc_vv.y);" SHNL, 
-                                                                  varname, double(m_impulsegen.count));
-
-  }
-  
-                          /// B
-  
-  else if (m_impulsegen.type == impulsedata_t::IR_B_COEFF || m_impulsegen.type == impulsedata_t::IR_B_COEFF_NOSCALED)
-  {
-    m_offset += msprintf(&m_to[m_offset],  "vec3 loc_vv = vec3(0.0, 0.0, 0.0);" SHNL );
-                         
-    const char* scnosc = m_datamapped == DM_OFF ? 
-                           m_impulsegen.type == impulsedata_t::IR_B_COEFF? "ab_ibounds" : "ab_indimms" :
-                           m_impulsegen.type == impulsedata_t::IR_B_COEFF? "dbounds" : "dbounds_noscaled";
-    
-    m_offset += msprintf(&m_to[m_offset],  "vec4 impulsegrad = vec4(%s.x, %s.y*%s.y, 1.0/%s.y, %s);" SHNL, // float(%s.y + float(%s))/float(dataportions)
-                                                          coordsname,  coordsname,  scnosc,   scnosc,     portionname
-                        );
-    
-    const char* lvclamp = "loc_vv[2]";
-    if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP && m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
-      lvclamp = "clamp(loc_vv[2], 0.0, 1.0)";
-    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP)
-      lvclamp = "min(loc_vv[2], 1.0)";
-    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
-      lvclamp = "max(loc_vv[2], 0.0)";
-    
-    for (int i=0; i<m_impulsegen.central; i++)
-    {
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = impulsegrad[1] - %d;" SHNL, -(i - m_impulsegen.central));
-      if (m_impulsegen.flags & impulsedata_t::F_CYCLED)
-        m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], %s.y + loc_vv[1], 1.0 - step(0.0, loc_vv[1]));" SHNL, scnosc);
-        
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(datasampler, vec2(impulsegrad[0], (loc_vv[1]*impulsegrad[2] + impulsegrad[3])/float(dataportions))).r;" SHNL);
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * %s;" SHNL, m_impulsegen.coeff[i], lvclamp);
-    }
-    
-    m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * texture(datasampler, vec2(impulsegrad[0], (impulsegrad[1]*impulsegrad[2] + impulsegrad[3])/float(dataportions))).r;" SHNL,
-                                                                              m_impulsegen.coeff[m_impulsegen.central]);
-    
-    for (int i=m_impulsegen.central+1; i<m_impulsegen.count; i++)
-    {
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = impulsegrad[1] + %d;" SHNL, i-m_impulsegen.central);
-      if (m_impulsegen.flags & impulsedata_t::F_CYCLED)
-        m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s.y, 1.0 - step(loc_vv[1], %s.y));" SHNL, scnosc, scnosc );
-      
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(datasampler, vec2(impulsegrad[0], (loc_vv[1]*impulsegrad[2] + impulsegrad[3])/float(dataportions))).r;" SHNL);
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = loc_vv[0] + %f * %s;" SHNL, m_impulsegen.coeff[i], lvclamp);
-    }
-    
-    m_offset += msprintf(&m_to[m_offset],  "%s = loc_vv[0];" SHNL, varname);
-  }
-  else if (m_impulsegen.type == impulsedata_t::IR_B_BORDERS || m_impulsegen.type == impulsedata_t::IR_B_BORDERS_FIXEDCOUNT || m_impulsegen.type == impulsedata_t::IR_B_BORDERS_SMART)
-  {
-    
-    const char* scnosc = m_datamapped == DM_OFF? "ab_indimms.y" : "dbounds_noscaled.y";
-    
-    m_offset += msprintf(&m_to[m_offset],  "vec4 impulsegrad = vec4(%s.x, (%s.y*(%s)), 1.0/(%s), float(%s));" SHNL,
-                                                           coordsname,  coordsname,  scnosc,  scnosc,  portionname );
-    
-    
-    m_offset += msprintf(&m_to[m_offset],  "vec3 loc_vv = vec3(impulsegrad[1] - 1, impulsegrad[1] + 1, 0.0);" SHNL );
-    if (m_impulsegen.flags & impulsedata_t::F_CYCLED)
-    {
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[0] = mix(loc_vv[0], %s + loc_vv[0], 1.0 - step(0.0, loc_vv[0]));" SHNL, scnosc);
-      m_offset += msprintf(&m_to[m_offset], "loc_vv[1] = mix(loc_vv[1], loc_vv[1] - %s, 1.0 - step(loc_vv[1], %s));" SHNL, scnosc, scnosc);
-    }
-    
-    m_offset += msprintf(&m_to[m_offset], "loc_vv[2] = texture(datasampler, vec2(impulsegrad[0], (%s.y + impulsegrad[3])/float(dataportions))).r;" SHNL, coordsname);
-    m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(texture(datasampler, vec2(impulsegrad[0], (loc_vv[0]*impulsegrad[2] + impulsegrad[3])/float(dataportions))).r," SHNL
-                                                           "texture(datasampler, vec2(impulsegrad[0], (loc_vv[1]*impulsegrad[2] + impulsegrad[3])/float(dataportions))).r);" SHNL);
-
-    {
-      double halfcent = m_impulsegen.central/2.0;
-      if (m_impulsegen.type == impulsedata_t::IR_B_BORDERS || m_impulsegen.type == impulsedata_t::IR_B_BORDERS_SMART)
-        m_offset += msprintf(&m_to[m_offset], "float impulsemix = (0.5 + float(imrect[1]))/float(imrect[3]+1);" SHNL);  // +1 !@!!!
-      else
-      {
-        m_offset += msprintf(&m_to[m_offset], "float impulsemix = (0.5 - 0.25/%F)*(-clamp(1.0 - (imrect[1])/%F, 0.0, 1.0) + clamp(1.0 - float(imrect[3]-imrect[1])/%F, 0.0, 1.0) );" SHNL,
-                              halfcent, halfcent, halfcent
-                           );
-      }
-    }
-    
-    float fc = m_impulsegen.coeff[0];
-    if (fc < 0.0f)  fc = 0.0f;  else if (fc > 1.0f) fc = 1.0f;
-    
-    const char* igclamp = "loc_vv[2]";
-    const char* lv0clamp = "loc_vv[0]", *lv1clamp = "loc_vv[1]";
-    if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP && m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
-    {
-      igclamp = "clamp(loc_vv[2], 0.0, 1.0)"; lv0clamp = "clamp(loc_vv[0], 0.0, 1.0)"; lv1clamp = "clamp(loc_vv[1], 0.0, 1.0)";
-    }
-    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPTOP)
-    { igclamp = "min(loc_vv[2], 1.0)"; lv0clamp = "min(loc_vv[0], 1.0)"; lv1clamp = "min(loc_vv[1], 1.0)"; }
-    else if (m_impulsegen.flags & impulsedata_t::F_CLAMPBOT)
-    { igclamp = "max(loc_vv[2], 0.0)"; lv0clamp = "max(loc_vv[0], 0.0)"; lv1clamp = "max(loc_vv[1], 0.0)"; }
-    
-//    m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(" SHNL
-//                                            "-impulsemix*step(impulsemix, 0.0)*(%s - %s)/(1.0 - %f*(1.0+impulsemix))," SHNL
-//                                            " impulsemix*step(0.0, impulsemix)*(%s - %s)/(1.0 - %f*(1.0-impulsemix)) " SHNL
-//                                          ");" SHNL, igclamp, lv0clamp, fc, igclamp, lv1clamp, fc);
-    
-    if (m_impulsegen.type == impulsedata_t::IR_B_BORDERS || m_impulsegen.type == impulsedata_t::IR_B_BORDERS_FIXEDCOUNT)
-    {
-      m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(" SHNL
-                           "(0.5 - impulsemix + (impulsemix-1)*impulsemix*(1-2*impulsemix)*%F)*step(impulsemix, 0.5)*(%s - %s)," SHNL
-                           "(impulsemix - (impulsemix-1)*impulsemix*(1-2*impulsemix)*%F - 0.5)*step(0.5, impulsemix)*(%s - %s) " SHNL
-                                            ");" SHNL, fc*2, igclamp, lv0clamp, fc*2, igclamp, lv1clamp);
-    }
-    else
-    {
-      m_offset += msprintf(&m_to[m_offset], "vec2 loc_c = vec2("
-                              "%F*abs(impulsegrad[0]-loc_vv[0])/max(impulsegrad[0],loc_vv[0]),"
-                              "%F*abs(impulsegrad[0]-loc_vv[1])/max(impulsegrad[0],loc_vv[1])"
-                              ");" SHNL, 8*fc, 8*fc
-                           );
-      
-      m_offset += msprintf(&m_to[m_offset], "loc_c = vec2("
-                              "(0.5 - impulsemix + (impulsemix-1)*impulsemix*loc_c[0]),"
-                              "(impulsemix + (impulsemix-1)*impulsemix*loc_c[1] - 0.5)"
-                              ");" SHNL
-                           );
-      
-      m_offset += msprintf(&m_to[m_offset], "loc_vv.xy = vec2(" SHNL
-                           "clamp(loc_c[0], 0.0, 1.0)*step(impulsemix, 0.5)*(%s - %s)," SHNL
-                           "clamp(loc_c[1], 0.0, 1.0)*step(0.5, impulsemix)*(%s - %s) " SHNL
-                                            ");" SHNL, igclamp, lv0clamp, igclamp, lv1clamp);
-    }
-    
-    m_offset += msprintf(&m_to[m_offset], "%s = loc_vv[2] - step(%F, float(imrect[3]))*(loc_vv.x + loc_vv.y);", varname, m_impulsegen.count);
-  }
-}

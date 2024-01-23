@@ -38,7 +38,6 @@ public:
   void    setOpts(const graphopts_t& go, const coloropts_t& co);
 public:
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
-  virtual unsigned int    colorBack() const;
 };
 
 /// 2D graph dynamic portion size:   Check portionSize() before each call setData

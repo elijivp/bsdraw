@@ -11,32 +11,27 @@ class SheiGeneratorSDP: public ISheiGenerator
 public:
   enum MODE { MODE_NONE, MODE_MARKER };
   MODE          m_mode;
-  unsigned int  m_bckclr;
 public:
-  SheiGeneratorSDP(MODE mode, unsigned int backgroundColor): m_mode(mode), m_bckclr(backgroundColor){}
+  SheiGeneratorSDP(MODE mode): m_mode(mode){}
   ~SheiGeneratorSDP();
 public:
   virtual const char*   shaderName() const {  return "SDP"; }
   virtual int           portionMeshType() const { return PMT_PSEUDO2D; }
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
-  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 300 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
-  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
-                                         const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
-                                         ovlfraginfo_t ovlsinfo[], unsigned int ovlscount,
-                                         locbackinfo_t locbackinfo[], unsigned int* locbackcount,
-                                         char* to) const
+  virtual unsigned int  shfragment_pendingSize() const { return 300; }
+  virtual unsigned int  shfragment_uniforms(shuniformdesc_t* sfdarr, unsigned int limit)
   {
-    globvarinfo_t globvars[] = {  { DT_SAMP4, "sdpsampler" }  };
-    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, sizeof(globvars)/sizeof(globvars[0]), globvars, ovlscount, ovlsinfo);
-    fmg.getLocbacks(locbackinfo, locbackcount);
-    fmg.main_begin(FshDrawConstructor::INIT_BYVALUE, m_bckclr, orient, fsp);
-    
-    fmg.push(   "vec4 pixsdp = texture(sdpsampler, abc_coords).rgba;" );
-    
+    strcpy(sfdarr[0].varname, "sdpsampler");
+    sfdarr[0].type = DT_SAMP4;
+    return 1;
+  }
+  virtual void          shfragment_store(FshDrawComposer& fdc) const
+  {
+    fdc.push(   "vec4 pixsdp = texture(sdpsampler, abc_coords).rgba;" );
     if (m_mode == MODE_NONE)
     {
-      fmg.push(   "result = mix(result, pixsdp.bgr, pixsdp.a);"
+      fdc.push(   "result = mix(result, pixsdp.bgr, pixsdp.a);"
 //                  "float value = texture(datasampler, vec2(domain, 0.0)).r;"  // domain /float(lenground-1)
 //                  "dvalue = max(dvalue, value);"
 //                  "post_mask[0] = mix(1.0, post_mask[0], step( value , post_mask[1]));"
@@ -44,7 +39,7 @@ public:
     }
     else if (m_mode == MODE_MARKER)
     {
-      fmg.push(
+      fdc.push(
                   "float marker = mod(pixsdp[2]*255.0, 4.0)*16.0 + mod(pixsdp[1]*255.0, 4.0)*4.0 + mod(pixsdp[0]*255.0, 4.0);"
                   "float value = texture(datasampler, vec2((marker - 1.0)/float(dataportionsize-1), 0.0)).r;"
                   "value = paletrange[0] + (paletrange[1] - paletrange[0])*value;"
@@ -58,10 +53,6 @@ public:
   
                   );
     }
-    fmg.main_end(fsp, fspopacity);
-    
-    qDebug()<<to;
-    return fmg.written();
   }
 };
 SheiGeneratorSDP::~SheiGeneratorSDP(){}
@@ -83,7 +74,7 @@ void DrawSDPicture::reConstructor(unsigned int samplesHorz, unsigned int samples
 }
 
 DrawSDPicture::DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert, QImage* img, unsigned int backgroundColor, bool allowNoscaledResize):
-  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER, backgroundColor), 1, OR_LRTB),
+  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER), 1, OR_LRTB, SP_NONE, backgroundColor),
   m_allowNoscaledResize(allowNoscaledResize)
 {
   m_pImage = new QImage(img->convertToFormat(QImage::Format_ARGB32));
@@ -93,7 +84,7 @@ DrawSDPicture::DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert,
 
 
 DrawSDPicture::DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert, const char* imagepath, unsigned int backgroundColor, bool allowNoscaledResize):
-  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER, backgroundColor), 1, OR_LRTB), 
+  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER), 1, OR_LRTB, SP_NONE, backgroundColor), 
   m_allowNoscaledResize(allowNoscaledResize)
 {
   QImage orig(imagepath);
@@ -104,7 +95,7 @@ DrawSDPicture::DrawSDPicture(unsigned int samplesHorz, unsigned int samplesVert,
 }
 
 DrawSDPicture::DrawSDPicture(QImage* img, float sizeMultiplier, unsigned int backgroundColor):
-  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER, backgroundColor), 1, OR_LRTB)
+  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER), 1, OR_LRTB, SP_NONE, backgroundColor)
 {
   m_pImage = new QImage(img->convertToFormat(QImage::Format_ARGB32));
   m_pImage->detach();
@@ -112,7 +103,7 @@ DrawSDPicture::DrawSDPicture(QImage* img, float sizeMultiplier, unsigned int bac
 }
 
 DrawSDPicture::DrawSDPicture(const char* imagepath, float sizeMultiplier, unsigned int backgroundColor):
-  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER, backgroundColor), 1, OR_LRTB)
+  DrawQWidget(DATEX_DD, new SheiGeneratorSDP(SheiGeneratorSDP::MODE_MARKER), 1, OR_LRTB, SP_NONE, backgroundColor)
 {
   QImage orig(imagepath);
   m_pImage = new QImage(orig.convertToFormat(QImage::Format_ARGB32));
@@ -180,15 +171,6 @@ void DrawSDPicture::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixD
   }
   clampScaling(scalingA, scalingB);
 }
-
-unsigned int DrawSDPicture::colorBack() const
-{
-  unsigned int bc = ((SheiGeneratorSDP*)m_pcsh)->m_bckclr;
-  if (bc == 0xFFFFFFFF)
-    return DrawQWidget::colorBack();
-  return bc;
-}
-
 
 
 

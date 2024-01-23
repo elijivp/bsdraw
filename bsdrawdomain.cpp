@@ -19,45 +19,39 @@ public:
   virtual int           portionMeshType() const { return PMT_PSEUDO2D; }
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
-  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 700 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
-  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
-                                         const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
-                                         ovlfraginfo_t ovlsinfo[], unsigned int ovlscount, 
-                                         locbackinfo_t locbackinfo[], unsigned int* locbackcount,
-                                         char* to) const
+  virtual unsigned int  shfragment_pendingSize() const { return 2048; }
+  virtual unsigned int  shfragment_uniforms(shuniformdesc_t* sfdarr, unsigned int limit)
   {
-    globvarinfo_t globvars[] = {  { DT_SAMP4, "dmnsampler" }  };
-    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, sizeof(globvars)/sizeof(globvars[0]), globvars, ovlscount, ovlsinfo);
-    fmg.getLocbacks(locbackinfo, locbackcount);
-
-    fmg.main_begin(FshDrawConstructor::INITBACK_BYPALETTE, 0, orient, fsp); //FshDrawConstructor::INITBACK_BYZERO
-    fmg.cintvar("allocatedPortions", (int)allocatedPortions);
-    fmg.push("float domain = texture(dmnsampler, abc_coords).r / float(dataportionsize+1);");
-    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<dataportions; i++)" : "int i = explicitPortion;" );
-    fmg.push( "{" );
+    strcpy(sfdarr[0].varname, "dmnsampler");
+    sfdarr[0].type = DT_SAMP4;
+    return 1;
+  }
+  virtual void          shfragment_store(FshDrawComposer& fdc) const
+  {
+    fdc.push("float domain = texture(dmnsampler, abc_coords).r / float(dataportionsize+1);");
+    fdc.push( fdc.splits() == SP_NONE? 
+              "for (int i=0; i<dataportions; i++)" : "int i = explicitPortion;" );
+    fdc.push( "{" );
     {
       if (isBckgrndDomain)
-        fmg.push("float value = texture(datasampler, vec2(domain, 0.0)).r;");  // domain /float(dmnlen-1)
+        fdc.push("float value = texture(datasampler, vec2(domain, 0.0)).r;");  // domain /float(dmnlen-1)
       else
-        fmg.push("float value = texture(datasampler, vec2(domain, 0.0)).r * (1-step(domain, 0.0));");    // /float(dmnlen-1)
+        fdc.push("float value = texture(datasampler, vec2(domain, 0.0)).r * (1-step(domain, 0.0));");    // /float(dmnlen-1)
       
-      fmg.push(  "dvalue = max(dvalue, value);");
-      fmg.push(  "value = paletrange[0] + (paletrange[1] - paletrange[0])*value;" );
+      fdc.push(  "dvalue = max(dvalue, value);");
+      fdc.push(  "value = paletrange[0] + (paletrange[1] - paletrange[0])*value;" );
       
-      if ( splitPortions == SP_NONE )
-        fmg.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );
-      else if (splitPortions & SPFLAG_COLORSPLIT)
-        fmg.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" );
-//        fmg.push("result.rgb = mix(texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1))).rgb, result.rgb, step(countPortions, float(explicitPortion)));" );
+      if ( fdc.splits() == SP_NONE )
+        fdc.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );
+      else if (fdc.splits() & SPFLAG_COLORSPLIT)
+        fdc.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" );
+//        fdc.push("result.rgb = mix(texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1))).rgb, result.rgb, step(countPortions, float(explicitPortion)));" );
       else
-        fmg.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" );
+        fdc.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" );
       
-      fmg.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" );
+      fdc.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" );
     }
-    fmg.push( "}" );
-    
-    fmg.main_end(fsp, fspopacity);
-    return fmg.written();
+    fdc.push( "}" );
   }
 };
 
@@ -276,7 +270,7 @@ void DIDomain::excludePixel(int r, int c)
 /////////////////////////////////////////////////////////////////////////
 
 DrawDomain::DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions, bool isBckgrndDomain, ORIENTATION orient): 
-  DrawQWidget(DATEX_DD, new SheiGeneratorDomain(isBckgrndDomain), portions, orient)
+  DrawQWidget(DATEX_DD, new SheiGeneratorDomain(isBckgrndDomain), portions, orient, SP_NONE, 0x00000000)
 {
   m_dataDimmA = samplesHorz;
   m_dataDimmB = samplesVert;
@@ -290,7 +284,7 @@ DrawDomain::DrawDomain(unsigned int samplesHorz, unsigned int samplesVert, unsig
 }
 
 DrawDomain::DrawDomain(const DIDomain &cpy, unsigned int portions, ORIENTATION orient): 
-  DrawQWidget(DATEX_DD, new SheiGeneratorDomain(cpy.isBackgroundDomain()), portions, orient)
+  DrawQWidget(DATEX_DD, new SheiGeneratorDomain(cpy.isBackgroundDomain()), portions, orient, SP_NONE, 0x00000000)
 {
   m_dataDimmA = cpy.m_width;
   m_dataDimmB = cpy.m_height;

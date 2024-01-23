@@ -89,104 +89,98 @@ public:
   virtual int           portionMeshType() const { return PMT_PSEUDO2D; }
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
-  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 1200 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
-  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
-                                         const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
-                                         ovlfraginfo_t ovlsinfo[], unsigned int ovlscount, 
-                                         locbackinfo_t locbackinfo[], unsigned int* locbackcount,
-                                         char* to) const
+  virtual unsigned int  shfragment_pendingSize() const { return 2000; }
+  virtual unsigned int  shfragment_uniforms(shuniformdesc_t* sfdarr, unsigned int limit)
   {
-    globvarinfo_t globvars[] = {  
-                                  { DT_SAMP4, "sctsampler" },
-                                  { DT_SAMP4, "mapsampler" },
-                                  { DT_1I,    "mapbound_a" },
-                                  { DT_1I,    "mapbound_b" },
-                                  { DT_1F,    "range" },
-                                  { DT_4F,    "ddcc" },
-                                  { DT_4F,    "mappalbord" },
-                                  { DT_3F,    "mapdepbord" },
-    };
-    
-    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, sizeof(globvars)/sizeof(globvars[0]), globvars, ovlscount, ovlsinfo);
-    fmg.getLocbacks(locbackinfo, locbackcount);
-    fmg.main_begin(FshDrawConstructor::INITBACK_BYPALETTE, 0, orient, fsp); //FshDrawConstructor::INITBACK_BYZERO
-    fmg.cintvar("vertsize", vertsize);
-    fmg.cintvar("iterations", iterations);
-    fmg.cfloatvar("ee2rad", 1/60.0*M_PI/180.0);
+    strcpy(sfdarr[0].varname, "sctsampler");    sfdarr[0].type = DT_SAMP4;
+    strcpy(sfdarr[1].varname, "mapsampler");    sfdarr[1].type = DT_SAMP4;
+    strcpy(sfdarr[2].varname, "mapbound_a");    sfdarr[2].type = DT_1I;
+    strcpy(sfdarr[3].varname, "mapbound_b");    sfdarr[3].type = DT_1I;
+    strcpy(sfdarr[4].varname, "range");         sfdarr[4].type = DT_1F;
+    strcpy(sfdarr[5].varname, "ddcc");          sfdarr[5].type = DT_4F;
+    strcpy(sfdarr[6].varname, "mappalbord");    sfdarr[6].type = DT_4F;
+    strcpy(sfdarr[7].varname, "mapdepbord");    sfdarr[7].type = DT_3F;
+    return 8;
+  }
+  virtual void          shfragment_store(FshDrawComposer& fdc) const
+  {
+    fdc.cintvar("vertsize", vertsize);
+    fdc.cintvar("iterations", iterations);
+    fdc.cfloatvar("ee2rad", 1/60.0*M_PI/180.0);
     
 #ifdef DMETERS
-    fmg.push("vec2 ptc = vec2(ddcc[2], ddcc[3]);" SHNL);
+    fdc.push("vec2 ptc = vec2(ddcc[2], ddcc[3]);" SHNL);
     
-    fmg.push("float dvert = float(ab_ibounds.y)/float(ab_ibounds.x);" SHNL);
-    fmg.push("float ea=6378000;" SHNL);
-    fmg.push("float eb=6357000;" SHNL);
+    fdc.push("float dvert = float(ab_ibounds.y)/float(ab_ibounds.x);" SHNL);
+    fdc.push("float ea=6378000;" SHNL);
+    fdc.push("float eb=6357000;" SHNL);
     
-    fmg.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
-    fmg.push("float latM = (ptc.y + yside/2 - vertsize/2.0)*ee2rad;" SHNL);
-    fmg.push("float cosM = cos(latM);  float sinM = sin(latM);" SHNL);
-    fmg.push("float mympart = sqrt((ea*cosM)*(ea*cosM) + (eb*sinM)*(eb*sinM));" SHNL);
-    fmg.push("float MyM=(ea*eb)*(ea*eb)/(mympart*mympart*mympart);" SHNL);
-    fmg.push("float dy = MyM*ee2rad;" SHNL);
-    fmg.push("float yd = (1.0 - xy_coords.y - 0.5)*range*dvert / dy;" SHNL);  // /1855
+    fdc.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
+    fdc.push("float latM = (ptc.y + yside/2 - vertsize/2.0)*ee2rad;" SHNL);
+    fdc.push("float cosM = cos(latM);  float sinM = sin(latM);" SHNL);
+    fdc.push("float mympart = sqrt((ea*cosM)*(ea*cosM) + (eb*sinM)*(eb*sinM));" SHNL);
+    fdc.push("float MyM=(ea*eb)*(ea*eb)/(mympart*mympart*mympart);" SHNL);
+    fdc.push("float dy = MyM*ee2rad;" SHNL);
+    fdc.push("float yd = (1.0 - xy_coords.y - 0.5)*range*dvert / dy;" SHNL);  // /1855
     
-    fmg.push("float latT = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
-    fmg.push("float cosT = cos(latT);  float sinT = sin(latT);" SHNL);
-    fmg.push("float Ny=(ea*ea)/sqrt((ea*cosT)*(ea*cosT) + (eb*sinT)*(eb*sinT));" SHNL);
-    fmg.push("float tgtdist = abs(xy_coords.x - 0.5)*range;" SHNL);
-    fmg.push("float dx = (Ny*cos((ddcc[3]-vertsize/2.0)*ee2rad)*ee2rad);" SHNL);
-    fmg.push("float xd = tgtdist/dx*sign(xy_coords.x - 0.5);" SHNL);
+    fdc.push("float latT = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
+    fdc.push("float cosT = cos(latT);  float sinT = sin(latT);" SHNL);
+    fdc.push("float Ny=(ea*ea)/sqrt((ea*cosT)*(ea*cosT) + (eb*sinT)*(eb*sinT));" SHNL);
+    fdc.push("float tgtdist = abs(xy_coords.x - 0.5)*range;" SHNL);
+    fdc.push("float dx = (Ny*cos((ddcc[3]-vertsize/2.0)*ee2rad)*ee2rad);" SHNL);
+    fdc.push("float xd = tgtdist/dx*sign(xy_coords.x - 0.5);" SHNL);
     
-    fmg.push("vec2  eecoords = vec2(ddcc[0]/dx + xd + mapbound_a/2.0, ddcc[1]/dy + yd + mapbound_b/2.0);" SHNL);
-    fmg.push("vec2  tcoords = eecoords/vec2(mapbound_a, mapbound_b);" SHNL);  // + cc.xy
+    fdc.push("vec2  eecoords = vec2(ddcc[0]/dx + xd + mapbound_a/2.0, ddcc[1]/dy + yd + mapbound_b/2.0);" SHNL);
+    fdc.push("vec2  tcoords = eecoords/vec2(mapbound_a, mapbound_b);" SHNL);  // + cc.xy
     
-    fmg.push("vec3  mpx = texture(mapsampler, tcoords).rgb;" SHNL);
-    fmg.push("float level = mpx[0] + mapdepbord[0];" SHNL);
-    fmg.push("dvalue = mix(  mappalbord[0] + (mappalbord[1] - mappalbord[0])*(1.0 - level/mapdepbord[1]), "
+    fdc.push("vec3  mpx = texture(mapsampler, tcoords).rgb;" SHNL);
+    fdc.push("float level = mpx[0] + mapdepbord[0];" SHNL);
+    fdc.push("dvalue = mix(  mappalbord[0] + (mappalbord[1] - mappalbord[0])*(1.0 - level/mapdepbord[1]), "
                             "mappalbord[2] + (mappalbord[3] - mappalbord[2])*(level/mapdepbord[2]),"
                             "step(0.0, level) );" SHNL);
-    fmg.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
-    fmg.push("result = result + texture(paletsampler, vec2(dvalue, 0.0)).rgb;" SHNL);
+    fdc.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
+    fdc.push("result = result + texture(paletsampler, vec2(dvalue, 0.0)).rgb;" SHNL);
 #else
-    fmg.push("vec2 ptc = vec2(ddcc[0] + ddcc[2], ddcc[1] + ddcc[3]);" SHNL);
+    fdc.push("vec2 ptc = vec2(ddcc[0] + ddcc[2], ddcc[1] + ddcc[3]);" SHNL);
     
-    fmg.push("float dvert = float(ab_ibounds.y)/float(ab_ibounds.x);" SHNL);
-    fmg.push("float ea=6378000;" SHNL);
-    fmg.push("float eb=6357000;" SHNL);
+    fdc.push("float dvert = float(ab_ibounds.y)/float(ab_ibounds.x);" SHNL);
+    fdc.push("float ea=6378000;" SHNL);
+    fdc.push("float eb=6357000;" SHNL);
     
-    fmg.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
-    fmg.push("float latM = (ptc.y + yside/2 - vertsize/2.0)*ee2rad;" SHNL);
-    fmg.push("float cosM = cos(latM);  float sinM = sin(latM);" SHNL);
-    fmg.push("float mympart = sqrt((ea*cosM)*(ea*cosM) + (eb*sinM)*(eb*sinM));" SHNL);
-    fmg.push("float MyM=(ea*eb)*(ea*eb)/(mympart*mympart*mympart);" SHNL);
-    fmg.push("float dy = MyM*ee2rad;" SHNL);
-    fmg.push("float yd = (1.0 - xy_coords.y - 0.5)*range*dvert / dy;" SHNL);  // /1855
+    fdc.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
+    fdc.push("float latM = (ptc.y + yside/2 - vertsize/2.0)*ee2rad;" SHNL);
+    fdc.push("float cosM = cos(latM);  float sinM = sin(latM);" SHNL);
+    fdc.push("float mympart = sqrt((ea*cosM)*(ea*cosM) + (eb*sinM)*(eb*sinM));" SHNL);
+    fdc.push("float MyM=(ea*eb)*(ea*eb)/(mympart*mympart*mympart);" SHNL);
+    fdc.push("float dy = MyM*ee2rad;" SHNL);
+    fdc.push("float yd = (1.0 - xy_coords.y - 0.5)*range*dvert / dy;" SHNL);  // /1855
     
-    fmg.push("float latT = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
-    fmg.push("float cosT = cos(latT);  float sinT = sin(latT);" SHNL);
-    fmg.push("float Ny=(ea*ea)/sqrt((ea*cosT)*(ea*cosT) + (eb*sinT)*(eb*sinT));" SHNL);
-    fmg.push("float tgtdist = abs(xy_coords.x - 0.5)*range;" SHNL);
-    fmg.push("float xd = tgtdist/(Ny*cos((ddcc[3]-vertsize/2.0)*ee2rad)*ee2rad)*sign(xy_coords.x - 0.5);" SHNL);
+    fdc.push("float latT = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
+    fdc.push("float cosT = cos(latT);  float sinT = sin(latT);" SHNL);
+    fdc.push("float Ny=(ea*ea)/sqrt((ea*cosT)*(ea*cosT) + (eb*sinT)*(eb*sinT));" SHNL);
+    fdc.push("float tgtdist = abs(xy_coords.x - 0.5)*range;" SHNL);
+    fdc.push("float xd = tgtdist/(Ny*cos((ddcc[3]-vertsize/2.0)*ee2rad)*ee2rad)*sign(xy_coords.x - 0.5);" SHNL);
     
-    fmg.push("vec2  eecoords = vec2(ddcc[0] + xd + mapbound_a/2.0, ddcc[1] + yd + mapbound_b/2.0);" SHNL);
-    fmg.push("vec2  tcoords = eecoords/vec2(mapbound_a, mapbound_b);" SHNL);  // + cc.xy
+    fdc.push("vec2  eecoords = vec2(ddcc[0] + xd + mapbound_a/2.0, ddcc[1] + yd + mapbound_b/2.0);" SHNL);
+    fdc.push("vec2  tcoords = eecoords/vec2(mapbound_a, mapbound_b);" SHNL);  // + cc.xy
     
-    fmg.push("vec3  mpx = texture(mapsampler, tcoords).rgb;" SHNL);
-    fmg.push("float level = mpx[0] + mapdepbord[0];" SHNL);
-    fmg.push("dvalue = mix(  mappalbord[0] + (mappalbord[1] - mappalbord[0])*(1.0 - level/mapdepbord[1]), "
+    fdc.push("vec3  mpx = texture(mapsampler, tcoords).rgb;" SHNL);
+    fdc.push("float level = mpx[0] + mapdepbord[0];" SHNL);
+    fdc.push("dvalue = mix(  mappalbord[0] + (mappalbord[1] - mappalbord[0])*(1.0 - level/mapdepbord[1]), "
                             "mappalbord[2] + (mappalbord[3] - mappalbord[2])*(level/mapdepbord[2]),"
                             "step(0.0, level) );" SHNL);
-    fmg.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
-    fmg.push("result = result + texture(paletsampler, vec2(dvalue, 0.0)).rgb;" SHNL);
+    fdc.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
+    fdc.push("result = result + texture(paletsampler, vec2(dvalue, 0.0)).rgb;" SHNL);
 #endif
     
     
 #ifdef RULER
     {
-      fmg.push("float thick = 2.0;");
-      fmg.push("vec2 pt  = vec2(ab_coords.x*ab_ibounds.x, ab_coords.y*ab_ibounds.y);" SHNL);
-      fmg.push("vec2 ptb = vec2(measurer[0]*ab_ibounds.x, measurer[1]*ab_ibounds.y) - pt;" SHNL);
-      fmg.push("vec2 pte = vec2(measurer[2]*ab_ibounds.x, measurer[3]*ab_ibounds.y) - pt;" SHNL);
-      fmg.push("vec2 bz = vec2(step(pte.x, 0.0)*step(0.0, pte.x), step(pte.y, 0.0)*step(0.0, pte.y));" SHNL
+      fdc.push("float thick = 2.0;");
+      fdc.push("vec2 pt  = vec2(ab_coords.x*ab_ibounds.x, ab_coords.y*ab_ibounds.y);" SHNL);
+      fdc.push("vec2 ptb = vec2(measurer[0]*ab_ibounds.x, measurer[1]*ab_ibounds.y) - pt;" SHNL);
+      fdc.push("vec2 pte = vec2(measurer[2]*ab_ibounds.x, measurer[3]*ab_ibounds.y) - pt;" SHNL);
+      fdc.push("vec2 bz = vec2(step(pte.x, 0.0)*step(0.0, pte.x), step(pte.y, 0.0)*step(0.0, pte.y));" SHNL
                "vec2 cz = vec2(1.0/(pte.x-ptb.x), 1.0/(pte.y-ptb.y));" SHNL
                "float dist = abs( (1-bz[0])*(1-bz[1])*(ptb.y*cz[1] - ptb.x*cz[0])/sqrt(cz[0]*cz[0] + cz[1]*cz[1]) + ptb.x*bz[0] + ptb.y*bz[1] );" SHNL
                "float dz = step(length((ptb + pte)/2.0), length(pte-ptb)/2.0 + 1.0 + thick);" SHNL // center point and radius
@@ -198,28 +192,24 @@ public:
     }
 #endif
     
-    fmg.push("post_mask[0] = mix(1.0, post_mask[0], step(dvalue, post_mask[1]));" SHNL);
-    //    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
-    //    fmg.push("{");
+    fdc.push("post_mask[0] = mix(1.0, post_mask[0], step(dvalue, post_mask[1]));" SHNL);
+    //    fdc.push( splitPortions == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
+    //    fdc.push("{");
     //    {
-    //      fmg.value2D("float value");
-    ////      fmg.push("value = mix(dvalue, value);");
-    //      fmg.push("value = dvalue;");    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //      fmg.push("value = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
+    //      fdc.value2D("float value");
+    ////      fdc.push("value = mix(dvalue, value);");
+    //      fdc.push("value = dvalue;");    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //      fdc.push("value = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
     //      if ( splitPortions == SP_NONE )
-    //        fmg.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" SHNL);
+    //        fdc.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" SHNL);
     //      else if (splitPortions & SPFLAG_COLORSPLIT)
-    //        fmg.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" SHNL);
+    //        fdc.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" SHNL);
     //      else
-    //        fmg.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" SHNL);
+    //        fdc.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" SHNL);
           
-    //      fmg.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" SHNL);
+    //      fdc.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" SHNL);
     //    }
-    //    fmg.push("}");
-    fmg.main_end(fsp, fspopacity);
-//    qDebug()<<vertsize;
-//    qDebug()<<to;
-    return fmg.written();
+    //    fdc.push("}");
   }
 };
 
@@ -227,7 +217,7 @@ public:
 
 
 DrawMapEx::DrawMapEx(const char* mappath, int map_x_size, int map_y_size, unsigned int samplesA, unsigned int samplesB, ORIENTATION orient, SPLITPORTIONS splitPortions): 
-  DrawQWidget(DATEX_2D, new SheiGeneratorMapEx(map_y_size), 1, orient, splitPortions)
+  DrawQWidget(DATEX_2D, new SheiGeneratorMapEx(map_y_size), 1, orient, splitPortions, 0xFFFFFFFF)
 {
   m_dataDimmA = samplesA;
   m_dataDimmB = samplesB;
@@ -867,485 +857,485 @@ bool MapExReactorMove::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, 
 /*
 
     FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, sizeof(globvars)/sizeof(globvars[0]), globvars, ovlscount, ovlsinfo);
-    fmg.getLocbacks(locbackinfo, locbackcount);
-    fmg.main_begin(FshDrawConstructor::INITBACK_BYPALETTE, 0, orient, fsp); //FshDrawConstructor::INITBACK_BYZERO
-    fmg.cintvar("vertsize", vertsize);
-    fmg.cfloatvar("rr", 500000.0f);
-//    fmg.cfloatvar("rr", 50.0f);
+    fdc.getLocbacks(locbackinfo, locbackcount);
+    fdc.main_begin(FshDrawConstructor::INITBACK_BYPALETTE, 0, orient, fsp); //FshDrawConstructor::INITBACK_BYZERO
+    fdc.cintvar("vertsize", vertsize);
+    fdc.cfloatvar("rr", 500000.0f);
+//    fdc.cfloatvar("rr", 50.0f);
     
-    fmg.push("vec2 ptc = vec2(ddcc[0] + ddcc[2], ddcc[1] + ddcc[3]);" SHNL);
-    fmg.push("float ytgtdist = abs(xy_coords.y - 0.5)*rr;" SHNL);
-    fmg.push("float yds = mapbound_b/2;" SHNL);
-    fmg.push("float yd = 0;" SHNL);
-//    fmg.push("vec2 cs_lat1 = texture(sctsampler, vec2(abs(ptc.y - vertsize/2.0)/(1.0 + vertsize/2.0), 0.0)).rg;" SHNL);
-//    fmg.push("float cos1 = cos((ptc.y-vertsize/2.0)*1/60.0*3.1415927/180.0);" SHNL);
-//    fmg.push("float sin1 = cos((ptc.y-vertsize/2.0)*1/60.0*3.1415927/180.0);" SHNL);
-    fmg.push("vec2 cs_lat1 = vec2(cos((ptc.y-vertsize/2.0)*1/60.0*3.1415927/180.0), sin((ptc.y-vertsize/2.0)*1/60.0*3.1415927/180.0));" SHNL);
-    fmg.push("vec2 cs_lat2;" SHNL);
+    fdc.push("vec2 ptc = vec2(ddcc[0] + ddcc[2], ddcc[1] + ddcc[3]);" SHNL);
+    fdc.push("float ytgtdist = abs(xy_coords.y - 0.5)*rr;" SHNL);
+    fdc.push("float yds = mapbound_b/2;" SHNL);
+    fdc.push("float yd = 0;" SHNL);
+//    fdc.push("vec2 cs_lat1 = texture(sctsampler, vec2(abs(ptc.y - vertsize/2.0)/(1.0 + vertsize/2.0), 0.0)).rg;" SHNL);
+//    fdc.push("float cos1 = cos((ptc.y-vertsize/2.0)*1/60.0*3.1415927/180.0);" SHNL);
+//    fdc.push("float sin1 = cos((ptc.y-vertsize/2.0)*1/60.0*3.1415927/180.0);" SHNL);
+    fdc.push("vec2 cs_lat1 = vec2(cos((ptc.y-vertsize/2.0)*1/60.0*3.1415927/180.0), sin((ptc.y-vertsize/2.0)*1/60.0*3.1415927/180.0));" SHNL);
+    fdc.push("vec2 cs_lat2;" SHNL);
     
-    fmg.push("for (int i=0; i<30; i++)" SHNL
+    fdc.push("for (int i=0; i<30; i++)" SHNL
              "{" SHNL
     );                                                                    //mix(yd, -yd, step(0.5, xy_coords.y)) 
-//    fmg.push("cs_lat2 = texture(sctsampler, vec2(abs(ptc.y + yd - vertsize/2.0)/(1.0 + vertsize/2.0), 0.0)).rg;" SHNL); //mix(yd, -yd, step(0.5, xy_coords.y)) 
-    fmg.push("float a = (ptc.y + yd - vertsize/2.0)*1/60.0*3.1415927/180.0;" SHNL);
-    fmg.push("cs_lat2 = vec2(cos(a), sin(a));" SHNL);
-    fmg.push("float cp1 = cs_lat1[0]*cs_lat2[1] - cs_lat1[1]*cs_lat2[0];" SHNL);
-    fmg.push("float curdist = 6378137*atan( abs(cp1)/(cs_lat1[1]*cs_lat2[1] + cs_lat1[0]*cs_lat2[0]) );" SHNL);
-//    fmg.push("if (abs(curdist - ytgtdist) < 100)  break;" SHNL);
-    fmg.push("yds = yds/2;" SHNL);
-    fmg.push("yd = yd + mix(-yds, yds, step(abs(curdist), ytgtdist))*mix(1, -1, step(0.5, xy_coords.y));" SHNL);
-    fmg.push("}" SHNL);
+//    fdc.push("cs_lat2 = texture(sctsampler, vec2(abs(ptc.y + yd - vertsize/2.0)/(1.0 + vertsize/2.0), 0.0)).rg;" SHNL); //mix(yd, -yd, step(0.5, xy_coords.y)) 
+    fdc.push("float a = (ptc.y + yd - vertsize/2.0)*1/60.0*3.1415927/180.0;" SHNL);
+    fdc.push("cs_lat2 = vec2(cos(a), sin(a));" SHNL);
+    fdc.push("float cp1 = cs_lat1[0]*cs_lat2[1] - cs_lat1[1]*cs_lat2[0];" SHNL);
+    fdc.push("float curdist = 6378137*atan( abs(cp1)/(cs_lat1[1]*cs_lat2[1] + cs_lat1[0]*cs_lat2[0]) );" SHNL);
+//    fdc.push("if (abs(curdist - ytgtdist) < 100)  break;" SHNL);
+    fdc.push("yds = yds/2;" SHNL);
+    fdc.push("yd = yd + mix(-yds, yds, step(abs(curdist), ytgtdist))*mix(1, -1, step(0.5, xy_coords.y));" SHNL);
+    fdc.push("}" SHNL);
 
 #if 0
-    fmg.push("float xtgtdist = abs(xy_coords.x - 0.5)*rr;" SHNL);
-    fmg.push("float xds = mapbound_a/2;" SHNL);
-    fmg.push("float xd = 0;" SHNL);                                     //mix(yd, -yd, step(0.5, xy_coords.y))
-    fmg.push("for (int i=0; i<20; i++)" SHNL
+    fdc.push("float xtgtdist = abs(xy_coords.x - 0.5)*rr;" SHNL);
+    fdc.push("float xds = mapbound_a/2;" SHNL);
+    fdc.push("float xd = 0;" SHNL);                                     //mix(yd, -yd, step(0.5, xy_coords.y))
+    fdc.push("for (int i=0; i<20; i++)" SHNL
              "{" SHNL
     );
-    fmg.push("float dlon = xd*1/60.0*3.1415927/180.0;" SHNL);
-    fmg.push("float cp1 = cs_lat1[0]*cs_lat2[1] - cs_lat1[1]*cs_lat2[0]*cos(dlon);" SHNL);
-    fmg.push("float cp2 = cs_lat2[0]*sin(dlon);" SHNL);
-    fmg.push("float curdist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2)/(cs_lat1[1]*cs_lat2[1] + cs_lat1[0]*cs_lat2[0]*cos(dlon)) );" SHNL);
-//    fmg.push("curdist = rr/20*i;" SHNL);
+    fdc.push("float dlon = xd*1/60.0*3.1415927/180.0;" SHNL);
+    fdc.push("float cp1 = cs_lat1[0]*cs_lat2[1] - cs_lat1[1]*cs_lat2[0]*cos(dlon);" SHNL);
+    fdc.push("float cp2 = cs_lat2[0]*sin(dlon);" SHNL);
+    fdc.push("float curdist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2)/(cs_lat1[1]*cs_lat2[1] + cs_lat1[0]*cs_lat2[0]*cos(dlon)) );" SHNL);
+//    fdc.push("curdist = rr/20*i;" SHNL);
     
-//    fmg.push("if (abs(curdist - xtgtdist) < 100)  break;" SHNL);
-    fmg.push("xds = xds/2;" SHNL);
-    fmg.push("xd = xd + mix(-xds, xds, step(abs(curdist), xtgtdist))*mix(1, -1, step(0.5, xy_coords.x));" SHNL);
-    fmg.push("}" SHNL);
+//    fdc.push("if (abs(curdist - xtgtdist) < 100)  break;" SHNL);
+    fdc.push("xds = xds/2;" SHNL);
+    fdc.push("xd = xd + mix(-xds, xds, step(abs(curdist), xtgtdist))*mix(1, -1, step(0.5, xy_coords.x));" SHNL);
+    fdc.push("}" SHNL);
 #elif 1
-    fmg.push("float dlon = 1/60.0*3.1415927/180.0;" SHNL);
-    fmg.push("float cp1 = cs_lat2[0]*cs_lat2[1] - cs_lat2[1]*cs_lat2[0]*cos(dlon);" SHNL);
-    fmg.push("float cp2 = cs_lat2[0]*sin(dlon);" SHNL);
-    fmg.push("float mindist = 6378137*atan(sqrt(cp1*cp1 + cp2*cp2)/(cs_lat2[1]*cs_lat2[1] + cs_lat2[0]*cs_lat2[0]*cos(dlon)));" SHNL);
-    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-    fmg.push("float xd = xtgtdist/mindist;" SHNL);
+    fdc.push("float dlon = 1/60.0*3.1415927/180.0;" SHNL);
+    fdc.push("float cp1 = cs_lat2[0]*cs_lat2[1] - cs_lat2[1]*cs_lat2[0]*cos(dlon);" SHNL);
+    fdc.push("float cp2 = cs_lat2[0]*sin(dlon);" SHNL);
+    fdc.push("float mindist = 6378137*atan(sqrt(cp1*cp1 + cp2*cp2)/(cs_lat2[1]*cs_lat2[1] + cs_lat2[0]*cs_lat2[0]*cos(dlon)));" SHNL);
+    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+    fdc.push("float xd = xtgtdist/mindist;" SHNL);
 #elif 0
-    fmg.push("float dlon = 1/60.0*3.1415927/180.0;" SHNL);
-    fmg.push("float cp1 = cs_lat1[0]*cs_lat2[1] - cs_lat1[1]*cs_lat2[0]*cos(dlon);" SHNL);
-    fmg.push("float cp2 = cs_lat2[0]*sin(dlon);" SHNL);
-    fmg.push("float mindist = 6378137*atan(sqrt(cp1*cp1 + cp2*cp2)/(cs_lat1[1]*cs_lat2[1] + cs_lat1[0]*cs_lat2[0]*cos(dlon)));" SHNL);
-    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-    fmg.push("float xd = xtgtdist/mindist;" SHNL);
+    fdc.push("float dlon = 1/60.0*3.1415927/180.0;" SHNL);
+    fdc.push("float cp1 = cs_lat1[0]*cs_lat2[1] - cs_lat1[1]*cs_lat2[0]*cos(dlon);" SHNL);
+    fdc.push("float cp2 = cs_lat2[0]*sin(dlon);" SHNL);
+    fdc.push("float mindist = 6378137*atan(sqrt(cp1*cp1 + cp2*cp2)/(cs_lat1[1]*cs_lat2[1] + cs_lat1[0]*cs_lat2[0]*cos(dlon)));" SHNL);
+    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+    fdc.push("float xd = xtgtdist/mindist;" SHNL);
 #elif 1
-    fmg.push("float xd = (xy_coords.x - 0.5)*mapbound_a;" SHNL);
+    fdc.push("float xd = (xy_coords.x - 0.5)*mapbound_a;" SHNL);
 #endif
 */
 /*
 
   
 #if 0
-    fmg.push("float xtgtdist = abs(xy_coords.x - 0.5)*rr;" SHNL);
-    fmg.push("float xds = mapbound_a/2;" SHNL);
-    fmg.push("float xd = 0;" SHNL);                                     //mix(yd, -yd, step(0.5, xy_coords.y))
-    fmg.push("for (int i=0; i<20; i++)" SHNL
+    fdc.push("float xtgtdist = abs(xy_coords.x - 0.5)*rr;" SHNL);
+    fdc.push("float xds = mapbound_a/2;" SHNL);
+    fdc.push("float xd = 0;" SHNL);                                     //mix(yd, -yd, step(0.5, xy_coords.y))
+    fdc.push("for (int i=0; i<20; i++)" SHNL
              "{" SHNL
     );
-    fmg.push("float dlon = xd*ee2rad;" SHNL);
-    fmg.push("float cp1 = cos1*sin2 - sin1*cos2*cos(dlon);" SHNL);
-    fmg.push("float cp2 = cos2*sin(dlon);" SHNL);
-    fmg.push("float curdist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2)/(sin1*sin2 + cos1*cos2*cos(dlon)) );" SHNL);
-//    fmg.push("curdist = rr/20*i;" SHNL);
+    fdc.push("float dlon = xd*ee2rad;" SHNL);
+    fdc.push("float cp1 = cos1*sin2 - sin1*cos2*cos(dlon);" SHNL);
+    fdc.push("float cp2 = cos2*sin(dlon);" SHNL);
+    fdc.push("float curdist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2)/(sin1*sin2 + cos1*cos2*cos(dlon)) );" SHNL);
+//    fdc.push("curdist = rr/20*i;" SHNL);
     
-//    fmg.push("if (abs(curdist - xtgtdist) < 100)  break;" SHNL);
-    fmg.push("xds = xds/2;" SHNL);
-    fmg.push("xd = xd + mix(-xds, xds, step(abs(curdist), xtgtdist))*mix(1, -1, step(0.5, xy_coords.x));" SHNL);
-    fmg.push("}" SHNL);
+//    fdc.push("if (abs(curdist - xtgtdist) < 100)  break;" SHNL);
+    fdc.push("xds = xds/2;" SHNL);
+    fdc.push("xd = xd + mix(-xds, xds, step(abs(curdist), xtgtdist))*mix(1, -1, step(0.5, xy_coords.x));" SHNL);
+    fdc.push("}" SHNL);
 #elif 1
 
 
 #elif 0
-    fmg.push("float dlon = ee2rad;" SHNL);
-    fmg.push("float cp1 = cos1*sin2 - sin1*cos2*cos(dlon);" SHNL);
-    fmg.push("float cp2 = cos2*sin(dlon);" SHNL);
-    fmg.push("float mindist = 6378137*atan(sqrt(cp1*cp1 + cp2*cp2)/(sin1*sin2 + cos1*cos2*cos(dlon)));" SHNL);
-    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-    fmg.push("float xd = xtgtdist/mindist;" SHNL);
+    fdc.push("float dlon = ee2rad;" SHNL);
+    fdc.push("float cp1 = cos1*sin2 - sin1*cos2*cos(dlon);" SHNL);
+    fdc.push("float cp2 = cos2*sin(dlon);" SHNL);
+    fdc.push("float mindist = 6378137*atan(sqrt(cp1*cp1 + cp2*cp2)/(sin1*sin2 + cos1*cos2*cos(dlon)));" SHNL);
+    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+    fdc.push("float xd = xtgtdist/mindist;" SHNL);
 #elif 1
-    fmg.push("float xd = (xy_coords.x - 0.5)*mapbound_a;" SHNL);
+    fdc.push("float xd = (xy_coords.x - 0.5)*mapbound_a;" SHNL);
 */
 
 #if 0
 
 #elif 0
-    fmg.push("float a = (ptc.y - vertsize/2.0)*ee2rad;" SHNL);
-    fmg.push("cos2 = cos(a);" SHNL);
-    fmg.push("sin2 = sin(a);" SHNL);
-    fmg.push("float dlon = ee2rad;" SHNL);
-    fmg.push("float cp1 = cos2*sin2 - sin2*cos2*cos(dlon);" SHNL);
-    fmg.push("float cp2 = cos2*sin(dlon);" SHNL);
-    fmg.push("float adist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin2*sin2 + cos2*cos2*cos(dlon)) );" SHNL);
+    fdc.push("float a = (ptc.y - vertsize/2.0)*ee2rad;" SHNL);
+    fdc.push("cos2 = cos(a);" SHNL);
+    fdc.push("sin2 = sin(a);" SHNL);
+    fdc.push("float dlon = ee2rad;" SHNL);
+    fdc.push("float cp1 = cos2*sin2 - sin2*cos2*cos(dlon);" SHNL);
+    fdc.push("float cp2 = cos2*sin(dlon);" SHNL);
+    fdc.push("float adist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin2*sin2 + cos2*cos2*cos(dlon)) );" SHNL);
     
     
-    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-    fmg.push("float xd = xtgtdist/mindist;" SHNL);
+    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+    fdc.push("float xd = xtgtdist/mindist;" SHNL);
     
     
     
-    fmg.push("float ac = ;" SHNL);
-    fmg.push("float dlon = ee2rad;" SHNL);
-    fmg.push("float cp1 = cos1*sin1 - sin1*cos1*cos(dlon);" SHNL);
-    fmg.push("float cp2 = cos1*sin(dlon);" SHNL);
-    fmg.push("xx[i] = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin1 + cos1*cos1*cos(dlon)) );" SHNL);
+    fdc.push("float ac = ;" SHNL);
+    fdc.push("float dlon = ee2rad;" SHNL);
+    fdc.push("float cp1 = cos1*sin1 - sin1*cos1*cos(dlon);" SHNL);
+    fdc.push("float cp2 = cos1*sin(dlon);" SHNL);
+    fdc.push("xx[i] = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin1 + cos1*cos1*cos(dlon)) );" SHNL);
     
     
-    fmg.push("for (int i=0; i<2; i++)" SHNL
+    fdc.push("for (int i=0; i<2; i++)" SHNL
              "{" SHNL
     ); 
     {
-      fmg.push("float b = (1+i)*ee2rad;" SHNL);
-      fmg.push("float cp1 = cos1*sin1 - sin1*cos1*cos(b);" SHNL);
-      fmg.push("float cp2 = cos1*sin(b);" SHNL);
-      fmg.push("xx[i] = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin1 + cos1*cos1*cos(b)) );" SHNL);
+      fdc.push("float b = (1+i)*ee2rad;" SHNL);
+      fdc.push("float cp1 = cos1*sin1 - sin1*cos1*cos(b);" SHNL);
+      fdc.push("float cp2 = cos1*sin(b);" SHNL);
+      fdc.push("xx[i] = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin1 + cos1*cos1*cos(b)) );" SHNL);
     }
-    fmg.push("}" SHNL);
-//    fmg.push("float xs = log(xx[1]) / log(xx[0]);" SHNL);
-//    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-//    fmg.push("float xd = log(xtgtdist)/log(xx[0]) + 1;" SHNL);
-    fmg.push("float xs = xx[1]/xx[0];" SHNL);
-    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-    fmg.push("float xd = xtgtdist/xx[0];" SHNL);
+    fdc.push("}" SHNL);
+//    fdc.push("float xs = log(xx[1]) / log(xx[0]);" SHNL);
+//    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+//    fdc.push("float xd = log(xtgtdist)/log(xx[0]) + 1;" SHNL);
+    fdc.push("float xs = xx[1]/xx[0];" SHNL);
+    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+    fdc.push("float xd = xtgtdist/xx[0];" SHNL);
     
     
     
-    fmg.push("float ytgtdist = abs(xy_coords.y - 0.5)*rr;" SHNL);
-    fmg.push("float yds = mapbound_b/2;" SHNL);
-    fmg.push("float yd = 0;" SHNL);
-    fmg.push("float cos1 = cos((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float sin1 = sin((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float cos2, sin2;" SHNL);
-    fmg.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
+    fdc.push("float ytgtdist = abs(xy_coords.y - 0.5)*rr;" SHNL);
+    fdc.push("float yds = mapbound_b/2;" SHNL);
+    fdc.push("float yd = 0;" SHNL);
+    fdc.push("float cos1 = cos((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float sin1 = sin((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float cos2, sin2;" SHNL);
+    fdc.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
     
-    fmg.push("for (int i=0; i<16; i++)" SHNL
+    fdc.push("for (int i=0; i<16; i++)" SHNL
              "{" SHNL
     ); 
     {
-//    fmg.push("cs_lat2 = texture(sctsampler, vec2(abs(ptc.y + yd - vertsize/2.0)/(1.0 + vertsize/2.0), 0.0)).rg;" SHNL); //mix(yd, -yd, step(0.5, xy_coords.y)) 
-      fmg.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
-      fmg.push("cos2 = cos(a);" SHNL);
-      fmg.push("sin2 = sin(a);" SHNL);
-      fmg.push("float curdist = 6378137*atan( abs(cos1*sin2 - sin1*cos2), (sin1*sin2 + cos1*cos2) );" SHNL);
-//    fmg.push("if (abs(curdist - ytgtdist) < 100)  break;" SHNL);
-      fmg.push("yds = yds/2;" SHNL);
-      fmg.push("yd = yd + mix(-yds, yds, step(abs(curdist), ytgtdist)) * yside;" SHNL);
+//    fdc.push("cs_lat2 = texture(sctsampler, vec2(abs(ptc.y + yd - vertsize/2.0)/(1.0 + vertsize/2.0), 0.0)).rg;" SHNL); //mix(yd, -yd, step(0.5, xy_coords.y)) 
+      fdc.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
+      fdc.push("cos2 = cos(a);" SHNL);
+      fdc.push("sin2 = sin(a);" SHNL);
+      fdc.push("float curdist = 6378137*atan( abs(cos1*sin2 - sin1*cos2), (sin1*sin2 + cos1*cos2) );" SHNL);
+//    fdc.push("if (abs(curdist - ytgtdist) < 100)  break;" SHNL);
+      fdc.push("yds = yds/2;" SHNL);
+      fdc.push("yd = yd + mix(-yds, yds, step(abs(curdist), ytgtdist)) * yside;" SHNL);
     }
-    fmg.push("}" SHNL);
+    fdc.push("}" SHNL);
     
-    fmg.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
-    fmg.push("cos2 = cos(a);" SHNL);
-    fmg.push("sin2 = sin(a);" SHNL);
+    fdc.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
+    fdc.push("cos2 = cos(a);" SHNL);
+    fdc.push("sin2 = sin(a);" SHNL);
     
-    fmg.push("float dlon = ee2rad;" SHNL);
-    fmg.push("float cp1 = cos2*sin2 - sin2*cos2*cos(dlon);" SHNL);
-    fmg.push("float cp2 = cos2*sin(dlon);" SHNL);
-    fmg.push("float mindist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin2*sin2 + cos2*cos2*cos(dlon)) );" SHNL);
-    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-    fmg.push("float xd = xtgtdist/mindist;" SHNL);
+    fdc.push("float dlon = ee2rad;" SHNL);
+    fdc.push("float cp1 = cos2*sin2 - sin2*cos2*cos(dlon);" SHNL);
+    fdc.push("float cp2 = cos2*sin(dlon);" SHNL);
+    fdc.push("float mindist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin2*sin2 + cos2*cos2*cos(dlon)) );" SHNL);
+    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+    fdc.push("float xd = xtgtdist/mindist;" SHNL);
     
-    fmg.push("float tgtdist = length(xy_coords - vec2(0.5))*rr;" SHNL);
-    fmg.push("float xside = -2*step(0.5, xy_coords.x) + 1;" SHNL);
-    fmg.push("float xds = xd/16;" SHNL);
+    fdc.push("float tgtdist = length(xy_coords - vec2(0.5))*rr;" SHNL);
+    fdc.push("float xside = -2*step(0.5, xy_coords.x) + 1;" SHNL);
+    fdc.push("float xds = xd/16;" SHNL);
     
-    fmg.push("for (int i=0; i<8; i++)" SHNL
+    fdc.push("for (int i=0; i<8; i++)" SHNL
              "{" SHNL
     );
     {
-      fmg.push("dlon = xd*ee2rad;" SHNL);
-      fmg.push("float cp1 = cos1*sin2 - sin1*cos2*cos(dlon);" SHNL);
-      fmg.push("float cp2 = cos2*sin(dlon);" SHNL);
-      fmg.push("float curdist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin2 + cos1*cos2*cos(dlon)) );" SHNL);
-      fmg.push("xds = xds/2;" SHNL);
-      fmg.push("xd = xd + mix(-xds, xds, step(abs(curdist), tgtdist)) * xside;" SHNL);
+      fdc.push("dlon = xd*ee2rad;" SHNL);
+      fdc.push("float cp1 = cos1*sin2 - sin1*cos2*cos(dlon);" SHNL);
+      fdc.push("float cp2 = cos2*sin(dlon);" SHNL);
+      fdc.push("float curdist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin2 + cos1*cos2*cos(dlon)) );" SHNL);
+      fdc.push("xds = xds/2;" SHNL);
+      fdc.push("xd = xd + mix(-xds, xds, step(abs(curdist), tgtdist)) * xside;" SHNL);
     }
-    fmg.push("}" SHNL);
+    fdc.push("}" SHNL);
 #elif 0
-    fmg.push("float ytgtdist = abs(xy_coords.y - 0.5)*rr;" SHNL);
-    fmg.push("float yds = mapbound_b/2;" SHNL);
-    fmg.push("float yd = 0;" SHNL);
-    fmg.push("float cos1 = cos((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float sin1 = sin((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float cos2, sin2;" SHNL);
-    fmg.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
+    fdc.push("float ytgtdist = abs(xy_coords.y - 0.5)*rr;" SHNL);
+    fdc.push("float yds = mapbound_b/2;" SHNL);
+    fdc.push("float yd = 0;" SHNL);
+    fdc.push("float cos1 = cos((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float sin1 = sin((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float cos2, sin2;" SHNL);
+    fdc.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
     
-    fmg.push("for (int i=0; i<16; i++)" SHNL
+    fdc.push("for (int i=0; i<16; i++)" SHNL
              "{" SHNL
     ); 
     {
-//    fmg.push("cs_lat2 = texture(sctsampler, vec2(abs(ptc.y + yd - vertsize/2.0)/(1.0 + vertsize/2.0), 0.0)).rg;" SHNL); //mix(yd, -yd, step(0.5, xy_coords.y)) 
-      fmg.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
-      fmg.push("cos2 = cos(a);" SHNL);
-      fmg.push("sin2 = sin(a);" SHNL);
-      fmg.push("float curdist = 6378137*atan( abs(cos1*sin2 - sin1*cos2), (sin1*sin2 + cos1*cos2) );" SHNL);
-//    fmg.push("if (abs(curdist - ytgtdist) < 100)  break;" SHNL);
-      fmg.push("yds = yds/2;" SHNL);
-      fmg.push("yd = yd + mix(-yds, yds, step(abs(curdist), ytgtdist)) * yside;" SHNL);
+//    fdc.push("cs_lat2 = texture(sctsampler, vec2(abs(ptc.y + yd - vertsize/2.0)/(1.0 + vertsize/2.0), 0.0)).rg;" SHNL); //mix(yd, -yd, step(0.5, xy_coords.y)) 
+      fdc.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
+      fdc.push("cos2 = cos(a);" SHNL);
+      fdc.push("sin2 = sin(a);" SHNL);
+      fdc.push("float curdist = 6378137*atan( abs(cos1*sin2 - sin1*cos2), (sin1*sin2 + cos1*cos2) );" SHNL);
+//    fdc.push("if (abs(curdist - ytgtdist) < 100)  break;" SHNL);
+      fdc.push("yds = yds/2;" SHNL);
+      fdc.push("yd = yd + mix(-yds, yds, step(abs(curdist), ytgtdist)) * yside;" SHNL);
     }
-    fmg.push("}" SHNL);
+    fdc.push("}" SHNL);
     
-    fmg.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
-//    fmg.push("cos2 = cos(a);" SHNL);
-//    fmg.push("sin2 = sin(a);" SHNL);
-    fmg.push("cos1 = cos(a);" SHNL);
-    fmg.push("sin1 = sin(a);" SHNL);
+    fdc.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
+//    fdc.push("cos2 = cos(a);" SHNL);
+//    fdc.push("sin2 = sin(a);" SHNL);
+    fdc.push("cos1 = cos(a);" SHNL);
+    fdc.push("sin1 = sin(a);" SHNL);
     
-    fmg.push("float xx[2];" SHNL);
-    fmg.push("for (int i=0; i<2; i++)" SHNL
+    fdc.push("float xx[2];" SHNL);
+    fdc.push("for (int i=0; i<2; i++)" SHNL
              "{" SHNL
     ); 
     {
-      fmg.push("float b = (1+i)*ee2rad;" SHNL);
-      fmg.push("float cp1 = cos1*sin1 - sin1*cos1*cos(b);" SHNL);
-      fmg.push("float cp2 = cos1*sin(b);" SHNL);
-      fmg.push("xx[i] = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin1 + cos1*cos1*cos(b)) );" SHNL);
+      fdc.push("float b = (1+i)*ee2rad;" SHNL);
+      fdc.push("float cp1 = cos1*sin1 - sin1*cos1*cos(b);" SHNL);
+      fdc.push("float cp2 = cos1*sin(b);" SHNL);
+      fdc.push("xx[i] = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin1 + cos1*cos1*cos(b)) );" SHNL);
     }
-    fmg.push("}" SHNL);
-//    fmg.push("float xs = log(xx[1]) / log(xx[0]);" SHNL);
-//    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-//    fmg.push("float xd = log(xtgtdist)/log(xx[0]) + 1;" SHNL);
-    fmg.push("float xs = xx[1]/xx[0];" SHNL);
-    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-    fmg.push("float xd = xtgtdist/xx[0];" SHNL);
+    fdc.push("}" SHNL);
+//    fdc.push("float xs = log(xx[1]) / log(xx[0]);" SHNL);
+//    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+//    fdc.push("float xd = log(xtgtdist)/log(xx[0]) + 1;" SHNL);
+    fdc.push("float xs = xx[1]/xx[0];" SHNL);
+    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+    fdc.push("float xd = xtgtdist/xx[0];" SHNL);
     
     
-//    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-//    fmg.push("float xz = 1.0/log(xx[1])*log(xx[0]);" SHNL);
-//    fmg.push("float xd = 1/log(xz)*log(abs(xtgtdist));" SHNL);
+//    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+//    fdc.push("float xz = 1.0/log(xx[1])*log(xx[0]);" SHNL);
+//    fdc.push("float xd = 1/log(xz)*log(abs(xtgtdist));" SHNL);
     
-//    fmg.push("float ytgtdist = ((1.0 - xy_coords.y) - 0.5)*rr;" SHNL);
-//    fmg.push("float yd = ytgtdist/(yy[0]*ys);" SHNL);
-//    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-//    fmg.push("float xd = xtgtdist/(xx[0]*xs);" SHNL);
-//    fmg.push("float ytgtdist = ((1.0 - xy_coords.y) - 0.5)*rr;" SHNL);
-//    fmg.push("float yz = log(ys);" SHNL);
-//    fmg.push("float yd = 1/yz*log(abs(ytgtdist));" SHNL);
+//    fdc.push("float ytgtdist = ((1.0 - xy_coords.y) - 0.5)*rr;" SHNL);
+//    fdc.push("float yd = ytgtdist/(yy[0]*ys);" SHNL);
+//    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+//    fdc.push("float xd = xtgtdist/(xx[0]*xs);" SHNL);
+//    fdc.push("float ytgtdist = ((1.0 - xy_coords.y) - 0.5)*rr;" SHNL);
+//    fdc.push("float yz = log(ys);" SHNL);
+//    fdc.push("float yd = 1/yz*log(abs(ytgtdist));" SHNL);
     
-//    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-//    fmg.push("float xz = log(xs);" SHNL);
-//    fmg.push("float xd = 1/xz*log(abs(xtgtdist));" SHNL);
+//    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+//    fdc.push("float xz = log(xs);" SHNL);
+//    fdc.push("float xd = 1/xz*log(abs(xtgtdist));" SHNL);
     
-//    fmg.push("float ytgtdist = ((1.0 - xy_coords.y) - 0.5)*rr;" SHNL);
-//    fmg.push("float yd = ytgtdist/(yy[0]*ys)*4;" SHNL);
-//    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-//    fmg.push("float xd = xtgtdist/(xx[0]*xs)*4;" SHNL);
-    
-#elif 0
-    fmg.push("float cos1 = cos((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float sin1 = sin((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float cos2, sin2;" SHNL);
-    fmg.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
-    
-    fmg.push("float yy[2];" SHNL);
-    fmg.push("for (int i=0; i<2; i++)" SHNL
-             "{" SHNL
-    ); 
-    {
-//    fmg.push("cs_lat2 = texture(sctsampler, vec2(abs(ptc.y + yd - vertsize/2.0)/(1.0 + vertsize/2.0), 0.0)).rg;" SHNL); //mix(yd, -yd, step(0.5, xy_coords.y)) 
-      fmg.push("float a = (ptc.y + (1+i) - vertsize/2.0)*ee2rad;" SHNL);
-      fmg.push("cos2 = cos(a);" SHNL);
-      fmg.push("sin2 = sin(a);" SHNL);
-      fmg.push("yy[i] = 6378137*atan( abs(cos1*sin2 - sin1*cos2), (sin1*sin2 + cos1*cos2) );" SHNL);
-    }
-    fmg.push("}" SHNL);
-    fmg.push("float ys = yy[1] / yy[0];" SHNL);
-    
-    fmg.push("float xx[2];" SHNL);
-    fmg.push("for (int i=0; i<2; i++)" SHNL
-             "{" SHNL
-    ); 
-    {
-      fmg.push("float b = (1+i)*ee2rad;" SHNL);
-      fmg.push("float cp1 = cos1*sin1 - sin1*cos1*cos(b);" SHNL);
-      fmg.push("float cp2 = cos1*sin(b);" SHNL);
-      fmg.push("xx[i] = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin1 + cos1*cos1*cos(b)) );" SHNL);
-    }
-    fmg.push("}" SHNL);
-    fmg.push("float xs = xx[1] / xx[0];" SHNL);
-    
-//    fmg.push("float ytgtdist = ((1.0 - xy_coords.y) - 0.5)*rr;" SHNL);
-//    fmg.push("float yd = ytgtdist/(yy[0]*ys);" SHNL);
-//    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-//    fmg.push("float xd = xtgtdist/(xx[0]*xs);" SHNL);
-//    fmg.push("float ytgtdist = ((1.0 - xy_coords.y) - 0.5)*rr;" SHNL);
-//    fmg.push("float yz = log(ys);" SHNL);
-//    fmg.push("float yd = 1/yz*log(abs(ytgtdist));" SHNL);
-    
-//    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-//    fmg.push("float xz = log(xs);" SHNL);
-//    fmg.push("float xd = 1/xz*log(abs(xtgtdist));" SHNL);
-    
-    fmg.push("float ytgtdist = ((1.0 - xy_coords.y) - 0.5)*rr;" SHNL);
-    fmg.push("float yd = ytgtdist/(yy[0]*ys)*4;" SHNL);
-    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-    fmg.push("float xd = xtgtdist/(xx[0]);" SHNL);
+//    fdc.push("float ytgtdist = ((1.0 - xy_coords.y) - 0.5)*rr;" SHNL);
+//    fdc.push("float yd = ytgtdist/(yy[0]*ys)*4;" SHNL);
+//    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+//    fdc.push("float xd = xtgtdist/(xx[0]*xs)*4;" SHNL);
     
 #elif 0
-    fmg.push("float ytgtdist = abs(xy_coords.y - 0.5)*rr;" SHNL);
-    fmg.push("float yds = mapbound_b/2;" SHNL);
-    fmg.push("float yd = 0;" SHNL);
-    fmg.push("float cos1 = cos((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float sin1 = sin((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float cos2, sin2;" SHNL);
-    fmg.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
+    fdc.push("float cos1 = cos((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float sin1 = sin((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float cos2, sin2;" SHNL);
+    fdc.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
     
-    fmg.push("for (int i=0; i<16; i++)" SHNL
+    fdc.push("float yy[2];" SHNL);
+    fdc.push("for (int i=0; i<2; i++)" SHNL
              "{" SHNL
     ); 
     {
-//    fmg.push("cs_lat2 = texture(sctsampler, vec2(abs(ptc.y + yd - vertsize/2.0)/(1.0 + vertsize/2.0), 0.0)).rg;" SHNL); //mix(yd, -yd, step(0.5, xy_coords.y)) 
-      fmg.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
-      fmg.push("cos2 = cos(a);" SHNL);
-      fmg.push("sin2 = sin(a);" SHNL);
-      fmg.push("float curdist = 6378137*atan( abs(cos1*sin2 - sin1*cos2), (sin1*sin2 + cos1*cos2) );" SHNL);
-//    fmg.push("if (abs(curdist - ytgtdist) < 100)  break;" SHNL);
-      fmg.push("yds = yds/2;" SHNL);
-      fmg.push("yd = yd + mix(-yds, yds, step(abs(curdist), ytgtdist)) * yside;" SHNL);
+//    fdc.push("cs_lat2 = texture(sctsampler, vec2(abs(ptc.y + yd - vertsize/2.0)/(1.0 + vertsize/2.0), 0.0)).rg;" SHNL); //mix(yd, -yd, step(0.5, xy_coords.y)) 
+      fdc.push("float a = (ptc.y + (1+i) - vertsize/2.0)*ee2rad;" SHNL);
+      fdc.push("cos2 = cos(a);" SHNL);
+      fdc.push("sin2 = sin(a);" SHNL);
+      fdc.push("yy[i] = 6378137*atan( abs(cos1*sin2 - sin1*cos2), (sin1*sin2 + cos1*cos2) );" SHNL);
     }
-    fmg.push("}" SHNL);
+    fdc.push("}" SHNL);
+    fdc.push("float ys = yy[1] / yy[0];" SHNL);
     
-    fmg.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
-    fmg.push("cos2 = cos(a);" SHNL);
-    fmg.push("sin2 = sin(a);" SHNL);
+    fdc.push("float xx[2];" SHNL);
+    fdc.push("for (int i=0; i<2; i++)" SHNL
+             "{" SHNL
+    ); 
+    {
+      fdc.push("float b = (1+i)*ee2rad;" SHNL);
+      fdc.push("float cp1 = cos1*sin1 - sin1*cos1*cos(b);" SHNL);
+      fdc.push("float cp2 = cos1*sin(b);" SHNL);
+      fdc.push("xx[i] = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin1 + cos1*cos1*cos(b)) );" SHNL);
+    }
+    fdc.push("}" SHNL);
+    fdc.push("float xs = xx[1] / xx[0];" SHNL);
     
-    fmg.push("float tgtdist = length(xy_coords - vec2(0.5))*rr;" SHNL);
-//    fmg.push("float tgtdist = abs(xy_coords.x - 0.5)*rr;" SHNL);
-    fmg.push("float xds = mapbound_a/2;" SHNL);
-    fmg.push("float xd = 0;" SHNL);
-    fmg.push("float xside = 2*step(0.5, xy_coords.x) - 1;" SHNL);
+//    fdc.push("float ytgtdist = ((1.0 - xy_coords.y) - 0.5)*rr;" SHNL);
+//    fdc.push("float yd = ytgtdist/(yy[0]*ys);" SHNL);
+//    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+//    fdc.push("float xd = xtgtdist/(xx[0]*xs);" SHNL);
+//    fdc.push("float ytgtdist = ((1.0 - xy_coords.y) - 0.5)*rr;" SHNL);
+//    fdc.push("float yz = log(ys);" SHNL);
+//    fdc.push("float yd = 1/yz*log(abs(ytgtdist));" SHNL);
     
-    fmg.push("for (int i=0; i<16; i++)" SHNL
+//    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+//    fdc.push("float xz = log(xs);" SHNL);
+//    fdc.push("float xd = 1/xz*log(abs(xtgtdist));" SHNL);
+    
+    fdc.push("float ytgtdist = ((1.0 - xy_coords.y) - 0.5)*rr;" SHNL);
+    fdc.push("float yd = ytgtdist/(yy[0]*ys)*4;" SHNL);
+    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+    fdc.push("float xd = xtgtdist/(xx[0]);" SHNL);
+    
+#elif 0
+    fdc.push("float ytgtdist = abs(xy_coords.y - 0.5)*rr;" SHNL);
+    fdc.push("float yds = mapbound_b/2;" SHNL);
+    fdc.push("float yd = 0;" SHNL);
+    fdc.push("float cos1 = cos((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float sin1 = sin((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float cos2, sin2;" SHNL);
+    fdc.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
+    
+    fdc.push("for (int i=0; i<16; i++)" SHNL
+             "{" SHNL
+    ); 
+    {
+//    fdc.push("cs_lat2 = texture(sctsampler, vec2(abs(ptc.y + yd - vertsize/2.0)/(1.0 + vertsize/2.0), 0.0)).rg;" SHNL); //mix(yd, -yd, step(0.5, xy_coords.y)) 
+      fdc.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
+      fdc.push("cos2 = cos(a);" SHNL);
+      fdc.push("sin2 = sin(a);" SHNL);
+      fdc.push("float curdist = 6378137*atan( abs(cos1*sin2 - sin1*cos2), (sin1*sin2 + cos1*cos2) );" SHNL);
+//    fdc.push("if (abs(curdist - ytgtdist) < 100)  break;" SHNL);
+      fdc.push("yds = yds/2;" SHNL);
+      fdc.push("yd = yd + mix(-yds, yds, step(abs(curdist), ytgtdist)) * yside;" SHNL);
+    }
+    fdc.push("}" SHNL);
+    
+    fdc.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
+    fdc.push("cos2 = cos(a);" SHNL);
+    fdc.push("sin2 = sin(a);" SHNL);
+    
+    fdc.push("float tgtdist = length(xy_coords - vec2(0.5))*rr;" SHNL);
+//    fdc.push("float tgtdist = abs(xy_coords.x - 0.5)*rr;" SHNL);
+    fdc.push("float xds = mapbound_a/2;" SHNL);
+    fdc.push("float xd = 0;" SHNL);
+    fdc.push("float xside = 2*step(0.5, xy_coords.x) - 1;" SHNL);
+    
+    fdc.push("for (int i=0; i<16; i++)" SHNL
              "{" SHNL
     );
     {
-      fmg.push("float b = xd*ee2rad;" SHNL);
-      fmg.push("float cp1 = cos1*sin2 - sin1*cos2*cos(b);" SHNL);
-      fmg.push("float cp2 = cos2*sin(b);" SHNL);
-      fmg.push("float curdist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin2 + cos1*cos2*cos(b)) );" SHNL);
-      fmg.push("xds = xds/2;" SHNL);
-      fmg.push("xd = xd + mix(-xds, xds, step(abs(curdist), tgtdist)) * xside;" SHNL);
+      fdc.push("float b = xd*ee2rad;" SHNL);
+      fdc.push("float cp1 = cos1*sin2 - sin1*cos2*cos(b);" SHNL);
+      fdc.push("float cp2 = cos2*sin(b);" SHNL);
+      fdc.push("float curdist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin2 + cos1*cos2*cos(b)) );" SHNL);
+      fdc.push("xds = xds/2;" SHNL);
+      fdc.push("xd = xd + mix(-xds, xds, step(abs(curdist), tgtdist)) * xside;" SHNL);
     }
-    fmg.push("}" SHNL);
+    fdc.push("}" SHNL);
 #elif 0
-    fmg.push("float ytgtdist = abs(xy_coords.y - 0.5)*rr;" SHNL);
-    fmg.push("float yds = mapbound_b/2;" SHNL);
-    fmg.push("float yd = 0;" SHNL);
-    fmg.push("float cos1 = cos((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float sin1 = sin((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float cos2, sin2;" SHNL);
-    fmg.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
+    fdc.push("float ytgtdist = abs(xy_coords.y - 0.5)*rr;" SHNL);
+    fdc.push("float yds = mapbound_b/2;" SHNL);
+    fdc.push("float yd = 0;" SHNL);
+    fdc.push("float cos1 = cos((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float sin1 = sin((ptc.y-vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float cos2, sin2;" SHNL);
+    fdc.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
     
-    fmg.push("for (int i=0; i<16; i++)" SHNL
+    fdc.push("for (int i=0; i<16; i++)" SHNL
              "{" SHNL
     ); 
     {
-//    fmg.push("cs_lat2 = texture(sctsampler, vec2(abs(ptc.y + yd - vertsize/2.0)/(1.0 + vertsize/2.0), 0.0)).rg;" SHNL); //mix(yd, -yd, step(0.5, xy_coords.y)) 
-      fmg.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
-      fmg.push("cos2 = cos(a);" SHNL);
-      fmg.push("sin2 = sin(a);" SHNL);
-      fmg.push("float curdist = 6378137*atan( abs(cos1*sin2 - sin1*cos2), (sin1*sin2 + cos1*cos2) );" SHNL);
-//    fmg.push("if (abs(curdist - ytgtdist) < 100)  break;" SHNL);
-      fmg.push("yds = yds/2;" SHNL);
-      fmg.push("yd = yd + mix(-yds, yds, step(abs(curdist), ytgtdist)) * yside;" SHNL);
+//    fdc.push("cs_lat2 = texture(sctsampler, vec2(abs(ptc.y + yd - vertsize/2.0)/(1.0 + vertsize/2.0), 0.0)).rg;" SHNL); //mix(yd, -yd, step(0.5, xy_coords.y)) 
+      fdc.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
+      fdc.push("cos2 = cos(a);" SHNL);
+      fdc.push("sin2 = sin(a);" SHNL);
+      fdc.push("float curdist = 6378137*atan( abs(cos1*sin2 - sin1*cos2), (sin1*sin2 + cos1*cos2) );" SHNL);
+//    fdc.push("if (abs(curdist - ytgtdist) < 100)  break;" SHNL);
+      fdc.push("yds = yds/2;" SHNL);
+      fdc.push("yd = yd + mix(-yds, yds, step(abs(curdist), ytgtdist)) * yside;" SHNL);
     }
-    fmg.push("}" SHNL);
+    fdc.push("}" SHNL);
     
-    fmg.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
-    fmg.push("cos2 = cos(a);" SHNL);
-    fmg.push("sin2 = sin(a);" SHNL);
+    fdc.push("float a = (ptc.y + yd - vertsize/2.0)*ee2rad;" SHNL);
+    fdc.push("cos2 = cos(a);" SHNL);
+    fdc.push("sin2 = sin(a);" SHNL);
     
-    fmg.push("float dlon = ee2rad;" SHNL);
-    fmg.push("float cp1 = cos2*sin2 - sin2*cos2*cos(dlon);" SHNL);
-    fmg.push("float cp2 = cos2*sin(dlon);" SHNL);
-    fmg.push("float mindist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin2*sin2 + cos2*cos2*cos(dlon)) );" SHNL);
-    fmg.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
-    fmg.push("float xd = xtgtdist/mindist;" SHNL);
+    fdc.push("float dlon = ee2rad;" SHNL);
+    fdc.push("float cp1 = cos2*sin2 - sin2*cos2*cos(dlon);" SHNL);
+    fdc.push("float cp2 = cos2*sin(dlon);" SHNL);
+    fdc.push("float mindist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin2*sin2 + cos2*cos2*cos(dlon)) );" SHNL);
+    fdc.push("float xtgtdist = (xy_coords.x - 0.5)*rr;" SHNL);
+    fdc.push("float xd = xtgtdist/mindist;" SHNL);
     
-    fmg.push("float tgtdist = length(xy_coords - vec2(0.5))*rr;" SHNL);
-    fmg.push("float xside = -2*step(0.5, xy_coords.x) + 1;" SHNL);
-    fmg.push("float xds = xd/16;" SHNL);
+    fdc.push("float tgtdist = length(xy_coords - vec2(0.5))*rr;" SHNL);
+    fdc.push("float xside = -2*step(0.5, xy_coords.x) + 1;" SHNL);
+    fdc.push("float xds = xd/16;" SHNL);
     
-    fmg.push("for (int i=0; i<8; i++)" SHNL
+    fdc.push("for (int i=0; i<8; i++)" SHNL
              "{" SHNL
     );
     {
-      fmg.push("dlon = xd*ee2rad;" SHNL);
-      fmg.push("float cp1 = cos1*sin2 - sin1*cos2*cos(dlon);" SHNL);
-      fmg.push("float cp2 = cos2*sin(dlon);" SHNL);
-      fmg.push("float curdist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin2 + cos1*cos2*cos(dlon)) );" SHNL);
-      fmg.push("xds = xds/2;" SHNL);
-      fmg.push("xd = xd + mix(-xds, xds, step(abs(curdist), tgtdist)) * xside;" SHNL);
+      fdc.push("dlon = xd*ee2rad;" SHNL);
+      fdc.push("float cp1 = cos1*sin2 - sin1*cos2*cos(dlon);" SHNL);
+      fdc.push("float cp2 = cos2*sin(dlon);" SHNL);
+      fdc.push("float curdist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin2 + cos1*cos2*cos(dlon)) );" SHNL);
+      fdc.push("xds = xds/2;" SHNL);
+      fdc.push("xd = xd + mix(-xds, xds, step(abs(curdist), tgtdist)) * xside;" SHNL);
     }
-    fmg.push("}" SHNL);
+    fdc.push("}" SHNL);
 #endif
     
     
 #if 0
-    fmg.push("float xtgtdist = abs(xy_coords.x - 0.5)*rr;" SHNL);
-    fmg.push("float xds = mapbound_a/2;" SHNL);
-    fmg.push("float xd = 0;" SHNL);                                     //mix(yd, -yd, step(0.5, xy_coords.y))
-    fmg.push("for (int i=0; i<20; i++)" SHNL
+    fdc.push("float xtgtdist = abs(xy_coords.x - 0.5)*rr;" SHNL);
+    fdc.push("float xds = mapbound_a/2;" SHNL);
+    fdc.push("float xd = 0;" SHNL);                                     //mix(yd, -yd, step(0.5, xy_coords.y))
+    fdc.push("for (int i=0; i<20; i++)" SHNL
              "{" SHNL
     );
-    fmg.push("float dlon = xd*ee2rad;" SHNL);
-    fmg.push("float cp1 = cos1*sin2 - sin1*cos2*cos(dlon);" SHNL);
-    fmg.push("float cp2 = cos2*sin(dlon);" SHNL);
-    fmg.push("float curdist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2)/(sin1*sin2 + cos1*cos2*cos(dlon)) );" SHNL);
-//    fmg.push("curdist = rr/20*i;" SHNL);
+    fdc.push("float dlon = xd*ee2rad;" SHNL);
+    fdc.push("float cp1 = cos1*sin2 - sin1*cos2*cos(dlon);" SHNL);
+    fdc.push("float cp2 = cos2*sin(dlon);" SHNL);
+    fdc.push("float curdist = 6378137*atan( sqrt(cp1*cp1 + cp2*cp2)/(sin1*sin2 + cos1*cos2*cos(dlon)) );" SHNL);
+//    fdc.push("curdist = rr/20*i;" SHNL);
     
-//    fmg.push("if (abs(curdist - xtgtdist) < 100)  break;" SHNL);
-    fmg.push("xds = xds/2;" SHNL);
-    fmg.push("xd = xd + mix(-xds, xds, step(abs(curdist), xtgtdist))*mix(1, -1, step(0.5, xy_coords.x));" SHNL);
-    fmg.push("}" SHNL);
+//    fdc.push("if (abs(curdist - xtgtdist) < 100)  break;" SHNL);
+    fdc.push("xds = xds/2;" SHNL);
+    fdc.push("xd = xd + mix(-xds, xds, step(abs(curdist), xtgtdist))*mix(1, -1, step(0.5, xy_coords.x));" SHNL);
+    fdc.push("}" SHNL);
 #endif
 
     
     
 #if 0
-    fmg.push("float cos1 = cos((ptc.y - vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float sin1 = sin((ptc.y - vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
-    fmg.push("float cos2 = cos((ptc.y + yside - vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float sin2 = sin((ptc.y + yside - vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("float dy = 6378137*atan( abs(cos1*sin2 - sin1*cos2), (sin1*sin2 + cos1*cos2) );" SHNL);
+    fdc.push("float cos1 = cos((ptc.y - vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float sin1 = sin((ptc.y - vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float yside = -2*step(0.5, xy_coords.y) + 1;" SHNL);
+    fdc.push("float cos2 = cos((ptc.y + yside - vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float sin2 = sin((ptc.y + yside - vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float dy = 6378137*atan( abs(cos1*sin2 - sin1*cos2), (sin1*sin2 + cos1*cos2) );" SHNL);
     
-    fmg.push("float yd = (1.0 - xy_coords.y - 0.5)*range / dy;" SHNL);
-    fmg.push("cos2 = cos((ptc.y + yd - vertsize/2.0)*ee2rad);" SHNL);
-    fmg.push("sin2 = sin((ptc.y + yd - vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("float yd = (1.0 - xy_coords.y - 0.5)*range / dy;" SHNL);
+    fdc.push("cos2 = cos((ptc.y + yd - vertsize/2.0)*ee2rad);" SHNL);
+    fdc.push("sin2 = sin((ptc.y + yd - vertsize/2.0)*ee2rad);" SHNL);
     
 #if 0
-    fmg.push("float tgtdist = length(xy_coords - vec2(0.5))*range;" SHNL);
-    fmg.push("float xds = 1.4*mapbound_a/2.0;" SHNL);
+    fdc.push("float tgtdist = length(xy_coords - vec2(0.5))*range;" SHNL);
+    fdc.push("float xds = 1.4*mapbound_a/2.0;" SHNL);
 #else
-    fmg.push("float tgtdist = abs(xy_coords.x - 0.5)*range;" SHNL);
-    fmg.push("cos1 = cos2;" SHNL);
-    fmg.push("sin1 = sin2;" SHNL);
-    fmg.push("float xds = mapbound_a/2.0;" SHNL);
+    fdc.push("float tgtdist = abs(xy_coords.x - 0.5)*range;" SHNL);
+    fdc.push("cos1 = cos2;" SHNL);
+    fdc.push("sin1 = sin2;" SHNL);
+    fdc.push("float xds = mapbound_a/2.0;" SHNL);
 #endif
     
-    fmg.push("float xside = 2*step(0.5, xy_coords.x) - 1;" SHNL);
-    fmg.push("float xd = xds;" SHNL);
-    fmg.push("for (int i=0; i<iterations; i++)" SHNL
+    fdc.push("float xside = 2*step(0.5, xy_coords.x) - 1;" SHNL);
+    fdc.push("float xd = xds;" SHNL);
+    fdc.push("for (int i=0; i<iterations; i++)" SHNL
              "{" SHNL
     );
     {
-      fmg.push("float dlon = xd*ee2rad;" SHNL); //*abs(cos(xd*ee2rad*6))
-      fmg.push("float cp1 = cos1*sin2 - sin1*cos2*cos(dlon);" SHNL);
-      fmg.push("float cp2 = cos2*sin(dlon);" SHNL);
-      fmg.push("float carad = atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin2 + cos1*cos2*cos(dlon)) );" SHNL);
-      fmg.push("float curdist = 6378137*carad;" SHNL);
-      fmg.push("xds = xds/2;" SHNL);
-      fmg.push("xd = xd + xds*sign(tgtdist - curdist);" SHNL);
+      fdc.push("float dlon = xd*ee2rad;" SHNL); //*abs(cos(xd*ee2rad*6))
+      fdc.push("float cp1 = cos1*sin2 - sin1*cos2*cos(dlon);" SHNL);
+      fdc.push("float cp2 = cos2*sin(dlon);" SHNL);
+      fdc.push("float carad = atan( sqrt(cp1*cp1 + cp2*cp2), (sin1*sin2 + cos1*cos2*cos(dlon)) );" SHNL);
+      fdc.push("float curdist = 6378137*carad;" SHNL);
+      fdc.push("xds = xds/2;" SHNL);
+      fdc.push("xd = xd + xds*sign(tgtdist - curdist);" SHNL);
     }
-    fmg.push("}" SHNL);
-    fmg.push("xd = xd*sign(xy_coords.x - 0.5);" SHNL);
+    fdc.push("}" SHNL);
+    fdc.push("xd = xd*sign(xy_coords.x - 0.5);" SHNL);
     
-    fmg.push("vec2  eecoords = vec2(ddcc[0] + xd + mapbound_a/2.0, ddcc[1] + yd + mapbound_b/2.0);" SHNL);
-    fmg.push("vec2  tcoords = eecoords/vec2(mapbound_a, mapbound_b);" SHNL);  // + cc.xy
+    fdc.push("vec2  eecoords = vec2(ddcc[0] + xd + mapbound_a/2.0, ddcc[1] + yd + mapbound_b/2.0);" SHNL);
+    fdc.push("vec2  tcoords = eecoords/vec2(mapbound_a, mapbound_b);" SHNL);  // + cc.xy
     
-    fmg.push("vec3  mpx = texture(mapsampler, tcoords).rgb;" SHNL);
-    fmg.push("float level = mpx[0] + mapdepbord[0];" SHNL);
-    fmg.push("dvalue = mix(  mappalbord[0] + (mappalbord[1] - mappalbord[0])*(1.0 - level/mapdepbord[1]), "
+    fdc.push("vec3  mpx = texture(mapsampler, tcoords).rgb;" SHNL);
+    fdc.push("float level = mpx[0] + mapdepbord[0];" SHNL);
+    fdc.push("dvalue = mix(  mappalbord[0] + (mappalbord[1] - mappalbord[0])*(1.0 - level/mapdepbord[1]), "
                             "mappalbord[2] + (mappalbord[3] - mappalbord[2])*(level/mapdepbord[2]),"
                             "step(0.0, level) );" SHNL);
-    fmg.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
-    fmg.push("result = result + texture(paletsampler, vec2(dvalue, 0.0)).rgb;" SHNL);
+    fdc.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
+    fdc.push("result = result + texture(paletsampler, vec2(dvalue, 0.0)).rgb;" SHNL);
 #endif

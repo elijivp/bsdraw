@@ -115,39 +115,35 @@ public:
   virtual int           portionMeshType() const { return PMT_PSEUDO2D; }
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
   virtual unsigned int  shvertex_store(char* to) const {  return VshMainGenerator2D()(to); }
-  virtual unsigned int  shfragment_pendingSize(const impulsedata_t& imp, unsigned int ovlscount) const { return 1200 + FshDrawConstructor::basePendingSize(imp, ovlscount); }
-  virtual unsigned int  shfragment_store(unsigned int allocatedPortions, ORIENTATION orient, SPLITPORTIONS splitPortions, 
-                                         const impulsedata_t& imp, const overpattern_t& fsp, float fspopacity, 
-                                         ovlfraginfo_t ovlsinfo[], unsigned int ovlscount, 
-                                         locbackinfo_t locbackinfo[], unsigned int* locbackcount,
-                                         char* to) const
+  virtual unsigned int  shfragment_pendingSize() const { return 2000; }
+  virtual unsigned int  shfragment_uniforms(shuniformdesc_t* sfdarr, unsigned int limit)
   {
-    globvarinfo_t globvars[] = {  { DT_SAMP4, "mapsampler" },
-                                  { DT_1I,    "mapbound_a" },
-                                  { DT_1I,    "mapbound_b" },
-                                  { DT_3F,    "cc" },
-                                  { DT_4F,    "mappalbord" },
-                                  { DT_3F,    "mapdepbord" },
-    };
-    FshDrawConstructor fmg(to, allocatedPortions, splitPortions, imp, sizeof(globvars)/sizeof(globvars[0]), globvars, ovlscount, ovlsinfo);
-    fmg.getLocbacks(locbackinfo, locbackcount);
-    fmg.main_begin(FshDrawConstructor::INITBACK_BYPALETTE, 0, orient, fsp); //FshDrawConstructor::INITBACK_BYZERO
-    fmg.push("vec2 mmii = vec2(float(mapbound_a)/ab_ibounds.x, float(mapbound_b)/ab_ibounds.y);" SHNL);
-    fmg.push("vec2  tcoords = (vec2(xy_coords.x, 1.0-xy_coords.y) - vec2(0.5))/mmii/vec2(cc.z) + cc.xy;" SHNL);  // + cc.xy
-    fmg.push("vec3  mpx = texture(mapsampler, tcoords).rgb;" SHNL);
-    fmg.push("float level = mpx[0] + mapdepbord[0];" SHNL);
-    fmg.push("dvalue = mix(  mappalbord[0] + (mappalbord[1] - mappalbord[0])*(1.0 - level/mapdepbord[1]), "
+    strcpy(sfdarr[0].varname, "mapsampler");    sfdarr[0].type = DT_SAMP4;
+    strcpy(sfdarr[1].varname, "mapbound_a");    sfdarr[1].type = DT_1I;
+    strcpy(sfdarr[2].varname, "mapbound_b");    sfdarr[2].type = DT_1I;
+    strcpy(sfdarr[3].varname, "cc");            sfdarr[3].type = DT_3F;
+    strcpy(sfdarr[4].varname, "mappalbord");    sfdarr[4].type = DT_4F;
+    strcpy(sfdarr[5].varname, "mapdepbord");    sfdarr[5].type = DT_3F;
+    return 6;
+  }
+  virtual void          shfragment_store(FshDrawComposer& fdc) const
+  {
+    fdc.push("vec2 mmii = vec2(float(mapbound_a)/ab_ibounds.x, float(mapbound_b)/ab_ibounds.y);" SHNL);
+    fdc.push("vec2  tcoords = (vec2(xy_coords.x, 1.0-xy_coords.y) - vec2(0.5))/mmii/vec2(cc.z) + cc.xy;" SHNL);  // + cc.xy
+    fdc.push("vec3  mpx = texture(mapsampler, tcoords).rgb;" SHNL);
+    fdc.push("float level = mpx[0] + mapdepbord[0];" SHNL);
+    fdc.push("dvalue = mix(  mappalbord[0] + (mappalbord[1] - mappalbord[0])*(1.0 - level/mapdepbord[1]), "
                             "mappalbord[2] + (mappalbord[3] - mappalbord[2])*(level/mapdepbord[2]),"
                             "step(0.0, level) );" SHNL);
-    fmg.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
-    fmg.push("result = result + texture(paletsampler, vec2(dvalue, 0.0)).rgb;" SHNL);
+    fdc.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
+    fdc.push("result = result + texture(paletsampler, vec2(dvalue, 0.0)).rgb;" SHNL);
 #ifdef RULER
     {
-      fmg.push("float thick = 2.0;");
-      fmg.push("vec2 pt  = vec2(ab_coords.x*ab_ibounds.x, ab_coords.y*ab_ibounds.y);" SHNL);
-      fmg.push("vec2 ptb = vec2(measurer[0]*ab_ibounds.x, measurer[1]*ab_ibounds.y) - pt;" SHNL);
-      fmg.push("vec2 pte = vec2(measurer[2]*ab_ibounds.x, measurer[3]*ab_ibounds.y) - pt;" SHNL);
-      fmg.push("vec2 bz = vec2(step(pte.x, 0.0)*step(0.0, pte.x), step(pte.y, 0.0)*step(0.0, pte.y));" SHNL
+      fdc.push("float thick = 2.0;");
+      fdc.push("vec2 pt  = vec2(ab_coords.x*ab_ibounds.x, ab_coords.y*ab_ibounds.y);" SHNL);
+      fdc.push("vec2 ptb = vec2(measurer[0]*ab_ibounds.x, measurer[1]*ab_ibounds.y) - pt;" SHNL);
+      fdc.push("vec2 pte = vec2(measurer[2]*ab_ibounds.x, measurer[3]*ab_ibounds.y) - pt;" SHNL);
+      fdc.push("vec2 bz = vec2(step(pte.x, 0.0)*step(0.0, pte.x), step(pte.y, 0.0)*step(0.0, pte.y));" SHNL
                "vec2 cz = vec2(1.0/(pte.x-ptb.x), 1.0/(pte.y-ptb.y));" SHNL
                "float dist = abs( (1-bz[0])*(1-bz[1])*(ptb.y*cz[1] - ptb.x*cz[0])/sqrt(cz[0]*cz[0] + cz[1]*cz[1]) + ptb.x*bz[0] + ptb.y*bz[1] );" SHNL
                "float dz = step(length((ptb + pte)/2.0), length(pte-ptb)/2.0 + 1.0 + thick);" SHNL // center point and radius
@@ -159,26 +155,24 @@ public:
     }
 #endif
     
-    fmg.push("post_mask[0] = mix(1.0, post_mask[0], step(dvalue, post_mask[1]));" SHNL);
-    //    fmg.push( splitPortions == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
-    //    fmg.push("{");
+    fdc.push("post_mask[0] = mix(1.0, post_mask[0], step(dvalue, post_mask[1]));" SHNL);
+    //    fdc.push( splitPortions == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
+    //    fdc.push("{");
     //    {
-    //      fmg.value2D("float value");
-    ////      fmg.push("value = mix(dvalue, value);");
-    //      fmg.push("value = dvalue;");    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //      fmg.push("value = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
+    //      fdc.value2D("float value");
+    ////      fdc.push("value = mix(dvalue, value);");
+    //      fdc.push("value = dvalue;");    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //      fdc.push("value = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
     //      if ( splitPortions == SP_NONE )
-    //        fmg.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" SHNL);
+    //        fdc.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" SHNL);
     //      else if (splitPortions & SPFLAG_COLORSPLIT)
-    //        fmg.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" SHNL);
+    //        fdc.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" SHNL);
     //      else
-    //        fmg.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" SHNL);
+    //        fdc.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" SHNL);
           
-    //      fmg.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" SHNL);
+    //      fdc.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" SHNL);
     //    }
-    //    fmg.push("}");
-    fmg.main_end(fsp, fspopacity);
-    return fmg.written();
+    //    fdc.push("}");
   }
 };
 
@@ -186,7 +180,7 @@ public:
 
 
 DrawMap::DrawMap(const char* mappath, int map_x_size, int map_y_size, unsigned int samplesA, unsigned int samplesB, ORIENTATION orient, SPLITPORTIONS splitPortions): 
-  DrawQWidget(DATEX_2D, new SheiGeneratorMap(), 1, orient, splitPortions)
+  DrawQWidget(DATEX_2D, new SheiGeneratorMap(), 1, orient, splitPortions, 0xFFFFFFFF)
 {
   m_dataDimmA = samplesA;
   m_dataDimmB = samplesB;

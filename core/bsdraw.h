@@ -114,6 +114,7 @@ protected:
   const IPalette*       m_paletptr;
   bool                  m_paletdiscretise;       // inited by true if portions > 1
   float                 m_paletrange[2];
+  unsigned int          m_emptycolor;
   float                 m_clearcolor[3];
   enum                  { PRNG_START, PRNG_STOP };
   
@@ -124,9 +125,9 @@ protected:
   int                   m_bitmaskUpdateBan;
   int                   m_bitmaskPendingChanges;
 protected:
-  impulsedata_t         m_postImpulse;
-  overpattern_t         m_postOverpattern;
-  float                 m_postOverpatternOpacity;
+  datasubmesh_t         m_datasubmesh;
+  overpattern_t         m_overpattern;
+  float                 m_overpatternOpacity;
 public:
                     /// Redraw control. Which actions will cause repaint
   enum  REDRAWBY        { RD_BYDATA, RD_BYSETTINGS, RD_BYOVL_ADDREMOVE, RD_BYOVL_ACTIONS };   // special now used on overlays removing
@@ -140,7 +141,8 @@ protected:
                                     PC_SEC1=0x00100, PC_SEC2=0x00200, PC_SEC3=0x00400, PC_SEC4=0x00800,
                                     PC_SEC5=0x01000, PC_SEC6=0x02000, PC_SEC7=0x04000, PC_SEC8=0x08000,
                                     PC_SEC9=0x10000, PC_SECA=0x20000, PC_SECB=0x40000, PC_SECC=0x80000,
-                                                                      PC_SEC=0xFFF00
+                                                                      PC_SEC=0xFFF00,
+                                PC_TFT_TEXTURE=0x100000, PC_TFT_PARAMS=0x200000
                               };
   bool                  havePendOn(PCBM bit) const {  return (m_bitmaskPendingChanges & bit) != 0; }
   bool                  havePending() const {  return m_bitmaskPendingChanges != 0; } 
@@ -181,7 +183,7 @@ protected:
   
   struct overlay_t
   {
-    Ovldraw*          povl;
+    Ovldraw*              povl;
     OVL_ORIENTATION       orient;
     IOverlayReactor*      prct;
     unsigned int          prct_bans;
@@ -215,7 +217,8 @@ protected:
   bool                  m_proactiveOwner;
   OvldrawEmpty          m_overlaySingleEmpty;
 public:
-  DrawCore(DATAASTEXTURE datex, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions): m_datex(datex), 
+  DrawCore(DATAASTEXTURE datex, unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions, unsigned int emptycolor): 
+                                                        m_datex(datex), 
                                                         m_portionSize(0), m_allocatedPortions(portions), 
                                                         m_countPortions(portions), m_orient(orient), m_splitPortions(splitPortions),
                                                         m_dataStorage(nullptr), m_dataStorageCached(nullptr),
@@ -225,15 +228,16 @@ public:
                                                         m_scalingAMin(1), m_scalingAMax(0),
                                                         m_scalingBMin(1), m_scalingBMax(0), m_scalingIsSynced(false),
                                                         m_dataTextureInterp(false),
-                                                        m_paletptr(nullptr), m_paletdiscretise(false), m_doclearbackground(true), m_clearsource(CS_WIDGET), 
+                                                        m_paletptr(nullptr), m_paletdiscretise(false), m_emptycolor(emptycolor),
+                                                        m_doclearbackground(true), m_clearsource(CS_WIDGET),
                                                         m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
-                                                        m_postOverpattern(overpattern_off()), m_postOverpatternOpacity(0.0f), 
+                                                        m_overpattern(overpattern_off()), m_overpatternOpacity(0.0f), 
                                                         m_overlaysCount(0), m_proactive(nullptr), m_proactiveOwner(true)
   {
     _bsdraw_update_kb(m_bounds, &m_loc_k, &m_loc_b);
     
-    m_postImpulse.type = impulsedata_t::IR_OFF;
-    m_postImpulse.count = 0;
+    m_datasubmesh.type = datasubmesh_t::IR_OFF;
+    m_datasubmesh.count = 0;
     
     m_paletrange[PRNG_START] = 0.0f;
     m_paletrange[PRNG_STOP] = 1.0f;
@@ -518,67 +522,67 @@ public:
     if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
 public:
-  void  setImpulse(const impulsedata_t& id)
+  void  setSubmesh(const datasubmesh_t& id)
   {
-    m_postImpulse = id;
+    m_datasubmesh = id;
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
-  void  setImpulseOff()
+  void  setSubmeshOff()
   {
-    if (m_postImpulse.type != impulsedata_t::IR_OFF)
+    if (m_datasubmesh.type != datasubmesh_t::IR_OFF)
     {
-      m_postImpulse.type = impulsedata_t::IR_OFF;
-      m_postImpulse.count = m_postImpulse.central = 0;
+      m_datasubmesh.type = datasubmesh_t::IR_OFF;
+      m_datasubmesh.count = m_datasubmesh.central = 0;
       m_bitmaskPendingChanges |= PC_INIT;
       if (!autoUpdateBanned(RD_BYDATA) && !autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
     }
   }
-  void  setImpulseCoeffA(int count, const float coeffs[], int central, bool noscaled=false, bool cycled=false)
+  void  setSubmeshCoeffA(int count, const float coeffs[], int central, bool noscaled=false, bool cycled=false)
   {
-    impulsedata_t idt = { noscaled? impulsedata_t::IR_A_COEFF_NOSCALED : impulsedata_t::IR_A_COEFF, count, central, cycled? 1 : 0, {} };
+    datasubmesh_t idt = { noscaled? datasubmesh_t::IR_A_COEFF_NOSCALED : datasubmesh_t::IR_A_COEFF, count, central, cycled? 1 : 0, {} };
     for (int i=0; i<count; i++)
-      m_postImpulse.coeff[i] = coeffs[i];
-    setImpulse(idt);
+      m_datasubmesh.coeff[i] = coeffs[i];
+    setSubmesh(idt);
   }
-  void  setImpulseCoeffA(float coeff_left, float coeff_central, float coeff_right, bool noscaled=false, bool cycled=false)
+  void  setSubmeshCoeffA(float coeff_left, float coeff_central, float coeff_right, bool noscaled=false, bool cycled=false)
   {
-    impulsedata_t idt = { noscaled? impulsedata_t::IR_A_COEFF_NOSCALED : impulsedata_t::IR_A_COEFF, 3, 1, cycled? 1 : 0, {coeff_left, coeff_central, coeff_right} };
-    setImpulse(idt);
+    datasubmesh_t idt = { noscaled? datasubmesh_t::IR_A_COEFF_NOSCALED : datasubmesh_t::IR_A_COEFF, 3, 1, cycled? 1 : 0, {coeff_left, coeff_central, coeff_right} };
+    setSubmesh(idt);
   }
-  void  setImpulseCoeffA(float coeff_left2, float coeff_left1, float coeff_central, float coeff_right1, float coeff_right2, bool noscaled=false, bool cycled=false)
+  void  setSubmeshCoeffA(float coeff_left2, float coeff_left1, float coeff_central, float coeff_right1, float coeff_right2, bool noscaled=false, bool cycled=false)
   {
-    impulsedata_t idt = { noscaled? impulsedata_t::IR_A_COEFF_NOSCALED : impulsedata_t::IR_A_COEFF, 5, 2, cycled? 1 : 0, {coeff_left2, coeff_left1, coeff_central, coeff_right1, coeff_right2} };
-    setImpulse(idt);
+    datasubmesh_t idt = { noscaled? datasubmesh_t::IR_A_COEFF_NOSCALED : datasubmesh_t::IR_A_COEFF, 5, 2, cycled? 1 : 0, {coeff_left2, coeff_left1, coeff_central, coeff_right1, coeff_right2} };
+    setSubmesh(idt);
   }
-  void  setImpulseCoeffB(int count, const float coeffs[], int central, bool noscaled=false, bool cycled=false)
+  void  setSubmeshCoeffB(int count, const float coeffs[], int central, bool noscaled=false, bool cycled=false)
   {
-    impulsedata_t idt = { noscaled? impulsedata_t::IR_B_COEFF_NOSCALED : impulsedata_t::IR_B_COEFF, count, central, cycled? 1 : 0, {} };
+    datasubmesh_t idt = { noscaled? datasubmesh_t::IR_B_COEFF_NOSCALED : datasubmesh_t::IR_B_COEFF, count, central, cycled? 1 : 0, {} };
     for (int i=0; i<count; i++)
-      m_postImpulse.coeff[i] = coeffs[i];
-    setImpulse(idt);
+      m_datasubmesh.coeff[i] = coeffs[i];
+    setSubmesh(idt);
   }
-  void  setImpulseCoeffB(float coeff_left, float coeff_central, float coeff_right, bool noscaled=false, bool cycled=false)
+  void  setSubmeshCoeffB(float coeff_left, float coeff_central, float coeff_right, bool noscaled=false, bool cycled=false)
   {
-    impulsedata_t idt = { noscaled? impulsedata_t::IR_B_COEFF_NOSCALED : impulsedata_t::IR_B_COEFF, 3, 1, cycled? 1 : 0, {coeff_left, coeff_central, coeff_right} };
-    setImpulse(idt);
+    datasubmesh_t idt = { noscaled? datasubmesh_t::IR_B_COEFF_NOSCALED : datasubmesh_t::IR_B_COEFF, 3, 1, cycled? 1 : 0, {coeff_left, coeff_central, coeff_right} };
+    setSubmesh(idt);
   }
-  void  setImpulseCoeffB(float coeff_left2, float coeff_left1, float coeff_central, float coeff_right1, float coeff_right2, bool noscaled=false, bool cycled=false)
+  void  setSubmeshCoeffB(float coeff_left2, float coeff_left1, float coeff_central, float coeff_right1, float coeff_right2, bool noscaled=false, bool cycled=false)
   {
-    impulsedata_t idt = { noscaled? impulsedata_t::IR_B_COEFF_NOSCALED : impulsedata_t::IR_B_COEFF, 5, 2, cycled? 1 : 0, {coeff_left2, coeff_left1, coeff_central, coeff_right1, coeff_right2} };
-    setImpulse(idt);
+    datasubmesh_t idt = { noscaled? datasubmesh_t::IR_B_COEFF_NOSCALED : datasubmesh_t::IR_B_COEFF, 5, 2, cycled? 1 : 0, {coeff_left2, coeff_left1, coeff_central, coeff_right1, coeff_right2} };
+    setSubmesh(idt);
   }
-  void  setImpulseBordersA(int minscaling, float coeff, bool smart=false)
+  void  setSubmeshBordersA(int minscaling, float coeff, bool smart=false)
   {
-    impulsedata_t idt = { smart? impulsedata_t::IR_A_BORDERS_SMART : impulsedata_t::IR_A_BORDERS, minscaling, 0, 0, { coeff } };
-    setImpulse(idt);
+    datasubmesh_t idt = { smart? datasubmesh_t::IR_A_BORDERS_SMART : datasubmesh_t::IR_A_BORDERS, minscaling, 0, 0, { coeff } };
+    setSubmesh(idt);
   }
-  void  setImpulseBordersB(int minscaling, float coeff, bool smart=false)
+  void  setSubmeshBordersB(int minscaling, float coeff, bool smart=false)
   {
-    impulsedata_t idt = { smart? impulsedata_t::IR_B_BORDERS_SMART : impulsedata_t::IR_B_BORDERS, minscaling, smart, 0, { coeff } };
-    setImpulse(idt);
+    datasubmesh_t idt = { smart? datasubmesh_t::IR_B_BORDERS_SMART : datasubmesh_t::IR_B_BORDERS, minscaling, smart, 0, { coeff } };
+    setSubmesh(idt);
   }
-  const impulsedata_t& impulse() const { return m_postImpulse; }
+  const datasubmesh_t& submesh() const { return m_datasubmesh; }
 public:
   
   void  setOrientation(ORIENTATION orient)
@@ -763,19 +767,19 @@ public:
   /// 4. Optimized/Native posteffect methods on scaling
   void            setOverpattern(const overpattern_t& fsp)
   {
-    m_postOverpattern = fsp;
+    m_overpattern = fsp;
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
   void            setOverpattern(const overpattern_t& fsp, float opacity)
   {
-    m_postOverpattern = fsp;
-    m_postOverpatternOpacity = opacity;
+    m_overpattern = fsp;
+    m_overpatternOpacity = opacity;
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
-  const overpattern_t&  overpattern() const { return m_postOverpattern; }
-  float                 overpatternOpacity() const { return m_postOverpatternOpacity; }
+  const overpattern_t&  overpattern() const { return m_overpattern; }
+  float                 overpatternOpacity() const { return m_overpatternOpacity; }
 protected:
   virtual void            overlayUpdate(bool reinit, bool pendonly)
   {
@@ -823,7 +827,7 @@ public:
   unsigned int    clearColor() const {  return (unsigned int)
         (int(m_clearcolor[0]*255.0f) + (int(m_clearcolor[1]*255.0f)<<8) + (int(m_clearcolor[2]*255.0f)<<16));
                                      }
-  virtual unsigned int colorBack() const { return m_paletptr? m_paletptr->first() : 0x00000000; }
+  unsigned int colorBack() const { return m_emptycolor != 0xFFFFFFFF ? m_emptycolor : m_paletptr? m_paletptr->first() : 0x00000000; }
 protected:
   virtual void    callWidgetUpdate()=0;
   virtual void    innerRescale()=0;

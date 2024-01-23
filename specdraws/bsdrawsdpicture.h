@@ -49,7 +49,6 @@ protected:
   virtual void            processGlLocation(int secidx, int secflags, int loc, int TEX);
 public:
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
-  virtual unsigned int    colorBack() const;
 };
 
 class BSQMarkerSelector: public BSQProactiveSelectorBase

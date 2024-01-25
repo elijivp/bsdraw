@@ -636,7 +636,7 @@ struct tftfraginfo_t
   int               texid;
   int               texcount;
   
-  int               recordslimit;
+  int               limitrows;
   int               recordwidth;
   int               recordheight;
   int               textwidth;

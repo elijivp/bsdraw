@@ -69,15 +69,16 @@ public:
   
   void          generic_decls_begin();
   void          generic_decls_add(DTYPE, const char* name);
+  void          generic_decls_add(DTYPE, const char* name, int count);
   void          generic_decls_add_tft_area(int texid, char* result);
-  void          generic_decls_add_tft_dslot(int texid, int sloid, char* result_i, char* result_c);
+  void          generic_decls_add_tft_dslots(int texid, int count, char* result_i, char* result_c);
   void          generic_decls_add_ovl_input(int ovlid, char* result);
   void          generic_decls_add_ovl_nameonly(int ovlid, int ovlparamid, DTYPE type, char* result);
   
   void          generic_main_begin(int allocatedPortions, ORIENTATION orient, unsigned int emptycolor, const overpattern_t& fsp);
   
 //  void          generic_main_tftadd(const char* name, float arr[]);
-//  void          generic_main_process_tft(const char* holdingname, const char* varname, int record, int recordslimit, int arr[]);
+//  void          generic_main_process_tft(const char* holdingname, const char* varname, int record, int limitrows, int arr[]);
   void          generic_main_prepare_tft();
   void          generic_main_process_tft(const tftfraginfo_t& tft);
   

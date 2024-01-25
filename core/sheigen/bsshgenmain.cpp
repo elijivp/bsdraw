@@ -536,6 +536,12 @@ void FshDrawMain::generic_decls_add(DTYPE type, const char* name)
   //  }
 }
 
+void FshDrawMain::generic_decls_add(DTYPE type, const char* name, int count)
+{
+  Q_ASSERT(type >= 0 && type <= sizeof(glsl_types)/sizeof(glsl_types[0]));
+  m_offset += msprintf(&m_to[m_offset], "uniform highp %s \t%s[%d];" SHNL, glsl_types[type], name, count);
+}
+
 void FshDrawMain::generic_decls_add_tft_area(int texid, char* result)
 {
   msprintf(result, "tftholding_%d", texid);
@@ -546,12 +552,12 @@ void FshDrawMain::generic_decls_add_tft_area(int texid, char* result)
 #endif
 }
 
-void FshDrawMain::generic_decls_add_tft_dslot(int texid, int sloid, char* result_i, char* result_c)
+void FshDrawMain::generic_decls_add_tft_dslots(int texid, int count, char* result_i, char* result_c)
 {
-  msprintf(result_i, "tft_i_%d_%d", texid, sloid);
-  generic_decls_add(DT_1I, result_i);
-  msprintf(result_c, "tft_c_%d_%d", texid, sloid);
-  generic_decls_add(DT_4F, result_c);
+  msprintf(result_i, "tft_i_%d", texid);
+  generic_decls_add(DT_1I, result_i, count);
+  msprintf(result_c, "tft_c_%d", texid);
+  generic_decls_add(DT_4F, result_c, count);
 }
 
 void FshDrawMain::generic_decls_add_ovl_input(int ovlid, char* result)
@@ -720,21 +726,21 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft)
       m_offset += msprintf(&m_to[m_offset],     
                                                 SHGP "int  tft_rec = %d;" SHNL
                                                 SHGP "vec4 tft_slot = vec4(%F, %F, %F, %F);" SHNL, 
-                                                      tft.recordid/* / tft.recordslimit*/,
+                                                      tft.recordid/* / tft.limitrows*/,
                                                       tft.slotdata.fx, tft.slotdata.fy, tft.slotdata.scale, tft.slotdata.rotate);
       if (tft.slotdata.rotate > -0.0001f && tft.slotdata.rotate < 0.0001f)
         gorotate = false;
     }
     else
-      m_offset += msprintf(&m_to[m_offset],     SHGP "int  tft_rec = tft_i_%d_%d;" SHNL
-                                                SHGP "vec4 tft_slot = tft_c_%d_%d;" SHNL, tft.texid, tft.varid, tft.texid, tft.varid);
+      m_offset += msprintf(&m_to[m_offset],     SHGP "int  tft_rec = tft_i_%d[%d];" SHNL
+                                                SHGP "vec4 tft_slot = tft_c_%d[%d];" SHNL, tft.texid, tft.varid, tft.texid, tft.varid);
     m_offset += msprintf(&m_to[m_offset],       SHGP "tft_slot.xy = tft_slot.xy*%s;" SHNL, cr_to_px_str(tft.slotdata.cr));
     m_offset += msprintf(&m_to[m_offset],       SHGP "vec2  rc = ab_coords*ab_ibounds - tft_slot.xy + vec2(0.499);" SHNL);
     
 #ifdef TFT_OPTIMISE
 //    m_offset += msprintf(&m_to[m_offset],       SHGP "if (step(distance(rc, vec2(%f, %f)), 0.0) == 1.0)" SHNL
     m_offset += msprintf(&m_to[m_offset],       SHGP "if (length(rc) < length(vec2(%f, %f)))" SHNL
-                                                SHGP "{" SHNL, float(tft.textwidth), float(tft.recordheight));
+                                                SHGP "{" SHNL, float(tft.textwidth)/2, float(tft.recordheight)/2);
 #endif
     
     if (gorotate)
@@ -743,12 +749,12 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft)
       m_offset += msprintf(&m_to[m_offset],     SHGP "rc = rc*mat2(aa.x, -aa.y, aa.y, aa.x);" SHNL);
     }
     
-    float recone = 1.0f / tft.recordslimit;
+    float recone = 1.0f / tft.limitrows;
     m_offset += msprintf(&m_to[m_offset],       SHGP "float pc = rc.y/%f + 0.5;" SHNL,  float(tft.recordheight));
 #ifndef BSGLSLOLD
     m_offset += msprintf(&m_to[m_offset],       SHGP "vec3  tcoords = vec3((rc.x + 0.5*%f)/%f, 1.0 - (mod(tft_rec,%d) + pc)*%f, float(tft_rec/%d)/%f);" SHNL,
                                                   float(tft.textwidth), float(tft.recordwidth),
-                                                  tft.recordslimit, recone, tft.recordslimit, float(tft.texcount == 1? 1 : tft.texcount-1));
+                                                  tft.limitrows, recone, tft.limitrows, float(tft.texcount == 1? 1 : tft.texcount-1));
 #else
     m_offset += msprintf(&m_to[m_offset],       SHGP "vec2  tcoords = vec2((rc.x + 0.5*%f)/%f, 1.0 - (tft_rec + pc)*%f);" SHNL,
                                                   float(tft.textwidth), float(tft.recordwidth), recone);

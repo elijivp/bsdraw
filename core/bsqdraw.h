@@ -42,6 +42,31 @@ inline QColor bsqcolor(unsigned int v){ return QColor((v)&0xFF, (v>>8)&0xFF, (v>
 
 ////////////
 
+class   tftconstext_t
+{
+  int           hoid;
+  int           recid;
+  friend class  DrawQWidget;
+  tftconstext_t(int hid, int rid): hoid(hid), recid(rid){}
+public:
+  tftconstext_t(const tftconstext_t& cpy): hoid(cpy.hoid), recid(cpy.recid) {}
+};
+class   tftwriting_t
+{
+  DrawQWidget*  pdraw;
+  int           hoid;
+  int           sloid;
+  friend class  DrawQWidget;
+  tftwriting_t(DrawQWidget* _pdraw, int hid, int sid): pdraw(_pdraw), hoid(hid), sloid(sid){}
+public:
+  tftwriting_t(const tftwriting_t& cpy): pdraw(cpy.pdraw), hoid(cpy.hoid), sloid(cpy.sloid) {}
+  void    move(float fx, float fy);
+  void    rotate(float anglerad);
+  void    switchto(int recid);
+};
+////////////////
+
+
 struct dcgeometry_t
 {
   int  cttr_pre;           // left/top
@@ -273,97 +298,95 @@ protected:
     float*        rawData() { return m_extendeddataarr; }
   };
 public:
-  enum  { TFT_HOLDERS=16, TFT_MAXAREA=32, TFT_TEXTMAXLEN=64 };
+  enum  { TFT_HOLDERS=16, TFT_MAXAREA=32, TFT_TEXTMAXLEN=64, TFT_SLOTLIMIT=1024,
+    TFT_STATIC=0,
+    TFT_DYNAMIC=1
+  };
   
   struct  TFTslot
   {
     int           recid;
-    bool          isstatic;
     tftslot_t     slotinfo;
-    
     int           pinger;   // only for dynamic
     int           ponger;   // only for dynamic
-    int           _location_i, _location_c;
-    char          _varname_i[64], _varname_c[64];
   };
   
-  class   TFTslotpass
-  {
-    DrawQWidget*  pdraw;
-    int           hoid;
-    int           sloid;
-    friend class  DrawQWidget;
-    TFTslotpass(DrawQWidget* _pdraw, int hid, int sid): pdraw(_pdraw), hoid(hid), sloid(sid){}
-  public:
-    TFTslotpass(const TFTslotpass& cpy): pdraw(cpy.pdraw), hoid(cpy.hoid), sloid(cpy.sloid) {}
-    void    move(float fx, float fy){ pdraw->tftMove(hoid, sloid, fx, fy); }
-    void    rotate(float anglerad){ pdraw->tftRotate(hoid, sloid, anglerad); }
-    void    switchto(int recid){ pdraw->tftSwitchTo(hoid, sloid, recid); }
-  };
   
-  struct  TFTrecord
+  struct  tftpage_t
   {
-    char  text[TFT_TEXTMAXLEN+1];
-    int   width;
-  };
-  struct  TFTarea
-  {
-    QImage*                 ctx_img;
-    TFTrecord*              records;
-    int                     recordscount;
+    struct  record_t
+    {
+      char  text[TFT_TEXTMAXLEN+1];
+      int   width;
+    };
+    QImage*       ctx_img;
+    record_t*     records;
+    int           recordscount;
   };
   
   struct  TFTholder
   {
-    QFont                   font;
-    int                     recordslimit;   // by font
-    int                     record_width;
-    int                     record_height, record_ht, record_hb, record_ld;
+    QFont                     font;
+    int                       limitlen;
+    int                       limitrows;   // by font
+    int                       limitcolumns;
     
-    BSQSetup*               ctx_setup;
+    int                       record_width;
+    int                       record_height, record_ht, record_hb, record_ld;
+    
+    BSQSetup*                 ctx_setup;
 #ifndef BSGLSLOLD
-    std::vector<TFTarea>    tftarea;
+    std::vector<tftpage_t>    recbook;
 #else
-    TFTarea                 tftarea;
+    tftpage_t                 recbook;
 #endif
     
-    std::vector<TFTslot>    tftslots;
+    std::vector<TFTslot>      writings[2];
+      
+    int                       pinger;
+    int                       ponger;
     
-    int                     pinger;
-    int                     ponger;
-    int                     _location;
-    char                    _varname[64];
+    int                       _location;
+    char                      _varname[64];
+    int                       _location_i, _location_c;
+    char                      _varname_i[64], _varname_c[64];
   };
   
 private:
   int           m_holder_current = -1;
   TFTholder*    m_holders[TFT_HOLDERS];
-  int           _tft_allocHolder(QFont font);
+  int           _tft_allocHolder(QFont font, int limitlen=TFT_TEXTMAXLEN, int limitcolumns=1);
   int           _tft_pushRecord(TFTholder*  holder, const char* text);
   QImage*       _tft_allocateImage(int width, int height);
   TFTholder*    _tft_inf_takeHolder();
 public:
-  bool          tftRegisterHolding(const QFont& font);
-  bool          tftSwitchHolding(int hoid);
+  bool            tftRegisterHolding(const QFont& font, int limitlen=TFT_TEXTMAXLEN, int limitcolumns=1);
+  bool            tftSwitchHolding(int hoid);
+                  /// Every new record has incremented index
+  int             tftAddRecord(const char* text);
+  int             tftAddRecords(int count, const char* text[]);
 public:
-  TFTslotpass   tftPushBack(const char* text, COORDINATION cr, float fx, float fy, bool isstatic=true);
-  TFTslotpass   tftPushBack(const char* text, COORDINATION cr, float fx, float fy, float rotate, bool isstatic=true);
+  tftwriting_t    tftPushDynamic(const char* text, COORDINATION cr, float fx, float fy);
+  tftwriting_t    tftPushDynamic(const char* text, COORDINATION cr, float fx, float fy, float rotate);
   
-  TFTslotpass   tftGetSlot(int hoid, int sloid);
-  TFTslotpass   tftGetSlot(int sloid);
-  int           tftGetRecord(const TFTslotpass&) const;
-  const char*   tftGetText(const TFTslotpass&) const;
-  bool          tftGetStatic(const TFTslotpass&) const;
+  tftconstext_t   tftPushStatic(const char* text, COORDINATION cr, float fx, float fy);
+  tftconstext_t   tftPushStatic(const char* text, COORDINATION cr, float fx, float fy, float rotate);
+  
+  
+  tftwriting_t    tftGetSlot(int hoid, int sloid);
+  tftwriting_t    tftGetSlot(int sloid);
+  int             tftGetRecord(const tftwriting_t&) const;
+  const char*     tftGetText(const tftwriting_t&) const;
 public:
-  int           tftCountRecords(int hoid) const;
-  int           tftCountSlots(int hoid) const; 
-  int           tftRecordsPerArea(int hoid);
+  int             tftCountRecords(int hoid) const;
+  int             tftCountSlots(int hoid) const; 
+  int             tftRecordsPerArea(int hoid);
 public:
   
 public: // tft operations
-  bool          tftMove(int hoid, int sloid, float fx, float fy);
-  bool          tftRotate(int hoid, int sloid, float anglerad);
-  bool          tftSwitchTo(int hoid, int sloid, int recid);
+  bool            tftMove(int hoid, int sloid, float fx, float fy);
+  bool            tftRotate(int hoid, int sloid, float anglerad);
+  bool            tftSwitchTo(int hoid, int sloid, int recid);
   
 public:
 };

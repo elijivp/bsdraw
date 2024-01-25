@@ -1000,45 +1000,52 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                                         coloropts_t::copts(CP_MONO, 0.0f, 0.75f, 0x00666666));
     
     {
-//      pdraw->tftPushBack("Hello Wogld!", CR_RELATIVE, 0.5f, 0.5f, 0, false);
+//      pdraw->tftPushDynamic("Hello Wogld!", CR_RELATIVE, 0.5f, 0.5f, 0);
     }
     {
       QFont bigfont("Ubuntu", 32, 800);
-      pdraw->tftRegisterHolding(bigfont);
+      pdraw->tftRegisterHolding(bigfont, 10, 3);
     }
-    {
-      QFont smallfont("Ubuntu", 9, 500);
-      pdraw->tftRegisterHolding(smallfont);
-    }
+//    {
+//      QFont smallfont("Ubuntu", 9, 500);
+//      pdraw->tftRegisterHolding(smallfont);
+//    }
     {
 //      pdraw->tftPushBack("Second type!", CR_RELATIVE, 0.5f, 0.1f, 0, false);
 ////      pdraw->tftPushBack("ABCDEFGHIJKLMNOPQRSTUVWZYZ", CR_RELATIVE, 0.25f, 0.25f);
 ////      pdraw->tftPushBack("SUPERTEST RECORD", CR_PIXEL, 100, 100);
-//      int rpa = pdraw->tftRecordsPerArea(0);
+      int rpa = pdraw->tftRecordsPerArea(0);
 ////      qDebug()<<rpa;
-//      const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-//      int ctr = 0;
+      const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      int ctr = 0;
       
 //      pdraw->tftSwitchHolding(0);
       
 //      pdraw->tftPushBack("Third type!", CR_RELATIVE, 0.5f, 0.8f, 0, false);
       
-      static const int TTL = 20;
-      for (int i=0; i<TTL; i++)
-        for (int j=0; j<TTL; j++)
-          pdraw->tftPushBack("XYZ", CR_RELATIVE, 0.05f + i/float(TTL-1)*0.9f, 0.05f + j/float(TTL-1)*0.9f, 0, false);
+//#if 1
+//      static const int TTL = 20;
+//      for (int i=0; i<TTL; i++)
+//        for (int j=0; j<TTL; j++)
+//          pdraw->tftPushDynamic("ETOJOPA", CR_RELATIVE, 0.05f + i/float(TTL-1)*0.9f, 0.05f + j/float(TTL-1)*0.9f, 0);
       
-      QTimer* tm = new QTimer();
-      tm->setSingleShot(false);
-      tm->setInterval(16);
-      static int tc=0;
-      QObject::connect(tm, &QTimer::timeout, [=]()
-      { 
-        for (int i=0; i<TTL*TTL; i++)
-          pdraw->tftRotate(1, i, (i+tc)/20.0f*M_PI*2); 
-        tc += 1;
-      });
-      QTimer::singleShot(2000, tm, SLOT(start()));
+//      QTimer* tm = new QTimer();
+//      tm->setSingleShot(false);
+//      tm->setInterval(16);
+//      static int tc=0;
+//      QObject::connect(tm, &QTimer::timeout, [=]()
+//      { 
+//        for (int i=0; i<TTL*TTL; i++)
+//          pdraw->tftRotate(1, i, (i+tc)/20.0f*M_PI*2); 
+//        tc += 1;
+//      });
+//      QTimer::singleShot(2000, tm, SLOT(start()));
+//#else
+//      static const int TTL = 20;
+//      for (int i=0; i<TTL; i++)
+//        for (int j=0; j<TTL; j++)
+//          pdraw->tftPushStatic("ETOJOPA", CR_RELATIVE, 0.05f + i/float(TTL-1)*0.9f, 0.05f + j/float(TTL-1)*0.9f, 0);
+//#endif
       
       
       
@@ -1047,16 +1054,27 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //      {
 //        pdraw->tftPushBack("Hello Wogld!", CR_RELATIVE, 0.1f + 0.8f*i/(total-1), 0.5f, i*M_PI*2/float(total-1), true);
 //      }
-//      int total = rpa + 10;
+      int total = rpa*2 + 3;
 //      int total = 70;
-//      for (int i=0; i<total; i++)
-//      {
-//        char buffer[56];
-//        sprintf(buffer, "%c %d", alphabet[i/10 % sizeof(alphabet)], ctr++);
-//        if (ctr >= 10)
-//          ctr = 0;
-//        pdraw->tftPushBack(buffer, CR_RELATIVE, 0.1f + 0.8f*i/float(total), 0.1f + 0.8f*i/float(total), false);
-//      }
+      for (int i=0; i<total; i++)
+      {
+        char buffer[56];
+        sprintf(buffer, "%c %d", alphabet[i/10 % sizeof(alphabet)], ctr++);
+        if (ctr >= 10)
+          ctr = 0;
+        pdraw->tftPushDynamic(buffer, CR_RELATIVE, 0.1f + 0.8f*i/float(total), 0.1f + 0.8f*i/float(total));
+      }
+//      QTimer* tm = new QTimer();
+//      tm->setSingleShot(false);
+//      tm->setInterval(30);
+//      static int tc=0;
+//      QObject::connect(tm, &QTimer::timeout, [=]()
+//      { 
+//        for (int i=0; i<rpa*2 + 3; i++)
+//          pdraw->tftMove(0, i, 0.2f + 0.6f*rand()/float(RAND_MAX), 0.2f + 0.6f*rand()/float(RAND_MAX)); 
+//        tc += 1;
+//      });
+//      QTimer::singleShot(2000, tm, SLOT(start()));
       
       
     }

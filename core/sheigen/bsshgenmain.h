@@ -67,10 +67,12 @@ public:
 public:
   FshDrawMain(char* deststring, SPLITPORTIONS splits, const datasubmesh_t& imp);
   
-  void          generic_decls_begin(int ovlscount);
+  void          generic_decls_begin();
   void          generic_decls_add(DTYPE, const char* name);
-  void          generic_decls_add_tftareas(int texid, char* result);
-  void          generic_decls_add_tftdynamicvar(int texid, int sloid, char* result_i, char* result_c);
+  void          generic_decls_add_tft_area(int texid, char* result);
+  void          generic_decls_add_tft_dslot(int texid, int sloid, char* result_i, char* result_c);
+  void          generic_decls_add_ovl_input(int ovlid, char* result);
+  void          generic_decls_add_ovl_nameonly(int ovlid, int ovlparamid, DTYPE type, char* result);
   
   void          generic_main_begin(int allocatedPortions, ORIENTATION orient, unsigned int emptycolor, const overpattern_t& fsp);
   
@@ -80,7 +82,9 @@ public:
   void          generic_main_process_tft(const tftfraginfo_t& tft);
   
   void          generic_main_process_fsp(const overpattern_t& fsp, float fspopacity);
-  void          generic_main_process_overlays(ORIENTATION orient, int ovlscount, const ovlfraginfo_t* ovls);
+  void          generic_main_prepare_ovl();
+  void          generic_main_process_ovl(ORIENTATION orient, int i, int link, OVL_ORIENTATION ovlorient);
+  void          generic_main_end();
 };
 
 #endif // FSHDRAWCONSTRUCTOR_H

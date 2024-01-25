@@ -94,7 +94,7 @@ void FshOVCoordsConstructor::_gtb_coords(const _bs_unzip_t &bsu)
     if (bsu.type == 1)
       m_offset += msprintf(&m_to[m_offset], "vec2(%f, %f)", bsu.ffs[0], bsu.ffs[1]);
     else if (bsu.type >= 2)
-      m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr++);
+      m_offset += msprintf(&m_to[m_offset], "ovlprm%d_%d", m_overlay, m_paramsctr++);
     m_offset += msprintf(&m_to[m_offset],  " * xyscaler_px_%d" _PLUS_VEC2049 ");" SHNL, coordspixing);
   }
   else
@@ -131,7 +131,7 @@ void FshOVCoordsConstructor::_gtb_dimms(const _bs_unzip_t &bsu)
       if (bsu.type == 1)
         m_offset += msprintf(&m_to[m_offset], "%f", bsu.ffs[0]);
       else if (bsu.type == 2)
-        m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr++);
+        m_offset += msprintf(&m_to[m_offset], "ovlprm%d_%d", m_overlay, m_paramsctr++);
       m_offset += msprintf(&m_to[m_offset],  " * _fvar" _PLUS_049 "));" SHNL, dimmpixing);
     }
     else if (bsu.type == 3 || bsu.type == 4)
@@ -140,7 +140,7 @@ void FshOVCoordsConstructor::_gtb_dimms(const _bs_unzip_t &bsu)
       if (bsu.type == 3)
         m_offset += msprintf(&m_to[m_offset], "vec2(%f, %f)", bsu.ffs[0], bsu.ffs[1]);
       else if (bsu.type == 4)
-        m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr++);
+        m_offset += msprintf(&m_to[m_offset], "ovlprm%d_%d", m_overlay, m_paramsctr++);
       m_offset += msprintf(&m_to[m_offset],  " * vec2(xyscaler_px_%d.x, xyscaler_px_%d.y) " _PLUS_VEC2049 "));" SHNL, dimmpixing,dimmpixing);
     }
     else if (bsu.type == 5 || bsu.type == 6)
@@ -152,13 +152,13 @@ void FshOVCoordsConstructor::_gtb_dimms(const _bs_unzip_t &bsu)
       }
       else if (bsu.type == 6)
       {
-        m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr++);
+        m_offset += msprintf(&m_to[m_offset], "ovlprm%d_%d", m_overlay, m_paramsctr++);
       }
       m_offset += msprintf(&m_to[m_offset],  " * vec4(xyscaler_px_%d.x, xyscaler_px_%d.y, xyscaler_px_%d.x, xyscaler_px_%d.y)) " _PLUS_VEC4049 "));" SHNL, dimmpixing,dimmpixing,dimmpixing,dimmpixing);
     }
     else if (bsu.type == 7)
     {
-      m_offset += msprintf(&m_to[m_offset],  "ivec2 idimms2 = ivec2(floor(opm%D_%D * vec2(xyscaler_px_%d.x, xyscaler_px_%d.y) " _PLUS_VEC2049 "));" SHNL, m_overlay, m_paramsctr++, dimmpixing, dimmpixing);
+      m_offset += msprintf(&m_to[m_offset],  "ivec2 idimms2 = ivec2(floor(ovlprm%d_%d * vec2(xyscaler_px_%d.x, xyscaler_px_%d.y) " _PLUS_VEC2049 "));" SHNL, m_overlay, m_paramsctr++, dimmpixing, dimmpixing);
     }
   }
 }
@@ -307,11 +307,11 @@ void FshOVCoordsConstructor::param_alias(const char *name, int memslot)
 {
   if (memslot == -1)
   {
-    m_offset += msprintf(&m_to[m_offset], "%s %s = opm%D_%D;" SHNL, glsl_types[loc_uniforms[m_paramsctr].type], name, m_overlay, m_paramsctr);
+    m_offset += msprintf(&m_to[m_offset], "%s %s = ovlprm%d_%d;" SHNL, glsl_types[loc_uniforms[m_paramsctr].type], name, m_overlay, m_paramsctr);
     m_paramsctr++;
   }
   else
-    m_offset += msprintf(&m_to[m_offset], "%s %s = opm%D_%D;" SHNL, glsl_types[loc_uniforms[m_prmmemory[memslot]].type], name, m_overlay, m_prmmemory[memslot]);
+    m_offset += msprintf(&m_to[m_offset], "%s %s = ovlprm%d_%d;" SHNL, glsl_types[loc_uniforms[m_prmmemory[memslot]].type], name, m_overlay, m_prmmemory[memslot]);
 }
 
 int FshOVCoordsConstructor::param_push()
@@ -323,13 +323,13 @@ int FshOVCoordsConstructor::param_push()
 
 void FshOVCoordsConstructor::param_get()
 {
-  m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr);
+  m_offset += msprintf(&m_to[m_offset], "ovlprm%d_%d", m_overlay, m_paramsctr);
   m_paramsctr++;
 }
 
 void FshOVCoordsConstructor::param_mem(int memslot)
 {
-  m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_prmmemory[memslot]);
+  m_offset += msprintf(&m_to[m_offset], "ovlprm%d_%d", m_overlay, m_prmmemory[memslot]);
 }
 
 void FshOVCoordsConstructor::param_pass()
@@ -339,19 +339,19 @@ void FshOVCoordsConstructor::param_pass()
 
 void FshOVCoordsConstructor::param_peek()
 {
-  m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr);
+  m_offset += msprintf(&m_to[m_offset], "ovlprm%d_%d", m_overlay, m_paramsctr);
 }
 
 void FshOVCoordsConstructor::param_for_arr_begin(const char *name, const char *arrlengthname, const char* additname)
 {
-  m_offset += msprintf(&m_to[m_offset],   "int %s = int(opm%D_%D.length());" SHNL
+  m_offset += msprintf(&m_to[m_offset],   "int %s = int(ovlprm%d_%d.length());" SHNL
                                           "for (int i=0; i<%s; i++){" SHNL
-                                          "%s %s = opm%D_%D[i];" SHNL,
+                                          "%s %s = ovlprm%d_%d[i];" SHNL,
                       arrlengthname, m_overlay, m_paramsctr, arrlengthname, glsl_types[loc_uniforms[m_paramsctr].type], name, m_overlay, m_paramsctr);
   m_paramsctr++;
   if (additname)
   {
-    m_offset += msprintf(&m_to[m_offset],  "%s %s = opm%D_%D[i];" SHNL,
+    m_offset += msprintf(&m_to[m_offset],  "%s %s = ovlprm%d_%d[i];" SHNL,
                       glsl_types[loc_uniforms[m_paramsctr].type], additname, m_overlay, m_paramsctr);
     m_paramsctr++;
   }
@@ -359,12 +359,12 @@ void FshOVCoordsConstructor::param_for_arr_begin(const char *name, const char *a
 
 void FshOVCoordsConstructor::param_for_rarr_begin(const char *name)  // DT_ARR, DT_1I, DT_1I
 {
-  m_offset += msprintf(&m_to[m_offset],  "ivec2 rarr_rnds = ivec2(opm%D_%D,opm%D_%D);" SHNL
-                      "int rarr_len = opm%D_%D.length();" SHNL
+  m_offset += msprintf(&m_to[m_offset],  "ivec2 rarr_rnds = ivec2(ovlprm%d_%d,ovlprm%d_%d);" SHNL
+                      "int rarr_len = ovlprm%d_%d.length();" SHNL
                       "for (int i=0; i<rarr_rnds[1]; i++){" SHNL
                       "int rarr_idx = rarr_rnds[0] + i;" SHNL
                       "if (rarr_idx >= rarr_len) rarr_idx = rarr_idx - rarr_len;" SHNL
-                      "%s %s = opm%D_%D[i];" SHNL,  m_overlay, m_paramsctr+1, m_overlay, m_paramsctr+2, 
+                      "%s %s = ovlprm%d_%d[i];" SHNL,  m_overlay, m_paramsctr+1, m_overlay, m_paramsctr+2, 
                       m_overlay, m_paramsctr, 
                       glsl_types[loc_uniforms[m_paramsctr].type], name, m_overlay, m_paramsctr);
   m_paramsctr += 3;
@@ -372,10 +372,10 @@ void FshOVCoordsConstructor::param_for_rarr_begin(const char *name)  // DT_ARR, 
 
 void FshOVCoordsConstructor::param_for_oarr_begin(const char *name_cur, const char *name_next, const char *arrlengthname)  // DT_ARR, DT_1I
 {
-  m_offset += msprintf(&m_to[m_offset],  "%s %s = opm%D_%D[0]; %s %s; " SHNL, glsl_types[loc_uniforms[m_paramsctr].type], name_cur, m_overlay, m_paramsctr, glsl_types[loc_uniforms[m_paramsctr].type], name_next);
-  m_offset += msprintf(&m_to[m_offset],  "int %s = opm%D_%D;" SHNL
+  m_offset += msprintf(&m_to[m_offset],  "%s %s = ovlprm%d_%d[0]; %s %s; " SHNL, glsl_types[loc_uniforms[m_paramsctr].type], name_cur, m_overlay, m_paramsctr, glsl_types[loc_uniforms[m_paramsctr].type], name_next);
+  m_offset += msprintf(&m_to[m_offset],  "int %s = ovlprm%d_%d;" SHNL
                       "for (int i=1; i<%s; i++){" SHNL
-                      "%s = opm%D_%D[i];" SHNL,  arrlengthname, m_overlay, m_paramsctr + 1,
+                      "%s = ovlprm%d_%d[i];" SHNL,  arrlengthname, m_overlay, m_paramsctr + 1,
                       arrlengthname, 
                       name_next, m_overlay, m_paramsctr);
   m_paramsctr += 2;
@@ -383,9 +383,9 @@ void FshOVCoordsConstructor::param_for_oarr_begin(const char *name_cur, const ch
 
 void FshOVCoordsConstructor::param_for_carr_begin(const char* name, const char* arrlengthname)
 {
-  m_offset += msprintf(&m_to[m_offset],   "int %s = opm%D_%D;" SHNL
+  m_offset += msprintf(&m_to[m_offset],   "int %s = ovlprm%d_%d;" SHNL
                                           "for (int i=0; i<%s; i++){" SHNL
-                                            "%s %s = opm%D_%D[i];" SHNL,  arrlengthname, m_overlay, m_paramsctr + 1,
+                                            "%s %s = ovlprm%d_%d[i];" SHNL,  arrlengthname, m_overlay, m_paramsctr + 1,
                                             arrlengthname, glsl_types[loc_uniforms[m_paramsctr].type], name, m_overlay, m_paramsctr);
   m_paramsctr += 2;
 }
@@ -919,11 +919,11 @@ void FshOVCoordsConstructor::trace_ray_trough(const char* somepoint, const char*
   m_offset += msprintf(&m_to[m_offset], TRACE_MIX_MVAR_WITH_RESULT);
 }
 
-void FshOVCoordsConstructor::tex_pickcolor(int palette_param_idx, const char *pickvalue, const char *result){  m_offset += msprintf(&m_to[m_offset], "%s = texture(opm%D_%D, vec2(%s, 1)).rgb;" SHNL, result, m_overlay, palette_param_idx, pickvalue); }
+void FshOVCoordsConstructor::tex_pickcolor(int palette_param_idx, const char *pickvalue, const char *result){  m_offset += msprintf(&m_to[m_offset], "%s = texture(ovlprm%d_%d, vec2(%s, 1)).rgb;" SHNL, result, m_overlay, palette_param_idx, pickvalue); }
 
-void FshOVCoordsConstructor::tex_addcolor(int palette_param_idx, const char *pickvalue, const char *weight, const char *result){  m_offset += msprintf(&m_to[m_offset], "%s += %s*texture(opm%D_%D, vec2(%s, 1)).rgb;" SHNL, result, weight, m_overlay, palette_param_idx, pickvalue); }
+void FshOVCoordsConstructor::tex_addcolor(int palette_param_idx, const char *pickvalue, const char *weight, const char *result){  m_offset += msprintf(&m_to[m_offset], "%s += %s*texture(ovlprm%d_%d, vec2(%s, 1)).rgb;" SHNL, result, weight, m_overlay, palette_param_idx, pickvalue); }
 
-void FshOVCoordsConstructor::tex_meshcolor(int palette_param_idx, const char *pickvalue, const char *mesh, const char *result){  m_offset += msprintf(&m_to[m_offset], "%s = %s*(1.0-%s) + %s*texture(opm%D_%D, vec2(%s, 0.0)).rgb;" SHNL, result, result, mesh, mesh, m_overlay, palette_param_idx, pickvalue); }
+void FshOVCoordsConstructor::tex_meshcolor(int palette_param_idx, const char *pickvalue, const char *mesh, const char *result){  m_offset += msprintf(&m_to[m_offset], "%s = %s*(1.0-%s) + %s*texture(ovlprm%d_%d, vec2(%s, 0.0)).rgb;" SHNL, result, result, mesh, mesh, m_overlay, palette_param_idx, pickvalue); }
 
 void FshOVCoordsConstructor::goto_func_end(bool traced)
 {

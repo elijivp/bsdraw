@@ -647,12 +647,6 @@ struct tftfraginfo_t
   tftslot_t         slotdata;
 };
 
-struct ovlfraginfo_t
-{
-  int               link;
-  OVL_ORIENTATION   orient;
-};
-
 class FshDrawComposer;
 
 class ISheiGenerator

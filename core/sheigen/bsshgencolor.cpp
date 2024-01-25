@@ -27,38 +27,6 @@ FshOVColorConstructor::FshOVColorConstructor(const _Ovldraw::uniforms_t& ufms, i
   m_offset += msexpandParams(&m_to[m_offset], m_overlay, loc_uniformsCount, loc_uniforms);
 }
 
-//void FshOVColorConstructor::goto_func_begin(CGV cgv)
-//{
-//  if (cgv == CGV_EMPTY)
-//    m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 overcolor, in vec3 undercolor) {" SHNL
-//                                            "vec3 result;" SHNL
-//                                            "float mixwell = 0.0;" SHNL
-//                        , m_overlay);
-//  else if (cgv == CGV_COLORED)
-//    m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 overcolor, in vec3 undercolor) {" SHNL
-//                                            "vec3 result = overcolor.rgb;" SHNL
-//                                            "float mixwell = overcolor[3];" SHNL
-//                        , m_overlay);
-//  else if (cgv == CGV_TRACED)
-//    m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 in_variant, in vec3 undercolor) {" SHNL
-//                                            "vec3 result;" SHNL
-//                                            "float mixwell = 0.0;" SHNL
-//                        , m_overlay);
-//  else if (cgv == CGV_TEXTURED)
-//  {
-//    m_offset += msprintf(&m_to[m_offset],   "uniform highp sampler2D opm%D_%D;" SHNL
-//                                            "vec3 overlayColor%d(in vec4 txtm, in vec3 undercolor) {" SHNL
-//                                            "vec3 result = texture(opm%D_%D, vec2(txtm[0], 0.0)).rgb;" SHNL
-//                                            "float mixwell = txtm[3];" SHNL
-//                        , m_overlay, m_paramsctr
-//                        , m_overlay
-//                        , m_overlay, m_paramsctr
-//                        );
-//    m_paramsctr++;
-//  }
-//}
-
-
 void FshOVColorConstructor::goto_func_begin()
 {
   m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 in_variant, in vec3 undercolor) " SHNL
@@ -72,19 +40,19 @@ void FshOVColorConstructor::goto_func_begin()
 void FshOVColorConstructor::param_alias(const char *name)
 {
 //  Q_ASSERT(loc_uniforms != nullptr);
-  m_offset += msprintf(&m_to[m_offset], "%s %s = opm%D_%D;" SHNL, glsl_types[loc_uniforms[m_paramsctr].type], name, m_overlay, m_paramsctr);
+  m_offset += msprintf(&m_to[m_offset], "%s %s = ovlprm%d_%d;" SHNL, glsl_types[loc_uniforms[m_paramsctr].type], name, m_overlay, m_paramsctr);
   m_paramsctr++;
 }
 
 void FshOVColorConstructor::paramarr_alias(const char* name, const char* idxname)
 {
-  m_offset += msprintf(&m_to[m_offset], "%s %s = opm%D_%D[%s];" SHNL, glsl_types[loc_uniforms[m_paramsctr].type], name, m_overlay, m_paramsctr, idxname);
+  m_offset += msprintf(&m_to[m_offset], "%s %s = ovlprm%d_%d[%s];" SHNL, glsl_types[loc_uniforms[m_paramsctr].type], name, m_overlay, m_paramsctr, idxname);
   m_paramsctr++;
 }
 
 void FshOVColorConstructor::param_get()
 {
-  m_offset += msprintf(&m_to[m_offset], "opm%D_%D", m_overlay, m_paramsctr);
+  m_offset += msprintf(&m_to[m_offset], "ovlprm%d_%d", m_overlay, m_paramsctr);
   m_paramsctr++;
 }
 

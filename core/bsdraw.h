@@ -168,10 +168,11 @@ protected:
   /// inner. Overlays storage
   struct uniform_located_t
   {
-    int                 location;
-    int                 type;
+    DTYPE               type;
     const void*         dataptr;
-    unsigned int        tex_idx;
+    
+    int                 _location;
+    char                _varname[64];
   };
   struct msstruct_t
   {
@@ -189,11 +190,15 @@ protected:
     unsigned int          prct_bans;
     unsigned int          ponger_reinit;
     unsigned int          ponger_update;
-    int                   outloc;
-    unsigned int          texcount;
-    unsigned int          uf_count;
-    uniform_located_t     uf_arr[OVLUFLIMIT];
     msstruct_t            olinks;
+    
+    int                   _location;
+    char                  _varname[64];
+    
+    unsigned int          uf_count;
+    unsigned int          texcount;
+    uniform_located_t     uf_arr[OVLUFLIMIT];
+    
     void      _reinit(Ovldraw* p, OVL_ORIENTATION o, unsigned int ufcount)
     {
       povl = p;
@@ -201,7 +206,7 @@ protected:
       prct = povl->reactor();
       prct_bans = 0;
       ponger_reinit = ponger_update = 0;
-      outloc = -1;
+      _location = -1;
       texcount = 0;
 //      if (uf_count) delete []uf_arr;
       uf_count = ufcount;
@@ -209,7 +214,7 @@ protected:
       olinks.type = msstruct_t::MS_SELF;
     }
     void                _setdriven(int driverid){ olinks.type = msstruct_t::MS_DRIVEN;  olinks.details.drivenid = driverid; }
-    overlay_t(): povl(nullptr), orient(OO_INHERITED), prct(nullptr), prct_bans(0), texcount(0), uf_count(0){}
+    overlay_t(): povl(nullptr), orient(OO_INHERITED), prct(nullptr), prct_bans(0), uf_count(0), texcount(0){}
 //    ~overlay_t() { if (uf_count) delete[]uf_arr; }
   }                     m_overlays[OVLLIMIT];
   unsigned int          m_overlaysCount;

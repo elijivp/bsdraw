@@ -999,25 +999,64 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                                         graphopts_t::goInterp(0.45f, DE_LINTERP), 
                                         coloropts_t::copts(CP_MONO, 0.0f, 0.75f, 0x00666666));
     
-    
     {
-      pdraw->tftPushBack("Hello Wogld!", CR_RELATIVE, 0.5f, 0.5f, true);
-//      pdraw->tftPushBack("ABCDEFGHIJKLMNOPQRSTUVWZYZ", CR_RELATIVE, 0.25f, 0.25f);
-//      pdraw->tftPushBack("SUPERTEST RECORD", CR_PIXEL, 100, 100);
-      int rpa = pdraw->tftRecordsPerArea(0);
-//      qDebug()<<rpa;
-      const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      int ctr = 0;
+//      pdraw->tftPushBack("Hello Wogld!", CR_RELATIVE, 0.5f, 0.5f, 0, false);
+    }
+    {
+      QFont bigfont("Ubuntu", 32, 800);
+      pdraw->tftRegisterHolding(bigfont);
+    }
+    {
+      QFont smallfont("Ubuntu", 9, 500);
+      pdraw->tftRegisterHolding(smallfont);
+    }
+    {
+//      pdraw->tftPushBack("Second type!", CR_RELATIVE, 0.5f, 0.1f, 0, false);
+////      pdraw->tftPushBack("ABCDEFGHIJKLMNOPQRSTUVWZYZ", CR_RELATIVE, 0.25f, 0.25f);
+////      pdraw->tftPushBack("SUPERTEST RECORD", CR_PIXEL, 100, 100);
+//      int rpa = pdraw->tftRecordsPerArea(0);
+////      qDebug()<<rpa;
+//      const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+//      int ctr = 0;
+      
+//      pdraw->tftSwitchHolding(0);
+      
+//      pdraw->tftPushBack("Third type!", CR_RELATIVE, 0.5f, 0.8f, 0, false);
+      
+      static const int TTL = 20;
+      for (int i=0; i<TTL; i++)
+        for (int j=0; j<TTL; j++)
+          pdraw->tftPushBack("XYZ", CR_RELATIVE, 0.05f + i/float(TTL-1)*0.9f, 0.05f + j/float(TTL-1)*0.9f, 0, false);
+      
+      QTimer* tm = new QTimer();
+      tm->setSingleShot(false);
+      tm->setInterval(16);
+      static int tc=0;
+      QObject::connect(tm, &QTimer::timeout, [=]()
+      { 
+        for (int i=0; i<TTL*TTL; i++)
+          pdraw->tftRotate(1, i, (i+tc)/20.0f*M_PI*2); 
+        tc += 1;
+      });
+      QTimer::singleShot(2000, tm, SLOT(start()));
+      
+      
+      
+//      int total = 15;
+//      for (int i=0; i<total; i++)
+//      {
+//        pdraw->tftPushBack("Hello Wogld!", CR_RELATIVE, 0.1f + 0.8f*i/(total-1), 0.5f, i*M_PI*2/float(total-1), true);
+//      }
 //      int total = rpa + 10;
-      int total = 70;
-      for (int i=0; i<total; i++)
-      {
-        char buffer[56];
-        sprintf(buffer, "%c %d", alphabet[i/10 % sizeof(alphabet)], ctr++);
-        if (ctr >= 10)
-          ctr = 0;
-        pdraw->tftPushBack(buffer, CR_RELATIVE, 0.1f + 0.8f*i/float(total), 0.1f + 0.8f*i/float(total), false);
-      }
+//      int total = 70;
+//      for (int i=0; i<total; i++)
+//      {
+//        char buffer[56];
+//        sprintf(buffer, "%c %d", alphabet[i/10 % sizeof(alphabet)], ctr++);
+//        if (ctr >= 10)
+//          ctr = 0;
+//        pdraw->tftPushBack(buffer, CR_RELATIVE, 0.1f + 0.8f*i/float(total), 0.1f + 0.8f*i/float(total), false);
+//      }
       
       
     }
@@ -4634,11 +4673,11 @@ void  MainWindow::changeFeatures(int id)
         {
           int s1 = rand()/float(RAND_MAX)*(draws[i]->tftCountSlots(0)-1);
           int s2 = rand()/float(RAND_MAX)*(draws[i]->tftCountSlots(0)-1);
-          int r1 = draws[i]->tftRecordForSlot(0, s2);
-          int r2 = draws[i]->tftRecordForSlot(0, s1);
+          int r1 = draws[i]->tftGetRecord(draws[i]->tftGetSlot(0, s2));
+          int r2 = draws[i]->tftGetRecord(draws[i]->tftGetSlot(0, s1));
           qDebug()<<"Switching: "<<s1<<s2<<r1<<r2;
-          draws[i]->tftSwitch(0, s1, r1);
-          draws[i]->tftSwitch(0, s2, r2);
+          draws[i]->tftSwitchTo(0, s1, r1);
+          draws[i]->tftSwitchTo(0, s2, r2);
         }
         
         draws[i]->tftMove(0, 0, rand()/float(RAND_MAX)*0.8f, 0.5f);

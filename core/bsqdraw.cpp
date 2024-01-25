@@ -105,45 +105,6 @@ void DrawQWidget::compileWhenInitializeGL(bool cflag)
   m_compileOnInitializeGL = cflag;
 }
 
-
-inline const char*  fastpaced_ovl_settings(char* tmpbuf, unsigned int ovl)
-{
-  /// EQuals: srintf(_tempvd, "ovl_otss_%d", i + 1);
-  static char chset[] = {'0','1','2','3','4','5','6','7','8','9'};
-  const char* base = "ovl_otss_";    // opacity, thickness, slice
-  char* p = tmpbuf;
-  while (*base)  *p++ = *base++;
-  *(p + 3) = '\0';
-  for (int i=2; i>=0; i--)
-  {
-    *(p+i) = chset[ovl % 10];
-    ovl /= 10;
-  }
-  return tmpbuf;
-}
-
-inline const char*  fastpaced_ovl_opm(char* tmpbuf, unsigned int ovl, unsigned int subpos)
-{
-  /// EQuals: srintf(_tempvd, "opm%d_%d", i + 1, j);
-  static char chset[] = {'0','1','2','3','4','5','6','7','8','9'};
-  const char* base = "opm";
-  char* p = tmpbuf;
-  while (*base)  *p++ = *base++;
-  static char fhset[] = { '_', '\0' };
-  unsigned int ids[] = { ovl, subpos };
-  for (int j=0; j<2; j++)
-  {
-    for (int i=2; i>=0; i--)
-    {
-      *(p+i) = chset[ids[j] % 10];
-      ids[j] /= 10;
-    }
-    p += 3;
-    *p++ = fhset[j];
-  }
-  return tmpbuf;
-}
-
 void DrawQWidget::palettePrepare(const IPalette* ppal, bool discrete, int levels)
 {
   const void*   palArr;
@@ -207,7 +168,9 @@ void DrawQWidget::initCollectAndCompileShader()
   fshps +=  FshDrawMain::basePendingSize(m_datasubmesh, m_overlaysCount);
   for (unsigned int t=0; t<TFT_HOLDERS; t++)
     if (m_holders[t] != nullptr)
-      fshps += m_holders[t]->tftslots.size()*512;
+      fshps += m_holders[t]->tftslots.size()*1024;
+  if (fshps < 32768)
+    fshps = 32768;
         
   if (m_fshalloc < fshps)
   {
@@ -219,7 +182,7 @@ void DrawQWidget::initCollectAndCompileShader()
   
   /// store
   FshDrawMain fdm(m_fshmem, m_splitPortions, m_datasubmesh);
-  fdm.generic_decls_begin(m_overlaysCount);
+  fdm.generic_decls_begin();
   unsigned int    additufm_count=0;
   shuniformdesc_t additufm_desc[96];
   {
@@ -232,7 +195,7 @@ void DrawQWidget::initCollectAndCompileShader()
     {
       if (m_holders[t] == nullptr)  continue;
       m_holders[t]->_location = -1;
-      fdm.generic_decls_add_tftareas(t, m_holders[t]->_varname);
+      fdm.generic_decls_add_tft_area(t, m_holders[t]->_varname);
       
       for (unsigned int i=0; i<m_holders[t]->tftslots.size(); i++)
       {
@@ -244,17 +207,49 @@ void DrawQWidget::initCollectAndCompileShader()
           m_holders[t]->tftslots[i]._varname_c[0] = '\0';
         }
         else
-          fdm.generic_decls_add_tftdynamicvar(t, i, m_holders[t]->tftslots[i]._varname_i, m_holders[t]->tftslots[i]._varname_c);
+          fdm.generic_decls_add_tft_dslot(t, i, m_holders[t]->tftslots[i]._varname_i, m_holders[t]->tftslots[i]._varname_c);
+      }
+    }
+  }
+  {
+    for (unsigned int i=0; i<m_overlaysCount; i++)
+    {
+      m_overlays[i]._location = -1;
+      fdm.generic_decls_add_ovl_input(i, m_overlays[i]._varname);
+      _Ovldraw::uniforms_t  uf = m_overlays[i].povl->uniforms();
+      m_overlays[i].uf_count = uf.count;
+      m_overlays[i].texcount = 0;
+      for (unsigned int j=0; j<uf.count; j++)
+      {
+        m_overlays[i].uf_arr[j]._location = -1;
+        m_overlays[i].uf_arr[j].type = uf.arr[j].type;
+        m_overlays[i].uf_arr[j].dataptr = uf.arr[j].dataptr;
+        fdm.generic_decls_add_ovl_nameonly(i, j, m_overlays[i].uf_arr[j].type, m_overlays[i].uf_arr[j]._varname);
+        if (dtIsTexture(m_overlays[i].uf_arr[j].type))
+          m_overlays[i].texcount += 1;
       }
     }
   }
   
   fdm.generic_main_begin(m_allocatedPortions, m_orient, m_emptycolor, m_overpattern);
-  
-  m_pcsh->shfragment_store(fdm);
+  {
+    m_pcsh->shfragment_store(fdm);
+  }
   
   {
     fdm.generic_main_process_fsp(m_overpattern, m_overpatternOpacity);
+  }
+  {
+    if (m_overlaysCount > 0)
+    {
+      fdm.generic_main_prepare_ovl();
+      for (unsigned int i=0; i<m_overlaysCount; i++)
+      {
+        int link = (m_overlays[i].olinks.type != msstruct_t::MS_SELF && 
+                    m_overlays[i].olinks.type != msstruct_t::MS_ROOT) ? m_overlays[i].olinks.details.drivenid : -1;
+        fdm.generic_main_process_ovl(m_orient, i, link, m_overlays[i].orient);
+      }
+    }
   }
   {
     fdm.generic_main_prepare_tft();
@@ -283,20 +278,11 @@ void DrawQWidget::initCollectAndCompileShader()
       }
     }
   }
-  {
-    ovlfraginfo_t ovlsinfo[OVLLIMIT];
-    for (unsigned int i=0; i<m_overlaysCount; i++)
-    {
-      if (m_overlays[i].olinks.type != msstruct_t::MS_SELF && m_overlays[i].olinks.type != msstruct_t::MS_ROOT)
-        ovlsinfo[i].link = m_overlays[i].olinks.details.drivenid;
-      else
-        ovlsinfo[i].link = -1;
-      
-      ovlsinfo[i].orient = m_overlays[i].orient;
-    }
-    fdm.generic_main_process_overlays(m_orient, m_overlaysCount, ovlsinfo);
-  }
+  
 //    qDebug()<<m_pcsh->shaderName()<<" fragment size "<<fsh_written<<" (had"<<m_fshalloc<<")";
+  
+  fdm.generic_main_end();
+  
   Q_ASSERT(fdm.written() <= m_fshalloc);
   
   if (!m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, m_fshmem))
@@ -317,33 +303,34 @@ void DrawQWidget::initCollectAndCompileShader()
 //    qDebug()<<m_fshmem;
     //////////////////////////////
   
-  char  ovlshaderbuf[8192*2];
   for (unsigned int i=0; i<m_overlaysCount; i++)
   {     
-    int fshtResult = m_overlays[i].povl->fshOVCoords(i + 1, m_dataDimmSwitchAB, ovlshaderbuf);
+    int fshtResult = m_overlays[i].povl->fshOVCoords(i + 1, m_dataDimmSwitchAB, m_fshmem);
     if (fshtResult <= 0)
       qDebug()<<Q_FUNC_INFO<<"OVL fshOVCoords failure!";
     else
-      m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, ovlshaderbuf);
+      m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, m_fshmem);
+    
+//    qDebug()<<ovlshaderbuf;
     
 #ifdef BSSHADER_DUMP
     fout.write((const char*)ovlshaderbuf);
     fout.write((const char*)"\n\n\n\n");
 #endif
     
-    int fshcResult = m_overlays[i].povl->fshColor(i + 1, ovlshaderbuf);
+    int fshcResult = m_overlays[i].povl->fshColor(i + 1, m_fshmem);
     if (fshcResult <= 0)
       qDebug()<<Q_FUNC_INFO<<"OVL fshColor failure!";
     else
-      m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment,  ovlshaderbuf);
+      m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment,  m_fshmem);
+    
+//    qDebug()<<ovlshaderbuf;
         
 #ifdef BSSHADER_DUMP
     fout.write((const char*)ovlshaderbuf);
     fout.write((const char*)"\n\n\n\n");
 #endif
   }
-  
-//  m_ShaderProgram.bindAttributeLocation("vertices", 0); ???
   
   m_texturesCount = 0;
   
@@ -358,10 +345,7 @@ void DrawQWidget::initCollectAndCompileShader()
     
     Q_ASSERT(_SF_COUNT == sizeof(vd_corresponding_array)/sizeof(const char*));
     for (int i=0; i<_SF_COUNT; i++)
-    {
       m_locationPrimary[i] = m_ShaderProgram.uniformLocation(vd_corresponding_array[i]);
-//      qDebug()<<i<<"????? "<<m_locationPrimary[i];
-    }
     
     if (m_locationPrimary[SF_DATASAMPLER] != -1)
       glGenTextures(1, &m_textures[m_texturesCount++]);
@@ -408,30 +392,13 @@ void DrawQWidget::initCollectAndCompileShader()
     
     /// 4. Init ovl locations and textures
     {
-      char _tempvd[64];
       for (unsigned int i=0; i<m_overlaysCount; i++)
       {
-        fastpaced_ovl_settings(_tempvd, i+1);
-        m_overlays[i].outloc = m_ShaderProgram.uniformLocation(_tempvd);                  /// ! cannot hide by upcount
-        m_overlays[i].texcount = 0;
-        _Ovldraw::uniforms_t  uf = m_overlays[i].povl->uniforms();
-        for (unsigned int j=0; j<uf.count; j++)
-        {
-          fastpaced_ovl_opm(_tempvd, i+1, j);
-          m_overlays[i].uf_arr[j].location = m_ShaderProgram.uniformLocation(_tempvd);
-          if (m_overlays[i].uf_arr[j].location == -1)
-          {
-//            qDebug()<<"Location of var"<<_tempvd<<"wasnt found";
-          }
-          DTYPE dtype = uf.arr[j].type;
-          m_overlays[i].uf_arr[j].type = dtype;
-          m_overlays[i].uf_arr[j].dataptr = uf.arr[j].dataptr;
-          if (dtIsTexture(dtype))
-          {
-            m_overlays[i].texcount += 1;
-            glGenTextures(1, &m_textures[m_texturesCount++]);
-          }
-        }
+        m_overlays[i]._location = m_ShaderProgram.uniformLocation(m_overlays[i]._varname);  /// ! cannot hide by upcount
+        for (unsigned int j=0; j<m_overlays[i].uf_count; j++)
+          m_overlays[i].uf_arr[j]._location = m_ShaderProgram.uniformLocation(m_overlays[i].uf_arr[j]._varname);
+        for (unsigned int t=0; t<m_overlays[i].texcount; t++)
+          glGenTextures(1, &m_textures[m_texturesCount++]);
         m_overlays[i].ponger_reinit = m_overlays[i].ponger_update = 0;
       }
     } // init ovl
@@ -784,7 +751,7 @@ void DrawQWidget::paintGL()
       if (subPendOn)
       {
         
-        if ((loc = ovl.outloc) != -1)
+        if ((loc = ovl._location) != -1)
           m_ShaderProgram.setUniformValue(loc, QVector4D(ovl.povl->isVisible()? ovl.povl->getOpacity() : 1.0f, 
                                                          ovl.povl->getThickness(), 
                                                          ovl.povl->getSliceLL(), ovl.povl->getSliceHL()));
@@ -792,7 +759,7 @@ void DrawQWidget::paintGL()
         for (unsigned int i=0; i<ovl.uf_count; i++)
         {
           const uniform_located_t& ufm = ovl.uf_arr[i];
-          loc = ufm.location;
+          loc = ufm._location;
           switch (ufm.type) {
             case DT_1F: m_ShaderProgram.setUniformValue(loc, *(const GLfloat*)ufm.dataptr); break;
             case DT_2F: m_ShaderProgram.setUniformValue(loc, *(const QVector2D*)ufm.dataptr); break;
@@ -1477,6 +1444,16 @@ void DrawQWidget::scrollDataToAbs(int)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class BSQSetup
+{
+public:
+  QFontMetrics            fm;
+  QPainter                painter;
+  QBrush                  brush;
+  QPen                    pen;
+  BSQSetup(const QFont& f): fm(f) {}
+};
+
 int DrawQWidget::_tft_allocHolder(QFont font)
 {
   for (int i=0; i<TFT_HOLDERS; i++)
@@ -1488,16 +1465,18 @@ int DrawQWidget::_tft_allocHolder(QFont font)
       m_holders[i]->pinger = 1;
       m_holders[i]->_location = -1;
       
-      m_holders[i]->ctx_metrix = new QFontMetrics(font);
-      m_holders[i]->record_width = m_holders[i]->ctx_metrix->averageCharWidth() * TFT_TEXTMAXLEN + 2;
-      m_holders[i]->record_ht = m_holders[i]->ctx_metrix->ascent();
-      m_holders[i]->record_hb = m_holders[i]->ctx_metrix->descent();
-      m_holders[i]->record_ld = m_holders[i]->ctx_metrix->leading();
-      m_holders[i]->record_height = m_holders[i]->ctx_metrix->height() + m_holders[i]->ctx_metrix->leading() + 2;
+      
+      m_holders[i]->ctx_setup = new BSQSetup(font);
+      m_holders[i]->record_width = m_holders[i]->ctx_setup->fm.averageCharWidth() * TFT_TEXTMAXLEN + 2;
+      m_holders[i]->record_ht = m_holders[i]->ctx_setup->fm.ascent();
+      m_holders[i]->record_hb = m_holders[i]->ctx_setup->fm.descent();
+      m_holders[i]->record_ld = m_holders[i]->ctx_setup->fm.leading();
+      m_holders[i]->record_height = m_holders[i]->ctx_setup->fm.height() + m_holders[i]->ctx_setup->fm.leading() + 2;
+      
+      m_holders[i]->ctx_setup->brush = QBrush(QColor(0,0,0));
+      m_holders[i]->ctx_setup->pen = QPen(QColor(0,0,0));
       
       m_holders[i]->recordslimit = 1080 / m_holders[i]->record_height;
-      
-      m_holders[i]->ctx_painter = nullptr;
       
 #ifndef BSGLSLOLD
       {
@@ -1517,7 +1496,7 @@ int DrawQWidget::_tft_allocHolder(QFont font)
   return -1;
 }
 
-#include <QLabel>
+//#include <QLabel>
 
 int DrawQWidget::_tft_pushRecord(DrawQWidget::TFTholder* holder, const char* text)
 {
@@ -1540,24 +1519,18 @@ int DrawQWidget::_tft_pushRecord(DrawQWidget::TFTholder* holder, const char* tex
   TFTrecord* tftrec = &tftar.records[rid_loc];
   strncpy(tftrec->text, text, TFT_TEXTMAXLEN);
   QFontMetrics qfm(holder->font);
-  tftrec->width = holder->ctx_metrix->horizontalAdvance(tftrec->text);
+  tftrec->width = holder->ctx_setup->fm.horizontalAdvance(tftrec->text);
   
-  if (holder->ctx_painter == nullptr)
+  holder->ctx_setup->painter.begin(tftar.ctx_img);
   {
-    holder->ctx_painter = new QPainter(tftar.ctx_img);
-    holder->ctx_painter->setBrush(QBrush(QColor(0,0,0)));
-    holder->ctx_painter->setPen(QColor(0,0,0));
-    holder->ctx_painter->setFont(holder->font);
+    holder->ctx_setup->painter.setBrush(holder->ctx_setup->brush);
+    holder->ctx_setup->painter.setPen(holder->ctx_setup->pen);
+    holder->ctx_setup->painter.setFont(holder->font);
+    holder->ctx_setup->painter.drawText(1, holder->record_height*holder->recordslimit - rid_loc*holder->record_height - holder->record_hb, /*Qt::AlignLeft | Qt::AlignBottom, */text);
   }
-  else
-    holder->ctx_painter->begin(tftar.ctx_img);
-  {
-    holder->ctx_painter->drawText(1, holder->record_height*holder->recordslimit - rid_loc*holder->record_height - holder->record_hb, /*Qt::AlignLeft | Qt::AlignBottom, */text);
-  }
-  holder->ctx_painter->end();
+  holder->ctx_setup->painter.end();
   
   holder->pinger += 1;
-  
 //  QLabel* lbl = new QLabel();
 //  lbl->setPixmap(QPixmap::fromImage(*tftar.ctx_img));
 //  lbl->show();
@@ -1575,7 +1548,33 @@ QImage* DrawQWidget::_tft_allocateImage(int width, int height)
   return img;
 }
 
+bool DrawQWidget::tftRegisterHolding(const QFont& font)
+{
+  int next_holder = _tft_allocHolder(font);
+  if (next_holder == -1)
+    return false;
+  m_holder_current = next_holder;
+  return true;
+}
+
+bool DrawQWidget::tftSwitchHolding(int hoid)
+{
+  if (hoid < 0 || hoid >= TFT_HOLDERS)
+    return false;
+  if (m_holders[hoid] == nullptr)
+    return false;
+  m_holder_current = hoid;
+  return true;
+}
+
+/////
+
 DrawQWidget::TFTslotpass DrawQWidget::tftPushBack(const char* text, COORDINATION cr, float fx, float fy, bool isstatic)
+{
+  return tftPushBack(text, cr, fx, fy, 0.0f, isstatic);
+}
+
+DrawQWidget::TFTslotpass DrawQWidget::tftPushBack(const char* text, COORDINATION cr, float fx, float fy, float rotate, bool isstatic)
 {
   if (m_holder_current == -1)
     m_holder_current = _tft_allocHolder(font());
@@ -1587,7 +1586,7 @@ DrawQWidget::TFTslotpass DrawQWidget::tftPushBack(const char* text, COORDINATION
   ts.slotinfo.cr = cr;
   ts.slotinfo.fx = fx;
   ts.slotinfo.fy = fy;
-  ts.slotinfo.rotate = 0.0f;
+  ts.slotinfo.rotate = rotate;
   ts.slotinfo.scale = 1.0f;
   if (ts.isstatic)
   {
@@ -1608,6 +1607,49 @@ DrawQWidget::TFTslotpass DrawQWidget::tftPushBack(const char* text, COORDINATION
   }
   return TFTslotpass(this, m_holder_current, sid);
 }
+
+DrawQWidget::TFTslotpass DrawQWidget::tftGetSlot(int hoid, int sloid)
+{ 
+  return TFTslotpass(this, hoid, sloid);
+}
+
+DrawQWidget::TFTslotpass DrawQWidget::tftGetSlot(int sloid)
+{
+  return TFTslotpass(this, m_holder_current, sloid);
+}
+
+int DrawQWidget::tftGetRecord(const DrawQWidget::TFTslotpass& sp) const
+{
+  return m_holders[sp.hoid]->tftslots[sp.sloid].recid;
+}
+
+const char* DrawQWidget::tftGetText(const DrawQWidget::TFTslotpass& sp) const
+{
+  int recid = m_holders[sp.hoid]->tftslots[sp.sloid].recid;
+  if (recid == -1)
+    return nullptr;
+#ifndef BSGLSLOLD  
+  int rlim = m_holders[sp.hoid]->recordslimit;
+  return m_holders[sp.hoid]->tftarea[recid/rlim].records[recid%rlim].text;
+#else
+  return m_holders[sp.hoid]->tftarea.records[recid].text;
+#endif
+}
+
+bool DrawQWidget::tftGetStatic(const DrawQWidget::TFTslotpass& sp) const
+{
+  return m_holders[sp.hoid]->tftslots[sp.sloid].isstatic;
+}
+
+//int DrawQWidget::tftRecordForSlot(int hoid, int sloid) const
+//{
+//  Q_ASSERT(hoid < TFT_HOLDERS);
+//  if (m_holders[hoid] == nullptr)
+//    return -1;
+//  if (sloid >= m_holders[hoid]->tftslots.size())
+//    return -1;
+//  return m_holders[hoid]->tftslots[sloid].recid;
+//}
 
 int DrawQWidget::tftCountRecords(int hoid) const
 {
@@ -1637,25 +1679,17 @@ int DrawQWidget::tftRecordsPerArea(int hoid)
   return m_holders[hoid]->recordslimit;
 }
 
-int DrawQWidget::tftRecordForSlot(int hoid, int sloid) const
-{
-  Q_ASSERT(hoid < TFT_HOLDERS);
-  if (m_holders[hoid] == nullptr)
-    return -1;
-  if (sloid >= m_holders[hoid]->tftslots.size())
-    return -1;
-  return m_holders[hoid]->tftslots[sloid].recid;
-}
+#define TFT_GOTO_SLOT_DYNAMIC   Q_ASSERT(hoid < TFT_HOLDERS); \
+                                if (m_holders[hoid] == nullptr) \
+                                  return false; \
+                                if (sloid >= int(m_holders[hoid]->tftslots.size())) \
+                                  return false; \
+                                if (m_holders[hoid]->tftslots[sloid].isstatic) \
+                                  return false;
 
 bool DrawQWidget::tftMove(int hoid, int sloid, float fx, float fy)
 {
-  Q_ASSERT(hoid < TFT_HOLDERS);
-  if (m_holders[hoid] == nullptr)
-    return false;
-  if (sloid >= m_holders[hoid]->tftslots.size())
-    return false;
-  if (m_holders[hoid]->tftslots[sloid].isstatic)
-    return false;
+  TFT_GOTO_SLOT_DYNAMIC
   m_holders[hoid]->tftslots[sloid].slotinfo.fx = fx;
   m_holders[hoid]->tftslots[sloid].slotinfo.fy = fy;
   {
@@ -1666,15 +1700,21 @@ bool DrawQWidget::tftMove(int hoid, int sloid, float fx, float fy)
   return true;
 }
 
-bool DrawQWidget::tftSwitch(int hoid, int sloid, int recid)
+bool DrawQWidget::tftRotate(int hoid, int sloid, float anglerad)
 {
-  Q_ASSERT(hoid < TFT_HOLDERS);
-  if (m_holders[hoid] == nullptr)
-    return false;
-  if (sloid >= m_holders[hoid]->tftslots.size())
-    return false;
-  if (m_holders[hoid]->tftslots[sloid].isstatic)
-    return false;
+  TFT_GOTO_SLOT_DYNAMIC
+  m_holders[hoid]->tftslots[sloid].slotinfo.rotate = anglerad;
+  {
+    m_holders[hoid]->tftslots[sloid].pinger += 1;
+    m_bitmaskPendingChanges |= PC_TFT_PARAMS;
+    if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
+  }
+  return true;
+}
+
+bool DrawQWidget::tftSwitchTo(int hoid, int sloid, int recid)
+{
+  TFT_GOTO_SLOT_DYNAMIC
   m_holders[hoid]->tftslots[sloid].recid = recid;
   {
     m_holders[hoid]->tftslots[sloid].pinger += 1;

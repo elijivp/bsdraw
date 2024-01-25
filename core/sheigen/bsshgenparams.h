@@ -34,10 +34,10 @@ inline unsigned int  msexpandParams(char* to, int overlay, unsigned int uniforms
           uniforms[i].type == DT_ARRI || uniforms[i].type == DT_ARRI2 || uniforms[i].type == DT_ARRI3 || uniforms[i].type == DT_ARRI4)
       {
         const dmtype_arr_t* parr = (const dmtype_arr_t*)uniforms[i].dataptr;
-        offset += msprintf(&to[offset], "uniform highp %s opm%D_%D[%d];\n", glsl_types[glsl_types_idx], overlay, i, parr->count);
+        offset += msprintf(&to[offset], "uniform highp %s \tovlprm%d_%d[%d];\n", glsl_types[glsl_types_idx], overlay, i, parr->count);
       }
       else
-        offset += msprintf(&to[offset], "uniform highp %s opm%D_%D;\n", glsl_types[glsl_types_idx], overlay, i);
+        offset += msprintf(&to[offset], "uniform highp %s \tovlprm%d_%d;\n", glsl_types[glsl_types_idx], overlay, i);
     }
     else
       offset += msprintf(&to[offset], "ERROR on param %d;\n", overlay);

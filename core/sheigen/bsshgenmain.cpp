@@ -716,6 +716,7 @@ const char* cr_to_px_str(COORDINATION con)
 
 #define TFT_OPTIMISE
 
+#if 0
 void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft)
 {
   m_offset += msprintf(&m_to[m_offset],     "{" SHNL);
@@ -768,6 +769,66 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft)
   }
   m_offset += msprintf(&m_to[m_offset],     "}" SHNL);
 }
+#else
+void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft)
+{
+  m_offset += msprintf(&m_to[m_offset],     "{" SHNL);
+  {
+    int limit = tft.limitrows * tft.limitcols;
+    bool gorotate = true;
+    if (tft.isstatic)
+    {
+      m_offset += msprintf(&m_to[m_offset],     
+                                                SHGP "int  tft_rec = %d;" SHNL
+                                                SHGP "vec4 tft_slot = vec4(%F, %F, %F, %F);" SHNL, 
+                                                      tft.recordid/* / tft.limitrows*/,
+                                                      tft.slotdata.fx, tft.slotdata.fy, tft.slotdata.scale, tft.slotdata.rotate);
+      if (tft.slotdata.rotate > -0.0001f && tft.slotdata.rotate < 0.0001f)
+        gorotate = false;
+    }
+    else
+      m_offset += msprintf(&m_to[m_offset],     SHGP "int  tft_rec = tft_i_%d[%d];" SHNL
+                                                SHGP "vec4 tft_slot = tft_c_%d[%d];" SHNL, tft.texid, tft.varid, tft.texid, tft.varid);
+    m_offset += msprintf(&m_to[m_offset],       SHGP "tft_slot.xy = tft_slot.xy*%s;" SHNL, cr_to_px_str(tft.slotdata.cr));
+    m_offset += msprintf(&m_to[m_offset],       SHGP "vec2  rc = ab_coords*ab_ibounds - tft_slot.xy + vec2(0.499);" SHNL);
+    
+#ifdef TFT_OPTIMISE
+//    m_offset += msprintf(&m_to[m_offset],       SHGP "if (step(distance(rc, vec2(%f, %f)), 0.0) == 1.0)" SHNL
+    m_offset += msprintf(&m_to[m_offset],       SHGP "if (length(rc) < length(vec2(%f, %f)))" SHNL
+                                                SHGP "{" SHNL, float(tft.textwidth)/2, float(tft.recordheight)/2);
+#endif
+    
+    if (gorotate)
+    {
+      m_offset += msprintf(&m_to[m_offset],     SHGP "vec2  aa = vec2(cos(tft_slot[3]), sin(tft_slot[3]));" SHNL);
+      m_offset += msprintf(&m_to[m_offset],     SHGP "rc = rc*mat2(aa.x, -aa.y, aa.y, aa.x);" SHNL);
+    }
+    
+    float oneroww = 1.0f / tft.limitcols;
+    float onerowh = 1.0f / tft.limitrows;
+    m_offset += msprintf(&m_to[m_offset],       SHGP "float pc = rc.y/%f + 0.5;" SHNL,  float(tft.recordheight));
+#ifndef BSGLSLOLD
+    m_offset += msprintf(&m_to[m_offset],       SHGP "vec3  tcoords = vec3((int(mod(tft_rec,%d))/%d + (rc.x + 0.5*%f)/%f)*%f, "
+                                                                           "1.0 - (mod(mod(tft_rec,%d),%d) + pc)*%f, "
+                                                                           "float(tft_rec/%d)/%f);" SHNL,
+                                                  limit, tft.limitrows, float(tft.textwidth), float(tft.recordwidth), oneroww,
+                                                  limit, tft.limitrows, onerowh, 
+                                                  limit, float(tft.texcount == 1? 1 : tft.texcount-1));
+#else
+    m_offset += msprintf(&m_to[m_offset],       SHGP "vec2  tcoords = vec2((int(mod(tft_rec,%d))/%d + (rc.x + 0.5*%f)/%f)*%f, "
+                                                                            "1.0 - (tft_rec + pc)*%f);" SHNL,
+                                                  limit, tft.limitrows, float(tft.textwidth), float(tft.recordwidth), onerowh);
+#endif
+    m_offset += msprintf(&m_to[m_offset],       SHGP "vec4  ttc = texture(tftholding_%d, tcoords).rgba;" SHNL
+                                                SHGP "result = mix(result, ttc.rgb, ttc.a*step(0.0, pc)*step(pc, 1.0));" SHNL,
+                                                  tft.texid);
+#ifdef TFT_OPTIMISE
+    m_offset += msprintf(&m_to[m_offset],       SHGP "}" SHNL);
+#endif
+  }
+  m_offset += msprintf(&m_to[m_offset],     "}" SHNL);
+}
+#endif
 
 void FshDrawMain::generic_main_process_fsp(const overpattern_t &fsp, float fspopacity)
 {

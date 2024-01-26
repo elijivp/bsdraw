@@ -327,9 +327,9 @@ public:
   struct  TFTholder
   {
     QFont                     font;
-    int                       limitlen;
-    int                       limitrows;   // by font
-    int                       limitcolumns;
+    int                       maxtextlen;
+    int                       limrows;   // by font
+    int                       limcols;
     
     int                       record_width;
     int                       record_height, record_ht, record_hb, record_ld;
@@ -355,12 +355,13 @@ public:
 private:
   int           m_holder_current = -1;
   TFTholder*    m_holders[TFT_HOLDERS];
-  int           _tft_allocHolder(QFont font, int limitlen=TFT_TEXTMAXLEN, int limitcolumns=1);
+  int           _tft_allocHolder(QFont font, int maxtextlen=TFT_TEXTMAXLEN, int limitcolumns=1);
+  int           _tft_total(int hoid) const { return m_holders[hoid]->limrows*m_holders[hoid]->limcols; }
   int           _tft_pushRecord(TFTholder*  holder, const char* text);
   QImage*       _tft_allocateImage(int width, int height);
   TFTholder*    _tft_inf_takeHolder();
 public:
-  bool            tftRegisterHolding(const QFont& font, int limitlen=TFT_TEXTMAXLEN, int limitcolumns=1);
+  bool            tftRegisterHolding(const QFont& font, int maxtextlen=TFT_TEXTMAXLEN, int limitcolumns=1);
   bool            tftSwitchHolding(int hoid);
                   /// Every new record has incremented index
   int             tftAddRecord(const char* text);

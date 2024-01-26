@@ -1004,7 +1004,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     }
     {
       QFont bigfont("Ubuntu", 32, 800);
-      pdraw->tftRegisterHolding(bigfont, 10, 3);
+      pdraw->tftRegisterHolding(bigfont, 10, 2);
     }
 //    {
 //      QFont smallfont("Ubuntu", 9, 500);

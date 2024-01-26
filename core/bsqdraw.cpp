@@ -255,17 +255,19 @@ void DrawQWidget::initCollectAndCompileShader()
       {
         for (unsigned int i=0; i<m_holders[t]->writings[s].size(); i++)
         {
-          int recid_short = m_holders[t]->writings[s][i].recid % m_holders[t]->limitrows;
+          int recid_short = m_holders[t]->writings[s][i].recid % _tft_total(t);
 #ifndef BSGLSLOLD
-          int areaid =  m_holders[t]->writings[s][i].recid / m_holders[t]->limitrows;
+          int areaid =  m_holders[t]->writings[s][i].recid / _tft_total(t);
           tftfraginfo_t tfi = {  int(t), int(m_holders[t]->recbook.size()),
-                                 m_holders[t]->limitrows, m_holders[t]->record_width, m_holders[t]->record_height, m_holders[t]->recbook[areaid].records[recid_short].width, 
+                                 m_holders[t]->limrows, m_holders[t]->limcols, 
+                                 m_holders[t]->record_width, m_holders[t]->record_height, m_holders[t]->recbook[areaid].records[recid_short].width, 
                                           m_holders[t]->writings[s][i].recid,
                                  int(i), s == TFT_STATIC, m_holders[t]->writings[s][i].slotinfo
           };
 #else
           tftfraginfo_t tfi = {  int(t), 1,
-                                 m_holders[t]->limitrows, m_holders[t]->record_width, m_holders[t]->record_height, m_holders[t]->recbook.records[recid_short].width, 
+                                 m_holders[t]->limrows, m_holders[t]->limcols, 
+                                 m_holders[t]->record_width, m_holders[t]->record_height, m_holders[t]->recbook.records[recid_short].width, 
                                           m_holders[t]->writings[s][i].recid,
                                  int(i), s == TFT_STATIC, m_holders[t]->writings[s][i].slotinfo
           };
@@ -624,8 +626,8 @@ void DrawQWidget::paintGL()
         const GLint   gl_internalFormat = GL_RGBA8;
         const GLenum  gl_format = GL_RGBA;
         const GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
-        int width = m_holders[t]->record_width;
-        int height = m_holders[t]->record_height * m_holders[t]->limitrows;
+        int width = m_holders[t]->record_width * m_holders[t]->limcols;
+        int height = m_holders[t]->record_height * m_holders[t]->limrows;
 //        qDebug()<<m_holders[t]->ponger<<m_holders[t]->pinger<<m_holders[t]->_location;
 #ifndef BSGLSLOLD
         glActiveTexture(GL_TEXTURE0 + CORR_TEX);
@@ -1449,22 +1451,22 @@ public:
   BSQSetup(const QFont& f): fm(f) {}
 };
 
-int DrawQWidget::_tft_allocHolder(QFont font, int limitlen, int limitcolumns)
+int DrawQWidget::_tft_allocHolder(QFont font, int maxtextlen, int limitcolumns)
 {
   for (int i=0; i<TFT_HOLDERS; i++)
     if (m_holders[i] == nullptr)
     {
       m_holders[i] = new TFTholder;
       m_holders[i]->font = font;
-      m_holders[i]->limitlen = limitlen < TFT_TEXTMAXLEN ? limitlen : TFT_TEXTMAXLEN;
-      m_holders[i]->limitcolumns = limitcolumns;
+      m_holders[i]->maxtextlen = maxtextlen < TFT_TEXTMAXLEN ? maxtextlen : TFT_TEXTMAXLEN;
+      m_holders[i]->limcols = limitcolumns;
       m_holders[i]->ponger = 0;
       m_holders[i]->pinger = 1;
       m_holders[i]->_location = -1;
       
       
       m_holders[i]->ctx_setup = new BSQSetup(font);
-      m_holders[i]->record_width = m_holders[i]->ctx_setup->fm.averageCharWidth() * m_holders[i]->limitlen + 2;
+      m_holders[i]->record_width = m_holders[i]->ctx_setup->fm.averageCharWidth() * m_holders[i]->maxtextlen + 2;
       m_holders[i]->record_ht = m_holders[i]->ctx_setup->fm.ascent();
       m_holders[i]->record_hb = m_holders[i]->ctx_setup->fm.descent();
       m_holders[i]->record_ld = m_holders[i]->ctx_setup->fm.leading();
@@ -1473,18 +1475,20 @@ int DrawQWidget::_tft_allocHolder(QFont font, int limitlen, int limitcolumns)
       m_holders[i]->ctx_setup->brush = QBrush(QColor(0,0,0));
       m_holders[i]->ctx_setup->pen = QPen(QColor(0,0,0));
       
-      m_holders[i]->limitrows = 1080 / m_holders[i]->record_height;
+      m_holders[i]->limrows = 1080 / m_holders[i]->record_height;
       
 #ifndef BSGLSLOLD
       {
         tftpage_t area;
-        area.ctx_img = _tft_allocateImage(m_holders[i]->record_width, m_holders[i]->record_height*m_holders[i]->limitrows);
-        area.records = new tftpage_t::record_t[m_holders[i]->limitrows];
+        area.ctx_img = _tft_allocateImage(m_holders[i]->record_width*m_holders[i]->limcols,
+                                          m_holders[i]->record_height*m_holders[i]->limrows);
+        area.records = new tftpage_t::record_t[_tft_total(i)];
         area.recordscount = 0;
         m_holders[i]->recbook.push_back(area);
       }
 #else
-      m_holders[i]->recbook.ctx_img = _tft_allocateImage(m_holders[i]->record_width, m_holders[i]->record_height*m_holders[i]->limitrows);
+      m_holders[i]->recbook.ctx_img = _tft_allocateImage( m_holders[i]->record_width*m_holders[i]->limcols,
+                                                          m_holders[i]->record_height*m_holders[i]->limrows);
       m_holders[i]->recbook.records = new record_t[m_holders[i]->limitrows];
       m_holders[i]->recbook.recordscount = 0;
 #endif
@@ -1493,18 +1497,20 @@ int DrawQWidget::_tft_allocHolder(QFont font, int limitlen, int limitcolumns)
   return -1;
 }
 
+#ifdef DBGLABELSHOW
 #include <QLabel>
 QLabel* g_lbl = nullptr;
 int     g_ctr = 0;
+#endif
 
 int DrawQWidget::_tft_pushRecord(DrawQWidget::TFTholder* holder, const char* text)
 {
 #ifndef BSGLSLOLD
-  if (holder->recbook.back().recordscount >= holder->limitrows)
+  if (holder->recbook.back().recordscount >= holder->limrows*holder->limcols)
   {
     tftpage_t area;
-    area.ctx_img = _tft_allocateImage(holder->record_width, holder->record_height*holder->limitrows);
-    area.records = new tftpage_t::record_t[holder->limitrows];
+    area.ctx_img = _tft_allocateImage(holder->record_width*holder->limcols, holder->record_height*holder->limrows);
+    area.records = new tftpage_t::record_t[holder->limrows*holder->limcols];
     area.recordscount = 0;
     holder->recbook.push_back(area);
   }
@@ -1525,12 +1531,18 @@ int DrawQWidget::_tft_pushRecord(DrawQWidget::TFTholder* holder, const char* tex
     holder->ctx_setup->painter.setBrush(holder->ctx_setup->brush);
     holder->ctx_setup->painter.setPen(holder->ctx_setup->pen);
     holder->ctx_setup->painter.setFont(holder->font);
-    holder->ctx_setup->painter.drawText(1, holder->record_height*holder->limitrows - rid_loc*holder->record_height - holder->record_hb, /*Qt::AlignLeft | Qt::AlignBottom, */text);
+    
+    int row = rid_loc % holder->limrows;
+    int col = rid_loc / holder->limrows;
+    holder->ctx_setup->painter.drawText(
+          1 + col*(holder->record_width), 
+          holder->record_height*holder->limrows - row*holder->record_height - holder->record_hb, 
+          text);
   }
   holder->ctx_setup->painter.end();
   
   holder->pinger += 1;
-//  QLabel* lbl = new QLabel();
+#ifdef DBGLABELSHOW
   if (g_lbl == nullptr || g_ctr != holder->recbook.size())
   {
     g_lbl = new QLabel;
@@ -1538,8 +1550,9 @@ int DrawQWidget::_tft_pushRecord(DrawQWidget::TFTholder* holder, const char* tex
   }
   g_lbl->setPixmap(QPixmap::fromImage(*tftar.ctx_img));
   g_lbl->show();
+#endif
 #ifndef BSGLSLOLD
-  return (holder->recbook.size()-1)*holder->limitrows + rid_loc;
+  return (holder->recbook.size()-1)*(holder->limrows*holder->limcols) + rid_loc;
 #else  
   return rid_loc;
 #endif
@@ -1552,9 +1565,9 @@ QImage* DrawQWidget::_tft_allocateImage(int width, int height)
   return img;
 }
 
-bool DrawQWidget::tftRegisterHolding(const QFont& font, int limitlen, int limitcolumns)
+bool DrawQWidget::tftRegisterHolding(const QFont& font, int maxtextlen, int limitcolumns)
 {
-  int next_holder = _tft_allocHolder(font, limitlen, limitcolumns);
+  int next_holder = _tft_allocHolder(font, maxtextlen, limitcolumns);
   if (next_holder == -1)
     return false;
   m_holder_current = next_holder;
@@ -1653,7 +1666,7 @@ const char* DrawQWidget::tftGetText(const tftwriting_t& sp) const
   if (recid == -1)
     return nullptr;
 #ifndef BSGLSLOLD  
-  int rlim = m_holders[sp.hoid]->limitrows;
+  int rlim = _tft_total(sp.hoid);
   return m_holders[sp.hoid]->recbook[recid/rlim].records[recid%rlim].text;
 #else
   return m_holders[sp.hoid]->recbook.records[recid].text;
@@ -1676,7 +1689,7 @@ int DrawQWidget::tftCountRecords(int hoid) const
   if (m_holders[hoid] == nullptr)
     return 0;
 #ifndef BSGLSLOLD  
-  return (m_holders[hoid]->recbook.size()-1)*m_holders[hoid]->limitrows + m_holders[hoid]->recbook.back().recordscount;
+  return (m_holders[hoid]->recbook.size()-1)*_tft_total(hoid) + m_holders[hoid]->recbook.back().recordscount;
 #else
   return m_holders[hoid]->recbook.recordscount;
 #endif
@@ -1695,7 +1708,7 @@ int DrawQWidget::tftRecordsPerArea(int hoid)
   Q_ASSERT(hoid < TFT_HOLDERS);
   if (m_holders[hoid] == nullptr)
     return 0;
-  return m_holders[hoid]->limitrows;
+  return _tft_total(hoid);
 }
 
 #define TFT_GOTO_SLOT_DYNAMIC   Q_ASSERT(hoid < TFT_HOLDERS); \

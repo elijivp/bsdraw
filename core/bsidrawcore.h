@@ -645,6 +645,8 @@ struct tftfraginfo_t
   
   int               varid;
   bool              isstatic;
+  bool              isunrotateable;
+  int               driven_id;
   tftslot_t         slotdata;
 };
 

@@ -1000,52 +1000,83 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                                         coloropts_t::copts(CP_MONO, 0.0f, 0.75f, 0x00666666));
     
     {
-//      pdraw->tftPushDynamic("Hello Wogld!", CR_RELATIVE, 0.5f, 0.5f, 0);
+//      pdraw->tftPushDynamicDA("Hello Wogld!", CR_RELATIVE, 0.5f, 0.5f, 0);
     }
     {
-      QFont bigfont("Ubuntu", 32, 800);
-      pdraw->tftRegisterHolding(bigfont, 10, 2);
+      QFont bigfont("Ubuntu", 6, 200, true);
+      pdraw->tftHoldingRegister(bigfont, 10, 2);
     }
-//    {
-//      QFont smallfont("Ubuntu", 9, 500);
-//      pdraw->tftRegisterHolding(smallfont);
-//    }
+    {
+      QFont smallfont("Ubuntu", 9, 500);
+      pdraw->tftHoldingRegister(smallfont, 6, 8);
+    }
+//    pdraw->tftHoldingRelease();
     {
 //      pdraw->tftPushBack("Second type!", CR_RELATIVE, 0.5f, 0.1f, 0, false);
 ////      pdraw->tftPushBack("ABCDEFGHIJKLMNOPQRSTUVWZYZ", CR_RELATIVE, 0.25f, 0.25f);
 ////      pdraw->tftPushBack("SUPERTEST RECORD", CR_PIXEL, 100, 100);
-      int rpa = pdraw->tftRecordsPerArea(0);
+      int rpa = pdraw->tftRecordsPerArea();
 ////      qDebug()<<rpa;
       const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
       int ctr = 0;
       
-//      pdraw->tftSwitchHolding(0);
+//      pdraw->tftHoldingSwitch(0);
       
 //      pdraw->tftPushBack("Third type!", CR_RELATIVE, 0.5f, 0.8f, 0, false);
       
-//#if 1
-//      static const int TTL = 20;
-//      for (int i=0; i<TTL; i++)
-//        for (int j=0; j<TTL; j++)
-//          pdraw->tftPushDynamic("ETOJOPA", CR_RELATIVE, 0.05f + i/float(TTL-1)*0.9f, 0.05f + j/float(TTL-1)*0.9f, 0);
+#if 0
+      static const int TTL = 20;
+      for (int i=0; i<TTL; i++)
+        for (int j=0; j<TTL; j++)
+          pdraw->tftPushDynamicDA("ETOJOPA", CR_RELATIVE, 0.05f + i/float(TTL-1)*0.9f, 0.05f + j/float(TTL-1)*0.9f, 0);
       
-//      QTimer* tm = new QTimer();
-//      tm->setSingleShot(false);
-//      tm->setInterval(16);
-//      static int tc=0;
-//      QObject::connect(tm, &QTimer::timeout, [=]()
-//      { 
-//        for (int i=0; i<TTL*TTL; i++)
-//          pdraw->tftRotate(1, i, (i+tc)/20.0f*M_PI*2); 
-//        tc += 1;
-//      });
-//      QTimer::singleShot(2000, tm, SLOT(start()));
-//#else
-//      static const int TTL = 20;
-//      for (int i=0; i<TTL; i++)
-//        for (int j=0; j<TTL; j++)
-//          pdraw->tftPushStatic("ETOJOPA", CR_RELATIVE, 0.05f + i/float(TTL-1)*0.9f, 0.05f + j/float(TTL-1)*0.9f, 0);
-//#endif
+      QTimer* tm = new QTimer();
+      tm->setSingleShot(false);
+      tm->setInterval(16);
+      static int tc=0;
+      QObject::connect(tm, &QTimer::timeout, [=]()
+      { 
+        for (int i=0; i<TTL*TTL; i++)
+          pdraw->tftRotate(1, i, (i+tc)/20.0f*M_PI*2); 
+        tc += 1;
+      });
+      QTimer::singleShot(2000, tm, SLOT(start()));
+#elif 0
+      static const int TTL = 20;
+      for (int i=0; i<TTL; i++)
+        for (int j=0; j<TTL; j++)
+          pdraw->tftPushStatic("ETOJOPA", CR_RELATIVE, 0.05f + i/float(TTL-1)*0.9f, 0.05f + j/float(TTL-1)*0.9f, 0);
+#else
+      
+      ovl_visir = pdraw->ovlPushBack(new OActiveCursor());
+      
+      
+      char buffer[32];
+      for (int i=0; i<360; i++)
+      {
+        sprintf(buffer, "%d°", i);
+        pdraw->tftAddRecord(buffer);
+      }
+      
+      int TOT = 12*4;
+      for (int i=0; i<TOT; i++)
+      {
+        float pr = i/float(TOT)*M_PI*2.0f;
+//        pdraw->tftPushDynamicFA(i*360/TOT, CR_RELATIVE, 0.5f + 0.3f*sin(pr), 0.5f + 0.3f*cos(pr));
+        pdraw->tftPushDynamicFA(i*360/TOT, CR_RELATIVE, 0.3f*sin(pr), 0.3f*cos(pr), ovl_visir);
+      }
+      
+      QTimer* tm = new QTimer();
+      tm->setSingleShot(false);
+      tm->setInterval(30);
+      static int tc=0;
+      QObject::connect(tm, &QTimer::timeout, [=]()
+      { 
+        for (int j=0; j<pdraw->tftDynamicsCount(); j++)
+          pdraw->tftSwitchTo(j, (pdraw->tftRecordIndex(j) + 1) % pdraw->tftRecordsCount());
+      } );
+      QTimer::singleShot(2000, tm, SLOT(start()));
+#endif
       
       
       
@@ -1054,16 +1085,16 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //      {
 //        pdraw->tftPushBack("Hello Wogld!", CR_RELATIVE, 0.1f + 0.8f*i/(total-1), 0.5f, i*M_PI*2/float(total-1), true);
 //      }
-      int total = rpa*2 + 3;
-//      int total = 70;
-      for (int i=0; i<total; i++)
-      {
-        char buffer[56];
-        sprintf(buffer, "%c %d", alphabet[i/10 % sizeof(alphabet)], ctr++);
-        if (ctr >= 10)
-          ctr = 0;
-        pdraw->tftPushDynamic(buffer, CR_RELATIVE, 0.1f + 0.8f*i/float(total), 0.1f + 0.8f*i/float(total));
-      }
+//      int total = rpa*2 + 3;
+////      int total = 70;
+//      for (int i=0; i<total; i++)
+//      {
+//        char buffer[56];
+//        sprintf(buffer, "%c %d", alphabet[i/10 % sizeof(alphabet)], ctr++);
+//        if (ctr >= 10)
+//          ctr = 0;
+//        pdraw->tftPushDynamicDA(buffer, CR_RELATIVE, 0.1f + 0.8f*i/float(total), 0.1f + 0.8f*i/float(total));
+//      }
 //      QTimer* tm = new QTimer();
 //      tm->setSingleShot(false);
 //      tm->setInterval(30);
@@ -4689,18 +4720,16 @@ void  MainWindow::changeFeatures(int id)
       else if (MW_TEST == OVERVIEW_BARS_3)
       {
         {
-          int s1 = rand()/float(RAND_MAX)*(draws[i]->tftCountSlots(0)-1);
-          int s2 = rand()/float(RAND_MAX)*(draws[i]->tftCountSlots(0)-1);
-          int r1 = draws[i]->tftGetRecord(draws[i]->tftGetSlot(0, s2));
-          int r2 = draws[i]->tftGetRecord(draws[i]->tftGetSlot(0, s1));
+          int s1 = rand()/float(RAND_MAX)*(draws[i]->tftDynamicsCount()-1);
+          int s2 = rand()/float(RAND_MAX)*(draws[i]->tftDynamicsCount()-1);
+          int r1 = draws[i]->tftRecordIndex(draws[i]->tftGet(0, s2));
+          int r2 = draws[i]->tftRecordIndex(draws[i]->tftGet(0, s1));
           qDebug()<<"Switching: "<<s1<<s2<<r1<<r2;
           draws[i]->tftSwitchTo(0, s1, r1);
           draws[i]->tftSwitchTo(0, s2, r2);
         }
         
         draws[i]->tftMove(0, 0, rand()/float(RAND_MAX)*0.8f, 0.5f);
-        
-        
       }
     }
     else if (id == BTF_UPDATEGEOMETRY)

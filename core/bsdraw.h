@@ -174,12 +174,6 @@ protected:
     int                 _location;
     char                _varname[64];
   };
-  struct msstruct_t
-  {
-    enum  MSTYPE        { MS_SELF, MS_ROOT, MS_DRIVEN };
-    int                 type;
-    union {     int     drivenid;    }  details;
-  };
   enum  REACTOR_BANS    { ORB_KEYBOARD=0x1, ORB_MOUSE=0x2 };
   
   struct overlay_t
@@ -190,7 +184,7 @@ protected:
     unsigned int          prct_bans;
     unsigned int          ponger_reinit;
     unsigned int          ponger_update;
-    msstruct_t            olinks;
+    int                   driven_id;
     
     int                   _location;
     char                  _varname[64];
@@ -208,12 +202,10 @@ protected:
       ponger_reinit = ponger_update = 0;
       _location = -1;
       texcount = 0;
-//      if (uf_count) delete []uf_arr;
       uf_count = ufcount;
-//      if(uf_count) uf_arr = new uniform_located_t[ufcount];
-      olinks.type = msstruct_t::MS_SELF;
+      driven_id = -1;
     }
-    void                _setdriven(int driverid){ olinks.type = msstruct_t::MS_DRIVEN;  olinks.details.drivenid = driverid; }
+    void      _setdriven(int driverid){ driven_id = driverid; }
     overlay_t(): povl(nullptr), orient(OO_INHERITED), prct(nullptr), prct_bans(0), uf_count(0), texcount(0){}
 //    ~overlay_t() { if (uf_count) delete[]uf_arr; }
   }                     m_overlays[OVLLIMIT];
@@ -658,7 +650,7 @@ public:
     ovl--;
     OVL_ORIENTATION c_orient = orient == OO_SAME? m_overlays[ovl].orient : orient;
     if (ovlroot == 0)
-      ovlroot = m_overlays[ovl].olinks.details.drivenid;
+      ovlroot = m_overlays[ovl].driven_id;
     else
       ovlroot--;
     if (ovlroot < 0 || ovlroot >= ovl) return -1;

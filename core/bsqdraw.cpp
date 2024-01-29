@@ -681,7 +681,6 @@ void DrawQWidget::paintGL()
           glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
   #endif
           const tftpage_t&  area = m_holders[t]->recbook;
-          qDebug()<<"IMAGE ASSIGNED!"<<width<<height;
           glTexImage2D(GL_TEXTURE_2D, 0, gl_internalFormat, width, height, 0, gl_format, gl_texture_type, area.ctx_img->constBits());
           
           m_holders[t]->ponger = m_holders[t]->pinger;
@@ -1489,7 +1488,7 @@ int DrawQWidget::_tft_holding_alloc(QFont font, int maxtextlen, int limitcolumns
 #else
       m_holders[i]->recbook.ctx_img = _tft_holding_allocimage( m_holders[i]->record_width*m_holders[i]->limcols,
                                                           m_holders[i]->record_height*m_holders[i]->limrows);
-      m_holders[i]->recbook.records = new record_t[m_holders[i]->limitrows];
+      m_holders[i]->recbook.records = new tftpage_t::record_t[m_holders[i]->c_total];
       m_holders[i]->recbook.recordscount = 0;
 #endif
       return i;
@@ -1547,7 +1546,7 @@ int DrawQWidget::_tft_record_push(DrawQWidget::TFTholder* holder, const char* te
   }
   tftpage_t& tftar = holder->recbook.back();
 #else
-  if (holder->recbook.recordscount >= holder->limitrows)
+  if (holder->recbook.recordscount >= holder->c_total)
     return -1;
   tftpage_t& tftar = holder->recbook;
 #endif
@@ -1577,6 +1576,9 @@ int DrawQWidget::_tft_record_push(DrawQWidget::TFTholder* holder, const char* te
   holder->ctx_setup->painter.end();
   
   holder->pinger += 1;
+  {
+    m_bitmaskPendingChanges |= PC_TFT_TEXTURE;
+  }
 #ifdef DBGLABELSHOW
   if (g_lbl == nullptr || g_ctr != holder->recbook.size())
   {
@@ -1766,7 +1768,7 @@ int DrawQWidget::tftRecordsCount() const
 #ifndef BSGLSLOLD  
   return (m_holders[m_holder_current]->recbook.size()-1)*m_holders[m_holder_current]->c_total + m_holders[m_holder_current]->recbook.back().recordscount;
 #else
-  return m_holders[hoid]->recbook.recordscount;
+  return m_holders[m_holder_current]->recbook.recordscount;
 #endif
 }
 
@@ -1830,7 +1832,7 @@ const char* DrawQWidget::tftText(int sloid) const
 #ifndef BSGLSLOLD  
   return m_holders[m_holder_current]->recbook[recid/m_holders[m_holder_current]->c_total].records[recid%m_holders[m_holder_current]->c_total].text;
 #else
-  return m_holders[sp.hoid]->recbook.records[recid].text;
+  return m_holders[m_holder_current]->recbook.records[recid].text;
 #endif
 }
 
@@ -2312,188 +2314,3 @@ bool BSQSelectorB::reactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, c
   else if (oreact == m_drop)  emit selectionDropped();
   return false;
 }
-
-
-
-
-#if 0     /// Integer calculatons
-  unsigned int singleDimmWidth = sizeHorz();
-  unsigned int singleDimmHeight = sizeVert();
-  unsigned int totalDimmWidth = singleDimmWidth * (m_dataDimmSwitchAB? m_splitterB : m_splitterA);
-  unsigned int totalDimmHeight = singleDimmHeight * (m_dataDimmSwitchAB? m_splitterA : m_splitterB);
-  x -= m_cttrLeft;    y -= m_cttrTop;
-  x *=  c_dpr;        y *=  c_dpr;
-
-  if (isPress[oreact] == false)
-  {
-    if (x < 0)  x = 0; else if (x >= totalDimmWidth) x = int(totalDimmWidth) - 1;
-    if (y < 0)  y = 0; else if (y >= totalDimmHeight) y = int(totalDimmHeight) - 1;
-  }
-  else if (x >= totalDimmWidth || y >= totalDimmHeight)
-    return;
-
-  coordstriumv_t ct;
-  ct.fx_pix = x;
-  ct.fy_pix = y;
-  if (orientationTransposed(m_orient))
-  {
-    ct.fx_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y);
-    ct.fy_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x);
-    ct.fx_rel = singleDimmHeight <=1 ? 0 : float(int(ct.fx_ovl) % singleDimmHeight) / (singleDimmHeight - 1);
-    ct.fy_rel = singleDimmWidth <= 1? 0 : float(int(ct.fy_ovl) % singleDimmWidth) / (singleDimmWidth - 1);
-//    ct.fx_ovl = singleDimmHeight <=1 ? 0 : float(int(ct.fx_ovl) % singleDimmHeight) / singleDimmHeight;
-//    ct.fy_ovl = singleDimmWidth <= 1? 0 : float(int(ct.fy_ovl) % singleDimmWidth) / singleDimmWidth;
-    ct.fx_ovl = ct.fx_rel;
-    ct.fy_ovl = ct.fy_rel;
-  }
-  else
-  {
-    ct.fx_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x);
-    ct.fy_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y);
-    ct.fx_rel = singleDimmWidth <= 1? 0 : float(int(ct.fx_ovl) % singleDimmWidth) / (singleDimmWidth - 1);
-    ct.fy_rel = singleDimmHeight <= 1? 0 : float(int(ct.fy_ovl) % singleDimmHeight) / (singleDimmHeight - 1);
-//    ct.fx_ovl = singleDimmWidth <= 1? 0 : float(int(ct.fx_ovl) % singleDimmWidth) / singleDimmWidth;
-//    ct.fy_ovl = singleDimmHeight <= 1? 0 : float(int(ct.fy_ovl) % singleDimmHeight) / singleDimmHeight;
-    ct.fx_ovl = ct.fx_rel;
-    ct.fy_ovl = ct.fy_rel;
-  }
-#elif 0   /// floating calculations
-  float singleDimmWidth = sizeHorz();
-  float singleDimmHeight = sizeVert();
-  float totalDimmWidth = singleDimmWidth * (m_dataDimmSwitchAB? m_splitterB : m_splitterA);
-  float totalDimmHeight = singleDimmHeight * (m_dataDimmSwitchAB? m_splitterA : m_splitterB);
-  
-  float fx = (x - m_cttrLeft) * c_dpr;
-  float fy = (y - m_cttrTop) * c_dpr;
-  
-  if (isPress[oreact] == false)
-  {
-    if (fx < 0)  fx = 0; else if (fx >= totalDimmWidth) fx = totalDimmWidth - 1;
-    if (fy < 0)  fy = 0; else if (fy >= totalDimmHeight) fy = totalDimmHeight - 1;
-  }
-  else if (fx >= totalDimmWidth || fy >= totalDimmHeight)
-    return;
-
-  coordstriumv_t ct;
-  ct.fx_pix = fx;
-  ct.fy_pix = fy;
-  if (orientationTransposed(m_orient))
-  {
-    ct.fx_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
-    ct.fy_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
-    ct.fx_rel = singleDimmHeight <=1 ? 0 : (ct.fx_ovl - int(ct.fx_ovl/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
-    ct.fy_rel = singleDimmWidth <= 1? 0 : (ct.fy_ovl - int(ct.fy_ovl/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
-    ct.fx_ovl = ct.fx_rel;
-    ct.fy_ovl = ct.fy_rel;
-  }
-  else
-  {
-    ct.fx_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
-    ct.fy_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
-    ct.fx_rel = singleDimmWidth <= 1? 0 : (ct.fx_ovl - int(ct.fx_ovl/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
-    ct.fy_rel = singleDimmHeight <= 1? 0 : (ct.fy_ovl - int(ct.fy_ovl/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
-    ct.fx_ovl = ct.fx_rel;
-    ct.fy_ovl = ct.fy_rel;
-  }
-#endif
-
-    
-#if 0
-    qDebug()<<"CTX: "<<CORR_TEX;
-    if (!havePendOn(PC_TFT_TEXTURE, bitmaskPendingChanges))
-    {
-      qDebug()<<"!hpo";
-      for (unsigned int t=0; t<TFT_HOLDERS; t++)
-      {
-        if (m_holders[t] == nullptr)
-          continue;
-        qDebug()<<m_holders[t]->ponger<<m_holders[t]->pinger<<m_holders[t]->_location;
-  #ifndef BSGLSLOLD
-        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, m_textures[CORR_TEX]);
-  #else
-        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
-        glBindTexture(GL_TEXTURE, m_textures[CORR_TEX]);
-  #endif
-        CORR_TEX++;
-      }
-    }
-    else
-    {
-      qDebug()<<"hpo";
-      for (unsigned int t=0; t<TFT_HOLDERS; t++)
-      {
-        if (m_holders[t] == nullptr)
-          continue;
-        const GLint   gl_internalFormat = GL_RGBA8;
-        const GLenum  gl_format = GL_RGBA;
-        const GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
-        int width = m_holders[t]->record_width;
-        int height = m_holders[t]->record_height * m_holders[t]->limitrows;
-        qDebug()<<m_holders[t]->ponger<<m_holders[t]->pinger<<m_holders[t]->_location;
-      
-  #ifndef BSGLSLOLD
-        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, m_textures[CORR_TEX]);
-        if (m_holders[t]->ponger != m_holders[t]->pinger)
-        {
-          int LAY = m_holders[t]->recbook.size();
-          glTexStorage3D(  GL_TEXTURE_2D_ARRAY, LAY, gl_internalFormat, width, height, LAY);
-          for (int r=0; r<LAY; r++)
-          {
-            const tftpage_t&  area = m_holders[t]->recbook[r];
-            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, r, width, height, 1, gl_format, gl_texture_type, area.ctx_img->constBits());
-          }
-          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-          
-          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-  #if QT_VERSION >= 0x050000
-          glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-          glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
-  #endif
-          glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
-          
-          m_holders[t]->ponger = m_holders[t]->pinger;
-        }
-  #else
-        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
-        glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
-        if (m_holders[t]->ponger != m_holders[t]->pinger)
-        {
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-          
-          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-          
-  #if QT_VERSION >= 0x050000
-          glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-          glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
-  #endif
-          const tftpage_t&  area = m_holders[t]->recbook;
-          qDebug()<<"IMAGE ASSIGNED!"<<width<<height;
-          glTexImage2D(GL_TEXTURE_2D, 0, gl_internalFormat, width, height, 0, gl_format, gl_texture_type, area.ctx_img->constBits());
-          
-          m_holders[t]->ponger = m_holders[t]->pinger;
-        }
-  #endif
-        m_ShaderProgram.setUniformValue(m_holders[t]->_location, CORR_TEX);
-        CORR_TEX++;
-      }
-    }
-#endif      
-      

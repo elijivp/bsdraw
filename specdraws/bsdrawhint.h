@@ -33,11 +33,11 @@ enum  DRAWHINT
   DH_AUTOMARGIN_11=0xB00,  DH_AUTOMARGIN_12=0xC00,  DH_AUTOMARGIN_13=0xD00,  DH_AUTOMARGIN_14=0xE00,  DH_AUTOMARGIN_15=0xF00
 };
 
-
+class DrawGraph;
 class DrawHint: public DrawQWidget
 {
 public:
-  DrawHint(const class DrawGraph* pdg, int portion, int flags=0, ORIENTATION orient=OR_LRTB, unsigned int backgroundColor=0xFFFFFFFF);
+  DrawHint(const DrawGraph* pdg, int portion, int flags=0, ORIENTATION orient=OR_LRTB, unsigned int backgroundColor=0xFFFFFFFF);
   DrawHint(float value, ORIENTATION orient=OR_LRTB, unsigned int backgroundColor=0xFFFFFFFF);
 public:
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;

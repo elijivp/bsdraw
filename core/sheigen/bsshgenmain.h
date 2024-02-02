@@ -47,6 +47,7 @@ protected:
 public:
   SPLITPORTIONS splits() const { return m_split;  }
   unsigned int  written() const { return (unsigned int)m_offset; }
+  const char*   code() const { return m_writebase; }
 public:
   void  push(const char* text);
   void  pushin(const char* text); // guaranteed no SHNL at the end

@@ -26,8 +26,9 @@ public:
 class SheiGeneratorHint_Graph: public ISheiGeneratorHint_Base
 {
 private:
-  unsigned int     m_portion;
-  BSCOLORPOLICY m_cpolicy;
+  unsigned int    m_portion;
+  unsigned int    m_allocatedPortions;
+  BSCOLORPOLICY   m_cpolicy;
 private:
   int     m_automargin;
   DRAWHINT  m_type;
@@ -35,7 +36,8 @@ private:
 public:
   int     m_mindimmA, m_mindimmB;
 public:
-  SheiGeneratorHint_Graph(int flags, unsigned int portion, BSCOLORPOLICY cp): m_portion(portion), m_cpolicy(cp)
+  SheiGeneratorHint_Graph(int flags, unsigned int portion, unsigned int allocatedPortions, BSCOLORPOLICY cp): 
+        m_portion(portion), m_allocatedPortions(allocatedPortions), m_cpolicy(cp)
   {
     m_automargin = (flags >> 8) & 0xF;
     m_type = DRAWHINT(flags & 0xF0);
@@ -70,17 +72,17 @@ public:
     
 //    if (m_allocatedPortions > 1 && (splitPortions & SPFLAG_COLORSPLIT) == 0)
     {
-//      fdc.cintvar("allocatedPortions", (int)m_allocatedPortions);
+      fdc.cintvar("targetPortions", (int)m_allocatedPortions);
       switch (m_cpolicy)
       {
-      case CP_MONO:                 fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i);" SHNL); break;
-      case CP_PAINTED:              fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - VALCLR);" SHNL); break;
-      case CP_PAINTED_GROSS:        fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 1.0 - sqrt(VALCLR));" SHNL); break;
-      case CP_PAINTED_SYMMETRIC:    fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i + 0.5 - abs(VALCLR - 0.5));" SHNL); break;
-      case CP_REPAINTED:            fdc.push("float porc = (paletrange[1] - (paletrange[1] - paletrange[0])*(float(allocatedPortions - 1 - i)/float(allocatedPortions)))*VALCLR;" SHNL); break;
+      case CP_MONO:                 fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(targetPortions)*(targetPortions - 1 - i);" SHNL); break;
+      case CP_PAINTED:              fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(targetPortions)*(targetPortions - 1 - i + 1.0 - VALCLR);" SHNL); break;
+      case CP_PAINTED_GROSS:        fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(targetPortions)*(targetPortions - 1 - i + 1.0 - sqrt(VALCLR));" SHNL); break;
+      case CP_PAINTED_SYMMETRIC:    fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(targetPortions)*(targetPortions - 1 - i + 0.5 - abs(VALCLR - 0.5));" SHNL); break;
+      case CP_REPAINTED:            fdc.push("float porc = (paletrange[1] - (paletrange[1] - paletrange[0])*(float(targetPortions - 1 - i)/float(targetPortions)))*VALCLR;" SHNL); break;
         
       case CP_PALETTE:              fdc.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
-      case CP_PALETTE_SPLIT:        fdc.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])/float(allocatedPortions)*(i + b_coord_ns/ab_fndimms.y);" SHNL); break;
+      case CP_PALETTE_SPLIT:        fdc.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])/float(targetPortions)*(i + b_coord_ns/ab_fndimms.y);" SHNL); break;
       }
     }
 //    else
@@ -188,9 +190,8 @@ public:
 SheiGeneratorHint_Intensity::~SheiGeneratorHint_Intensity(){}
 
 DrawHint::DrawHint(const DrawGraph* pdg, int portion, int flags, ORIENTATION orient, unsigned int backgroundColor):
-  DrawQWidget(DATEX_2D, 
-              new SheiGeneratorHint_Graph(flags, (unsigned int)portion, pdg->coloropts().cpolicy)
-              , 1, orient, SP_NONE, backgroundColor == 0xFFFFFFFF? pdg->coloropts().backcolor : backgroundColor)
+  DrawQWidget(DATEX_2D, new SheiGeneratorHint_Graph(flags, (unsigned int)portion, pdg->allocatedPortions(), pdg->coloropts().cpolicy), 1, 
+                orient, SP_NONE, backgroundColor == 0xFFFFFFFF? pdg->coloropts().backcolor : backgroundColor)
 {
   m_dataDimmA = 1;
   m_dataDimmB = 1;

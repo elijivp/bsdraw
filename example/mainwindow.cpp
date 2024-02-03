@@ -883,10 +883,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     pdrawbars[1] = new DrawBars(pdraws[1], DrawBars::CP_FROM_DRAWBACK);
     {
-      pdrawbars[1]->addContour(AT_LEFT, 0);
-      pdrawbars[1]->addContour(AT_TOP, 0);
-      pdrawbars[1]->addContour(AT_BOTTOM, 0);
-      pdrawbars[1]->addContour(AT_RIGHT, 0);
+      const int BW = 1;
+      pdrawbars[1]->addBorder(AT_LEFT, BW, Qt::white);
+      pdrawbars[1]->addBorder(AT_TOP, BW, Qt::white);
+      pdrawbars[1]->addBorder(AT_BOTTOM, BW, Qt::white);
+      pdrawbars[1]->addBorder(AT_RIGHT, BW, Qt::white);
     }
     pdrawbars[1]->addScalePixstepOwnbounds(AT_TOP, 0, 0.0, SAMPLES-1, SAMPLES);
     pdrawbars[1]->addScaleNativeDrawbounds(AT_LEFT, 0, 0.1f, 1.0f, 21, 32);
@@ -895,10 +896,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     pdrawbars[2] = new DrawBars(pdraws[2], DrawBars::CP_FROM_DRAWBACK);
     {
-      pdrawbars[2]->addContour(AT_LEFT, 0);
-      pdrawbars[2]->addContour(AT_TOP, 0);
-      pdrawbars[2]->addContour(AT_BOTTOM, 0);
-      pdrawbars[2]->addContour(AT_RIGHT, 0);
+      const int BW = 1;
+      pdrawbars[2]->addBorder(AT_LEFT, BW, Qt::white);
+      pdrawbars[2]->addBorder(AT_TOP, BW, Qt::white);
+      pdrawbars[2]->addBorder(AT_BOTTOM, BW, Qt::white);
+      pdrawbars[2]->addBorder(AT_RIGHT, BW, Qt::white);
     }
     pdrawbars[2]->addScaleRollingTapNM(AT_TOP, 0, standard_tap_symbolate<-1>, 4, nullptr, SAMPLES, 20);
     pdrawbars[2]->addScaleNativeDrawbounds(AT_LEFT, 0, 0.1f, 1.0f, 21, 32);
@@ -1132,7 +1134,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     }
     
     pdrawbars->addSpace(AT_BOTTOM, 8);
-    pdrawbars->addContour(AT_BOTTOM);
+    pdrawbars->addBorder(AT_BOTTOM, 1, Qt::white);
     pdrawbars->addScaleNativeOwnbounds(AT_BOTTOM, 0, 0.0f, 1.0f, 0.1f, 0.0f, 32, 40, 9);
     
     
@@ -3550,9 +3552,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
               for (int j=0; j<4; j++)
               {
                 ATTACHED_TO at = ATTACHED_TO(j);
-                pDB->addContour(at, 0, contourMaxZone);
+                pDB->addBorderFG(at, 1, 0, 0);
+//                pDB->addBorder(at, 1, Qt::white);
                 pDB->addEScaleRollingOwnbounds(at, otherFlags | dockerFlags, 64 + 1, 30);
-                pDB->addContour(at, 0, contourMaxZone);
+                pDB->addBorderFG(at, 1, 0, 0);
+//                pDB->addBorder(at, 1, Qt::white);
                 pDB->addScaleRollingOwnbounds(at, otherFlags | dockerFlags | DBF_NOTESINSIDE, 0.0f, 1.0f, SAMPLES);
   //              pDB->addContour(at, 0, contourMaxZone);
                 
@@ -3604,10 +3608,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             DrawBars* pDB = new DrawBars(draws[i], cps[i]);
             if (cps[i] == DrawBars::CP_FROM_DRAWBACK)
             {
-              pDB->addContour(AT_LEFT, 0);
-              pDB->addContour(AT_TOP, 0);
-              pDB->addContour(AT_BOTTOM, 0);
-              pDB->addContour(AT_RIGHT, 0);
+              pDB->addBorderFG(AT_LEFT, 1, 0, 0);
+              pDB->addBorderFG(AT_TOP, 1, 0, 0);
+              pDB->addBorderFG(AT_BOTTOM, 1, 0, 0);
+              pDB->addBorderFG(AT_RIGHT, 1, 0, 0);
             }
               
             

@@ -748,61 +748,96 @@ public:
     filled = false;
   }
   ~MarginElementCached();
+public:
+  void    setColor(QColor color)
+  {
+    c_color = color;
+    c_color_redefined = true;
+  }
 };
 
 MarginElementCached::~MarginElementCached(){}
 
 
-class MarginColoredSpace: public MarginElementCached
+class MarginBorder: public MarginElementCached
 {
-  int     space;
-  QColor  color;
-  QRect   dtrt;
-  bool    useAllZone;
+  int       weight;
+  QColor    color;
+  QRect     dtrt;
+  int       zone_mode;
+  int       segm_pre, segm_post;
 public:
-  MarginColoredSpace(int space, QColor color, bool maxzone=true): MarginElementCached(color), useAllZone(maxzone) { this->space = space; }
-  ~MarginColoredSpace();
-  void  setSpace(int newspace){ space = newspace; }
+  MarginBorder(int weight): MarginElementCached(), zone_mode(0) 
+                                                          { this->weight = weight; segm_pre = segm_post = 0; }
+  MarginBorder(int weight, int spre, int spost): MarginElementCached(), zone_mode(1), segm_pre(spre), segm_post(spost) 
+                                                          { this->weight = weight; }
+  MarginBorder(int weight, QColor color): MarginElementCached(color), zone_mode(0) 
+                                                          { this->weight = weight; segm_pre = segm_post = 0; }
+  MarginBorder(int weight, QColor color, int spre, int spost): MarginElementCached(color), zone_mode(1), segm_pre(spre), segm_post(spost) 
+                                                          { this->weight = weight; }
+  ~MarginBorder();
+  void  setWeight(int newweight){ weight = newweight; }
 protected:
   virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
   {
     if (MarginElementCached::updateArea(area, UPDATEFOR) == false)
       return false;
-    int d1 = useAllZone? 0 : area.segm_pre, d2 = (useAllZone? area.segment_full : area.segment_full - area.segm_post)-1;
+    int d1, d2;
+    if (zone_mode == 0)
+    {
+      d1 = 0;
+      d2 = area.segment_full;
+    }
+    else
+    {
+      d1 = area.segm_pre - segm_pre;
+      d2 = area.segment_full - area.segm_post - 1 + segm_post;
+    }
     if (area.atto == AT_LEFT)
-      dtrt.setCoords(area.atto_end, d1, area.atto_begin, d2);
+      dtrt.setCoords(area.atto_toin, d1, area.atto_from, d2);
     else if (area.atto == AT_RIGHT)
-      dtrt.setCoords(area.atto_begin, d1, area.atto_end, d2);
+      dtrt.setCoords(area.atto_from, d1, area.atto_toin, d2);
     else if (area.atto == AT_TOP)
-      dtrt.setCoords(d1, area.atto_end, d2, area.atto_begin);
+      dtrt.setCoords(d1, area.atto_toin, d2, area.atto_from);
     else if (area.atto == AT_BOTTOM)
-      dtrt.setCoords(d1, area.atto_begin, d2, area.atto_end);
+      dtrt.setCoords(d1, area.atto_from, d2, area.atto_toin);
     return true;
   }
   virtual void  draw(QPainter& painter)
   { 
-    painter.fillRect(dtrt, c_color);
+//    painter.fillRect(dtrt, c_color);
+    if (c_color_redefined)
+      painter.fillRect(dtrt, c_color);
+    else
+      painter.fillRect(dtrt, painter.brush());
   }
   virtual void  sizeHint(ATTACHED_TO, int* atto_size, int* minsegm_main, int* minsegm_pre, int* minsegm_post) const
   {
-    *atto_size = space;
-    *minsegm_main = *minsegm_pre = *minsegm_post = 0;
+    *atto_size = weight;
+    *minsegm_main = 0;
+    if (zone_mode == 0)
+      *minsegm_pre = *minsegm_post = 0;
+    else
+    {
+      *minsegm_pre = segm_pre;
+      *minsegm_post = segm_post;
+    }
   }
 };
-MarginColoredSpace::~MarginColoredSpace(){}
+MarginBorder::~MarginBorder(){}
 
 
-class MarginContour: public MarginElementCached
+class MarginSubscaler: public MarginElementCached
 {
   int     space;
   int     count;
   QRect   dtrt[3];
   bool    useAllZone;
 public:
-  MarginContour(int space=0, bool maxzone=true):  count(space == 0? 1 : 3), useAllZone(maxzone) { this->space = space; }
-  MarginContour(int space, QColor color, bool maxzone=true): MarginElementCached(color), 
+  MarginSubscaler(int space=0, bool maxzone=true):  count(space == 0? 1 : 3), useAllZone(maxzone) { this->space = space; }
+  MarginSubscaler(int space, QColor color, bool maxzone=true): MarginElementCached(color), 
                                                   count(space == 0? 1 : 3), useAllZone(maxzone) { this->space = space; }
-  ~MarginContour();
+  ~MarginSubscaler();
   void  setSpace(int newspace)
   {
     space = newspace;
@@ -818,27 +853,27 @@ protected:
     int nspace = space == 0? 0 : space-1;
     if (area.atto == AT_LEFT)
     {
-      dtrt[0].setCoords(area.atto_begin - nspace, d1, area.atto_begin - nspace, d2);
-      dtrt[1].setCoords(area.atto_begin - nspace, d1, area.atto_begin, d1);
-      dtrt[2].setCoords(area.atto_begin - nspace, d2, area.atto_begin, d2);
+      dtrt[0].setCoords(area.atto_from - nspace, d1, area.atto_from - nspace, d2);
+      dtrt[1].setCoords(area.atto_from - nspace, d1, area.atto_from, d1);
+      dtrt[2].setCoords(area.atto_from - nspace, d2, area.atto_from, d2);
     }
     else if (area.atto == AT_RIGHT)
     {
-      dtrt[0].setCoords(area.atto_begin + nspace, d1, area.atto_begin + nspace, d2);
-      dtrt[1].setCoords(area.atto_begin, d1, area.atto_begin + nspace, d1);
-      dtrt[2].setCoords(area.atto_begin, d2, area.atto_begin + nspace, d2);
+      dtrt[0].setCoords(area.atto_from + nspace, d1, area.atto_from + nspace, d2);
+      dtrt[1].setCoords(area.atto_from, d1, area.atto_from + nspace, d1);
+      dtrt[2].setCoords(area.atto_from, d2, area.atto_from + nspace, d2);
     }
     else if (area.atto == AT_TOP)
     {
-      dtrt[0].setCoords(d1, area.atto_begin - nspace, d2, area.atto_begin - nspace);
-      dtrt[1].setCoords(d1, area.atto_begin - nspace, d1, area.atto_begin);
-      dtrt[2].setCoords(d2, area.atto_begin - nspace, d2, area.atto_begin);
+      dtrt[0].setCoords(d1, area.atto_from - nspace, d2, area.atto_from - nspace);
+      dtrt[1].setCoords(d1, area.atto_from - nspace, d1, area.atto_from);
+      dtrt[2].setCoords(d2, area.atto_from - nspace, d2, area.atto_from);
     }
     else if (area.atto == AT_BOTTOM)
     {
-      dtrt[0].setCoords(d1, area.atto_begin + nspace, d2, area.atto_begin + nspace);
-      dtrt[1].setCoords(d1, area.atto_begin, d1, area.atto_begin + nspace);
-      dtrt[2].setCoords(d2, area.atto_begin, d2, area.atto_begin + nspace);
+      dtrt[0].setCoords(d1, area.atto_from + nspace, d2, area.atto_from + nspace);
+      dtrt[1].setCoords(d1, area.atto_from, d1, area.atto_from + nspace);
+      dtrt[2].setCoords(d2, area.atto_from, d2, area.atto_from + nspace);
     }
     return true;
   }
@@ -858,7 +893,7 @@ protected:
     *minsegm_main = *minsegm_pre = *minsegm_post = 0;
   }
 };
-MarginContour::~MarginContour(){}
+MarginSubscaler::~MarginSubscaler(){}
 
   
 class MarginLabel: public MarginElementCached
@@ -931,15 +966,15 @@ protected:
   {
     if (MarginElementCached::updateArea(area, UPDATEFOR) == false)
       return false;
-    int a1 =  area.atto_end;
-    int a2 = area.atto_begin;
+    int a1 =  area.atto_toin;
+    int a2 = area.atto_from;
     int d = useneispace? area.segment_full : area.segm_main;
     int dd = useneispace? 0 : area.segm_pre + 1;
     
-    const QRect& actualArea = area.atto == AT_LEFT?  QRect(a1, dd, a2 - a1, d) :
-                              area.atto == AT_RIGHT? QRect(a2, dd, a1 - a2, d) :
-                              area.atto == AT_TOP?   QRect(dd, a1, d, a2 - a1) :
-                                                     QRect(dd, a2, d, a1 - a2);
+    const QRect& actualArea = area.atto == AT_LEFT?  QRect(a1, dd, a2 - a1 + 1, d) :
+                              area.atto == AT_RIGHT? QRect(a2, dd, a1 - a2 + 1, d) :
+                              area.atto == AT_TOP?   QRect(dd, a1, d, a2 - a1 + 1) :
+                                                     QRect(dd, a2, d, a1 - a2 + 1);
     
     QPointF textOffsetSign;
     rectAlign(actualArea, alignment/*Qt::AlignLeft | Qt::AlignTop*/, &ttranspoint, &textOffsetSign);
@@ -1036,26 +1071,26 @@ protected:
     {
     case AT_LEFT:
       {
-        mark.anchor = QPoint(area.atto_begin, offs);
-        mark.rect.setCoords(area.atto_begin - (mlenmaxi-1), offs, area.atto_begin, offs);
+        mark.anchor = QPoint(area.atto_from, offs);
+        mark.rect.setCoords(area.atto_from - (mlenmaxi-1), offs, area.atto_from, offs);
         break;
       }
     case AT_RIGHT:
       {
-        mark.anchor = QPoint(area.atto_begin, offs);
-        mark.rect.setCoords(area.atto_begin, offs, area.atto_begin + (mlenmaxi-1), offs);
+        mark.anchor = QPoint(area.atto_from, offs);
+        mark.rect.setCoords(area.atto_from, offs, area.atto_from + (mlenmaxi-1), offs);
         break;
       }
     case AT_TOP:
       {
-        mark.anchor = QPoint(offs, area.atto_begin);
-        mark.rect.setCoords(offs, area.atto_begin - (mlenmaxi-1), offs, area.atto_begin);
+        mark.anchor = QPoint(offs, area.atto_from);
+        mark.rect.setCoords(offs, area.atto_from - (mlenmaxi-1), offs, area.atto_from);
         break;
       }
     case AT_BOTTOM:
       {
-        mark.anchor = QPoint(offs, area.atto_begin);
-        mark.rect.setCoords(offs, area.atto_begin, offs, area.atto_begin + (mlenmaxi-1));
+        mark.anchor = QPoint(offs, area.atto_from);
+        mark.rect.setCoords(offs, area.atto_from, offs, area.atto_from + (mlenmaxi-1));
         break;
       }
     }
@@ -1065,8 +1100,8 @@ protected:
 //      int offs = area.segm_pre + (;
 //      int offs = area.mirrored? area.segm_pre + dimm_main*pos_mark:
 //                                area.segm_pre + dimm_main*(1.0f - pos_mark);
-//      int l1 = area.atto_begin;
-//      int l2 = area.atto_begin + (area.atto == AT_LEFT? -(mlenmaxi-1) : (mlenmaxi-1));
+//      int l1 = area.atto_from;
+//      int l2 = area.atto_from + (area.atto == AT_LEFT? -(mlenmaxi-1) : (mlenmaxi-1));
 //      mark.anchor = QPoint(l1, offs);
 //      if (area.atto == AT_LEFT)
 //        mark.rect.setCoords(l2, offs, l1, offs);
@@ -1077,8 +1112,8 @@ protected:
 //    {
 //      int offs = area.mirrored? area.segm_pre + dimm_main*(1.0f - pos_mark):
 //                                area.segm_pre + dimm_main*pos_mark;
-//      int l1 = area.atto_begin;
-//      int l2 = area.atto_begin + (area.atto == AT_TOP? -(mlenmaxi-1) : (mlenmaxi-1));
+//      int l1 = area.atto_from;
+//      int l2 = area.atto_from + (area.atto == AT_TOP? -(mlenmaxi-1) : (mlenmaxi-1));
 //      mark.anchor = QPoint(offs, l1);
 //      if (area.atto == AT_TOP)
 //        mark.rect.setCoords(offs, l2, offs, l1);
@@ -1551,8 +1586,8 @@ protected:
       {
         int d2 = area.mirrored? area.segm_pre : area.segm_pre + area.segm_main - 1;
         float d3 = area.mirrored? -over_deltapix[o] : over_deltapix[o];
-        int l1 = area.atto_begin;
-        int l2 = area.atto_begin + (area.atto == AT_LEFT? -(over_mlen[o]-1) : (over_mlen[o]-1));
+        int l1 = area.atto_from;
+        int l2 = area.atto_from + (area.atto == AT_LEFT? -(over_mlen[o]-1) : (over_mlen[o]-1));
         for (int i=0; i<over_count[o]; i += over_step[o])
         {
           if (o == 1 && i % minimod == 0)  continue;
@@ -1571,8 +1606,8 @@ protected:
       {
         int d2 = area.mirrored? area.segm_pre + area.segm_main - 1 : area.segm_pre;
         float d3 = area.mirrored? -over_deltapix[o] : over_deltapix[o];
-        int l1 = area.atto_begin;
-        int l2 = area.atto_begin + (area.atto == AT_TOP? -(over_mlen[o]-1) : (over_mlen[o]-1));
+        int l1 = area.atto_from;
+        int l2 = area.atto_from + (area.atto == AT_TOP? -(over_mlen[o]-1) : (over_mlen[o]-1));
         for (int i=0; i<over_count[o]; i += over_step[o])
         {
           if (o == 1 && i % minimod == 0)  continue;
@@ -2382,8 +2417,8 @@ private:
     const int gaps[] = { 3 + mlenmaxi, 3 + mlenmaxi, 0 + mlenmaxi, 0 + mlenmaxi };
     bool  doChangeLabel = false;
     
-    int l1 = area.atto_begin;
-    int l2 = area.atto_begin + (area.atto == AT_LEFT || area.atto == AT_TOP? -(mlenmaxi-1) : (mlenmaxi-1));
+    int l1 = area.atto_from;
+    int l2 = area.atto_from + (area.atto == AT_LEFT || area.atto == AT_TOP? -(mlenmaxi-1) : (mlenmaxi-1));
     bool MVORIG = BAR_VERT[area.atto] ^ !area.mirrored;   // original plus-based formula
     
     if (LL > HL)
@@ -2651,7 +2686,7 @@ private:
     
     if (miniPerMaxi && qAbs(fpxStep)/(miniPerMaxi+1) > 5 && m > 2)
     {
-      l2 = area.atto_begin + (area.atto == AT_LEFT || area.atto == AT_TOP? -(mlenmini-1) : (mlenmini-1));
+      l2 = area.atto_from + (area.atto == AT_LEFT || area.atto == AT_TOP? -(mlenmini-1) : (mlenmini-1));
       float step2 = fpxStep/(miniPerMaxi+1);
       
       float pxMini = fpxFirst;
@@ -2798,9 +2833,11 @@ public:
     if (UF_LEFT != -1 && areaVert.segm_main > 0)
       for (int i=0; i<elems[0].count(); i++)
       {
+        if (elems[0][i].length == 0)
+          continue;
         int apt = ttr[AT_LEFT].c_size - 1 - elems[0][i].offset;
-        areaVert.atto_begin = apt;
-        areaVert.atto_end = apt - elems[0][i].length;
+        areaVert.atto_from = apt;
+        areaVert.atto_toin = apt - elems[0][i].length + 1;
         areaVert.mirrored = elems[0][i].miralg == MIRALG_IGNORE? elems[0][i].miralg == MIRALG_INVERT? true : false : elems[0][i].miralg == MIRALG_INVERT? !c_mirroredVert : c_mirroredVert;
         elems[0][i].pme->updateArea(areaVert, UF_LEFT);
       }
@@ -2810,10 +2847,12 @@ public:
     if (UF_RIGHT != -1 && areaVert.segm_main > 0)
       for (int i=0; i<elems[1].count(); i++)
       {
-//        int apt = c_width - 1 - ttr[AT_RIGHT].c_size + 1 + elems[1][i].offset;    DAFUQ + 1
-        int apt = c_width - 1 - ttr[AT_RIGHT].c_size + elems[1][i].offset;
-        areaVert.atto_begin = apt;
-        areaVert.atto_end = apt + elems[1][i].length;
+        if (elems[1][i].length == 0)
+          continue;
+        int apt = c_width - 1 - ttr[AT_RIGHT].c_size + 1 + elems[1][i].offset;    // DAFUQ + 1
+//        int apt = c_width - 1 - ttr[AT_RIGHT].c_size + elems[1][i].offset;//    DAFUQ -1 ?????? 
+        areaVert.atto_from = apt;
+        areaVert.atto_toin = apt + elems[1][i].length - 1;
         areaVert.mirrored = elems[1][i].miralg == MIRALG_IGNORE? elems[1][i].miralg == MIRALG_INVERT? true : false : elems[1][i].miralg == MIRALG_INVERT? !c_mirroredVert : c_mirroredVert;
         elems[1][i].pme->updateArea(areaVert, UF_RIGHT);
       }
@@ -2828,9 +2867,11 @@ public:
     if (UF_TOP != -1 && areaHorz.segm_main > 0)
       for (int i=0; i<elems[2].count(); i++)
       {
+        if (elems[2][i].length == 0)
+          continue;
         int apt = ttr[AT_TOP].c_size - 1 - elems[2][i].offset;
-        areaHorz.atto_begin = apt;
-        areaHorz.atto_end = apt - elems[2][i].length;
+        areaHorz.atto_from = apt;
+        areaHorz.atto_toin = apt - elems[2][i].length + 1;
         areaHorz.mirrored = elems[2][i].miralg == MIRALG_IGNORE? elems[2][i].miralg == MIRALG_INVERT? true : false : elems[2][i].miralg == MIRALG_INVERT? !c_mirroredHorz : c_mirroredHorz;
         elems[2][i].pme->updateArea(areaHorz, UF_TOP);
       }
@@ -2840,10 +2881,12 @@ public:
     if (UF_BOTTOM != -1 && areaHorz.segm_main > 0)
       for (int i=0; i<elems[3].count(); i++)
       {
-//        int apt = c_height - 1 - ttr[AT_BOTTOM].c_size + 1 + elems[3][i].offset;    DAFUQ + 1
-        int apt = c_height - 1 - ttr[AT_BOTTOM].c_size + elems[3][i].offset;
-        areaHorz.atto_begin = apt;
-        areaHorz.atto_end = apt + elems[3][i].length;
+        if (elems[3][i].length == 0)
+          continue;
+        int apt = c_height - 1 - ttr[AT_BOTTOM].c_size + 1 + elems[3][i].offset;   //    DAFUQ + 1
+//        int apt = c_height - 1 - ttr[AT_BOTTOM].c_size + elems[3][i].offset;    DAFUQ -1 ?? FIND ME BUG
+        areaHorz.atto_from = apt;
+        areaHorz.atto_toin = apt + elems[3][i].length - 1;
         areaHorz.mirrored = elems[3][i].miralg == MIRALG_IGNORE? elems[3][i].miralg == MIRALG_INVERT? true : false : elems[3][i].miralg == MIRALG_INVERT? !c_mirroredHorz : c_mirroredHorz;
         elems[3][i].pme->updateArea(areaHorz, UF_BOTTOM);
       }
@@ -3217,24 +3260,59 @@ MEWSpace* DrawBars::addSpace(ATTACHED_TO atto, int space)
   return (MEWSpace*)addMarginElement(atto, pmarg, new MEWSpace, false, false, 0);
 }
 
-MEWColoredSpace* DrawBars::addSpace(ATTACHED_TO atto, int space, QColor color, bool maxzone)
-{
-  MarginElement*  pmarg = new MarginColoredSpace(space, color, maxzone);
-  return (MEWColoredSpace*)addMarginElement(atto, pmarg, new MEWColoredSpace, false, false, 0);
-}
+//MEWColoredSpace* DrawBars::addSpace(ATTACHED_TO atto, int space, QColor color, bool maxzone)
+//{
+//  MarginElement*  pmarg = new MarginColoredSpace(space, color, maxzone);
+//  return (MEWColoredSpace*)addMarginElement(atto, pmarg, new MEWColoredSpace, false, false, 0);
+//}
 
-MEWSpace* DrawBars::addContour(ATTACHED_TO atto, int space, bool maxzone)
+MEWSpace* DrawBars::addSubscaler(ATTACHED_TO atto, int space, bool maxzone)
 {
-  MarginElement*  pmarg = new MarginContour(space, maxzone);
+  MarginElement*  pmarg = new MarginSubscaler(space, maxzone);
   return (MEWSpace*)addMarginElement(atto, pmarg, new MEWSpace, false, false, 0);
 }
 
-MEWSpace*DrawBars::addContour(ATTACHED_TO atto, int space, QColor color, bool maxzone)
+MEWSpace* DrawBars::addSubscaler(ATTACHED_TO atto, int space, QColor color, bool maxzone)
 {
-  MarginElement*  pmarg = new MarginContour(space, color, maxzone);
+  MarginElement*  pmarg = new MarginSubscaler(space, color, maxzone);
   return (MEWSpace*)addMarginElement(atto, pmarg, new MEWSpace, false, false, 0);
 }
 
+MEWSpace* DrawBars::addBorder(ATTACHED_TO atto, int weight, QColor color, int segm_pre, int segm_post)
+{
+  MarginElement*  pmarg = new MarginBorder(weight, color, segm_pre, segm_post);
+  return (MEWSpace*)addMarginElement(atto, pmarg, new MEWSpace, false, false, 0);
+}
+
+MEWSpace* DrawBars::addBorder(ATTACHED_TO atto, int weight, QColor color)
+{
+  MarginElement*  pmarg = new MarginBorder(weight, color, weight, weight);
+  return (MEWSpace*)addMarginElement(atto, pmarg, new MEWSpace, false, false, 0);
+}
+
+MEWSpace* DrawBars::addBorderFG(ATTACHED_TO atto, int weight, int segm_pre, int segm_post)
+{
+  MarginElement*  pmarg = new MarginBorder(weight, segm_pre, segm_post);
+  return (MEWSpace*)addMarginElement(atto, pmarg, new MEWSpace, false, false, 0);
+}
+
+MEWSpace* DrawBars::addBorderFG(ATTACHED_TO atto, int weight)
+{
+  MarginElement*  pmarg = new MarginBorder(weight, weight, weight);
+  return (MEWSpace*)addMarginElement(atto, pmarg, new MEWSpace, false, false, 0);
+}
+
+MEWSpace* DrawBars::addBorderMAX(ATTACHED_TO atto, int weight, QColor color)
+{
+  MarginElement*  pmarg = new MarginBorder(weight, color);
+  return (MEWSpace*)addMarginElement(atto, pmarg, new MEWSpace, false, false, 0);
+}
+
+MEWSpace* DrawBars::addBorderMAXFG(ATTACHED_TO atto, int weight)
+{
+  MarginElement*  pmarg = new MarginBorder(weight);
+  return (MEWSpace*)addMarginElement(atto, pmarg, new MEWSpace, false, false, 0);
+}
 
 
 
@@ -3246,7 +3324,7 @@ MEWPointer* DrawBars::addPointerRelativeOwnbounds(ATTACHED_TO atto, int flags, f
   return (MEWPointer*)addMarginElement(atto, pmarg, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
 }
 
-MEWPointer*DrawBars::addPointerAbsoluteOwnbounds(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen, float MOD, const char* postfix)
+MEWPointer* DrawBars::addPointerAbsoluteOwnbounds(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen, float MOD, const char* postfix)
 {
   MarginPointer*  pmarg = new MarginPointer(DB_ROUNDING(flags), marklen, pos, true, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   MARG_OPTS_TEXT
@@ -3263,7 +3341,7 @@ MEWPointer* DrawBars::addPointerRelativeDrawbounds(ATTACHED_TO atto, int flags, 
   return (MEWPointer*)addMarginElement(atto, pmarg, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
 }
 
-MEWPointer*DrawBars::addPointerAbsoluteDrawbounds(ATTACHED_TO atto, int flags, float pos, int marklen, float MOD, const char* postfix)
+MEWPointer* DrawBars::addPointerAbsoluteDrawbounds(ATTACHED_TO atto, int flags, float pos, int marklen, float MOD, const char* postfix)
 {
   MarginPointer*  pmarg = new MarginPointer(DB_ROUNDING(flags), marklen, pos, true, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   MARG_OPTS_TEXT
@@ -4130,25 +4208,25 @@ void DrawBars::mouseDoubleClickEvent(QMouseEvent* event)
       {
       case AT_LEFT:
       {
-        if (x > area.atto_end && x < area.atto_begin)
+        if (x >= area.atto_toin && x <= area.atto_from)
           inside = true;
         break;
       }
       case AT_RIGHT:
       {
-        if (x > area.atto_begin && x < area.atto_end)
+        if (x >= area.atto_from && x <= area.atto_toin)
           inside = true;
         break;
       }
       case AT_TOP:
       {
-        if (y > area.atto_end && y < area.atto_begin)
+        if (y >= area.atto_toin && y <= area.atto_from)
           inside = true;
         break;
       }
       case AT_BOTTOM:
       {
-        if (y > area.atto_begin && y < area.atto_end)
+        if (y >= area.atto_from && y <= area.atto_toin)
           inside = true;
         break;
       }
@@ -4502,10 +4580,16 @@ void MEWSpace::setSpace(int space)
   remoteRebound();
 }
 
-void MEWColoredSpace::setSpace(int space)
+void MEWBorder::setWeight(int weight)
 {
-  ((MarginColoredSpace*)m_pme)->setSpace(space);
+  ((MarginBorder*)m_pme)->setWeight(weight);
   remoteRebound();
+}
+
+void MEWBorder::setColor(QColor clr)
+{
+  ((MarginBorder*)m_pme)->setColor(clr);
+  remoteUpdate();
 }
 
 

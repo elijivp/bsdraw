@@ -44,7 +44,7 @@ protected:
   struct uarea_t
   {
     ATTACHED_TO atto;
-    int atto_begin, atto_end;
+    int atto_from, atto_toin;
     int segm_pre, segm_main, segm_post;
     int segment_full;
     bool mirrored;
@@ -52,13 +52,13 @@ protected:
     
     bool operator==(const uarea_t& cmp) const
     {
-      return cmp.atto == atto && cmp.atto_begin == atto_begin && cmp.atto_end == atto_end && 
+      return cmp.atto == atto && cmp.atto_from == atto_from && cmp.atto_toin == atto_toin && 
           cmp.segm_pre == segm_pre && cmp.segm_main == segm_main && cmp.segm_post == segm_post && 
           cmp.mirrored == mirrored && cmp.ex_scaling == ex_scaling;
     }
     bool operator!=(const uarea_t& cmp) const
     {
-      return cmp.atto != atto || cmp.atto_begin != atto_begin || cmp.atto_end != atto_end || 
+      return cmp.atto != atto || cmp.atto_from != atto_from || cmp.atto_toin != atto_toin || 
           cmp.segm_pre != segm_pre || cmp.segm_main != segm_main || cmp.segm_post != segm_post || 
           cmp.mirrored != mirrored || cmp.ex_scaling != ex_scaling;
     }
@@ -120,7 +120,7 @@ public:
 
 
 class MEWLabel;
-class MEWSpace; class MEWColoredSpace;
+class MEWSpace; class MEWBorder;
 class MEWPointer;
 class MEWScaleNN;      // NN - 1 note per 1 mark
 class MEWScaleNM;      // NM notes between marks
@@ -224,10 +224,14 @@ public:
   /// 1. Fixed objects
   MEWLabel*           addLabel(ATTACHED_TO atto, int flags, QString text, Qt::Alignment  align=Qt::AlignCenter, Qt::Orientation orient=Qt::Horizontal/*, float orientAngleGrad=0.0f*/);
   MEWSpace*           addSpace(ATTACHED_TO atto, int space);
-  MEWColoredSpace*    addSpace(ATTACHED_TO atto, int space, QColor color, bool maxzone=false);
-//  MEWSpace*           addStretch(ATTACHED_TO atto, int space, int stepSelf=1, int stepDraw=10);
-  MEWSpace*           addContour(ATTACHED_TO atto, int space=0, bool maxzone=false);
-  MEWSpace*           addContour(ATTACHED_TO atto, int space, QColor color, bool maxzone);
+  MEWSpace*           addSubscaler(ATTACHED_TO atto, int space=0, bool maxzone=false);
+  MEWSpace*           addSubscaler(ATTACHED_TO atto, int space, QColor color, bool maxzone);
+  MEWSpace*           addBorder(ATTACHED_TO atto, int weight, QColor color, int segm_pre, int segm_post);
+  MEWSpace*           addBorder(ATTACHED_TO atto, int weight, QColor color);  // use same segm_pre, segm_post, as weight
+  MEWSpace*           addBorderFG(ATTACHED_TO atto, int weight, int segm_pre, int segm_post); // use foreground color, use explicit outs
+  MEWSpace*           addBorderFG(ATTACHED_TO atto, int weight=1);      // use foreground color, use same segm_pre, segm_post, as weight
+  MEWSpace*           addBorderMAX(ATTACHED_TO atto, int weight, QColor color);   // use all area
+  MEWSpace*           addBorderMAXFG(ATTACHED_TO atto, int weight);   // use all area
   
   
   /// 2. Pointers
@@ -423,12 +427,13 @@ public slots:
   void  setSpace(int space);
 };
 
-class MEWColoredSpace: public MEQWrapper
+class MEWBorder: public MEQWrapper
 {
   Q_OBJECT
   friend class DrawBars;
 public slots:
-  void  setSpace(int space);
+  void  setWeight(int border);
+  void  setColor(QColor clr);
 };
 
 

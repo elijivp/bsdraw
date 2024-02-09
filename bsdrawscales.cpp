@@ -4614,7 +4614,7 @@ void MEWBorder::setColor(QColor clr)
       if (oreact == ORM_LMPRESS || oreact == ORM_LMMOVE)
       {
 //        m_pme->setPosition(((const float*)dataptr)[0], ((const float*)dataptr)[1]);
-        m_pme->setPosition(ct->fx_rel, ct->fy_rel);
+        m_pme->setPosition(ct->fx_01, ct->fy_01);
         if (m_premote)  m_premote->update();
       }
       else if (oreact == ORM_RMPRESS)

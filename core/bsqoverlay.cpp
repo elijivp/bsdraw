@@ -69,7 +69,7 @@ void OQRemitStandard::overlayReactionVisible(bool v)
 bool OQRemitStandard::overlayReactionMouse(OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* /*doStop*/)
 {
   if (orm == ORM_LMPRESS)
-    emit mouseAction(ct->fx_rel, ct->fy_rel);
+    emit mouseAction(ct->fx_01, ct->fy_01);
   return false;
 }
 
@@ -108,7 +108,7 @@ bool OQRemitStandard::overlayReactionMouse(OVL_REACTION_MOUSE orm, const coordst
 
 bool  OQRemitPress_Release::overlayReactionMouse(OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* /*doStop*/)
 {
-  float v = m_horz? ct->fx_rel : ct->fy_rel;
+  float v = m_horz? ct->fx_01 : ct->fy_01;
   if (orm == ORM_LMPRESS)
     emit mouseAction(true, v);
   else if (orm == ORM_LMRELEASE)
@@ -118,7 +118,7 @@ bool  OQRemitPress_Release::overlayReactionMouse(OVL_REACTION_MOUSE orm, const c
 
 bool  OQRemitPressMove_Release::overlayReactionMouse(OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* /*doStop*/)
 {
-  float v = m_horz? ct->fx_rel : ct->fy_rel;
+  float v = m_horz? ct->fx_01 : ct->fy_01;
   if (orm == ORM_LMPRESS || orm == ORM_LMMOVE)
     emit mouseAction(true, v);
   else if (orm == ORM_LMRELEASE)

@@ -61,6 +61,8 @@ public:
   virtual bool  reactionMouse(class DrawQWidget*, OVL_REACTION_MOUSE, const coordstriumv_t*, bool* /*doStop*/){  return false; }
   virtual bool  reactionWheel(class DrawQWidget*, OVL_REACTION_WHEEL, const coordstriumv_t*, bool* /*doStop*/){  return false; }
   virtual bool  reactionKey(class DrawQWidget*, int /*key*/, int /*modifiersOMK*/, bool* /*doStop*/){  return false; }
+  virtual bool  reactionTracking(class DrawQWidget*, const coordstriumv_t*, bool* /*doStop*/){  return false; }
+  virtual bool  reactionLeave(class DrawQWidget*){  return false; }
   virtual ~DrawEventReactor(){}
 };
 
@@ -130,7 +132,7 @@ protected:
   float                 m_overpatternOpacity;
 public:
                     /// Redraw control. Which actions will cause repaint
-  enum  REDRAWBY        { RD_BYDATA, RD_BYSETTINGS, RD_BYOVL_ADDREMOVE, RD_BYOVL_ACTIONS };   // special now used on overlays removing
+  enum  REDRAWBY        { RD_BYDATA, RD_BYSETTINGS, RD_BYOVL_ADDREMOVE, RD_BYINPUTEVENTS };   // special now used on overlays removing
   void                  banAutoUpdate(REDRAWBY rb, bool ban){ if (ban) m_bitmaskUpdateBan |= (1 << (int)rb); else m_bitmaskUpdateBan &= ~(1 << (int)rb); }
   void                  banAutoUpdate(bool ban){ m_bitmaskUpdateBan = ban? 0xFF : 0; }
   bool                  autoUpdateBanned(REDRAWBY rdb) const {  return ((1 << (int)rdb) & m_bitmaskUpdateBan) != 0;  }
@@ -210,7 +212,7 @@ protected:
 //    ~overlay_t() { if (uf_count) delete[]uf_arr; }
   }                     m_overlays[OVLLIMIT];
   unsigned int          m_overlaysCount;
-  DrawEventReactor*           m_proactive;
+  DrawEventReactor*     m_proactive;
   bool                  m_proactiveOwner;
   OvldrawEmpty          m_overlaySingleEmpty;
 public:
@@ -782,7 +784,7 @@ protected:
   {
     m_bitmaskPendingChanges |= reinit? PC_INIT : PC_PARAMSOVL;
     if (pendonly) return;
-    if (!autoUpdateBanned(RD_BYOVL_ACTIONS))  callWidgetUpdate();
+    if (!autoUpdateBanned(RD_BYINPUTEVENTS))  callWidgetUpdate();
   }
   virtual void            innerOverlayReplace(int ovlid, Ovldraw* novl, OVL_ORIENTATION orient, bool owner)
   {

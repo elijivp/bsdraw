@@ -194,6 +194,7 @@ void DrawQWidget::initCollectAndCompileShader()
     for (unsigned int i=0; i<additufm_count; i++)
       fdm.generic_decls_add(additufm_desc[i].type, additufm_desc[i].varname);
   }
+  bool havetft = false;
   {
     for (unsigned int t=0; t<TFT_HOLDERS; t++)
     {
@@ -204,8 +205,10 @@ void DrawQWidget::initCollectAndCompileShader()
       m_holders[t]->_location_c = -1;
       if (m_holders[t]->writings[TFT_DYNAMIC].empty() == false)
         fdm.generic_decls_add_tft_dslots(t, m_holders[t]->writings[TFT_DYNAMIC].size(), m_holders[t]->_varname_i, m_holders[t]->_varname_c);
+      havetft |= m_holders[t]->writings[TFT_STATIC].empty() == false || m_holders[t]->writings[TFT_DYNAMIC].empty() == false;
     }
   }
+  bool haveovl = m_overlaysCount > 0;
   {
     for (unsigned int i=0; i<m_overlaysCount; i++)
     {
@@ -234,6 +237,7 @@ void DrawQWidget::initCollectAndCompileShader()
   {
     fdm.generic_main_process_fsp(m_overpattern, m_overpatternOpacity);
   }
+  if (haveovl)
   {
     if (m_overlaysCount > 0)
     {
@@ -242,6 +246,7 @@ void DrawQWidget::initCollectAndCompileShader()
         fdm.generic_main_process_ovl(m_orient, i, m_overlays[i].driven_id, m_overlays[i].orient);
     }
   }
+  if (havetft)
   {
     fdm.generic_main_prepare_tft();
     for (unsigned int t=0; t<TFT_HOLDERS; t++)
@@ -1102,7 +1107,7 @@ QSize DrawQWidget::sizeHint() const
 
 static const bool isPress[] = { true, false, false, true, true, false, true };
 
-void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
+void  DrawQWidget::_applyMouseEvents(OVL_REACTION_MOUSE oreact, int x, int y)
 {
   dcgeometry_t dch = this->geometryHorz();
   dcgeometry_t dcv = this->geometryVert();
@@ -1123,30 +1128,56 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
   else if (fx >= totalDimmWidth || fy >= totalDimmHeight)
     return;
 
+//  coordstriumv_t ct;
+//  ct.fx_pix = fx;
+//  ct.fy_pix = fy;
+//  if (orientationTransposed(m_orient))
+//  {
+//    ct.fx_01 = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
+//    ct.fy_01 = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
+//    ct.fx_01 = singleDimmHeight <=1 ? 0 : (ct.fx_01 - int(ct.fx_01/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
+//    ct.fy_01 = singleDimmWidth <= 1? 0 : (ct.fy_01 - int(ct.fy_01/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
+//    ct.fx_01 = ct.fx_01;
+//    ct.fy_01 = ct.fy_01;
+//  }
+//  else
+//  {
+//    ct.fx_01 = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
+//    ct.fy_01 = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
+//    ct.fx_01 = singleDimmWidth <= 1? 0 : (ct.fx_01 - int(ct.fx_01/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
+//    ct.fy_01 = singleDimmHeight <= 1? 0 : (ct.fy_01 - int(ct.fy_01/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
+//    ct.fx_01 = ct.fx_01;
+//    ct.fy_01 = ct.fy_01;
+//  }
   coordstriumv_t ct;
   ct.fx_pix = fx;
   ct.fy_pix = fy;
   if (orientationTransposed(m_orient))
   {
-    ct.fx_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
-    ct.fy_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
-    ct.fx_rel = singleDimmHeight <=1 ? 0 : (ct.fx_ovl - int(ct.fx_ovl/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
-    ct.fy_rel = singleDimmWidth <= 1? 0 : (ct.fy_ovl - int(ct.fy_ovl/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
-    ct.fx_ovl = ct.fx_rel;
-    ct.fy_ovl = ct.fy_rel;
+    float tx = !orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy;
+    tx = tx - int(tx/singleDimmHeight)*singleDimmHeight;
+    float ty = orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx;
+    ty = ty - int(ty/singleDimmWidth)*singleDimmWidth;
+    ct.fx_01  = singleDimmHeight <=1 ? 0 : tx / (singleDimmHeight - 1);
+    ct.fy_01  = singleDimmWidth <= 1 ? 0 : ty / (singleDimmWidth - 1);
+    ct.fx_0n1 = singleDimmHeight <=1 ? 0 : tx / singleDimmHeight;
+    ct.fy_0n1 = singleDimmHeight <=1 ? 0 : ty / singleDimmWidth;
   }
   else
   {
-    ct.fx_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
-    ct.fy_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
-    ct.fx_rel = singleDimmWidth <= 1? 0 : (ct.fx_ovl - int(ct.fx_ovl/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
-    ct.fy_rel = singleDimmHeight <= 1? 0 : (ct.fy_ovl - int(ct.fy_ovl/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
-    ct.fx_ovl = ct.fx_rel;
-    ct.fy_ovl = ct.fy_rel;
+    float tx = orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx;
+    tx = tx - int(tx/singleDimmWidth)*singleDimmWidth;
+    float ty = !orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy;
+    ty = ty - int(ty/singleDimmHeight)*singleDimmHeight;
+    ct.fx_01  = singleDimmWidth <= 1? 0 : tx / (singleDimmWidth - 1);
+    ct.fy_01  = singleDimmHeight <= 1? 0 : ty / (singleDimmHeight - 1);
+    ct.fx_0n1 = singleDimmWidth <= 1? 0 : tx / singleDimmWidth;
+    ct.fy_0n1 = singleDimmHeight <= 1? 0 : ty / singleDimmHeight;
   }
   
   bool doStop = false, doUpdate = false;
-  if (m_proactive)  m_proactive->reactionMouse(this, oreact, &ct, &doStop);
+  if (m_proactive)
+    doUpdate |= m_proactive->reactionMouse(this, oreact, &ct, &doStop);
   if (!doStop)
     for (int i=int(m_overlaysCount)-1; i>=0; i--)
       if (m_overlays[i].prct && (m_overlays[i].prct_bans & ORB_MOUSE) == 0)
@@ -1162,60 +1193,112 @@ void  DrawQWidget::store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y)
   if (doUpdate)
   {
     m_bitmaskPendingChanges |= PC_PARAMSOVL;
-    if (!autoUpdateBanned(RD_BYOVL_ACTIONS))
+    if (!autoUpdateBanned(RD_BYINPUTEVENTS))
       callWidgetUpdate();
   }
 }
 
-/*
-//  float fx, fy;
-//  if (orientationTransposed(m_orient))
-//  {
-//    fx = float((!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y) % singleDimmHeight) / singleDimmHeight;
-//    fy = float((orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x) % singleDimmWidth) / singleDimmWidth;
-//  }
-//  else
-//  {
-//    fx = float((orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - x : x) % singleDimmWidth) / singleDimmWidth;
-//    fy = float((!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - y : y) % singleDimmHeight) / singleDimmHeight;
-//  }
-*/
+void  DrawQWidget::_applyMouseTracking(int x, int y)
+{
+  dcgeometry_t dch = this->geometryHorz();
+  dcgeometry_t dcv = this->geometryVert();
+  
+  float singleDimmWidth = dch.length;
+  float singleDimmHeight = dcv.length;
+  float totalDimmWidth = singleDimmWidth * (m_dataDimmSwitchAB? m_splitterB : m_splitterA);
+  float totalDimmHeight = singleDimmHeight * (m_dataDimmSwitchAB? m_splitterA : m_splitterB);
+  
+  float fx = (x*c_dpr - (dch.cttr_pre + dch.viewalign_pre));
+  float fy = (y*c_dpr - (dcv.cttr_pre + dcv.viewalign_pre));
+  
+#if 0
+  if (isPress[oreact] == false)
+  {
+    if (fx < 0)  fx = 0; else if (fx >= totalDimmWidth) fx = totalDimmWidth - 1;
+    if (fy < 0)  fy = 0; else if (fy >= totalDimmHeight) fy = totalDimmHeight - 1;
+  }
+  else if (fx >= totalDimmWidth || fy >= totalDimmHeight)
+    return;
+#else
+  if (fx >= totalDimmWidth || fy >= totalDimmHeight)
+    return;
+#endif
+
+  coordstriumv_t ct;
+  ct.fx_pix = fx;
+  ct.fy_pix = fy;
+  if (orientationTransposed(m_orient))
+  {
+    float tx = !orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy;
+    tx = tx - int(tx/singleDimmHeight)*singleDimmHeight;
+    float ty = orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx;
+    ty = ty - int(ty/singleDimmWidth)*singleDimmWidth;
+    ct.fx_01  = singleDimmHeight <=1 ? 0 : tx / (singleDimmHeight - 1);
+    ct.fy_01  = singleDimmWidth <= 1 ? 0 : ty / (singleDimmWidth - 1);
+    ct.fx_0n1 = singleDimmHeight <=1 ? 0 : tx / singleDimmHeight;
+    ct.fy_0n1 = singleDimmHeight <=1 ? 0 : ty / singleDimmWidth;
+  }
+  else
+  {
+    float tx = orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx;
+    tx = tx - int(tx/singleDimmWidth)*singleDimmWidth;
+    float ty = !orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy;
+    ty = ty - int(ty/singleDimmHeight)*singleDimmHeight;
+    ct.fx_01  = singleDimmWidth <= 1? 0 : tx / (singleDimmWidth - 1);
+    ct.fy_01  = singleDimmHeight <= 1? 0 : ty / (singleDimmHeight - 1);
+    ct.fx_0n1 = singleDimmWidth <= 1? 0 : tx / singleDimmWidth;
+    ct.fy_0n1 = singleDimmHeight <= 1? 0 : ty / singleDimmHeight;
+  }
+  
+  bool doStop;
+  bool doUpdate = m_proactive->reactionTracking(this, &ct, &doStop);
+  if (doUpdate)
+  {
+    m_bitmaskPendingChanges |= PC_PARAMSOVL;
+    if (!autoUpdateBanned(RD_BYINPUTEVENTS))
+      callWidgetUpdate();
+  }
+}
+
+
 
 #define BUTTONCHECK_DOGSHIT(action) Qt::MouseButton btn = event->button(); \
                                     QPoint pos = event->pos(); \
-                                    if (btn == Qt::LeftButton)        store_crd_clk(ORM_LM##action, pos.x(), pos.y()); \
-                                    else if (btn == Qt::RightButton)  store_crd_clk(ORM_RM##action, pos.x(), pos.y());
-
-#define BUTTONCHECK_BULLSHIT(action)  Qt::MouseButtons btn = event->buttons(); \
-                                      QPoint pos = event->pos(); \
-                                      if (btn & Qt::LeftButton)        store_crd_clk(ORM_LM##action, pos.x(), pos.y()); \
-                                      else if (btn & Qt::RightButton)  store_crd_clk(ORM_RM##action, pos.x(), pos.y());
+                                    if (btn == Qt::LeftButton)        _applyMouseEvents(ORM_LM##action, pos.x(), pos.y()); \
+                                    else if (btn == Qt::RightButton)  _applyMouseEvents(ORM_RM##action, pos.x(), pos.y());
 
 
 void DrawQWidget::mousePressEvent(QMouseEvent *event)
 {
   BUTTONCHECK_DOGSHIT(PRESS)
-//  if (event->button() == Qt::LeftButton)  store_crd_clk(ORM_LMPRESS, event->pos().x(), event->pos().y());
-//  else if (event->button() == Qt::RightButton)  store_crd_clk(ORM_RMPRESS, event->pos().x(), event->pos().y());
+//  if (event->button() == Qt::LeftButton)  _applyMouseEvents(ORM_LMPRESS, event->pos().x(), event->pos().y());
+//  else if (event->button() == Qt::RightButton)  _applyMouseEvents(ORM_RMPRESS, event->pos().x(), event->pos().y());
 }
 
 void DrawQWidget::mouseReleaseEvent(QMouseEvent *event)
 {
   BUTTONCHECK_DOGSHIT(RELEASE)
-//  if (event->button() == Qt::LeftButton)  store_crd_clk(ORM_LMRELEASE, event->pos().x(), event->pos().y());
+//  if (event->button() == Qt::LeftButton)  _applyMouseEvents(ORM_LMRELEASE, event->pos().x(), event->pos().y());
 }
 
 void DrawQWidget::mouseMoveEvent(QMouseEvent *event)
 {
-  BUTTONCHECK_BULLSHIT(MOVE)
-//  if (event->buttons() & Qt::LeftButton)  store_crd_clk(ORM_LMMOVE, event->pos().x(), event->pos().y());
-//  store_crd_clk(ORM_LMMOVE, event->pos().x(), event->pos().y());
+  Qt::MouseButtons btn = event->buttons();
+  QPoint pos = event->pos();
+  if (btn & Qt::LeftButton)        _applyMouseEvents(ORM_LMMOVE, pos.x(), pos.y());
+  else if (btn & Qt::RightButton)  _applyMouseEvents(ORM_RMMOVE, pos.x(), pos.y());
+  else if (btn == Qt::NoButton && m_proactive != nullptr)
+    if (hasMouseTracking())
+      _applyMouseTracking(pos.x(), pos.y());
+  
+//  if (event->buttons() & Qt::LeftButton)  _applyMouseEvents(ORM_LMMOVE, event->pos().x(), event->pos().y());
+//  _applyMouseEvents(ORM_LMMOVE, event->pos().x(), event->pos().y());
   //  setMouseTracking(tru!!);
 }
 
 void DrawQWidget::mouseDoubleClickEvent(QMouseEvent* event)
 {
-  if (event->button() == Qt::LeftButton)  store_crd_clk(ORM_LMDOUBLE, event->pos().x(), event->pos().y());
+  if (event->button() == Qt::LeftButton)  _applyMouseEvents(ORM_LMDOUBLE, event->pos().x(), event->pos().y());
 }
 
 #if QT_CONFIG(wheelevent)
@@ -1244,21 +1327,21 @@ void DrawQWidget::wheelEvent(QWheelEvent* event)
   ct.fy_pix = fy;
   if (orientationTransposed(m_orient))
   {
-    ct.fx_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
-    ct.fy_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
-    ct.fx_rel = singleDimmHeight <=1 ? 0 : (ct.fx_ovl - int(ct.fx_ovl/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
-    ct.fy_rel = singleDimmWidth <= 1? 0 : (ct.fy_ovl - int(ct.fy_ovl/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
-    ct.fx_ovl = ct.fx_rel;
-    ct.fy_ovl = ct.fy_rel;
+    ct.fx_01 = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
+    ct.fy_01 = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
+    ct.fx_01 = singleDimmHeight <=1 ? 0 : (ct.fx_01 - int(ct.fx_01/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
+    ct.fy_01 = singleDimmWidth <= 1? 0 : (ct.fy_01 - int(ct.fy_01/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
+    ct.fx_01 = ct.fx_01;
+    ct.fy_01 = ct.fy_01;
   }
   else
   {
-    ct.fx_ovl = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
-    ct.fy_ovl = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
-    ct.fx_rel = singleDimmWidth <= 1? 0 : (ct.fx_ovl - int(ct.fx_ovl/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
-    ct.fy_rel = singleDimmHeight <= 1? 0 : (ct.fy_ovl - int(ct.fy_ovl/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
-    ct.fx_ovl = ct.fx_rel;
-    ct.fy_ovl = ct.fy_rel;
+    ct.fx_01 = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
+    ct.fy_01 = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
+    ct.fx_01 = singleDimmWidth <= 1? 0 : (ct.fx_01 - int(ct.fx_01/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
+    ct.fy_01 = singleDimmHeight <= 1? 0 : (ct.fy_01 - int(ct.fy_01/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
+    ct.fx_01 = ct.fx_01;
+    ct.fy_01 = ct.fy_01;
   }
   ct.angle = event->angleDelta().y()/8.0f;
   ct.delta_x = event->angleDelta().x();
@@ -1281,7 +1364,7 @@ void DrawQWidget::wheelEvent(QWheelEvent* event)
   if (doUpdate)
   {
     m_bitmaskPendingChanges |= PC_PARAMSOVL;
-    if (!autoUpdateBanned(RD_BYOVL_ACTIONS))
+    if (!autoUpdateBanned(RD_BYINPUTEVENTS))
       callWidgetUpdate();
   }
 }
@@ -1310,7 +1393,7 @@ void DrawQWidget::keyPressEvent(QKeyEvent* event)
   if (doUpdate)
   {
     m_bitmaskPendingChanges |= PC_PARAMSOVL;
-    if (!autoUpdateBanned(RD_BYOVL_ACTIONS))
+    if (!autoUpdateBanned(RD_BYINPUTEVENTS))
       callWidgetUpdate();
   }
   QWidget::keyPressEvent(event);
@@ -1322,6 +1405,20 @@ void DrawQWidget::showEvent(QShowEvent* ev)
   if (havePending())
     if (!autoUpdateBanned(RD_BYDATA) || !autoUpdateBanned(RD_BYSETTINGS))
       callWidgetUpdate();
+}
+
+void DrawQWidget::leaveEvent(QEvent* event)
+{
+  bool doUpdate = false;
+  if (m_proactive)
+    doUpdate |= m_proactive->reactionLeave(this);
+  if (doUpdate)
+  {
+    m_bitmaskPendingChanges |= PC_PARAMSOVL;
+    if (!autoUpdateBanned(RD_BYINPUTEVENTS))
+      callWidgetUpdate();
+  }
+  QOpenGLWidget::leaveEvent(event);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1644,6 +1741,14 @@ int DrawQWidget::tftHoldingRelease()
   return m_holder_current;
 }
 
+void DrawQWidget::tftHoldingSetColor(QColor clr)
+{
+  if (m_holder_current == -1)
+    return;
+  m_holders[m_holder_current]->ctx_setup->brush = QBrush(clr);
+  m_holders[m_holder_current]->ctx_setup->pen = QPen(clr);
+}
+
 int DrawQWidget::tftAddRecord(const char* text)
 {
   if (m_holder_current == -1)
@@ -1907,11 +2012,11 @@ bool DrawQWidget::tftSwitchTo(int hoid, int sloid, int recid)
 }
 
 
-void tftdynamic_t::move(float fx, float fy){ pdraw->tftMove(hoid, sloid, fx, fy); }
+bool tftdynamic_t::move(float fx, float fy){ return pdraw->tftMove(hoid, sloid, fx, fy); }
 
-void tftdynamic_t::rotate(float anglerad){ pdraw->tftRotate(hoid, sloid, anglerad); }
+bool tftdynamic_t::rotate(float anglerad){ return pdraw->tftRotate(hoid, sloid, anglerad); }
 
-void tftdynamic_t::switchto(int recid){ pdraw->tftSwitchTo(hoid, sloid, recid); }
+bool tftdynamic_t::switchto(int recid){ return pdraw->tftSwitchTo(hoid, sloid, recid); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2166,7 +2271,7 @@ bool BSQClickerXY::reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE oreact, const 
 {
   if (oreact == ORM_LMPRESS)
   {
-    emit clicked(ct->fx_rel, ct->fy_rel);
+    emit clicked(ct->fx_01, ct->fy_01);
     return true;
   }
   if (oreact == ORM_RMPRESS)
@@ -2211,7 +2316,7 @@ bool BSQMousePoint::reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE oreact, const
   if (oreact == emitset[0] || oreact == emitset[1] || oreact == emitset[2])
   {
     emit active(QPoint(ct->fx_pix, ct->fy_pix));
-    emit active(QPointF(ct->fx_rel, ct->fy_rel));
+    emit active(QPointF(ct->fx_01, ct->fy_01));
     return true;
   }
   return false;

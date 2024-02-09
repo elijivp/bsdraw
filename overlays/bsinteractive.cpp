@@ -64,7 +64,7 @@ bool OActiveCursor::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coords
   {
     if (isVisible() == false)
       setVisible(true, false);
-    setCoordinates(ct->fx_ovl, ct->fy_ovl);
+    setCoordinates(ct->fx_01, ct->fy_01);
     return true;
   }
   else if (oreact == ORM_RMPRESS)
@@ -86,7 +86,7 @@ bool OActiveCursorR::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coord
   {
     if (isVisible() == false)
       setVisible(true, false);
-    setCoordinates(ct->fx_ovl, ct->fy_ovl);
+    setCoordinates(ct->fx_01, ct->fy_01);
     return true;
   }
   else if (oreact == ORM_LMPRESS)
@@ -126,7 +126,7 @@ bool OActiveCursorCarrierL::overlayReactionMouse(OVL_REACTION_MOUSE oreact, cons
       setVisible(true, false);
       m_iop->overlayReactionVisible(true);
     }
-    setCoordinates(ct->fx_ovl, ct->fy_ovl);
+    setCoordinates(ct->fx_01, ct->fy_01);
     result = true;
   }
   else if (oreact == ORM_RMPRESS)
@@ -168,7 +168,7 @@ bool OActiveCursorCarrierL2::overlayReactionMouse(OVL_REACTION_MOUSE oreact, con
       m_iop->overlayReactionVisible(true);
       m_iop2->overlayReactionVisible(true);
     }
-    setCoordinates(ct->fx_ovl, ct->fy_ovl);
+    setCoordinates(ct->fx_01, ct->fy_01);
     result = true;
   }
   else if (oreact == ORM_RMPRESS)
@@ -218,7 +218,7 @@ bool OActiveCursorCarrierL3::overlayReactionMouse(OVL_REACTION_MOUSE oreact, con
       m_iop2->overlayReactionVisible(true);
       m_iop3->overlayReactionVisible(true);
     }
-    setCoordinates(ct->fx_ovl, ct->fy_ovl);
+    setCoordinates(ct->fx_01, ct->fy_01);
     result = true;
   }
   else if (oreact == ORM_RMPRESS)
@@ -274,7 +274,7 @@ bool OActiveCursorCarrierL4::overlayReactionMouse(OVL_REACTION_MOUSE oreact, con
       m_iop3->overlayReactionVisible(true);
       m_iop4->overlayReactionVisible(true);
     }
-    setCoordinates(ct->fx_ovl, ct->fy_ovl);
+    setCoordinates(ct->fx_01, ct->fy_01);
     result = true;
   }
   else if (oreact == ORM_RMPRESS)
@@ -323,7 +323,7 @@ bool OActiveCursorCarrierR::overlayReactionMouse(OVL_REACTION_MOUSE oreact, cons
       setVisible(true, false);
       m_iop->overlayReactionVisible(true);
     }
-    setCoordinates(ct->fx_ovl, ct->fy_ovl);
+    setCoordinates(ct->fx_01, ct->fy_01);
     result = true;
   }
   else if (oreact == ORM_LMPRESS)
@@ -365,7 +365,7 @@ bool OActiveCursorCarrierR2::overlayReactionMouse(OVL_REACTION_MOUSE oreact, con
       m_iop->overlayReactionVisible(true);
       m_iop2->overlayReactionVisible(true);
     }
-    setCoordinates(ct->fx_ovl, ct->fy_ovl);
+    setCoordinates(ct->fx_01, ct->fy_01);
     result = true;
   }
   else if (oreact == ORM_LMPRESS)
@@ -516,15 +516,15 @@ bool        OActiveCell::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const c
   {
     *doStop = true;
     
-    int r = int(ct->fy_rel * m_rows), c = int(ct->fx_rel * m_columns);
+    int r = int(ct->fy_0n1 * m_rows), c = int(ct->fx_0n1 * m_columns);
     
     if (r >= 0 && r < m_rows && c >= 0 && c < m_columns)
     {
       m_selrow = r;
       m_selcolumn = c;
       up = true;
-      m_selfloat[0] = ct->fx_ovl;
-      m_selfloat[1] = ct->fy_ovl;
+      m_selfloat[0] = ct->fx_01;
+      m_selfloat[1] = ct->fy_01;
     }
   }
   else if (oreact == ORM_RMPRESS)

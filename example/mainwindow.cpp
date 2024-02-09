@@ -201,7 +201,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
   int syncscaling=0;
   drawscount = 0;
   unsigned drcount = 1, dccount = 1;
-  DrawBars* drawbars[32];
+  DrawBars* drawbars[128];
   bool  drawbarsstage=false;
   
 #define PRECREATE(dr, dc) drcount = dr; dccount = dc; drawscount = (dr)*(dc); draws = new DrawQWidget*[drawscount];
@@ -1705,6 +1705,31 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
 //    sigtype = ST_MANYSIN;
 //    sp = SP_ONCE;
+  }
+  else if (MW_TEST == FEATURE_SMOOTHINTERP_VARIANTS)
+  {
+    SAMPLES = 20;
+    LINES = 20;
+    PORTIONS = 1;
+    PRECREATE(9, 9);
+    float smooths[] = { -2.0f, -1.0f, -0.5f, -0.3f, 0.0f, 0.3f,  0.5f, 1.0f, 2.0f };
+    float opacitys[] = { -2.0f, -1.0f, -0.5f, -0.3f, 0.0f, 0.3f,  0.5f, 1.0f, 2.0f };
+    graphopts_t  gopts = { GT_LINTERP, DE_QINTERP, 0.0f, 0, 0.0f, 0.5f, PR_STANDARD };
+    for (unsigned int c=0; c<dccount; c++)
+      for (unsigned int i=0; i<drcount; i++)
+      {
+        gopts.smooth = smooths[c];
+        gopts.opacity = opacitys[i];
+        draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gopts);
+        {
+          QString gname = QString("S: %1; O: %2").arg(gopts.smooth, 4, 'f', 1).arg(gopts.opacity, 4, 'f', 1);
+          draws[c*drcount + i]->ovlPushBack(new OTextColored(gname.toUtf8().data(), CR_RELATIVE, 0.1f, 0.05f, 12, 0x00000000, 0x44FFFFFF, 0x00000000));
+        }
+      }
+    sigtype = ST_RAND;
+//    sigtype = ST_SINXX;
+//    sp = SP_SLOWEST;
+//    setMinimumSize(2400, 1000);
   }
   else if (MW_TEST == FEATURE_COLORS_DOTS || MW_TEST == FEATURE_COLORS_INTERP || MW_TEST == FEATURE_COLORS_HISTORGRAM)
   {
@@ -4914,7 +4939,7 @@ void MainWindow::changeBans(bool banned)
     }
     else if (id == BTF_BANUPDATEOVERLAYS)
     {
-      draws[i]->banAutoUpdate(DrawCore::RD_BYOVL_ACTIONS, banned);
+      draws[i]->banAutoUpdate(DrawCore::RD_BYINPUTEVENTS, banned);
     }
   }
 }

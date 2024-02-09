@@ -33,7 +33,8 @@ public:
   {
     fdc.push("mixwell = 0.0;");
     
-    fdc.cfloatvar("specopc", 1.0f - (graphopts.opacity > 1.0f? 1.0f : graphopts.opacity < 0.0f? 0.0f : graphopts.opacity));
+//    fdc.cfloatvar("specopc", 1.0f - (graphopts.opacity > 1.0f? 1.0f : graphopts.opacity < 0.0f? 0.0f : graphopts.opacity));
+    fdc.cfloatvar("specopc", 1.0f - graphopts.opacity);
     
     static const char graph_locals[] = 
                                       "vec2  ab_fndimms = vec2(datadimm_a, datadimm_b);" SHNL
@@ -139,24 +140,8 @@ public:
         }
         else if (graphopts.descaling == DE_SINTERP)
         {
-#if 0
-//                    "float corrector = clamp(float(iy_view[2] - iy_view[1] + (iy_view[1] - iy_view[0]))/((iy_view[2] - iy_view[1]) - (iy_view[1] - iy_view[0])), -4.0, 4.0);"
-//                    "float corrector = clamp(0.5 + 0.5*(iy_view[1] - iy_view[0])/(iy_view[2] - iy_view[1]) + step(abs(iy_view[1] - iy_view[0]), 0.0)*2*sign(iy_view[2] - iy_view[1]), -4.0, 4.0);"
-//                    "float surrector = 1.0 - abs(iy_view[2] - iy_view[1])/float(ab_ibounds.y);"
-//                    "float surrector = 1.0 - step(iy_view[2] - iy_view[1], 5.0)/(iy_view[0] - iy_view[1]);"
-//                    "surrector = mix(1.0, 0.0, surrector);"
-          
-//                    "vec3 fcorr = vec3((fsteps.x - 1.0)/float(ab_iscaler.x)*mix(corrector, 1.0, (fsteps.x - 1.0)/float(ab_iscaler.x)*surrector), "
-//                                      "(fsteps.x      )/float(ab_iscaler.x)*mix(corrector, 1.0, (fsteps.x      )/float(ab_iscaler.x)*surrector), "
-//                                      "(fsteps.x + 1.0)/float(ab_iscaler.x)*mix(corrector, 1.0, (fsteps.x + 1.0)/float(ab_iscaler.x)*surrector)"
-//                                      ");"
-          
-//                      "vec3(ify[1] - fsteps[2], ify[1], ify[1] + fsteps[1]*fcorr[1]),"
-//                "vec3(0.0, 0.0, 0.0),"
-#endif
           fdc.push( 
                     "float corrector = clamp(0.5 + 0.5*(iy_view[1] - iy_view[0])/(iy_view[2] - iy_view[1]) + 0.0*(iy_view[2] - iy_view[1]), -4.0, 4.0);"
-//                    "float surrector = step(ab_iscaler.y*4.0, float(abs(iy_view[2] - iy_view[1])))*step(ab_iscaler.y*4.0, float(abs(iy_view[0] - iy_view[1])))*(step(float(sign((iy_view[2] - iy_view[1])*(iy_view[0] - iy_view[1]))), 0.0));"
                     "float surrector = 1.0;"
                     "vec3 fsteps = vec3(float(immod.x), iy_view[2] - iy_view[1], (iy_view[1] - iy_view[0])/float(ab_iscaler.x));"
                     "vec3 fcorr = vec3((fsteps.x - 1.0)/float(ab_iscaler.x)*mix(1.0, corrector, (1.0 - (fsteps.x - 1.0)/float(ab_iscaler.x))*surrector), "
@@ -169,58 +154,35 @@ public:
                       "vec3(iy_view[1] - fsteps[2], iy_view[1], iy_view[1] + fsteps[1]*fcorr[2]),"
                       "step(fsteps.x, 0.0) );"
                     );
-//          fdc.push( 
-//                    "float corrector = clamp(0.5 + 0.5*(iy_view[1] - iy_view[0])/(iy_view[2] - iy_view[1]) + 0.0*(iy_view[2] - iy_view[1]), -4.0, 4.0);"
-////                    "float surrector = step(ab_iscaler.y*4.0, float(abs(iy_view[2] - iy_view[1])))*step(ab_iscaler.y*4.0, float(abs(iy_view[0] - iy_view[1])))*(step(float(sign((iy_view[2] - iy_view[1])*(iy_view[0] - iy_view[1]))), 0.0));"
-//                    "float surrector = 1.0;"
-//                    "float fcx = (immod.x - ab_iscaler.x/2);"
-////                "float fcx = immod.x;"
-//                    "vec3 fcorr = vec3((fcx - 1.0)/float(ab_iscaler.x)*mix(1.0, corrector, (1.0 - (fcx - 1.0)/float(ab_iscaler.x))*surrector), "
-//                                      "(fcx      )/float(ab_iscaler.x)*mix(1.0, corrector, (1.0 - (fcx      )/float(ab_iscaler.x))*surrector), "
-//                                      "(fcx + 1.0)/float(ab_iscaler.x)*mix(1.0, corrector, (1.0 - (fcx + 1.0)/float(ab_iscaler.x))*surrector)"
-//                                      ");"
-//                    "vec3 fds = vec3((immod.x - ab_iscaler.x/2)/float(ab_iscaler.x)) + vec3(-1.0/ab_iscaler.x, 0.0, 1.0/ab_iscaler.x);"
-//                    "fy_view = vec3("     // fy_view*step(float(ab_iscaler.x), 1.0) + (1 - step(float(ab_iscaler.x), 1.0))*"
-//                                      "mix(iy_view[1] + (iy_view[1] - iy_view[0]*fcorr[0])*fds.x, iy_view[1] + (iy_view[2] - iy_view[1]*fcorr[0])*fds.x, step(0.0, fds.x)),"
-//                                      "mix(iy_view[1] + (iy_view[1] - iy_view[0]*fcorr[1])*fds.y, iy_view[1] + (iy_view[2] - iy_view[1]*fcorr[1])*fds.y, step(0.0, fds.y)),"
-//                                      "mix(iy_view[1] + (iy_view[1] - iy_view[0]*fcorr[2])*fds.z, iy_view[1] + (iy_view[2] - iy_view[1]*fcorr[2])*fds.z, step(0.0, fds.z))"
-//                                  ");"
-//                    );
         }
         else if (graphopts.descaling == DE_QINTERP)
           fdc.push(              
-                "vec3 dd = vec3(iy_view[1] - iy_view[0], iy_view[2] - iy_view[1], iy_view[3] - iy_view[2]);" SHNL
-                "vec3 ss = vec3(sign(dd[0]), sign(dd[1]), sign(dd[2]));" SHNL
-                
-                "vec2 srs = vec2((1.0 + ss[0]*ss[1])/2.0, (1.0 + ss[1]*ss[2])/2.0);" SHNL
-                "ss[1] = ss[1] + (1.0 - abs(ss[1]))*ss[0];" SHNL
-                "ss = vec3(ss[0] + (1.0 - abs(ss[0]))*ss[1], ss[1], ss[2] + (1.0 - abs(ss[2]))*ss[1]);" SHNL
-                "vec2 corrector = vec2(  clamp(0.5 + ss[0]*ss[1]*mix(0.5, 0.15, srs[0])*sqrt(dd[0]*dd[0] + 1.0)/sqrt(dd[1]*dd[1] + 1.0), -3.0, 3.0),"
-                                        "clamp(0.5 - ss[2]*ss[1]*mix(0.5, 0.15, srs[1])*sqrt(dd[2]*dd[2] + 1.0)/sqrt(dd[1]*dd[1] + 1.0), -3.0, 3.0)"
+                    "vec3 dd = vec3(iy_view[1] - iy_view[0], iy_view[2] - iy_view[1], iy_view[3] - iy_view[2]);" SHNL
+                    "vec3 ss = vec3(sign(dd[0]), sign(dd[1]), sign(dd[2]));" SHNL
+                    
+                    "vec2 srs = vec2((1.0 + ss[0]*ss[1])/2.0, (1.0 + ss[1]*ss[2])/2.0);" SHNL
+                    "ss[1] = ss[1] + (1.0 - abs(ss[1]))*ss[0];" SHNL
+                    "ss = vec3(ss[0] + (1.0 - abs(ss[0]))*ss[1], ss[1], ss[2] + (1.0 - abs(ss[2]))*ss[1]);" SHNL
+                    "vec2 corrector = vec2(  clamp(0.5 + ss[0]*ss[1]*mix(0.5, 0.15, srs[0])*sqrt(dd[0]*dd[0] + 1.0)/sqrt(dd[1]*dd[1] + 1.0), -3.0, 3.0),"
+                                            "clamp(0.5 - ss[2]*ss[1]*mix(0.5, 0.15, srs[1])*sqrt(dd[2]*dd[2] + 1.0)/sqrt(dd[1]*dd[1] + 1.0), -3.0, 3.0)"
+                                          ");" SHNL
+    //                "vec2 corrector = vec2( 0.5, 0.5 );" SHNL
+                    "vec3 fsteps = vec3(float(immod.x), iy_view[2] - iy_view[1], (iy_view[1] - iy_view[0])/float(ab_iscaler.x));" SHNL
+                    "vec3 stepF = vec3((fsteps.x - 1.0)/float(ab_iscaler.x), (fsteps.x   )/float(ab_iscaler.x), (fsteps.x + 1.0)/float(ab_iscaler.x));" SHNL
+                    
+                    "dd = vec3(mix(corrector[0], corrector[1], stepF[0]), mix(corrector[0], corrector[1], stepF[1]), mix(corrector[0], corrector[1], stepF[2]));" SHNL
+    
+                    "vec3 fcorr = vec3("
+                        "mix(mix(0.0, dd[0], stepF[0]), mix(dd[0], 1.0, stepF[0]), stepF[0]), " SHNL
+                        "mix(mix(0.0, dd[1], stepF[1]), mix(dd[0], 1.0, stepF[1]), stepF[1]), " SHNL
+                        "mix(mix(0.0, dd[2], stepF[2]), mix(dd[2], 1.0, stepF[2]), stepF[2]) " SHNL
                                       ");" SHNL
-//                "vec2 corrector = vec2( 0.5, 0.5 );" SHNL
-                "vec3 fsteps = vec3(float(immod.x), iy_view[2] - iy_view[1], (iy_view[1] - iy_view[0])/float(ab_iscaler.x));" SHNL
-                "vec3 stepF = vec3((fsteps.x - 1.0)/float(ab_iscaler.x), (fsteps.x   )/float(ab_iscaler.x), (fsteps.x + 1.0)/float(ab_iscaler.x));" SHNL
-                
-                "dd = vec3(mix(corrector[0], corrector[1], stepF[0]), mix(corrector[0], corrector[1], stepF[1]), mix(corrector[0], corrector[1], stepF[2]));" SHNL
-
-                "vec3 fcorr = vec3("
-                    "mix(mix(0.0, dd[0], stepF[0]), mix(dd[0], 1.0, stepF[0]), stepF[0]), " SHNL
-                    "mix(mix(0.0, dd[1], stepF[1]), mix(dd[0], 1.0, stepF[1]), stepF[1]), " SHNL
-                    "mix(mix(0.0, dd[2], stepF[2]), mix(dd[2], 1.0, stepF[2]), stepF[2]) " SHNL
-                                  ");" SHNL
-                
+                    
                     "fy_view = mix(" SHNL
-                      "vec4(iy_view[1] + fsteps[1]*fcorr[0], iy_view[1] + fsteps[1]*fcorr[1], iy_view[1] + fsteps[1]*fcorr[2], 0.0)," SHNL
-//                      "vec3(ify[1] - fsteps[2], ify[1], ify[1] + fsteps[1]*fcorr[1]),"
-                      "vec4(iy_view[1] - fsteps[2], iy_view[1], iy_view[1] + fsteps[1]*fcorr[2], 0.0)," SHNL
-//                "vec3(0.0, 0.0, 0.0),"
-                      "step(fsteps.x, 0.0) );" SHNL
+                          "vec4(iy_view[1] + fsteps[1]*fcorr[0], iy_view[1] + fsteps[1]*fcorr[1], iy_view[1] + fsteps[1]*fcorr[2], 0.0)," SHNL
+                          "vec4(iy_view[1] - fsteps[2], iy_view[1], iy_view[1] + fsteps[1]*fcorr[2], 0.0)," SHNL
+                          "step(fsteps.x, 0.0) );" SHNL
                     );
-        
-          
-
-        
         if (needDots == 3)
           fdc.push( "iy_view = ivec3(floor(fy_view));" SHNL
                     "fy_ns = floor(fy_view/(ab_iscaler.y));" SHNL
@@ -323,8 +285,8 @@ public:
                         "fmix_next = fmix_next + (specsmooth-fmix_rej)*2.0*(0.25-(fmix_next-0.5)*(fmix_next-0.5));" SHNL    /// 2.0 - gap
                         "fmix_prev = mix(fmix_prev, 0.2, (1.0-step(fmix_prev, 0.0))*step(fmix_prev, 0.2));" SHNL    /// 0.2 level for all 0..0.2
                         "fmix_next = mix(fmix_next, 0.2, (1.0-step(fmix_next, 0.0))*step(fmix_next, 0.2));" SHNL    /// 0.2 level for all 0..0.2
-                        "fmix_prev = mix(fmix_prev, 1.0, step(1.0, fmix_prev));" SHNL
-                        "fmix_next = mix(fmix_next, 1.0, step(1.0, fmix_next));" SHNL
+//                        "fmix_prev = mix(fmix_prev, 1.0, step(1.0, fmix_prev));" SHNL
+//                        "fmix_next = mix(fmix_next, 1.0, step(1.0, fmix_next));" SHNL
                         );
 #else                 /// advanced algo with smooth line transition but bad V-effect destroys
             fdc.push( 
@@ -363,7 +325,15 @@ public:
         }
         fdc.push( 
                   "vec3 fhit = vec3(0.0, step(1.0, fmix_self), 0.0);" SHNL
-                  "float mixwellp =  max(fhit.y, specopc*max(max(fmix_prev, fmix_next), fmix_self ));" SHNL
+//                  "float mixwellp = max(fhit.y, specopc*max(max(fmix_prev, fmix_next), fmix_self ));" SHNL
+                  "float mixwellp = max(fhit.y, min(specopc*max(max(fmix_prev, fmix_next), fmix_self), 1.0));" SHNL
+                  
+        
+//              "float fmix_summ = max(max(fmix_prev, fmix_next), fmix_self);" SHNL
+//              "float mixwellp = max(fhit.y, min((specopc + fmix_summ)*step, 1.0));" SHNL
+        
+//            "float mixwellp = max(fhit.y, min((specopc + fmix_summ)*step, 1.0));" SHNL
+
                   "fhit.x = 1.0 - step(mixwellp, 0.0);" SHNL
                   "float VALCLR = b_coord_ns / ab_fndimms.y;" SHNL
                  );
@@ -372,15 +342,6 @@ public:
       } // interp
       else if (isHistogram)
       {
-        //        fdc.push(                 
-        //                  "vec3 fhit = vec3(sign(b_coord_ns - fy_ns[1]), 0.0, 0.0);" SHNL
-        //                  "fhit.xy = vec2(step(fhit.x, 0.0), 1.0 - abs(fhit.x));" SHNL
-        //                  "fhit.z = (1.0 - fhit.x)*specopc*(1.0 - clamp((b_coord_ns-fy_ns[1])/(1.0 + specsmooth*10.0), 0.0, 1.0));" SHNL
-        //                  "float mixwellp = fhit.y + (fhit.x - fhit.y)*specopc + fhit.z;" SHNL
-        //                  "fhit.z = 1.0 - step(fhit.z, 0.0);" SHNL
-                  
-        //                  "float fneiprec = iy_view[1];" SHNL
-        //                  );
         fdc.push(                               
                   "float fmix_max = max(fy_ns[0], fy_ns[2]); " SHNL
                   "float fy_addit = (fmix_max - fy_ns[1])*ab_iscaler.y;" SHNL

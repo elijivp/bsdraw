@@ -91,8 +91,8 @@ bool OSnowflake::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstri
 {
   if (oreact == ORM_LMPRESS)
   {
-    m_click[0] = ct->fx_ovl;
-    m_click[1] = ct->fy_ovl;
+    m_click[0] = ct->fx_01;
+    m_click[1] = ct->fy_01;
     m_click[2] = float(m_counter);
     m_click[3] = 1.0f;
     return true;

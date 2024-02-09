@@ -590,24 +590,48 @@ void FshDrawMain::generic_main_begin(int allocatedPortions, ORIENTATION orient, 
                                     SHGP "ivec2 ab_ibounds = ab_indimms*ab_iscaler;" SHNL;
   memcpy(&m_to[m_offset], fsh_main, sizeof(fsh_main) - 1);  m_offset += sizeof(fsh_main) - 1;
   
+  {
+    const char* rotaters[] = {  "ab_ibounds.xy",  "ab_ibounds.xy",  "ab_ibounds.xy",  "ab_ibounds.xy",
+                                "ab_ibounds.yx",  "ab_ibounds.yx",  "ab_ibounds.yx",  "ab_ibounds.yx" 
+                             };
+    
+    m_offset += msprintf(&m_to[m_offset], SHGP "ivec2 xy_ibounds = %s;" SHNL, rotaters[orient]);
+  }
   
+  static const char fsh_xy[] = SHGP "vec2  xy_coords = vec2(coords.x*0.5 + 0.5, coords.y*0.5 + 0.5);" SHNL; ///   non-oriented non-cell coords
+  memcpy(&m_to[m_offset], fsh_xy, sizeof(fsh_xy) - 1);  m_offset += sizeof(fsh_xy) - 1;
   
   {
-    const char* rotaters[] = {              "",
-                                            "ab_coords.x = 1.0-ab_coords.x;",
-                                            "ab_coords.y = 1.0-ab_coords.y;",
-                                            "ab_coords.xy = vec2(1.0,1.0)-ab_coords.xy;",
-                                            "ab_coords.xy = vec2(1.0-ab_coords.y, ab_coords.x);",
-                                            "ab_coords.xy = ab_coords.yx;",
-                                            "ab_coords.xy = vec2(1.0,1.0)-ab_coords.yx;",
-                                            "ab_coords.xy = vec2(ab_coords.y, 1.0-ab_coords.x);"
-                                  };
+    const char* rotaters[] = {  "xy_coords.xy",
+                                "vec2(1.0 - xy_coords.x, xy_coords.y)",
+                                "vec2(xy_coords.x, 1.0 - xy_coords.y)",
+                                "vec2(1.0 - xy_coords.x, 1.0 - xy_coords.y)",
+                                "vec2(1.0 - xy_coords.y, xy_coords.x)",
+                                "xy_coords.yx",
+                                "vec2(1.0 - xy_coords.y, 1.0 - xy_coords.x)",
+                                "vec2(xy_coords.y, 1.0 - xy_coords.x)"
+                             };
     
     m_offset += msprintf(&m_to[m_offset], 
-                                    SHGP "vec2  xy_coords = vec2(coords.xy*0.5 + vec2(0.5,0.5));" SHNL     ///   non-oriented non-cell coords
-                                    SHGP "vec2  ab_coords = xy_coords;         %s    " SHNL                ///   oriented non-cell coords
-                                    SHGP "vec2  abc_coords = ab_coords;" SHNL                              ///   oriented cell coords
+                                    SHGP "vec2  ab_coords = %s;" SHNL                ///   oriented non-cell coords
+                                    SHGP "vec2  abc_coords = ab_coords;" SHNL        ///   oriented cell coords
                                 , rotaters[orient]);
+    
+//    const char* rotaters[] = {              "",
+//                                            "ab_coords.x = 1.0-ab_coords.x;",
+//                                            "ab_coords.y = 1.0-ab_coords.y;",
+//                                            "ab_coords.xy = vec2(1.0,1.0)-ab_coords.xy;",
+//                                            "ab_coords.xy = vec2(1.0-ab_coords.y, ab_coords.x);",
+//                                            "ab_coords.xy = ab_coords.yx;",
+//                                            "ab_coords.xy = vec2(1.0,1.0)-ab_coords.yx;",
+//                                            "ab_coords.xy = vec2(ab_coords.y, 1.0-ab_coords.x);"
+//                                  };
+    
+//    m_offset += msprintf(&m_to[m_offset], 
+                                    
+//                                    SHGP "vec2  ab_coords = xy_coords;         %s    " SHNL                ///   oriented non-cell coords
+//                                    SHGP "vec2  abc_coords = ab_coords;" SHNL                              ///   oriented cell coords
+//                                , rotaters[orient]);
   }
   if (m_split == 0)
   {
@@ -744,7 +768,7 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft)
     else
       m_offset += msprintf(&m_to[m_offset],       SHGP "tft_slot.xy = ovl_pos_%d.xy + tft_slot.xy*%s;" SHNL, tft.driven_id, cr_to_px_str(tft.slotdata.cr));
     
-    m_offset += msprintf(&m_to[m_offset],       SHGP "vec2  rc = ab_coords*ab_ibounds - tft_slot.xy + vec2(0.499);" SHNL);
+    m_offset += msprintf(&m_to[m_offset],       SHGP "vec2  rc = xy_coords*xy_ibounds - tft_slot.xy + vec2(0.499);" SHNL);
     
 #ifdef TFT_OPTIMISE
     const float lenmax = tft.isstatic ? sqrt(tft.textwidth*tft.textwidth/4.0f + tft.recordheight*tft.recordheight/4.0f) :

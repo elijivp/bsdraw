@@ -83,8 +83,8 @@ bool ODropPoints::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstr
     }
     else
       ptCount++;
-    ptdrops[placeTo].x = ct->fx_ovl;
-    ptdrops[placeTo].y = ct->fy_ovl;
+    ptdrops[placeTo].x = ct->fx_01;
+    ptdrops[placeTo].y = ct->fy_01;
     return true;
   }
   return false;
@@ -203,17 +203,17 @@ bool ODropLine::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriu
   {
     if (ptCount == ptCountMax)
       ptCount--;
-    ptdrops[ptCount++] = ovlcoords_t(ct->fx_ovl, ct->fy_ovl);
+    ptdrops[ptCount++] = ovlcoords_t(ct->fx_01, ct->fy_01);
     result = true;
   }
   else if (oreact == ORM_LMMOVE && followMoving)
   {
     if (ptCount == 1 && followMoving)
-      ptdrops[ptCount++] = ovlcoords_t(ct->fx_ovl, ct->fy_ovl);
+      ptdrops[ptCount++] = ovlcoords_t(ct->fx_01, ct->fy_01);
     else
     {
-      ptdrops[ptCount-1].x = ct->fx_ovl;
-      ptdrops[ptCount-1].y = ct->fy_ovl;
+      ptdrops[ptCount-1].x = ct->fx_01;
+      ptdrops[ptCount-1].y = ct->fy_01;
     }
     result = true;
   }
@@ -255,9 +255,9 @@ bool OBrush::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coordstriumv_
     else
     {
 //      if (fabs(c_x - ct->fx_pix) > 1.0f || fabs(c_y - ct->fy_pix) > 1.0f)
-//      if (fabs(ct->fx_ovl - ct->fy_ovl) >= 0.001f)
+//      if (fabs(ct->fx_01 - ct->fy_01) >= 0.001f)
       {
-        ptdrops[ptCount++] = ovlcoords_t(ct->fx_ovl, ct->fy_ovl);
+        ptdrops[ptCount++] = ovlcoords_t(ct->fx_01, ct->fy_01);
         result = true;
       }
     }
@@ -292,7 +292,7 @@ bool OSelectorReaction::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const co
   {
     if (m_dimmsready)
     {
-      ovlcoords_t clk(ct->fx_ovl, ct->fy_ovl);
+      ovlcoords_t clk(ct->fx_01, ct->fy_01);
       if (oreact == ORM_LMPRESS)
       {
         if (inrect(clk))
@@ -316,7 +316,7 @@ bool OSelectorReaction::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const co
     if (oreact == ORM_LMPRESS || oreact == ORM_RMPRESS)
     {
       m_phase = oreact == ORM_LMPRESS? 1 : 0;
-      m_xy = ovlcoords_t(ct->fx_ovl, ct->fy_ovl);
+      m_xy = ovlcoords_t(ct->fx_01, ct->fy_01);
       m_dxy = m_xy;
       m_wh = ovldimms2_t(0.0f, 0.0f);
       m_dimmsready = false;
@@ -326,7 +326,7 @@ bool OSelectorReaction::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const co
     {
       if (m_phase == 1)
       {
-        ovlcoords_t pdt(ct->fx_ovl, ct->fy_ovl);
+        ovlcoords_t pdt(ct->fx_01, ct->fy_01);
         m_wh.w = pdt.x - m_dxy.x;  if (m_wh.w < 0 && !m_neg){  m_wh.w = -m_wh.w; m_xy.x = pdt.x; }  //if (m_wh[0] < 0) m_wh[0] = -m_wh[0];
         m_wh.h = pdt.y - m_dxy.y;  if (m_wh.h < 0 && !m_neg){  m_wh.h = -m_wh.h; m_xy.y = pdt.y; } //if (m_wh[1] < 0) m_wh[1] = -m_wh[1];
         result = true;
@@ -450,7 +450,7 @@ bool OSegmentReaction::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coo
   if (oreact == ORM_LMPRESS || oreact == ORM_RMPRESS)
   {
     m_phase = oreact == ORM_LMPRESS? 1 : 0;
-    m_xy = ovlcoords_t(ct->fx_ovl, ct->fy_ovl);
+    m_xy = ovlcoords_t(ct->fx_01, ct->fy_01);
     m_dxy = m_xy;
     m_wh = ovldimms2_t(0.0f, 0.0f);
     m_dimmsready = false;
@@ -460,7 +460,7 @@ bool OSegmentReaction::overlayReactionMouse(OVL_REACTION_MOUSE oreact, const coo
   {
     if (m_phase == 1)
     {
-      ovlcoords_t pdt(ct->fx_ovl, ct->fy_ovl);
+      ovlcoords_t pdt(ct->fx_01, ct->fy_01);
       m_wh.w = pdt.x - m_dxy.x;  //if (m_wh.w < 0/* && !m_neg*/){  m_wh.w = -m_wh.w; m_xy.x = pdt.x; }  //if (m_wh[0] < 0) m_wh[0] = -m_wh[0];
       m_wh.h = pdt.y - m_dxy.y;  //if (m_wh.h < 0/* && !m_neg*/){  m_wh.h = -m_wh.h; m_xy.y = pdt.y; } //if (m_wh[1] < 0) m_wh[1] = -m_wh[1];
       result = true;

@@ -60,9 +60,9 @@ class   tftdynamic_t
   tftdynamic_t(DrawQWidget* _pdraw, int hid, int sid): pdraw(_pdraw), hoid(hid), sloid(sid){}
 public:
   tftdynamic_t(const tftdynamic_t& cpy): pdraw(cpy.pdraw), hoid(cpy.hoid), sloid(cpy.sloid) {}
-  void    move(float fx, float fy);
-  void    rotate(float anglerad);
-  void    switchto(int recid);
+  bool    move(float fx, float fy);
+  bool    rotate(float anglerad);
+  bool    switchto(int recid);
 };
 ////////////////
 
@@ -222,8 +222,10 @@ protected:
 //  virtual void resizeEvent(QResizeEvent *event); no need. we afterreact in resizeGL method
   virtual void keyPressEvent(QKeyEvent *event);
   virtual void showEvent(QShowEvent*);
+  virtual void leaveEvent(QEvent *event);
 private:
-  void  store_crd_clk(OVL_REACTION_MOUSE oreact, int x, int y);
+  void  _applyMouseEvents(OVL_REACTION_MOUSE oreact, int x, int y);
+  void  _applyMouseTracking(int x, int y);
 public:
   virtual  int    scrollValue() const;
   unsigned int    lmSize() const;
@@ -366,6 +368,8 @@ public:
   int             tftHoldingRegister(const QFont& font, int maxtextlen=TFT_TEXTMAXLEN, int limitcolumns=1);
   bool            tftHoldingSwitch(int hoid);
   int             tftHoldingRelease();
+  void            tftHoldingSetColor(QColor clr);
+  
                   /// Every new record has incremented index
   int             tftAddRecord(const char* text);
   int             tftAddRecords(int count, const char* text[]);   // convert texts into records, returns first record id

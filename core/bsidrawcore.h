@@ -526,11 +526,18 @@ enum  OVL_REACTION_WHEEL {
 };
 enum  OVL_MODIFIER_KEYBOARD {  OMK_NONE=0, OMK_SHIFT=2, OMK_CONTROL=4, OMK_ALT=8 };
 
+//struct coordstriumv_t
+//{
+//  float   fx_ovl, fy_ovl;   // coords [0..1)    (for overlay evals)
+//  float   fx_pix, fy_pix;   // screen coords -margins *devicePixelRatio
+//  float   fx_rel, fy_rel;   // coords [0..1]    (for strict calculations)
+//};
+
 struct coordstriumv_t
 {
-  float   fx_ovl, fy_ovl;   // coords [0..1)    (for overlay evals)
-  float   fx_pix, fy_pix;   // screen coords -margins *devicePixelRatio
-  float   fx_rel, fy_rel;   // coords [0..1]    (for strict calculations)
+  float   fx_pix, fy_pix;               // screen coords -margins *devicePixelRatio
+  float   fx_01,  fy_01;                // coords [0..1]    (for area calculations)
+  float   fx_0n1, fy_0n1;               // coords [0..1)    (for scaled calculations)
 };
 
 struct coordstriumv_ex_t: coordstriumv_t

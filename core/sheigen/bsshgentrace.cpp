@@ -390,6 +390,18 @@ void FshOVCoordsConstructor::param_for_carr_begin(const char* name, const char* 
   m_paramsctr += 2;
 }
 
+void FshOVCoordsConstructor::param_for_carr_double_begin(const char* name1, const char* name2, const char* arrlengthname)
+{
+  m_offset += msprintf(&m_to[m_offset],   "int %s = ovlprm%d_%d;" SHNL
+                                          "for (int i=0; i<%s; i++){" SHNL
+                                            "%s %s = ovlprm%d_%d[i];" SHNL
+                                            "%s %s = ovlprm%d_%d[i];" SHNL,  
+                                                      arrlengthname, m_overlay, m_paramsctr + 2, arrlengthname, 
+                                              glsl_types[loc_uniforms[m_paramsctr + 0].type], name1, m_overlay, m_paramsctr + 0, 
+                                              glsl_types[loc_uniforms[m_paramsctr + 1].type], name2, m_overlay, m_paramsctr + 1);
+  m_paramsctr += 3;
+}
+
 void FshOVCoordsConstructor::param_for_end() {  m_offset += msprintf(&m_to[m_offset], "}");  }
 
 void FshOVCoordsConstructor::goto_normed()

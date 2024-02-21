@@ -71,7 +71,7 @@ void ORecLine::increment(bool activate, bool update)
 {
   if (activate)
   {
-    for (int i=LAST-1; i>0; i--)
+    for (int i=LAST; i>0; i--)    //for (int i=LAST-1; i>0; i--)????????????????
       links[i] = links[i-1];
     links[0] = ctr;
   }

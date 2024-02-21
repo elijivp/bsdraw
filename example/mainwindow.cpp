@@ -6,6 +6,7 @@
 #include <math.h>
 #include "palettes/bspalettes_std.h"
 #include "palettes/bspalettes_adv.h"
+#include "palettes/bspalettes_spec.h"
 #include "palettes/bspalettes_rgb.h"
 
 #include <omp.h>
@@ -186,6 +187,38 @@ QString palette2string(const QString& name, const T& pptr, unsigned int clc)
   result += QString("const PaletteConstBWD<sizeof(%1) / sizeof(unsigned int)>   %2(%1);").arg(nc).arg(pci) + "\n";
   return result;
 }
+
+
+class PaletteTArray: public IPalette
+{
+protected:
+  const unsigned int*   m_palbuf;
+  unsigned int          m_count;
+  bool                  m_discretion;
+  bool                  m_owner;
+public:
+  virtual void    paletteData(const void** clrarr, unsigned int* count, unsigned int* format) const
+  {
+    *clrarr = (const void*)m_palbuf;
+    *count = m_count;
+    *format = FMT_UNSIGNED_BYTE;
+  }
+  virtual unsigned int  first() const {  return m_palbuf[0];  }
+  virtual unsigned int  last() const {  return m_palbuf[m_count-1];  }
+  virtual bool          paletteDiscretion() const { return m_discretion; }
+  unsigned int    operator[](int i) const {  return m_palbuf[i]; }
+  unsigned int    count() const {  return m_count; }
+  void            setDiscretion(bool _discretion){  m_discretion = _discretion; }
+public:
+  template <typename T>
+  PaletteTArray(const T& palette): m_owner(false)
+  {
+    unsigned int format;
+    palette->paletteData((const void**)&m_palbuf, &m_count, &format);
+    Q_ASSERT(format == FMT_UNSIGNED_BYTE);
+  }
+  ~PaletteTArray(){}
+};
 
 
 #define TESTTRASS
@@ -2127,7 +2160,20 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     static PalettePArray palettes[2] = { PalettePArray(colors[0], clc, false), PalettePArray(colors[1], clc, false) };
     const IPalette* pptr[2] = { &palettes[0], &palettes[1] };
     PORTIONS = 2;
-#else
+    
+    SAMPLES = 100;
+    LINES = 100;
+    PRECREATE(1, 2);
+    for (int i=0; i < drawscount; i++)
+    {
+      draws[i] = new DrawIntensity(SAMPLES, LINES, PORTIONS);
+//      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(0.0f, DE_NONE), coloropts_t::copts(CP_PALETTE, 1.0f, 1.0f, 0x00000000));
+      draws[i]->setScalingLimitsSynced(6);
+      draws[i]->setClearByPalette();
+      draws[i]->setDataPalette(pptr[i]);
+      draws[i]->setDataPaletteDiscretion(true);
+    }
+#elif 1
     static const int clc = 172;
     static PaletteBORDS<clc> brd0(0xFFFFFF);
     static PaletteBORDS<clc> brd1(0xFFFFFF);
@@ -2174,8 +2220,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     const IPalette* pptr[2] = { &brd0, &brd1 };
     PORTIONS = 1;
-#endif
-    
     
     SAMPLES = 100;
     LINES = 100;
@@ -2189,6 +2233,104 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       draws[i]->setDataPalette(pptr[i]);
       draws[i]->setDataPaletteDiscretion(true);
     }
+#else
+        
+//    static const PaletteTArray ppals[] = { 
+//            PaletteTArray(&palette_superblue_a_1), 
+//            PaletteTArray(&palette_superblue_a_2), 
+//            PaletteTArray(&palette_superblue_a_3),
+//            PaletteTArray(&palette_superblue_a_4),
+//            PaletteTArray(&palette_superblue_a_5),
+//            PaletteTArray(&palette_superblue_a_6),
+//            PaletteTArray(&palette_superblue_a_7),
+//            PaletteTArray(&palette_superblue_a_8),
+//            PaletteTArray(&palette_superblue_a_9),
+//            PaletteTArray(&palette_superblue_a_10),
+//            PaletteTArray(&palette_superblue_a_11),
+//            PaletteTArray(&palette_superblue_a_12),
+//            PaletteTArray(&palette_superblue_a_13),
+//            PaletteTArray(&palette_superblue_a_14),
+//            PaletteTArray(&palette_superblue_a_15),
+//    };    
+    
+//    static const PaletteTArray ppals[] = { 
+//            PaletteTArray(&palette_superblue_b_1), 
+//            PaletteTArray(&palette_superblue_b_2), 
+//            PaletteTArray(&palette_superblue_b_3),
+//            PaletteTArray(&palette_superblue_b_4),
+//            PaletteTArray(&palette_superblue_b_5),
+//            PaletteTArray(&palette_superblue_b_6),
+//            PaletteTArray(&palette_superblue_b_7),
+//            PaletteTArray(&palette_superblue_b_8),
+//            PaletteTArray(&palette_superblue_b_9),
+//            PaletteTArray(&palette_superblue_b_10),
+//            PaletteTArray(&palette_superblue_b_11),
+//            PaletteTArray(&palette_superblue_b_12),
+//            PaletteTArray(&palette_superblue_b_13),
+//            PaletteTArray(&palette_superblue_b_14),
+//            PaletteTArray(&palette_superblue_b_15),
+//            PaletteTArray(&palette_superblue_b_16),
+//            PaletteTArray(&palette_superblue_b_17),
+//    };
+    
+//    static const PaletteTArray ppals[] = { 
+//            PaletteTArray(&palette_superblue_c_1), 
+//            PaletteTArray(&palette_superblue_c_2), 
+//            PaletteTArray(&palette_superblue_c_3), 
+//            PaletteTArray(&palette_superblue_c_4), 
+//            PaletteTArray(&palette_superblue_c_5), 
+//            PaletteTArray(&palette_superblue_c_6),
+//            PaletteTArray(&palette_superblue_c_7),
+//            PaletteTArray(&palette_superblue_c_8),
+//            PaletteTArray(&palette_superblue_c_9),
+//            PaletteTArray(&palette_superblue_c_10), 
+//            PaletteTArray(&palette_superblue_c_11),
+//            PaletteTArray(&palette_superblue_c_12),
+//            PaletteTArray(&palette_superblue_c_13),
+//            PaletteTArray(&palette_superblue_c_14),
+//            PaletteTArray(&palette_superblue_c_15),
+//    };
+    
+    static const int PALSCOUNT = sizeof(ppals)/sizeof(PaletteTArray);
+    
+    /// RECORD!
+//    const char* title_letter = "c";
+//    for (int p=0; p<sizeof(ppals)/sizeof(ppals[0]); p++)
+//    {
+//      const int clc = ppals[p].count();
+//      {
+//        QImage img(clc, 16, QImage::Format_RGB888);
+//        for (int j=0; j<16; j++)
+//        {
+//          myrgb_t*  bits = (myrgb_t*)img.scanLine(j);
+//          for (int i=0; i<clc; i++)
+//          {
+//            bits[i] = cast(ppals[p][i]);
+//          }
+//        }
+//        img = img.scaled(clc*2, 16);
+//        img.save(QString("superblue_%1_%2.png").arg(title_letter).arg(1+p), nullptr);
+//      }
+//    }
+    
+    PORTIONS = 1;
+    SAMPLES = 100;
+    LINES = 1;
+    
+    PRECREATE(PALSCOUNT, 1);
+    for (int i=0; i < drawscount; i++)
+    {
+      draws[i] = new DrawIntensity(SAMPLES, LINES, PORTIONS);
+//      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(0.0f, DE_NONE), coloropts_t::copts(CP_PALETTE, 1.0f, 1.0f, 0x00000000));
+      draws[i]->setScalingLimitsA(8);
+      draws[i]->setScalingLimitsB(12);
+      draws[i]->setClearByPalette();
+      draws[i]->setDataPalette(&ppals[i]);
+      draws[i]->setDataPaletteDiscretion(true);
+    }
+#endif
+    
+    
 //    sigtype = ST_ONE;
     sp = SP_ONCE;
   }
@@ -4072,16 +4214,24 @@ void MainWindow::generateData()
 //          testbuf2D[p*DSAMPLES*LINES + j*DSAMPLES + i] = i/float(DSAMPLES-1) + j/float(LINES-1);
 //        }
     
-    for (int j=0; j<LINES; j++)
-      for (int i=0; i<DSAMPLES; i++)
-      {
-        testbuf2D[0*DSAMPLES*LINES + j*DSAMPLES + i] = i/float(DSAMPLES-1);
-      }
-    for (int j=0; j<LINES; j++)
-      for (int i=0; i<DSAMPLES; i++)
-      {
-        testbuf2D[1*DSAMPLES*LINES + j*DSAMPLES + i] = j/float(LINES-1);
-      }
+    if (PORTIONS > 0)
+    {
+      for (int j=0; j<LINES; j++)
+        for (int i=0; i<DSAMPLES; i++)
+        {
+          testbuf2D[0*DSAMPLES*LINES + j*DSAMPLES + i] = i/float(DSAMPLES-1);
+        }
+    }
+    if (PORTIONS > 1)
+    {
+      for (int j=0; j<LINES; j++)
+        for (int i=0; i<DSAMPLES; i++)
+        {
+          testbuf2D[1*DSAMPLES*LINES + j*DSAMPLES + i] = j/float(LINES-1);
+        }
+    }
+    if (PORTIONS > 2)
+      Q_ASSERT(false);
     
     for (unsigned int i=0; i<drawscount; i++)
     {

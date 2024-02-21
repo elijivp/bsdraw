@@ -453,40 +453,1886 @@ const unsigned int colors_rgb_BY_09[] = {
 const PaletteConstFWD<sizeof(colors_rgb_BY_09) / sizeof(unsigned int)>   paletteBY_09(colors_rgb_BY_09);
 const PaletteConstBWD<sizeof(colors_rgb_BY_09) / sizeof(unsigned int)>   paletteBY_09_inv(colors_rgb_BY_09);
 
+/////////////////////////////   SuperSHP  //////////////////////////////////////////////////////
+
+
+static const unsigned int colors_superblue_a_1[] = {
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+                                          0x002b0000, 0x002a0000, 0x00290000, 0x00270000, 0x00260000, 0x00250000, 0x00230000, 0x00220000,
+                                          0x00210000, 0x001f0000, 0x001e0000, 0x001d0000, 0x001b0000, 0x001a0000, 0x00180000, 0x00170000,
+                                          0x00160000, 0x00140000, 0x00130000, 0x00120000, 0x00100000, 0x000f0000, 0x000e0000, 0x000c0000,
+                                          0x000b0000, 0x000a0000, 0x00080000, 0x00070000, 0x00060000, 0x00040000, 0x00030000, 0x00020000
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_1) / sizeof(unsigned int)> palette_superblue_a_1(colors_superblue_a_1);
+static const PaletteConstBWD<sizeof(colors_superblue_a_1) / sizeof(unsigned int)> palette_superblue_a_1_inv(colors_superblue_a_1);
+
+static const unsigned int colors_superblue_a_2[] = {
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+                                          0x002b0000, 0x002a0000, 0x00290000, 0x00270000, 0x00260000, 0x00250000, 0x00230000, 0x00220000,
+                                          0x00210000, 0x001f0000, 0x001e0000, 0x001d0000, 0x001b0000, 0x001a0000, 0x00180000, 0x00170000,
+                                          0x00160000, 0x00140000, 0x00130000, 0x00120000, 0x00100000, 0x000f0000, 0x000e0000, 0x000c0000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_2) / sizeof(unsigned int)> palette_superblue_a_2(colors_superblue_a_2);
+static const PaletteConstBWD<sizeof(colors_superblue_a_2) / sizeof(unsigned int)> palette_superblue_a_2_inv(colors_superblue_a_2);
+
+
+static const unsigned int colors_superblue_a_3[] = {
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+                                          0x002b0000, 0x002a0000, 0x00290000, 0x00270000, 0x00260000, 0x00250000, 0x00230000, 0x00220000,
+                                          0x00210000, 0x001f0000, 0x001e0000, 0x001d0000, 0x001b0000, 0x001a0000, 0x00180000, 0x00170000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_3) / sizeof(unsigned int)> palette_superblue_a_3(colors_superblue_a_3);
+static const PaletteConstBWD<sizeof(colors_superblue_a_3) / sizeof(unsigned int)> palette_superblue_a_3_inv(colors_superblue_a_3);
+
+static const unsigned int colors_superblue_a_4[] = {
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+                                          0x002b0000, 0x002a0000, 0x00290000, 0x00270000, 0x00260000, 0x00250000, 0x00230000, 0x00220000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_4) / sizeof(unsigned int)> palette_superblue_a_4(colors_superblue_a_4);
+static const PaletteConstBWD<sizeof(colors_superblue_a_4) / sizeof(unsigned int)> palette_superblue_a_4_inv(colors_superblue_a_4);
+
+
+static const unsigned int colors_superblue_a_5[] = {
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_5) / sizeof(unsigned int)> palette_superblue_a_5(colors_superblue_a_5);
+static const PaletteConstBWD<sizeof(colors_superblue_a_5) / sizeof(unsigned int)> palette_superblue_a_5_inv(colors_superblue_a_5);
+
+
+static const unsigned int colors_superblue_a_6[] = {
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_6) / sizeof(unsigned int)> palette_superblue_a_6(colors_superblue_a_6);
+static const PaletteConstBWD<sizeof(colors_superblue_a_6) / sizeof(unsigned int)> palette_superblue_a_6_inv(colors_superblue_a_6);
+
+
+static const unsigned int colors_superblue_a_7[] = {
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_7) / sizeof(unsigned int)> palette_superblue_a_7(colors_superblue_a_7);
+static const PaletteConstBWD<sizeof(colors_superblue_a_7) / sizeof(unsigned int)> palette_superblue_a_7_inv(colors_superblue_a_7);
+
+
+static const unsigned int colors_superblue_a_8[] = {
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_8) / sizeof(unsigned int)> palette_superblue_a_8(colors_superblue_a_8);
+static const PaletteConstBWD<sizeof(colors_superblue_a_8) / sizeof(unsigned int)> palette_superblue_a_8_inv(colors_superblue_a_8);
+
+
+static const unsigned int colors_superblue_a_9[] = {
+                                          0x004166f1, 0x004269f2, 0x00436bf3, 0x00446ef4, 0x004570f4, 0x004673f5, 0x004775f5, 0x004878f6,
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_9) / sizeof(unsigned int)> palette_superblue_a_9(colors_superblue_a_9);
+static const PaletteConstBWD<sizeof(colors_superblue_a_9) / sizeof(unsigned int)> palette_superblue_a_9_inv(colors_superblue_a_9);
+
+
+static const unsigned int colors_superblue_a_10[] = {
+                                          0x003853e8, 0x003955e9, 0x003a58ea, 0x003b5aeb, 0x003c5ded, 0x003d5fee, 0x003e61ef, 0x004064f0,
+                                          0x004166f1, 0x004269f2, 0x00436bf3, 0x00446ef4, 0x004570f4, 0x004673f5, 0x004775f5, 0x004878f6,
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_10) / sizeof(unsigned int)> palette_superblue_a_10(colors_superblue_a_10);
+static const PaletteConstBWD<sizeof(colors_superblue_a_10) / sizeof(unsigned int)> palette_superblue_a_10_inv(colors_superblue_a_10);
+
+
+static const unsigned int colors_superblue_a_11[] = {
+                                          0x002f40df, 0x003043e0, 0x003145e1, 0x003247e3, 0x00334ae4, 0x00344ce5, 0x00354ee6, 0x003751e7,
+                                          0x003853e8, 0x003955e9, 0x003a58ea, 0x003b5aeb, 0x003c5ded, 0x003d5fee, 0x003e61ef, 0x004064f0,
+                                          0x004166f1, 0x004269f2, 0x00436bf3, 0x00446ef4, 0x004570f4, 0x004673f5, 0x004775f5, 0x004878f6,
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_11) / sizeof(unsigned int)> palette_superblue_a_11(colors_superblue_a_11);
+static const PaletteConstBWD<sizeof(colors_superblue_a_11) / sizeof(unsigned int)> palette_superblue_a_11_inv(colors_superblue_a_11);
+
+
+static const unsigned int colors_superblue_a_12[] = {
+                                          0x00272fd6, 0x002731d7, 0x002833d9, 0x002935da, 0x002a37db, 0x002b3adc, 0x002c3cdd, 0x002e3ede,
+                                          0x002f40df, 0x003043e0, 0x003145e1, 0x003247e3, 0x00334ae4, 0x00344ce5, 0x00354ee6, 0x003751e7,
+                                          0x003853e8, 0x003955e9, 0x003a58ea, 0x003b5aeb, 0x003c5ded, 0x003d5fee, 0x003e61ef, 0x004064f0,
+                                          0x004166f1, 0x004269f2, 0x00436bf3, 0x00446ef4, 0x004570f4, 0x004673f5, 0x004775f5, 0x004878f6,
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_12) / sizeof(unsigned int)> palette_superblue_a_12(colors_superblue_a_12);
+static const PaletteConstBWD<sizeof(colors_superblue_a_12) / sizeof(unsigned int)> palette_superblue_a_12_inv(colors_superblue_a_12);
+
+
+static const unsigned int colors_superblue_a_13[] = {
+                                          0x00261fc6, 0x002621c8, 0x002623ca, 0x002725cc, 0x002727ce, 0x002729d0, 0x00272bd2, 0x00272dd4,
+                                          0x00272fd6, 0x002731d7, 0x002833d9, 0x002935da, 0x002a37db, 0x002b3adc, 0x002c3cdd, 0x002e3ede,
+                                          0x002f40df, 0x003043e0, 0x003145e1, 0x003247e3, 0x00334ae4, 0x00344ce5, 0x00354ee6, 0x003751e7,
+                                          0x003853e8, 0x003955e9, 0x003a58ea, 0x003b5aeb, 0x003c5ded, 0x003d5fee, 0x003e61ef, 0x004064f0,
+                                          0x004166f1, 0x004269f2, 0x00436bf3, 0x00446ef4, 0x004570f4, 0x004673f5, 0x004775f5, 0x004878f6,
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_13) / sizeof(unsigned int)> palette_superblue_a_13(colors_superblue_a_13);
+static const PaletteConstBWD<sizeof(colors_superblue_a_13) / sizeof(unsigned int)> palette_superblue_a_13_inv(colors_superblue_a_13);
+
+
+static const unsigned int colors_superblue_a_14[] = {
+                                          0x002610b6, 0x002612b8, 0x002614ba, 0x002616bc, 0x002618be, 0x00261ac0, 0x00261cc2, 0x00261ec4,
+                                          0x00261fc6, 0x002621c8, 0x002623ca, 0x002725cc, 0x002727ce, 0x002729d0, 0x00272bd2, 0x00272dd4,
+                                          0x00272fd6, 0x002731d7, 0x002833d9, 0x002935da, 0x002a37db, 0x002b3adc, 0x002c3cdd, 0x002e3ede,
+                                          0x002f40df, 0x003043e0, 0x003145e1, 0x003247e3, 0x00334ae4, 0x00344ce5, 0x00354ee6, 0x003751e7,
+                                          0x003853e8, 0x003955e9, 0x003a58ea, 0x003b5aeb, 0x003c5ded, 0x003d5fee, 0x003e61ef, 0x004064f0,
+                                          0x004166f1, 0x004269f2, 0x00436bf3, 0x00446ef4, 0x004570f4, 0x004673f5, 0x004775f5, 0x004878f6,
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_14) / sizeof(unsigned int)> palette_superblue_a_14(colors_superblue_a_14);
+static const PaletteConstBWD<sizeof(colors_superblue_a_14) / sizeof(unsigned int)> palette_superblue_a_14_inv(colors_superblue_a_14);
+
+
+static const unsigned int colors_superblue_a_15[] = {
+                                          0x002501a6, 0x002503a8, 0x002505aa, 0x002507ac, 0x002609ae, 0x00260bb0, 0x00260db2, 0x00260fb4,
+                                          0x002610b6, 0x002612b8, 0x002614ba, 0x002616bc, 0x002618be, 0x00261ac0, 0x00261cc2, 0x00261ec4,
+                                          0x00261fc6, 0x002621c8, 0x002623ca, 0x002725cc, 0x002727ce, 0x002729d0, 0x00272bd2, 0x00272dd4,
+                                          0x00272fd6, 0x002731d7, 0x002833d9, 0x002935da, 0x002a37db, 0x002b3adc, 0x002c3cdd, 0x002e3ede,
+                                          0x002f40df, 0x003043e0, 0x003145e1, 0x003247e3, 0x00334ae4, 0x00344ce5, 0x00354ee6, 0x003751e7,
+                                          0x003853e8, 0x003955e9, 0x003a58ea, 0x003b5aeb, 0x003c5ded, 0x003d5fee, 0x003e61ef, 0x004064f0,
+                                          0x004166f1, 0x004269f2, 0x00436bf3, 0x00446ef4, 0x004570f4, 0x004673f5, 0x004775f5, 0x004878f6,
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_a_15) / sizeof(unsigned int)> palette_superblue_a_15(colors_superblue_a_15);
+static const PaletteConstBWD<sizeof(colors_superblue_a_15) / sizeof(unsigned int)> palette_superblue_a_15_inv(colors_superblue_a_15);
+
+
+static const unsigned int colors_superblue_b_1[] = {
+                                          0x002501a6, 0x002503a8, 0x002505aa, 0x002507ac, 0x002609ae, 0x00260bb0, 0x00260db2, 0x00260fb4,
+                                          0x002610b6, 0x002612b8, 0x002614ba, 0x002616bc, 0x002618be, 0x00261ac0, 0x00261cc2, 0x00261ec4,
+                                          0x00261fc6, 0x002621c8, 0x002623ca, 0x002725cc, 0x002727ce, 0x002729d0, 0x00272bd2, 0x00272dd4,
+                                          0x00272fd6, 0x002731d7, 0x002833d9, 0x002935da, 0x002a37db, 0x002b3adc, 0x002c3cdd, 0x002e3ede,
+                                          0x002f40df, 0x003043e0, 0x003145e1, 0x003247e3, 0x00334ae4, 0x00344ce5, 0x00354ee6, 0x003751e7,
+                                          0x003853e8, 0x003955e9, 0x003a58ea, 0x003b5aeb, 0x003c5ded, 0x003d5fee, 0x003e61ef, 0x004064f0,
+                                          0x004166f1, 0x004269f2, 0x00436bf3, 0x00446ef4, 0x004570f4, 0x004673f5, 0x004775f5, 0x004878f6,
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+                                          0x002b0000, 0x002a0000, 0x00290000, 0x00270000, 0x00260000, 0x00250000, 0x00230000, 0x00220000,
+                                          0x00210000, 0x001f0000, 0x001e0000, 0x001d0000, 0x001b0000, 0x001a0000, 0x00180000, 0x00170000,
+                                          0x00160000, 0x00140000, 0x00130000, 0x00120000, 0x00100000, 0x000f0000, 0x000e0000, 0x000c0000,
+                                          0x000b0000, 0x000a0000, 0x00080000, 0x00070000, 0x00060000, 0x00040000, 0x00030000, 0x00020000
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_1) / sizeof(unsigned int)> palette_superblue_b_1(colors_superblue_b_1);
+static const PaletteConstBWD<sizeof(colors_superblue_b_1) / sizeof(unsigned int)> palette_superblue_b_1_inv(colors_superblue_b_1);
+
+
+static const unsigned int colors_superblue_b_2[] = {
+                                          0x002501a6, 0x002503a8, 0x002505aa, 0x002507ac, 0x002609ae, 0x00260bb0, 0x00260db2, 0x00260fb4,
+                                          0x002610b6, 0x002612b8, 0x002614ba, 0x002616bc, 0x002618be, 0x00261ac0, 0x00261cc2, 0x00261ec4,
+                                          0x00261fc6, 0x002621c8, 0x002623ca, 0x002725cc, 0x002727ce, 0x002729d0, 0x00272bd2, 0x00272dd4,
+                                          0x00272fd6, 0x002731d7, 0x002833d9, 0x002935da, 0x002a37db, 0x002b3adc, 0x002c3cdd, 0x002e3ede,
+                                          0x002f40df, 0x003043e0, 0x003145e1, 0x003247e3, 0x00334ae4, 0x00344ce5, 0x00354ee6, 0x003751e7,
+                                          0x003853e8, 0x003955e9, 0x003a58ea, 0x003b5aeb, 0x003c5ded, 0x003d5fee, 0x003e61ef, 0x004064f0,
+                                          0x004166f1, 0x004269f2, 0x00436bf3, 0x00446ef4, 0x004570f4, 0x004673f5, 0x004775f5, 0x004878f6,
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+                                          0x002b0000, 0x002a0000, 0x00290000, 0x00270000, 0x00260000, 0x00250000, 0x00230000, 0x00220000,
+                                          0x00210000, 0x001f0000, 0x001e0000, 0x001d0000, 0x001b0000, 0x001a0000, 0x00180000, 0x00170000,
+                                          0x00160000, 0x00140000, 0x00130000, 0x00120000, 0x00100000, 0x000f0000, 0x000e0000, 0x000c0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_2) / sizeof(unsigned int)> palette_superblue_b_2(colors_superblue_b_2);
+static const PaletteConstBWD<sizeof(colors_superblue_b_2) / sizeof(unsigned int)> palette_superblue_b_2_inv(colors_superblue_b_2);
+
+
+static const unsigned int colors_superblue_b_3[] = {
+                                          0x002610b6, 0x002612b8, 0x002614ba, 0x002616bc, 0x002618be, 0x00261ac0, 0x00261cc2, 0x00261ec4,
+                                          0x00261fc6, 0x002621c8, 0x002623ca, 0x002725cc, 0x002727ce, 0x002729d0, 0x00272bd2, 0x00272dd4,
+                                          0x00272fd6, 0x002731d7, 0x002833d9, 0x002935da, 0x002a37db, 0x002b3adc, 0x002c3cdd, 0x002e3ede,
+                                          0x002f40df, 0x003043e0, 0x003145e1, 0x003247e3, 0x00334ae4, 0x00344ce5, 0x00354ee6, 0x003751e7,
+                                          0x003853e8, 0x003955e9, 0x003a58ea, 0x003b5aeb, 0x003c5ded, 0x003d5fee, 0x003e61ef, 0x004064f0,
+                                          0x004166f1, 0x004269f2, 0x00436bf3, 0x00446ef4, 0x004570f4, 0x004673f5, 0x004775f5, 0x004878f6,
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+                                          0x002b0000, 0x002a0000, 0x00290000, 0x00270000, 0x00260000, 0x00250000, 0x00230000, 0x00220000,
+                                          0x00210000, 0x001f0000, 0x001e0000, 0x001d0000, 0x001b0000, 0x001a0000, 0x00180000, 0x00170000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_3) / sizeof(unsigned int)> palette_superblue_b_3(colors_superblue_b_3);
+static const PaletteConstBWD<sizeof(colors_superblue_b_3) / sizeof(unsigned int)> palette_superblue_b_3_inv(colors_superblue_b_3);
+
+
+static const unsigned int colors_superblue_b_4[] = {
+                                          0x00272fd6, 0x002731d7, 0x002833d9, 0x002935da, 0x002a37db, 0x002b3adc, 0x002c3cdd, 0x002e3ede,
+                                          0x002f40df, 0x003043e0, 0x003145e1, 0x003247e3, 0x00334ae4, 0x00344ce5, 0x00354ee6, 0x003751e7,
+                                          0x003853e8, 0x003955e9, 0x003a58ea, 0x003b5aeb, 0x003c5ded, 0x003d5fee, 0x003e61ef, 0x004064f0,
+                                          0x004166f1, 0x004269f2, 0x00436bf3, 0x00446ef4, 0x004570f4, 0x004673f5, 0x004775f5, 0x004878f6,
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+                                          0x002b0000, 0x002a0000, 0x00290000, 0x00270000, 0x00260000, 0x00250000, 0x00230000, 0x00220000,
+                                          0x00210000, 0x001f0000, 0x001e0000, 0x001d0000, 0x001b0000, 0x001a0000, 0x00180000, 0x00170000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_4) / sizeof(unsigned int)> palette_superblue_b_4(colors_superblue_b_4);
+static const PaletteConstBWD<sizeof(colors_superblue_b_4) / sizeof(unsigned int)> palette_superblue_b_4_inv(colors_superblue_b_4);
+
+
+static const unsigned int colors_superblue_b_5[] = {
+                                          0x002f40df, 0x003043e0, 0x003145e1, 0x003247e3, 0x00334ae4, 0x00344ce5, 0x00354ee6, 0x003751e7,
+                                          0x003853e8, 0x003955e9, 0x003a58ea, 0x003b5aeb, 0x003c5ded, 0x003d5fee, 0x003e61ef, 0x004064f0,
+                                          0x004166f1, 0x004269f2, 0x00436bf3, 0x00446ef4, 0x004570f4, 0x004673f5, 0x004775f5, 0x004878f6,
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+                                          0x002b0000, 0x002a0000, 0x00290000, 0x00270000, 0x00260000, 0x00250000, 0x00230000, 0x00220000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_5) / sizeof(unsigned int)> palette_superblue_b_5(colors_superblue_b_5);
+static const PaletteConstBWD<sizeof(colors_superblue_b_5) / sizeof(unsigned int)> palette_superblue_b_5_inv(colors_superblue_b_5);
+
+
+static const unsigned int colors_superblue_b_6[] = {
+                                          0x003853e8, 0x003955e9, 0x003a58ea, 0x003b5aeb, 0x003c5ded, 0x003d5fee, 0x003e61ef, 0x004064f0,
+                                          0x004166f1, 0x004269f2, 0x00436bf3, 0x00446ef4, 0x004570f4, 0x004673f5, 0x004775f5, 0x004878f6,
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_6) / sizeof(unsigned int)> palette_superblue_b_6(colors_superblue_b_6);
+static const PaletteConstBWD<sizeof(colors_superblue_b_6) / sizeof(unsigned int)> palette_superblue_b_6_inv(colors_superblue_b_6);
+
+
+static const unsigned int colors_superblue_b_7[] = {
+                                          0x004166f1, 0x004269f2, 0x00436bf3, 0x00446ef4, 0x004570f4, 0x004673f5, 0x004775f5, 0x004878f6,
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+                                          0x002b0000, 0x002a0000, 0x00290000, 0x00270000, 0x00260000, 0x00250000, 0x00230000, 0x00220000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_7) / sizeof(unsigned int)> palette_superblue_b_7(colors_superblue_b_7);
+static const PaletteConstBWD<sizeof(colors_superblue_b_7) / sizeof(unsigned int)> palette_superblue_b_7_inv(colors_superblue_b_7);
+
+static const unsigned int colors_superblue_b_8[] = {
+                                          0x004a7af6, 0x004b7df6, 0x004c80f7, 0x004d82f7, 0x004e85f7, 0x004f87f8, 0x00508af8, 0x00518cf8,
+                                          0x00538ff9, 0x005491f9, 0x005594fa, 0x005696fa, 0x005799fa, 0x00589bfb, 0x00599efb, 0x005aa0fb,
+                                          0x005ca2fc, 0x005da5fc, 0x005ea7fc, 0x005faafd, 0x0061acfd, 0x0062aefd, 0x0064b0fe, 0x0066b3fe,
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_8) / sizeof(unsigned int)> palette_superblue_b_8(colors_superblue_b_8);
+static const PaletteConstBWD<sizeof(colors_superblue_b_8) / sizeof(unsigned int)> palette_superblue_b_8_inv(colors_superblue_b_8);
+
+
+
+
+static const unsigned int colors_superblue_b_9[] = {
+                                          0x0068b5ff, 0x006ab7ff, 0x006bb9ff, 0x006dbbff, 0x006fbeff, 0x0071c0ff, 0x0073c2ff, 0x0075c4ff,
+                                          0x0076c6ff, 0x0078c8ff, 0x007acaff, 0x007cccff, 0x007ecdff, 0x007fcfff, 0x0081d1ff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_9) / sizeof(unsigned int)> palette_superblue_b_9(colors_superblue_b_9);
+static const PaletteConstBWD<sizeof(colors_superblue_b_9) / sizeof(unsigned int)> palette_superblue_b_9_inv(colors_superblue_b_9);
+
+
+
+
+static const unsigned int colors_superblue_b_10[] = {
+                                          0x002503a8, 0x002507ac, 0x00260bb0, 0x00260fb4, 0x002612b8, 0x002616bc, 0x00261ac0, 0x00261ec4,
+                                          0x002621c8, 0x002725cc, 0x002729d0, 0x00272dd4, 0x002731d7, 0x002935da, 0x002b3adc, 0x002e3ede,
+                                          0x003043e0, 0x003247e3, 0x00344ce5, 0x003751e7, 0x003955e9, 0x003b5aeb, 0x003d5fee, 0x004064f0,
+                                          0x004269f2, 0x00446ef4, 0x004673f5, 0x004878f6, 0x004b7df6, 0x004d82f7, 0x004f87f8, 0x00518cf8,
+                                          0x005491f9, 0x005696fa, 0x00589bfb, 0x005aa0fb, 0x005da5fc, 0x005faafd, 0x0062aefd, 0x0066b3fe,
+                                          0x006ab7ff, 0x006dbbff, 0x0071c0ff, 0x0075c4ff, 0x0078c8ff, 0x007cccff, 0x007fcfff, 0x0083d3ff,
+                                          0x0085d5ff, 0x0087d6ff, 0x0089d8ff, 0x008ad9ff, 0x008cdbff, 0x008eddff, 0x0090deff, 0x0092e0ff,
+                                          0x0093e1ff, 0x0095e3ff, 0x0097e4ff, 0x0099e5ff, 0x009be7ff, 0x009de8ff, 0x009ee9ff, 0x00a0ebff,
+
+                                          0x00a2ecff, 0x00a4edff, 0x00a6eeff, 0x00a7f0ff, 0x00a9f1ff, 0x00abf2ff, 0x00adf3ff, 0x00aff5ff,
+                                          0x00b1f6ff, 0x00b2f7ff, 0x00b4f8ff, 0x00b6faff, 0x00b8fbff, 0x00bafcff, 0x00bcfeff, 0x00beffff,
+                                          0x00c0ffff, 0x00c2fefd, 0x00c5fefc, 0x00c7fdfb, 0x00c9fdfa, 0x00cbfcf9, 0x00cdfcf7, 0x00d0fcf6,
+                                          0x00d2fbf5, 0x00d4fbf4, 0x00d6faf3, 0x00d8faf1, 0x00dbf9f0, 0x00ddf9ef, 0x00dff8ee, 0x00e1f8ed,
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_10) / sizeof(unsigned int)> palette_superblue_b_10(colors_superblue_b_10);
+static const PaletteConstBWD<sizeof(colors_superblue_b_10) / sizeof(unsigned int)> palette_superblue_b_10_inv(colors_superblue_b_10);
+
+
+
+static const unsigned int colors_superblue_b_11[] = {
+                                          0x004f87f8, 0x00518cf8,
+                                          0x005491f9, 0x005696fa, 0x00589bfb, 0x005aa0fb, 0x005da5fc, 0x005faafd, 0x0062aefd, 0x0066b3fe,
+                                          0x006ab7ff, 0x006dbbff, 0x0071c0ff, 0x0075c4ff, 0x0078c8ff, 0x007cccff, 0x007fcfff, 0x0083d3ff,
+                                          0x0087d6ff, 0x008ad9ff, 0x008eddff, 0x0092e0ff, 0x0095e3ff, 0x0099e5ff, 0x009de8ff, 0x00a0ebff,
+                                          0x00a4edff, 0x00a7f0ff, 0x00abf2ff, 0x00aff5ff, 0x00b2f7ff, 0x00b6faff, 0x00bafcff, 0x00beffff,
+                                          0x00c2fefd, 0x00c7fdfb, 0x00cbfcf9, 0x00d0fcf6, 0x00d4fbf4, 0x00d8faf1, 0x00ddf9ef, 0x00e1f8ed,
+
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, 0x002e0000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_11) / sizeof(unsigned int)> palette_superblue_b_11(colors_superblue_b_11);
+static const PaletteConstBWD<sizeof(colors_superblue_b_11) / sizeof(unsigned int)> palette_superblue_b_11_inv(colors_superblue_b_11);
+
+
+
+static const unsigned int colors_superblue_b_12[] = {
+                                          0x005491f9, 0x005696fa, 0x00589bfb, 0x005aa0fb, 0x005da5fc, 0x005faafd, 0x0062aefd, 0x0066b3fe,
+                                          0x006ab7ff, 0x006dbbff, 0x0071c0ff, 0x0075c4ff, 0x0078c8ff, 0x007cccff, 0x007fcfff, 0x0083d3ff,
+                                          0x0087d6ff, 0x008ad9ff, 0x008eddff, 0x0092e0ff, 0x0095e3ff, 0x0099e5ff, 0x009de8ff, 0x00a0ebff,
+                                          0x00a4edff, 0x00a7f0ff, 0x00abf2ff, 0x00aff5ff, 0x00b2f7ff, 0x00b6faff, 0x00bafcff, 0x00beffff,
+                                          0x00c2fefd, 0x00c7fdfb, 0x00cbfcf9, 0x00d0fcf6, 0x00d4fbf4, 0x00d8faf1, 0x00ddf9ef, 0x00e1f8ed,
+
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+                                          0x00bb8451, 0x00ba814f, 0x00b97f4d, 0x00b87d4b, 0x00b77b49, 0x00b57847, 0x00b47645, 0x00b37444,
+                                          0x00b27243, 0x00b16f43, 0x00b06d42, 0x00ae6a41, 0x00ad6840, 0x00ac6640, 0x00ab633f, 0x00aa613e,
+                                          0x00a95e3e, 0x00a75c3d, 0x00a6593c, 0x00a5573b, 0x00a4553b, 0x00a3523a, 0x00a24f39, 0x00a04d38,
+                                          0x009f4a38, 0x009e4837, 0x009d4536, 0x009c4335, 0x009a4035, 0x00993d34, 0x00983b33, 0x00973833,
+
+                                          0x00971a00, 0x00961900, 0x00951700, 0x00931600, 0x00921400, 0x00911200, 0x008f1100, 0x008e0f00,
+                                          0x008d0e00, 0x008b0c00, 0x008a0a00, 0x00890900, 0x00870700, 0x00860600, 0x00850400, 0x00830200,
+                                          0x00820100, 0x00810000, 0x007f0000, 0x007e0000, 0x007c0000, 0x007b0000, 0x007a0000, 0x00780000,
+                                          0x00770000, 0x00760000, 0x00740000, 0x00730000, 0x00720000, 0x00700000, 0x006f0000, 0x006e0000,
+                                          0x006c0000, 0x006b0000, 0x006a0000, 0x00680000, 0x00670000, 0x00660000, 0x00640000, 0x00630000,
+                                          0x00610000, 0x00600000, 0x005f0000, 0x005d0000, 0x005c0000, 0x005b0000, 0x00590000, 0x00580000,
+                                          0x00570000, 0x00550000, 0x00540000, 0x00530000, 0x00510000, 0x00500000, 0x004f0000, 0x004d0000,
+                                          0x004c0000, 0x004a0000, 0x00490000, 0x00480000, 0x00460000, 0x00450000, 0x00440000, 0x00420000,
+                                          0x00410000, 0x00400000, 0x003e0000, 0x003d0000, 0x003c0000, 0x003a0000, 0x00390000, 0x00380000,
+                                          0x00360000, 0x00350000, 0x00340000, 0x00320000, 0x00310000, 0x002f0000, //0x002e0000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_12) / sizeof(unsigned int)> palette_superblue_b_12(colors_superblue_b_12);
+static const PaletteConstBWD<sizeof(colors_superblue_b_12) / sizeof(unsigned int)> palette_superblue_b_12_inv(colors_superblue_b_12);
+
+
+static const unsigned int colors_superblue_b_13[] = {
+                                          0x005491f9, 0x005696fa, 0x00589bfb, 0x005aa0fb, 0x005da5fc, 0x005faafd, 0x0062aefd, 0x0066b3fe,
+                                          0x006ab7ff, 0x006dbbff, 0x0071c0ff, 0x0075c4ff, 0x0078c8ff, 0x007cccff, 0x007fcfff, 0x0083d3ff,
+                                          0x0087d6ff, 0x008ad9ff, 0x008eddff, 0x0092e0ff, 0x0095e3ff, 0x0099e5ff, 0x009de8ff, 0x00a0ebff,
+                                          0x00a4edff, 0x00a7f0ff, 0x00abf2ff, 0x00aff5ff, 0x00b2f7ff, 0x00b6faff, 0x00bafcff, 0x00beffff,
+                                          0x00c2fefd, 0x00c7fdfb, 0x00cbfcf9, 0x00d0fcf6, 0x00d4fbf4, 0x00d8faf1, 0x00ddf9ef, 0x00e1f8ed,
+
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dcc28d, 0x00dbc08b, 0x00dabe89, 0x00d9bc87, 0x00d8ba85, 0x00d7b983, 0x00d6b781,
+                                          0x00d5b57f, 0x00d4b37d, 0x00d3b17b, 0x00d2af79, 0x00d1ad77, 0x00d0ab75, 0x00cfa973, 0x00cfa771,
+                                          0x00cea56f, 0x00cda36d, 0x00cca16b, 0x00cb9f6a, 0x00c99d68, 0x00c89b66, 0x00c79964, 0x00c69762,
+                                          0x00c59560, 0x00c4935e, 0x00c2915c, 0x00c18f5a, 0x00c08c58, 0x00bf8a56, 0x00be8854, 0x00bd8652,
+
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00730000, 0x00700000, 0x006e0000,
+                                          0x006b0000, 0x00680000, 0x00660000, 0x00630000, 0x00600000, 0x005d0000, 0x005b0000, 0x00580000, 
+                                          0x00550000, 0x00530000, 0x00500000, 0x004d0000, 0x004a0000, 0x00480000, 0x00450000, 0x00420000,
+                                          0x00400000, 0x003d0000, 0x003a0000, 0x00380000, 0x00350000, 0x00320000, 0x002f0000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_13) / sizeof(unsigned int)> palette_superblue_b_13(colors_superblue_b_13);
+static const PaletteConstBWD<sizeof(colors_superblue_b_13) / sizeof(unsigned int)> palette_superblue_b_13_inv(colors_superblue_b_13);
+
+
+static const unsigned int colors_superblue_b_14[] = {
+                                          0x005491f9, 0x005696fa, 0x00589bfb, 0x005aa0fb, 0x005da5fc, 0x005faafd, 0x0062aefd, 0x0066b3fe, 
+                                          0x006ab7ff, 0x006dbbff, 0x0071c0ff, 0x0075c4ff, 0x0078c8ff, 0x007cccff, 0x007fcfff, 0x0083d3ff,
+                                          0x0087d6ff, 0x008ad9ff, 0x008eddff, 0x0092e0ff, 0x0095e3ff, 0x0099e5ff, 0x009de8ff, 0x00a0ebff,
+                                          0x00a4edff, 0x00a7f0ff, 0x00abf2ff, 0x00aff5ff, 0x00b2f7ff, 0x00b6faff, 0x00bafcff, 0x00beffff,
+                                          0x00c2fefd, 0x00c7fdfb, 0x00cbfcf9, 0x00d0fcf6, 0x00d4fbf4, 0x00d8faf1, 0x00ddf9ef, 0x00e1f8ed,
+
+                                          0x00e3f7ec, 0x00e5f7ea, 0x00e8f6e9, 0x00eaf6e8, 0x00ecf6e7, 0x00eef5e6, 0x00f0f5e4, 0x00f3f4e3,
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00730000, 0x00700000, 0x006e0000,
+                                          0x006b0000, 0x00680000, 0x00660000, 0x00630000, 0x00600000, 0x005d0000, 0x005b0000, 0x00580000,
+                                          0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000, 0x00320000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_14) / sizeof(unsigned int)> palette_superblue_b_14(colors_superblue_b_14);
+static const PaletteConstBWD<sizeof(colors_superblue_b_14) / sizeof(unsigned int)> palette_superblue_b_14_inv(colors_superblue_b_14);
+
+
+
+static const unsigned int colors_superblue_b_15[] = {
+                                          0x009bbbd6, 0x009dbed7, 0x009ec0d8, 0x009fc2d9, 
+                                          0x00a0c4d9, 0x00a1c6da, 0x00a2c8db, 0x00a3cadc, 0x00a4ccdc, 0x00a5cedd, 0x00a6d0de, 0x00a7d1df, 
+                                          0x00a8d3e0, 0x00a9d5e0, 0x00aad7e1, 0x00abd9e2, 0x00acdbe3, 0x00addde3, 0x00aedee4, 0x00afe0e5, 
+                                          0x00b0e2e6, 0x00b1e4e6, 0x00b2e5e7, 0x00b3e7e8, 0x00b4e9e9, 0x00b7e9e9, 0x00baeaea, 0x00bdebeb, 
+                                          0x00c0ecec, 0x00c2ecec, 0x00c5eded, 0x00c7eeee, 0x00caeeee, 0x00ccefef, 0x00cff0f0, 0x00d1f1f1, 
+                                          0x00d4f1f1, 0x00d6f2f2, 0x00d9f3f3, 0x00dbf3f3, 0x00ddf4f4, 0x00e0f5f5, 0x00e2f6f6, 0x00e4f6f6, 
+                                          0x00e6f7f7, 0x00e8f8f8, 0x00ebf8f8, 0x00edf9f9, 0x00effafa, 0x00f1fafa, 0x00f3fbfb, 0x00f5fcfc,  
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000, 
+                                          0x00320000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_15) / sizeof(unsigned int)> palette_superblue_b_15(colors_superblue_b_15);
+static const PaletteConstBWD<sizeof(colors_superblue_b_15) / sizeof(unsigned int)> palette_superblue_b_15_inv(colors_superblue_b_15);
+
+static const unsigned int colors_superblue_b_16[] = {
+                                          0x008ea0cc, 0x008fa2cd, 0x0090a5ce, 0x0091a7cf, 0x0092aad0, 0x0094acd0, 0x0095aed1, 0x0096b0d2, 
+                                          0x0097b3d3, 0x0098b5d4, 0x0099b7d4, 0x009ab9d5, 0x009bbbd6, 0x009dbed7, 0x009ec0d8, 0x009fc2d9, 
+                                          0x00a0c4d9, 0x00a1c6da, 0x00a2c8db, 0x00a3cadc, 0x00a4ccdc, 0x00a5cedd, 0x00a6d0de, 0x00a7d1df, 
+                                          0x00a8d3e0, 0x00a9d5e0, 0x00aad7e1, 0x00abd9e2, 0x00acdbe3, 0x00addde3, 0x00aedee4, 0x00afe0e5, 
+                                          0x00b0e2e6, 0x00b1e4e6, 0x00b2e5e7, 0x00b3e7e8, 0x00b4e9e9, 0x00b7e9e9, 0x00baeaea, 0x00bdebeb, 
+                                          0x00c0ecec, 0x00c2ecec, 0x00c5eded, 0x00c7eeee, 0x00caeeee, 0x00ccefef, 0x00cff0f0, 0x00d1f1f1, 
+                                          0x00d4f1f1, 0x00d6f2f2, 0x00d9f3f3, 0x00dbf3f3, 0x00ddf4f4, 0x00e0f5f5, 0x00e2f6f6, 0x00e4f6f6, 
+                                          0x00e6f7f7, 0x00e8f8f8, 0x00ebf8f8, 0x00edf9f9, 0x00effafa, 0x00f1fafa, 0x00f3fbfb, 0x00f5fcfc,  
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f, 
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_16) / sizeof(unsigned int)> palette_superblue_b_16(colors_superblue_b_16);
+static const PaletteConstBWD<sizeof(colors_superblue_b_16) / sizeof(unsigned int)> palette_superblue_b_16_inv(colors_superblue_b_16);
+
+static const unsigned int colors_superblue_b_17[] = {
+                                          0x007979ba, 0x007a7abc, 0x007b7bbe, 0x007d7cc0, 0x007e7ec2, 0x008081c3, 0x008185c4, 0x008288c4, 
+                                          0x00838bc5, 0x00858dc6, 0x008690c7, 0x008793c8, 0x008996c9, 0x008a98ca, 0x008b9bcb, 0x008c9dcb, 
+                                          0x008ea0cc, 0x008fa2cd, 0x0090a5ce, 0x0091a7cf, 0x0092aad0, 0x0094acd0, 0x0095aed1, 0x0096b0d2, 
+                                          0x0097b3d3, 0x0098b5d4, 0x0099b7d4, 0x009ab9d5, 0x009bbbd6, 0x009dbed7, 0x009ec0d8, 0x009fc2d9, 
+                                          0x00a0c4d9, 0x00a1c6da, 0x00a2c8db, 0x00a3cadc, 0x00a4ccdc, 0x00a5cedd, 0x00a6d0de, 0x00a7d1df, 
+                                          0x00a8d3e0, 0x00a9d5e0, 0x00aad7e1, 0x00abd9e2, 0x00acdbe3, 0x00addde3, 0x00aedee4, 0x00afe0e5, 
+                                          0x00b0e2e6, 0x00b1e4e6, 0x00b2e5e7, 0x00b3e7e8, 0x00b4e9e9, 0x00b7e9e9, 0x00baeaea, 0x00bdebeb, 
+                                          0x00c0ecec, 0x00c2ecec, 0x00c5eded, 0x00c7eeee, 0x00caeeee, 0x00ccefef, 0x00cff0f0, 0x00d1f1f1, 
+                                          0x00d4f1f1, 0x00d6f2f2, 0x00d9f3f3, 0x00dbf3f3, 0x00ddf4f4, 0x00e0f5f5, 0x00e2f6f6, 0x00e4f6f6, 
+                                          0x00e6f7f7, 0x00e8f8f8, 0x00ebf8f8, 0x00edf9f9, 0x00effafa, 0x00f1fafa, 0x00f3fbfb, 0x00f5fcfc,  
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_b_17) / sizeof(unsigned int)> palette_superblue_b_17(colors_superblue_b_17);
+static const PaletteConstBWD<sizeof(colors_superblue_b_17) / sizeof(unsigned int)> palette_superblue_b_17_inv(colors_superblue_b_17);
+
+
+
+static const unsigned int colors_superblue_c_1[] = {
+                                          0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 
+                                          0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 
+                                          0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 
+                                          0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 0x00ffffff, 
+                                          
+                                          0x00ffffff, 0x00fffffB, 0x00fffff8, 0x00fffef3, 0x00fdfcef, 0x00fbfaeb, 0x00f9f8e9, 0x00f7f6e6, 
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973, 
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200, 
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_1) / sizeof(unsigned int)> palette_superblue_c_1(colors_superblue_c_1);
+static const PaletteConstBWD<sizeof(colors_superblue_c_1) / sizeof(unsigned int)> palette_superblue_c_1_inv(colors_superblue_c_1);
+
+
+static const unsigned int colors_superblue_c_2[] = {
+                                          0x00d6dea1, 0x00d3dea3, 0x00d1dea5, 0x00cfdea7, 
+                                          0x00cddea9, 0x00ccdeab, 0x00cadfad, 0x00c9dfaf, 0x00c7dfb0, 0x00c6dfb2, 0x00c5dfb4, 0x00c5dfb6, 
+                                          0x00c4dfb8, 0x00c3e0b9, 0x00c3e0bb, 0x00c3e0bd, 0x00c3e0bf, 0x00c3e1c0, 0x00c4e1c2, 0x00c4e1c4, 
+                                          0x00c5e1c8, 0x00c7e2cb, 0x00c9e2cd, 0x00cae3d0, 0x00cce3d2, 0x00cde3d5, 0x00cfe4d7, 0x00d0e4d9, 
+                                          0x00d2e4db, 0x00d3e5dd, 0x00d5e5de, 0x00d6e6e0, 0x00d8e6e1, 0x00d9e7e3, 0x00dbe7e4, 0x00dce8e5, 
+                                          0x00dee8e7, 0x00dfe9e8, 0x00e0eae9, 0x00e2eaea, 0x00e3ebeb, 0x00e4ebec, 0x00e6eced, 0x00e7eded, 
+                                          0x00e8edee, 0x00eaeeef, 0x00ebeff0, 0x00eceff1, 0x00edf0f1, 0x00eff1f2, 0x00f0f2f3, 0x00f1f2f3, 
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973, 
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 
+                                          0x006b0000, 0x00660000, 0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000,
+                                          0x00400000, 0x003a0000, 0x00320000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_2) / sizeof(unsigned int)> palette_superblue_c_2(colors_superblue_c_2);
+static const PaletteConstBWD<sizeof(colors_superblue_c_2) / sizeof(unsigned int)> palette_superblue_c_2_inv(colors_superblue_c_2);
+
+
+static const unsigned int colors_superblue_c_3[] = {
+                                          0x00000096, 0x00000099, 0x0000009c, 0x0000009f, 
+                                          0x000000a2, 0x000000a5, 0x000000a8, 0x000000ab, 0x000000ad, 0x000003b0, 0x000007b3, 0x00000bb6, 
+                                          0x00000fb9, 0x000012bc, 0x000016bf, 0x00001ac2, 0x00001ec5, 0x000021c7, 0x000025ca, 0x000029cd, 
+                                          0x00002dd0, 0x000031d3, 0x000034d6, 0x000038d9, 0x00003cdc, 0x000040de, 0x000043e1, 0x000047e4, 
+                                          0x00004be7, 0x00004fea, 0x000052ed, 0x000056f0, 0x00005af3, 0x00005ef6, 0x000061f8, 0x000065fb, 
+                                          0x000069fe, 0x00006dff, 0x000070ff, 0x000074ff, 0x000078ff, 0x00007cff, 0x000080ff, 0x000083ff, 
+                                          0x000687ff, 0x000e8bff, 0x00168fff, 0x001e92ff, 0x002696ff, 0x002d9aff, 0x00359eff, 0x003da1ff, 
+                                          0x0045a5ff, 0x004da9ff, 0x0055adff, 0x005cb0ff, 0x0064b4ff, 0x006cb8ff, 0x0074bcff, 0x007cc0ff, 
+                                          0x0083c3ff, 0x008bc7ff, 0x0093cbff, 0x009bcfff, 0x00a3d2ff, 0x00abd6ff, 0x00b2daff, 0x00badeff, 
+                                          0x00c2e1ff, 0x00cae5ff, 0x00d2e9ff, 0x00d9edff, 0x00e1f0ff, 0x00e9f4ff, 0x00f1f8ff, 0x00f9fcff, 
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_3) / sizeof(unsigned int)> palette_superblue_c_3(colors_superblue_c_3);
+static const PaletteConstBWD<sizeof(colors_superblue_c_3) / sizeof(unsigned int)> palette_superblue_c_3_inv(colors_superblue_c_3);
+
+
+static const unsigned int colors_superblue_c_4[] = {
+                                          0x00000099, 0x0000009f, 
+                                          0x000000a5, 0x000000ab, 0x000003b0, 0x00000bb6, 0x000012bc, 0x00001ac2, 0x000021c7, 0x000029cd, 
+                                          0x000031d3, 0x000038d9, 0x000040de, 0x000047e4, 0x00004fea, 0x000056f0, 0x00005ef6, 0x000065fb, 
+                                          0x00006dff, 0x000074ff, 0x00007cff, 0x000083ff, 0x000e8bff, 0x001e92ff, 0x002d9aff, 0x003da1ff, 
+                                          0x004da9ff, 0x005cb0ff, 0x006cb8ff, 0x007cc0ff, 0x008bc7ff, 0x009bcfff, 0x00abd6ff, 0x00badeff, 
+                                          0x00cae5ff, 0x00d9edff, 0x00e9f4ff, 0x00f9fcff, 0x00f7fAf6, 0x00f7faef, 0x00f7fAeA, 0x00f7fae6, 
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_4) / sizeof(unsigned int)> palette_superblue_c_4(colors_superblue_c_4);
+static const PaletteConstBWD<sizeof(colors_superblue_c_4) / sizeof(unsigned int)> palette_superblue_c_4_inv(colors_superblue_c_4);
+
+
+static const unsigned int colors_superblue_c_5[] = {
+                                          0x00000099,  
+                                          0x000000a5, 0x000003b0, 0x000012bc, 0x000021c7, 0x000031d3, 0x000040de, 0x00004fea, 0x00005ef6, 
+                                          0x00006dff, 0x00007cff, 0x000e8bff, 0x002d9aff, 0x004da9ff, 0x006cb8ff, 0x008bc7ff, 0x00abd6ff, 
+                                          0x00cae5ff, 0x00d9edff, 0x00e9f4ff, 0x00f9fcff, 0x00f7fAf6, 0x00f7faef, 0x00f7fAeA, 0x00f7fae6, 
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973, 
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_5) / sizeof(unsigned int)> palette_superblue_c_5(colors_superblue_c_5);
+static const PaletteConstBWD<sizeof(colors_superblue_c_5) / sizeof(unsigned int)> palette_superblue_c_5_inv(colors_superblue_c_5);
+
+
+static const unsigned int colors_superblue_c_6[] = {
+                                          0x002e966c, 0x002f9870, 0x002f9b74, 0x00309e78, 0x0031a07b, 0x0037a37f, 0x003ca683, 0x0042a886, 
+                                          0x0048ab8a, 0x004eae8e, 0x0054b092, 0x005ab395, 0x005fb699, 0x0065b89d, 0x006bbba1, 0x0071bea4, 
+                                          0x0077c0a8, 0x007dc3ac, 0x0082c6af, 0x0088c8b3, 0x008ecbb7, 0x0094cebb, 0x009ad0be, 0x00a0d3c2, 
+                                          0x00a6d6c6, 0x00abd8c9, 0x00b1dbcd, 0x00b7ded1, 0x00bde0d5, 0x00c3e3d8, 0x00c9e6dc, 0x00cee8e0, 
+                                          0x00d4ebe4, 0x00daeee7, 0x00e0f0eb, 0x00e6f3ef, 0x00eAf4eb, 0x00eff4e8, 0x00f2f4e4, 
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000,  
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_6) / sizeof(unsigned int)> palette_superblue_c_6(colors_superblue_c_6);
+static const PaletteConstBWD<sizeof(colors_superblue_c_6) / sizeof(unsigned int)> palette_superblue_c_6_inv(colors_superblue_c_6);
+
+
+
+static const unsigned int colors_superblue_c_7[] = {
+                                          0x00266e3c, 0x0027733f, 0x00287844, 0x00297e4b, 0x002a8352, 0x002b885a, 0x002c8e61, 0x002e9369, 
+                                          0x002f9870, 0x00309e78, 0x0037a37f, 0x0042a886, 0x004eae8e, 0x005ab395, 0x0065b89d, 0x0071bea4, 
+                                          0x0077c0a8, 0x007dc3ac, 0x0082c6af, 0x0088c8b3, 0x008ecbb7, 0x0094cebb, 0x009ad0be, 0x00a0d3c2, 
+                                          0x00a6d6c6, 0x00abd8c9, 0x00b1dbcd, 0x00b7ded1, 0x00bde0d5, 0x00c3e3d8, 0x00c9e6dc, 0x00cee8e0, 
+                                          0x00d4ebe4, 0x00daeee7, 0x00e0f0eb, 0x00e6f3ef, 0x00eAf4eb, 0x00eff4e8, 0x00f2f4e4, 
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_7) / sizeof(unsigned int)> palette_superblue_c_7(colors_superblue_c_7);
+static const PaletteConstBWD<sizeof(colors_superblue_c_7) / sizeof(unsigned int)> palette_superblue_c_7_inv(colors_superblue_c_7);
+
+
+static const unsigned int colors_superblue_c_8[] = {
+                                          0x001e6caa, 0x002170ae, 0x002474b1, 0x002778b5, 0x00297cb8, 0x002c80bb, 0x002f84be, 0x003689c1, 
+                                          0x003d8ec4, 0x004393c7, 0x004a98ca, 0x00519dcd, 0x0057a2d0, 0x005ea8d2, 0x0064add5, 0x006ab3d7, 
+                                          0x0070b8da, 0x0076bddc, 0x007cc1de, 0x0082c5e0, 0x0088c8e3, 0x008dcbe5, 0x0093cee6, 0x0098d0e8, 
+                                          0x009ed3ea, 0x00a3d6ec, 0x00a8d9ed, 0x00addcef, 0x00b2dff0, 0x00b7e2f2, 0x00bce4f3, 0x00c0e7f4, 
+                                          0x00c5e9f6, 0x00caeaf6, 0x00ceebf6, 0x00d2ecf6, 0x00d7edf6, 0x00dbeef6, 0x00dfeff5, 0x00e3f0f5, 
+                                          0x00e7f1f5, 0x00eaf2f5, 0x00eef3f5, 0x00f2f4f5, 0x00f5f5f4, 0x00f5f5f2, 0x00f4f4f0, 0x00f3f4ef, 
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_8) / sizeof(unsigned int)> palette_superblue_c_8(colors_superblue_c_8);
+static const PaletteConstBWD<sizeof(colors_superblue_c_8) / sizeof(unsigned int)> palette_superblue_c_8_inv(colors_superblue_c_8);
+
+static const unsigned int colors_superblue_c_9[] = {
+                                          0x0009487e, 0x000a4e87, 0x000b548f, 0x00115b97, 0x0016629f, 0x001c69a7, 0x002170ae, 0x002778b5, 
+                                          0x002c80bb, 0x003689c1, 0x004393c7, 0x00519dcd, 0x0057a2d0, 0x005ea8d2, 0x0064add5, 0x006ab3d7, 
+                                          0x0070b8da, 0x0076bddc, 0x007cc1de, 0x0082c5e0, 0x0088c8e3, 0x008dcbe5, 0x0093cee6, 0x0098d0e8, 
+                                          0x009ed3ea, 0x00a3d6ec, 0x00a8d9ed, 0x00addcef, 0x00b2dff0, 0x00b7e2f2, 0x00bce4f3, 0x00c0e7f4, 
+                                          0x00c5e9f6, 0x00caeaf6, 0x00ceebf6, 0x00d2ecf6, 0x00d7edf6, 0x00dbeef6, 0x00dfeff5, 0x00e3f0f5, 
+                                          0x00e7f1f5, 0x00eaf2f5, 0x00eef3f5, 0x00f2f4f5, 0x00f5f5f4, 0x00f5f5f2, 0x00f4f4f0, 0x00f3f4ef, 
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_9) / sizeof(unsigned int)> palette_superblue_c_9(colors_superblue_c_9);
+static const PaletteConstBWD<sizeof(colors_superblue_c_9) / sizeof(unsigned int)> palette_superblue_c_9_inv(colors_superblue_c_9);
+
+
+
+static const unsigned int colors_superblue_c_10[] = {
+                                          0x00053458, 0x00063962, 0x00073d6c, 0x00084275, 
+                                          0x0009487e, 0x000a4e87, 0x000b548f, 0x00115b97, 0x0016629f, 0x001c69a7, 0x002170ae, 0x002778b5, 
+                                          0x002c80bb, 0x003689c1, 0x004393c7, 0x00519dcd, 0x0057a2d0, 0x005ea8d2, 0x0064add5, 0x006ab3d7, 
+                                          0x0070b8da, 0x0076bddc, 0x007cc1de, 0x0082c5e0, 0x0088c8e3, 0x008dcbe5, 0x0093cee6, 0x0098d0e8, 
+                                          0x009ed3ea, 0x00a3d6ec, 0x00a8d9ed, 0x00addcef, 0x00b2dff0, 0x00b7e2f2, 0x00bce4f3, 0x00c0e7f4, 
+                                          0x00c5e9f6, 0x00caeaf6, 0x00ceebf6, 0x00d2ecf6, 0x00d7edf6, 0x00dbeef6, 0x00dfeff5, 0x00e3f0f5, 
+                                          0x00e7f1f5, 0x00eaf2f5, 0x00eef3f5, 0x00f2f4f5, 0x00f5f5f4, 0x00f5f5f2, 0x00f4f4f0, 0x00f3f4ef, 
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000, 
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_10) / sizeof(unsigned int)> palette_superblue_c_10(colors_superblue_c_10);
+static const PaletteConstBWD<sizeof(colors_superblue_c_10) / sizeof(unsigned int)> palette_superblue_c_10_inv(colors_superblue_c_10);
+
+
+static const unsigned int colors_superblue_c_11[] = {
+                                          0x001d0ff7, 0x002111ed, 0x002513e2, 0x002915d8, 0x002d17ce, 
+                                          0x003119c3, 0x00351bb9, 0x00391daf, 0x003d1fa4, 0x0041219a, 0x00452390, 0x00492585, 0x004d277b, 
+                                          0x00512971, 0x00552b66, 0x00592d5c, 0x005d2f52, 0x00613147, 0x0065333d, 0x00693533, 0x006d3728, 
+                                          0x0071391e, 0x00753b14, 0x00793d0a, 0x007d3f00, 0x00804141, 0x00844343, 0x00884545, 0x008c4747, 
+                                          0x00904949, 0x00944b4b, 0x00984d4d, 0x009c4f4f, 0x00a05151, 0x00a45353, 0x00a85555, 0x00ac5757, 
+                                          0x00b05959, 0x00b45b5b, 0x00b85d5d, 0x00bc5f5f, 0x00c06161, 0x00c46363, 0x00c86565, 0x00cc6767, 
+                                          0x00d06969, 0x00d46b6b, 0x00d86d6d, 0x00dc6f6f, 0x00e07171, 0x00e47373, 0x00e87575, 0x00ec7777, 
+                                          0x00f07979, 0x00f47b7b, 0x00f87d7d, 0x00fc7f7f, 0x00fd8181, 0x00f58383, 0x00ec8585, 0x00e48787, 
+                                          0x00db8989, 0x00d38b8b, 0x00ca8d8d, 0x00c28f8f, 0x00ba9191, 0x00b19393, 0x00a99595, 0x00a09797, 
+                                          0x00989999, 0x008f9b9b, 0x00879d9d, 0x007e9f9f, 0x0076a1a1, 0x006da3a3, 0x0065a5a5, 0x005ca7a7, 
+                                          0x0054a9a9, 0x004babab, 0x0043adad, 0x003bafaf, 0x0032b1b1, 0x002ab3b3, 0x0021b5b5, 0x0019b7b7, 
+                                          0x0010b9b9, 0x0008bbbb, 0x0000bdbd, 0x0008bfbf, 0x0010c1c1, 0x0017c3c3, 0x001fc5c5, 0x0026c7c7, 
+                                          0x002ec9c9, 0x0036cbcb, 0x003dcdcd, 0x0045cfcf, 0x004cd1d1, 0x0054d3d3, 0x005bd5d5, 0x0063d7d7, 
+                                          0x006bd9d9, 0x0072dbdb, 0x007adddd, 0x0081dfdf, 0x0089e1e1, 0x0091e3e3, 0x0098e5e5, 0x00a0e7e7, 
+                                          0x00a7e9e9, 0x00afebeb, 0x00b6eded, 0x00beefef, 0x00c6f1f1, 0x00cdf3f3, 0x00d5f5f5, 0x00dcf7f7, 
+                                          0x00e0f8f8, 0x00e4f9f9, 0x00e4f7f5, 0x00eff6eA, 0x00f2f5e6, 
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_11) / sizeof(unsigned int)> palette_superblue_c_11(colors_superblue_c_11);
+static const PaletteConstBWD<sizeof(colors_superblue_c_11) / sizeof(unsigned int)> palette_superblue_c_11_inv(colors_superblue_c_11);
+
+
+static const unsigned int colors_superblue_c_12[] = {
+                                          0x001109a2, 0x00150bc6, 0x00190dea, 0x001d0ff7, 0x002111ed, 0x002513e2, 0x002915d8, 0x002d17ce, 
+                                          0x003119c3, 0x00351bb9, 0x00391daf, 0x003d1fa4, 0x0041219a, 0x00452390, 0x00492585, 0x004d277b, 
+                                          0x00512971, 0x00552b66, 0x00592d5c, 0x005d2f52, 0x00613147, 0x0065333d, 0x00693533, 0x006d3728, 
+                                          0x0071391e, 0x00753b14, 0x00793d0a, 0x007d3f00, 0x00804141, 0x00844343, 0x00884545, 0x008c4747, 
+                                          0x00904949, 0x00944b4b, 0x00984d4d, 0x009c4f4f, 0x00a05151, 0x00a45353, 0x00a85555, 0x00ac5757, 
+                                          0x00b05959, 0x00b45b5b, 0x00b85d5d, 0x00bc5f5f, 0x00c06161, 0x00c46363, 0x00c86565, 0x00cc6767, 
+                                          0x00d06969, 0x00d46b6b, 0x00d86d6d, 0x00dc6f6f, 0x00e07171, 0x00e47373, 0x00e87575, 0x00ec7777, 
+                                          0x00f07979, 0x00f47b7b, 0x00f87d7d, 0x00fc7f7f, 0x00fd8181, 0x00f58383, 0x00ec8585, 0x00e48787, 
+                                          0x00db8989, 0x00d38b8b, 0x00ca8d8d, 0x00c28f8f, 0x00ba9191, 0x00b19393, 0x00a99595, 0x00a09797, 
+                                          0x00989999, 0x008f9b9b, 0x00879d9d, 0x007e9f9f, 0x0076a1a1, 0x006da3a3, 0x0065a5a5, 0x005ca7a7, 
+                                          0x0054a9a9, 0x004babab, 0x0043adad, 0x003bafaf, 0x0032b1b1, 0x002ab3b3, 0x0021b5b5, 0x0019b7b7, 
+                                          0x0010b9b9, 0x0008bbbb, 0x0000bdbd, 0x0008bfbf, 0x0010c1c1, 0x0017c3c3, 0x001fc5c5, 0x0026c7c7, 
+                                          0x002ec9c9, 0x0036cbcb, 0x003dcdcd, 0x0045cfcf, 0x004cd1d1, 0x0054d3d3, 0x005bd5d5, 0x0063d7d7, 
+                                          0x006bd9d9, 0x0072dbdb, 0x007adddd, 0x0081dfdf, 0x0089e1e1, 0x0091e3e3, 0x0098e5e5, 0x00a0e7e7, 
+                                          0x00a7e9e9, 0x00afebeb, 0x00b6eded, 0x00beefef, 0x00c6f1f1, 0x00cdf3f3, 0x00d5f5f5, 0x00dcf7f7, 
+                                          0x00e0f8f8, 0x00e4f9f9, 0x00e4f7f5, 0x00eff6eA, 0x00f2f5e6, 
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+  
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_12) / sizeof(unsigned int)> palette_superblue_c_12(colors_superblue_c_12);
+static const PaletteConstBWD<sizeof(colors_superblue_c_12) / sizeof(unsigned int)> palette_superblue_c_12_inv(colors_superblue_c_12);
+
+
+static const unsigned int colors_superblue_c_13[] = {
+                                          0x002513e2, 0x002d17ce, 0x00351bb9, 0x003d1fa4, 
+                                          0x00452390, 0x004d277b, 0x00552b66, 0x005d2f52, 0x0065333d, 0x006d3728, 0x00753b14, 0x007d3f00, 
+                                          0x00844343, 0x008c4747, 0x00944b4b, 0x009c4f4f, 0x00a45353, 0x00ac5757, 0x00b45b5b, 0x00bc5f5f, 
+                                          0x00c46363, 0x00cc6767, 0x00d46b6b, 0x00dc6f6f, 0x00e47373, 0x00ec7777, 0x00f47b7b, 0x00fc7f7f, 
+                                          0x00f58383, 0x00e48787, 0x00d38b8b, 0x00c28f8f, 0x00b19393, 0x00a09797, 0x008f9b9b, 0x007e9f9f, 
+                                          0x006da3a3, 0x005ca7a7, 0x004babab, 0x003bafaf, 0x002ab3b3, 0x0019b7b7, 0x0008bbbb, 0x0008bfbf, 
+                                          0x0017c3c3, 0x0026c7c7, 0x0036cbcb, 0x0045cfcf, 0x0054d3d3, 0x0063d7d7, 0x0072dbdb, 0x0081dfdf, 
+                                          0x0091e3e3, 0x00a0e7e7, 0x00afebeb, 0x00beefef, 0x00cdf3f3, 0x00dcf7f7, 0x00e0f8f8, 0x00e4f9f9, 
+                                          0x00e4f7f5, 0x00eff6eA, 0x00f2f5e6, 
+                                          
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_13) / sizeof(unsigned int)> palette_superblue_c_13(colors_superblue_c_13);
+static const PaletteConstBWD<sizeof(colors_superblue_c_13) / sizeof(unsigned int)> palette_superblue_c_13_inv(colors_superblue_c_13);
+
+
+static const unsigned int colors_superblue_c_14[] = {
+                                          0x007d7d7d, 0x00858585, 0x00919191, 0x00a1a1a1, 0x00aeaeae, 
+                                          0x00b7b7b7, 0x00b9b9b9, 0x00b4b4b4, 0x00a9a9a9, 0x009b9b9b, 0x008f8f8f, 0x00888888, 0x00888888, 
+                                          0x008e8e8e, 0x009b9b9b, 0x00aaaaaa, 0x00b8b8b8, 0x00c2c2c2, 0x00c4c4c4, 0x00bfbfbf, 0x00b5b5b5, 
+                                          0x00a7a7a7, 0x009b9b9b, 0x00939393, 0x00929292, 0x00989898, 0x00a4a4a4, 0x00b4b4b4, 0x00c2c2c2, 
+                                          0x00cccccc, 0x00cfcfcf, 0x00cbcbcb, 0x00c1c1c1, 0x00b4b4b4, 0x00a7a7a7, 0x009f9f9f, 0x009d9d9d, 
+                                          0x00a2a2a2, 0x00aeaeae, 0x00bdbdbd, 0x00cccccc, 0x00d6d6d6, 0x00dadada, 0x00d7d7d7, 0x00cdcdcd, 
+                                          0x00c0c0c0, 0x00b3b3b3, 0x00aaaaaa, 0x00a7a7a7, 0x00acacac, 0x00b8b8b8, 0x00c6c6c6, 0x00d5d5d5, 
+                                          0x00e0e0e0, 0x00e5e5e5, 0x00e2e2e2, 0x00d9d9d9, 0x00cccccc, 0x00bfbfbf, 0x00b5b5b5, 0x00b2b2b2, 
+                                          0x00b6b6b6, 0x00c1c1c1, 0x00d0d0d0, 0x00dfdfdf, 0x00eaeaea, 0x00f0f0f0, 0x00ededed, 0x00e5e5e5, 
+                                          0x00d8d8d8, 0x00cbcbcb, 0x00c1c1c1, 0x00bdbdbd, 0x00c1c1c1, 0x00cbcbcb, 0x00d9d9d9, 0x00e8e8e8, 
+                                          0x00f4f4f4, 0x00fafafa, 0x00f9f9f9, 0x00f1f1f1, 0x00e4e4e4, 0x00d7d7d7, 0x00cccccc, 0x00c8c8c8, 
+                                          0x00cbcbcb, 0x00d5d5d5, 0x00e3e3e3, 0x00f2f2f2, 0x00fefefe, 0x00f9f9f9, 0x00fafafa, 0x00fdfdfd, 
+                                          0x00f0f0f0, 0x00e3e3e3, 0x00d8d8d8, 0x00d3d3d3, 0x00d5d5d5, 0x00dedede, 0x00ececec, 0x00fbfbfb, 
+                                          0x00f6f6f6, 0x00efefef, 0x00efefef, 0x00f6f6f6, 0x00fcfcfc, 0x00efefef, 0x00e4e4e4, 0x00dedede, 
+                                          0x00dfdfdf, 0x00e8e8e8, 0x00f6f6f6, 0x00f9f9f9, 0x00ececec, 0x00e4e4e4, 0x00e3e3e3, 0x00eaeaea,
+                                          
+                                          
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33, 
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200, 
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_14) / sizeof(unsigned int)> palette_superblue_c_14(colors_superblue_c_14);
+static const PaletteConstBWD<sizeof(colors_superblue_c_14) / sizeof(unsigned int)> palette_superblue_c_14_inv(colors_superblue_c_14);
+
+
+static const unsigned int colors_superblue_c_15[] = {
+                                          0x009d9d9d, 
+                                          0x00a2a2a2, 0x00aeaeae, 0x00bdbdbd, 0x00cccccc, 0x00d6d6d6, 0x00dadada, 0x00d7d7d7, 0x00cdcdcd, 
+                                          0x00c0c0c0, 0x00b3b3b3, 0x00aaaaaa, 0x00a7a7a7, 0x00acacac, 0x00b8b8b8, 0x00c6c6c6, 0x00d5d5d5, 
+                                          0x00e0e0e0, 0x00e5e5e5, 0x00e2e2e2, 0x00d9d9d9, 0x00cccccc, 0x00bfbfbf, 0x00b5b5b5, 0x00b2b2b2, 
+                                          0x00b6b6b6, 0x00c1c1c1, 0x00d0d0d0, 0x00dfdfdf, 0x00eaeaea, 0x00f0f0f0, 0x00ededed, 0x00e5e5e5, 
+                                          0x00d8d8d8, 0x00cbcbcb, 0x00c1c1c1, 0x00bdbdbd, 0x00c1c1c1, 0x00cbcbcb, 0x00d9d9d9, 0x00e8e8e8, 
+                                          0x00f4f4f4, 0x00fafafa, 0x00f9f9f9, 0x00f1f1f1, 0x00e4e4e4, 0x00d7d7d7, 0x00cccccc, 0x00c8c8c8, 
+                                          0x00cbcbcb, 0x00d5d5d5, 0x00e3e3e3, 0x00f2f2f2, 0x00fefefe, 0x00f9f9f9, 0x00fafafa, 0x00fdfdfd, 
+                                          0x00f0f0f0, 0x00e3e3e3, 0x00d8d8d8, 0x00d3d3d3, 0x00d5d5d5, 0x00dedede, 0x00ececec, 0x00fbfbfb, 
+                                          0x00f6f6f6, 0x00efefef, 0x00efefef, 0x00f6f6f6, 0x00fcfcfc, 0x00efefef, 0x00e4e4e4, 0x00dedede, 
+                                          0x00dfdfdf, 0x00e8e8e8, 0x00f6f6f6, 0x00f9f9f9, 0x00ececec, 0x00e4e4e4, 0x00e3e3e3, 0x00eaeaea,
+  
+                                          0x00f5f4e2, 0x00f7f3e1, 0x00f8f3e0, 0x00f7f2de, 0x00f7f1dc, 0x00f6f0da, 0x00f6efd8, 0x00f5eed5,
+                                          0x00f4edd3, 0x00f4ecd1, 0x00f3eacf, 0x00f3e9cd, 0x00f2e8cb, 0x00f1e7c8, 0x00f1e6c6, 0x00f0e5c4,
+                                          0x00f0e4c2, 0x00efe3c0, 0x00eee2be, 0x00eee1bb, 0x00ede0b9, 0x00eddfb7, 0x00ecdeb5, 0x00ebddb3,
+                                          0x00ebdcb1, 0x00eadbaf, 0x00eadaad, 0x00e9d8aa, 0x00e8d7a8, 0x00e7d6a6, 0x00e6d4a4, 0x00e5d3a2,
+                                          0x00e4d1a0, 0x00e3cf9e, 0x00e2ce9c, 0x00e2cc9a, 0x00e1ca98, 0x00e0c996, 0x00dfc794, 0x00dec592,
+                                          0x00ddc38f, 0x00dbc08b, 0x00d9bc87, 0x00d7b983, 0x00d5b57f, 0x00d3b17b, 0x00d1ad77, 0x00cfa973,
+                                          0x00cea56f, 0x00cca16b, 0x00c99d68, 0x00c79964, 0x00c59560, 0x00c2915c, 0x00c08c58, 0x00be8854,
+                                          0x00bb8451, 0x00b97f4d, 0x00b77b49, 0x00b47645, 0x00b27243, 0x00b06d42, 0x00ad6840, 0x00ab633f,
+                                          0x00a95e3e, 0x00a6593c, 0x00a4553b, 0x00a24f39, 0x009f4a38, 0x009d4536, 0x009a4035, 0x00983b33,
+
+                                          0x00961900, 0x00931600, 0x00911200, 0x008e0f00, 0x008b0c00, 0x00890900, 0x00860600, 0x00830200,
+                                          0x00810000, 0x007e0000, 0x007b0000, 0x00780000, 0x00760000, 0x00700000, 0x006b0000, 0x00660000, 
+                                          0x00600000, 0x005b0000, 0x00550000, 0x00500000, 0x004a0000, 0x00450000, 0x00400000, 0x003a0000,
+                                          0x00320000, 0x002d0000,
+};
+
+
+static const PaletteConstFWD<sizeof(colors_superblue_c_15) / sizeof(unsigned int)> palette_superblue_c_15(colors_superblue_c_15);
+static const PaletteConstBWD<sizeof(colors_superblue_c_15) / sizeof(unsigned int)> palette_superblue_c_15_inv(colors_superblue_c_15);
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-const IPalette* const ppalettes_spec[] = { &palette_spec_BlYeRd, &palette_spec_BlGnYe, &palette_spec_GnYe,
-                                           &paletteWR_02, &paletteWR_03, &paletteWR_04, &paletteWR_05, &paletteWR_06, &paletteWR_07, &paletteWR_08, &paletteWR_09, 
-                                           &paletteWG_02, &paletteWG_03, &paletteWG_04, &paletteWG_05, &paletteWG_06, &paletteWG_07, &paletteWG_08, &paletteWG_09, 
-                                           &paletteWY_02, &paletteWY_03, &paletteWY_04, &paletteWY_05, &paletteWY_06, &paletteWY_07, &paletteWY_08, &paletteWY_09
-                                         };
+const IPalette* const ppalettes_spec[] = {      &palette_spec_BlYeRd, &palette_spec_BlGnYe, &palette_spec_GnYe,
+                                                &paletteWR_02, &paletteWR_03, &paletteWR_04, &paletteWR_05, &paletteWR_06, &paletteWR_07, &paletteWR_08, &paletteWR_09, 
+                                                &paletteWG_02, &paletteWG_03, &paletteWG_04, &paletteWG_05, &paletteWG_06, &paletteWG_07, &paletteWG_08, &paletteWG_09, 
+                                                &paletteWY_02, &paletteWY_03, &paletteWY_04, &paletteWY_05, &paletteWY_06, &paletteWY_07, &paletteWY_08, &paletteWY_09,
+                                                &palette_superblue_a_1, &palette_superblue_a_2, &palette_superblue_a_3, &palette_superblue_a_4, &palette_superblue_a_5, 
+                                                &palette_superblue_a_6, &palette_superblue_a_7, &palette_superblue_a_8, &palette_superblue_a_9, &palette_superblue_a_10, 
+                                                &palette_superblue_a_11, &palette_superblue_a_12, &palette_superblue_a_13, &palette_superblue_a_14, &palette_superblue_a_15, 
+                                                &palette_superblue_b_1,  &palette_superblue_b_2,  &palette_superblue_b_3, &palette_superblue_b_4, &palette_superblue_b_5, 
+                                                &palette_superblue_b_6, &palette_superblue_b_7, &palette_superblue_b_8, &palette_superblue_b_9, &palette_superblue_b_10, 
+                                                &palette_superblue_b_11, &palette_superblue_b_12, &palette_superblue_b_13, &palette_superblue_b_14, &palette_superblue_b_15, 
+                                                &palette_superblue_b_16, &palette_superblue_b_17, &palette_superblue_c_1, &palette_superblue_c_2, &palette_superblue_c_3,  
+                                                &palette_superblue_c_4, &palette_superblue_c_5, &palette_superblue_c_6, &palette_superblue_c_7, &palette_superblue_c_8, 
+                                                &palette_superblue_c_9, &palette_superblue_c_10,  &palette_superblue_c_11, &palette_superblue_c_12, &palette_superblue_c_13, 
+                                                &palette_superblue_c_14, &palette_superblue_c_15, 
+                                             };
+
 const IPalette* const ppalettes_spec_inv[] = { &palette_spec_BlYeRd_inv, &palette_spec_BlGnYe_inv, &palette_spec_GnYe_inv,
                                                &paletteWR_02_inv, &paletteWR_03_inv, &paletteWR_04_inv, &paletteWR_05_inv, &paletteWR_06_inv, &paletteWR_07_inv, &paletteWR_08_inv, &paletteWR_09_inv, 
                                                &paletteWG_02_inv, &paletteWG_03_inv, &paletteWG_04_inv, &paletteWG_05_inv, &paletteWG_06_inv, &paletteWG_07_inv, &paletteWG_08_inv, &paletteWG_09_inv, 
-                                               &paletteWY_02_inv, &paletteWY_03_inv, &paletteWY_04_inv, &paletteWY_05_inv, &paletteWY_06_inv, &paletteWY_07_inv, &paletteWY_08_inv, &paletteWY_09_inv
+                                               &paletteWY_02_inv, &paletteWY_03_inv, &paletteWY_04_inv, &paletteWY_05_inv, &paletteWY_06_inv, &paletteWY_07_inv, &paletteWY_08_inv, &paletteWY_09_inv, 
+                                               &palette_superblue_a_1_inv, &palette_superblue_a_2_inv, &palette_superblue_a_3_inv, &palette_superblue_a_4_inv, &palette_superblue_a_5_inv, 
+                                               &palette_superblue_a_6_inv, &palette_superblue_a_7_inv, &palette_superblue_a_8_inv, &palette_superblue_a_9_inv, &palette_superblue_a_10_inv, 
+                                               &palette_superblue_a_11_inv, &palette_superblue_a_12_inv, &palette_superblue_a_13_inv, &palette_superblue_a_14_inv, &palette_superblue_a_15_inv, 
+                                               &palette_superblue_b_1_inv,  &palette_superblue_b_2_inv,  &palette_superblue_b_3_inv, &palette_superblue_b_4_inv, &palette_superblue_b_5_inv, 
+                                               &palette_superblue_b_6_inv, &palette_superblue_b_7_inv, &palette_superblue_b_8_inv, &palette_superblue_b_9_inv, &palette_superblue_b_10_inv, 
+                                               &palette_superblue_b_11_inv, &palette_superblue_b_12_inv, &palette_superblue_b_13_inv, &palette_superblue_b_14_inv, &palette_superblue_b_15_inv, 
+                                               &palette_superblue_b_16_inv, &palette_superblue_b_17_inv, &palette_superblue_c_1_inv, &palette_superblue_c_2_inv, &palette_superblue_c_3_inv,  
+                                               &palette_superblue_c_4_inv, &palette_superblue_c_5_inv, &palette_superblue_c_6_inv, &palette_superblue_c_7_inv, &palette_superblue_c_8_inv, 
+                                               &palette_superblue_c_9_inv, &palette_superblue_c_10_inv,  &palette_superblue_c_11_inv, &palette_superblue_c_12_inv, &palette_superblue_c_13_inv, 
+                                               &palette_superblue_c_14_inv, &palette_superblue_c_15_inv, 
                                              };
 const char*     const ppalettenames_spec[] = { "spec_BlYeRd", "spec_BlGnYe", "spec_GnYe",
                                                "spec_WR_02", "spec_WR_03", "spec_WR_04", "spec_WR_05", "spec_WR_06", "spec_WR_07", "spec_WR_08", "spec_WR_09", 
                                                "spec_WG_02", "spec_WG_03", "spec_WG_04", "spec_WG_05", "spec_WG_06", "spec_WG_07", "spec_WG_08", "spec_WG_09", 
-                                               "spec_WY_02", "spec_WY_03", "spec_WY_04", "spec_WY_05", "spec_WY_06", "spec_WY_07", "spec_WY_08", "spec_WY_09"
+                                               "spec_WY_02", "spec_WY_03", "spec_WY_04", "spec_WY_05", "spec_WY_06", "spec_WY_07", "spec_WY_08", "spec_WY_09",
+                                               "superblue_a_1", "superblue_a_2", "superblue_a_3", "superblue_a_4", "superblue_a_5", 
+                                               "superblue_a_6", "superblue_a_7", "superblue_a_8", "superblue_a_9", "superblue_a_10", 
+                                               "superblue_a_11", "superblue_a_12", "superblue_a_13", "superblue_a_14", "superblue_a_15", 
+                                               "superblue_b_1",  "superblue_b_2",  "superblue_b_3", "superblue_b_4", "superblue_b_5", 
+                                               "superblue_b_6", "superblue_b_7", "superblue_b_8", "superblue_b_9", "superblue_b_10", 
+                                               "superblue_b_11", "superblue_b_12", "superblue_b_13", "superblue_b_14", "superblue_b_15", 
+                                               "superblue_b_16", "superblue_b_17", "superblue_c_1", "superblue_c_2", "superblue_c_3",  
+                                               "superblue_c_4", "superblue_c_5", "superblue_c_6", "superblue_c_7", "superblue_c_8", 
+                                               "superblue_c_9", "superblue_c_10",  "superblue_c_11", "superblue_c_12", "superblue_c_13", 
+                                               "superblue_c_14", "superblue_c_15", 
                                              };
 
 
-const IPalette* const ppalettes_spec2[] = { &palette_spec_BlYeRd, &palette_spec_BlGnYe, &palette_spec_GnYe,
-                                           &paletteBR_02, &paletteBR_03, &paletteBR_04, &paletteBR_05, &paletteBR_06, &paletteBR_07, &paletteBR_08, &paletteBR_09, 
-                                           &paletteBG_02, &paletteBG_03, &paletteBG_04, &paletteBG_05, &paletteBG_06, &paletteBG_07, &paletteBG_08, &paletteBG_09, 
-                                           &paletteBY_02, &paletteBY_03, &paletteBY_04, &paletteBY_05, &paletteBY_06, &paletteBY_07, &paletteBY_08, &paletteBY_09
+const IPalette* const ppalettes_spec2[] = {     &palette_spec_BlYeRd, &palette_spec_BlGnYe, &palette_spec_GnYe,
+                                                &paletteBR_02, &paletteBR_03, &paletteBR_04, &paletteBR_05, &paletteBR_06, &paletteBR_07, &paletteBR_08, &paletteBR_09, 
+                                                &paletteBG_02, &paletteBG_03, &paletteBG_04, &paletteBG_05, &paletteBG_06, &paletteBG_07, &paletteBG_08, &paletteBG_09, 
+                                                &paletteBY_02, &paletteBY_03, &paletteBY_04, &paletteBY_05, &paletteBY_06, &paletteBY_07, &paletteBY_08, &paletteBY_09,
+                                                &palette_superblue_a_1, &palette_superblue_a_2, &palette_superblue_a_3, &palette_superblue_a_4, &palette_superblue_a_5, 
+                                                &palette_superblue_a_6, &palette_superblue_a_7, &palette_superblue_a_8, &palette_superblue_a_9, &palette_superblue_a_10, 
+                                                &palette_superblue_a_11, &palette_superblue_a_12, &palette_superblue_a_13, &palette_superblue_a_14, &palette_superblue_a_15, 
+                                                &palette_superblue_b_1,  &palette_superblue_b_2,  &palette_superblue_b_3, &palette_superblue_b_4, &palette_superblue_b_5, 
+                                                &palette_superblue_b_6, &palette_superblue_b_7, &palette_superblue_b_8, &palette_superblue_b_9, &palette_superblue_b_10, 
+                                                &palette_superblue_b_11, &palette_superblue_b_12, &palette_superblue_b_13, &palette_superblue_b_14, &palette_superblue_b_15, 
+                                                &palette_superblue_b_16, &palette_superblue_b_17, &palette_superblue_c_1, &palette_superblue_c_2, &palette_superblue_c_3,  
+                                                &palette_superblue_c_4, &palette_superblue_c_5, &palette_superblue_c_6, &palette_superblue_c_7, &palette_superblue_c_8, 
+                                                &palette_superblue_c_9, &palette_superblue_c_10,  &palette_superblue_c_11, &palette_superblue_c_12, &palette_superblue_c_13, 
+                                                &palette_superblue_c_14, &palette_superblue_c_15, 
                                          };
 const IPalette* const ppalettes_spec2_inv[] = { &palette_spec_BlYeRd_inv, &palette_spec_BlGnYe_inv, &palette_spec_GnYe_inv,
-                                               &paletteBR_02_inv, &paletteBR_03_inv, &paletteBR_04_inv, &paletteBR_05_inv, &paletteBR_06_inv, &paletteBR_07_inv, &paletteBR_08_inv, &paletteBR_09_inv, 
-                                               &paletteBG_02_inv, &paletteBG_03_inv, &paletteBG_04_inv, &paletteBG_05_inv, &paletteBG_06_inv, &paletteBG_07_inv, &paletteBG_08_inv, &paletteBG_09_inv, 
-                                               &paletteBY_02_inv, &paletteBY_03_inv, &paletteBY_04_inv, &paletteBY_05_inv, &paletteBY_06_inv, &paletteBY_07_inv, &paletteBY_08_inv, &paletteBY_09_inv
+                                                &paletteBR_02_inv, &paletteBR_03_inv, &paletteBR_04_inv, &paletteBR_05_inv, &paletteBR_06_inv, &paletteBR_07_inv, &paletteBR_08_inv, &paletteBR_09_inv, 
+                                                &paletteBG_02_inv, &paletteBG_03_inv, &paletteBG_04_inv, &paletteBG_05_inv, &paletteBG_06_inv, &paletteBG_07_inv, &paletteBG_08_inv, &paletteBG_09_inv, 
+                                                &paletteBY_02_inv, &paletteBY_03_inv, &paletteBY_04_inv, &paletteBY_05_inv, &paletteBY_06_inv, &paletteBY_07_inv, &paletteBY_08_inv, &paletteBY_09_inv, 
+                                                &palette_superblue_a_1_inv, &palette_superblue_a_2_inv, &palette_superblue_a_3_inv, &palette_superblue_a_4_inv, &palette_superblue_a_5_inv, 
+                                                &palette_superblue_a_6_inv, &palette_superblue_a_7_inv, &palette_superblue_a_8_inv, &palette_superblue_a_9_inv, &palette_superblue_a_10_inv, 
+                                                &palette_superblue_a_11_inv, &palette_superblue_a_12_inv, &palette_superblue_a_13_inv, &palette_superblue_a_14_inv, &palette_superblue_a_15_inv, 
+                                                &palette_superblue_b_1_inv,  &palette_superblue_b_2_inv,  &palette_superblue_b_3_inv, &palette_superblue_b_4_inv, &palette_superblue_b_5_inv, 
+                                                &palette_superblue_b_6_inv, &palette_superblue_b_7_inv, &palette_superblue_b_8_inv, &palette_superblue_b_9_inv, &palette_superblue_b_10_inv, 
+                                                &palette_superblue_b_11_inv, &palette_superblue_b_12_inv, &palette_superblue_b_13_inv, &palette_superblue_b_14_inv, &palette_superblue_b_15_inv, 
+                                                &palette_superblue_b_16_inv, &palette_superblue_b_17_inv, &palette_superblue_c_1_inv, &palette_superblue_c_2_inv, &palette_superblue_c_3_inv,  
+                                                &palette_superblue_c_4_inv, &palette_superblue_c_5_inv, &palette_superblue_c_6_inv, &palette_superblue_c_7_inv, &palette_superblue_c_8_inv, 
+                                                &palette_superblue_c_9_inv, &palette_superblue_c_10_inv,  &palette_superblue_c_11_inv, &palette_superblue_c_12_inv, &palette_superblue_c_13_inv, 
+                                                &palette_superblue_c_14_inv, &palette_superblue_c_15_inv, 
                                              };
 const char*     const ppalettenames_spec2[] = { "spec_BlYeRd", "spec_BlGnYe", "spec_GnYe",
-                                               "spec_BR_02", "spec_BR_03", "spec_BR_04", "spec_BR_05", "spec_BR_06", "spec_BR_07", "spec_BR_08", "spec_BR_09", 
-                                               "spec_BG_02", "spec_BG_03", "spec_BG_04", "spec_BG_05", "spec_BG_06", "spec_BG_07", "spec_BG_08", "spec_BG_09", 
-                                               "spec_BY_02", "spec_BY_03", "spec_BY_04", "spec_BY_05", "spec_BY_06", "spec_BY_07", "spec_BY_08", "spec_BY_09"
+                                                "spec_BR_02", "spec_BR_03", "spec_BR_04", "spec_BR_05", "spec_BR_06", "spec_BR_07", "spec_BR_08", "spec_BR_09", 
+                                                "spec_BG_02", "spec_BG_03", "spec_BG_04", "spec_BG_05", "spec_BG_06", "spec_BG_07", "spec_BG_08", "spec_BG_09", 
+                                                "spec_BY_02", "spec_BY_03", "spec_BY_04", "spec_BY_05", "spec_BY_06", "spec_BY_07", "spec_BY_08", "spec_BY_09", 
+                                                "superblue_a_1", "superblue_a_2", "superblue_a_3", "superblue_a_4", "superblue_a_5", 
+                                                "superblue_a_6", "superblue_a_7", "superblue_a_8", "superblue_a_9", "superblue_a_10", 
+                                                "superblue_a_11", "superblue_a_12", "superblue_a_13", "superblue_a_14", "superblue_a_15", 
+                                                "superblue_b_1",  "superblue_b_2",  "superblue_b_3", "superblue_b_4", "superblue_b_5", 
+                                                "superblue_b_6", "superblue_b_7", "superblue_b_8", "superblue_b_9", "superblue_b_10", 
+                                                "superblue_b_11", "superblue_b_12", "superblue_b_13", "superblue_b_14", "superblue_b_15", 
+                                                "superblue_b_16", "superblue_b_17", "superblue_c_1", "superblue_c_2", "superblue_c_3",  
+                                                "superblue_c_4", "superblue_c_5", "superblue_c_6", "superblue_c_7", "superblue_c_8", 
+                                                "superblue_c_9", "superblue_c_10",  "superblue_c_11", "superblue_c_12", "superblue_c_13", 
+                                                "superblue_c_14", "superblue_c_15", 
                                              };
 
 #endif // PALETTES_SPEC_H

@@ -207,7 +207,8 @@ DrawRecorderPaged::DrawRecorderPaged(unsigned int samplesHorz, unsigned int line
   m_pagescount(pages == 0? 1 : pages)
 {
   m_pages = new MemExpand2D::mem_t[m_pagescount];
-  for (int i=m_pagescount-1; i>0; i--)
+//  for (int i=m_pagescount-1; i>0;i--)
+  for (unsigned int i=1; i<m_pagescount; i++)
     m_pages[i] = m_memory.extendeddataarr_replicate();    /// after cycle 0idx is replicated
   m_pagehole = 0;
 }

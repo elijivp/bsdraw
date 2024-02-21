@@ -133,5 +133,52 @@
         <file>special/spec_WG_03.png</file>
         <file>special/spec_WY_02.png</file>
         <file>special/spec_WY_03.png</file>
+        <file>special/superblue_a_1.png</file>
+        <file>special/superblue_a_2.png</file>
+        <file>special/superblue_a_3.png</file>
+        <file>special/superblue_a_4.png</file>
+        <file>special/superblue_a_5.png</file>
+        <file>special/superblue_a_6.png</file>
+        <file>special/superblue_a_7.png</file>
+        <file>special/superblue_a_8.png</file>
+        <file>special/superblue_a_9.png</file>
+        <file>special/superblue_a_10.png</file>
+        <file>special/superblue_a_11.png</file>
+        <file>special/superblue_a_12.png</file>
+        <file>special/superblue_a_13.png</file>
+        <file>special/superblue_a_14.png</file>
+        <file>special/superblue_a_15.png</file>
+        <file>special/superblue_b_1.png</file>
+        <file>special/superblue_b_2.png</file>
+        <file>special/superblue_b_3.png</file>
+        <file>special/superblue_b_4.png</file>
+        <file>special/superblue_b_5.png</file>
+        <file>special/superblue_b_6.png</file>
+        <file>special/superblue_b_7.png</file>
+        <file>special/superblue_b_8.png</file>
+        <file>special/superblue_b_9.png</file>
+        <file>special/superblue_b_10.png</file>
+        <file>special/superblue_b_11.png</file>
+        <file>special/superblue_b_12.png</file>
+        <file>special/superblue_b_13.png</file>
+        <file>special/superblue_b_14.png</file>
+        <file>special/superblue_b_15.png</file>
+        <file>special/superblue_b_16.png</file>
+        <file>special/superblue_b_17.png</file>
+        <file>special/superblue_c_1.png</file>
+        <file>special/superblue_c_2.png</file>
+        <file>special/superblue_c_3.png</file>
+        <file>special/superblue_c_4.png</file>
+        <file>special/superblue_c_5.png</file>
+        <file>special/superblue_c_6.png</file>
+        <file>special/superblue_c_7.png</file>
+        <file>special/superblue_c_8.png</file>
+        <file>special/superblue_c_9.png</file>
+        <file>special/superblue_c_10.png</file>
+        <file>special/superblue_c_11.png</file>
+        <file>special/superblue_c_12.png</file>
+        <file>special/superblue_c_13.png</file>
+        <file>special/superblue_c_14.png</file>
+        <file>special/superblue_c_15.png</file>
     </qresource>
 </RCC>

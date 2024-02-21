@@ -2173,7 +2173,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       draws[i]->setDataPalette(pptr[i]);
       draws[i]->setDataPaletteDiscretion(true);
     }
-#elif 1
+#elif 0
     static const int clc = 172;
     static PaletteBORDS<clc> brd0(0xFFFFFF);
     static PaletteBORDS<clc> brd1(0xFFFFFF);
@@ -2253,25 +2253,25 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //            PaletteTArray(&palette_superblue_a_15),
 //    };    
     
-//    static const PaletteTArray ppals[] = { 
-//            PaletteTArray(&palette_superblue_b_1), 
-//            PaletteTArray(&palette_superblue_b_2), 
-//            PaletteTArray(&palette_superblue_b_3),
-//            PaletteTArray(&palette_superblue_b_4),
-//            PaletteTArray(&palette_superblue_b_5),
-//            PaletteTArray(&palette_superblue_b_6),
-//            PaletteTArray(&palette_superblue_b_7),
-//            PaletteTArray(&palette_superblue_b_8),
-//            PaletteTArray(&palette_superblue_b_9),
-//            PaletteTArray(&palette_superblue_b_10),
-//            PaletteTArray(&palette_superblue_b_11),
-//            PaletteTArray(&palette_superblue_b_12),
-//            PaletteTArray(&palette_superblue_b_13),
-//            PaletteTArray(&palette_superblue_b_14),
-//            PaletteTArray(&palette_superblue_b_15),
-//            PaletteTArray(&palette_superblue_b_16),
-//            PaletteTArray(&palette_superblue_b_17),
-//    };
+    static const PaletteTArray ppals[] = { 
+            PaletteTArray(&palette_superblue_b_1), 
+            PaletteTArray(&palette_superblue_b_2), 
+            PaletteTArray(&palette_superblue_b_3),
+            PaletteTArray(&palette_superblue_b_4),
+            PaletteTArray(&palette_superblue_b_5),
+            PaletteTArray(&palette_superblue_b_6),
+            PaletteTArray(&palette_superblue_b_7),
+            PaletteTArray(&palette_superblue_b_8),
+            PaletteTArray(&palette_superblue_b_9),
+            PaletteTArray(&palette_superblue_b_10),
+            PaletteTArray(&palette_superblue_b_11),
+            PaletteTArray(&palette_superblue_b_12),
+            PaletteTArray(&palette_superblue_b_13),
+            PaletteTArray(&palette_superblue_b_14),
+            PaletteTArray(&palette_superblue_b_15),
+            PaletteTArray(&palette_superblue_b_16),
+            PaletteTArray(&palette_superblue_b_17),
+    };
     
 //    static const PaletteTArray ppals[] = { 
 //            PaletteTArray(&palette_superblue_c_1), 
@@ -2291,27 +2291,29 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //            PaletteTArray(&palette_superblue_c_15),
 //    };
     
+    
     static const int PALSCOUNT = sizeof(ppals)/sizeof(PaletteTArray);
     
     /// RECORD!
-//    const char* title_letter = "c";
-//    for (int p=0; p<sizeof(ppals)/sizeof(ppals[0]); p++)
-//    {
-//      const int clc = ppals[p].count();
-//      {
-//        QImage img(clc, 16, QImage::Format_RGB888);
-//        for (int j=0; j<16; j++)
-//        {
-//          myrgb_t*  bits = (myrgb_t*)img.scanLine(j);
-//          for (int i=0; i<clc; i++)
-//          {
-//            bits[i] = cast(ppals[p][i]);
-//          }
-//        }
-//        img = img.scaled(clc*2, 16);
-//        img.save(QString("superblue_%1_%2.png").arg(title_letter).arg(1+p), nullptr);
-//      }
-//    }
+    const char* title_letter = "c";
+    for (int p=0; p<sizeof(ppals)/sizeof(ppals[0]); p++)
+    {
+      const int clc = ppals[p].count();
+      {
+        QImage img(clc, 16, QImage::Format_RGB888);
+        for (int j=0; j<16; j++)
+        {
+          myrgb_t*  bits = (myrgb_t*)img.scanLine(j);
+          for (int i=0; i<clc; i++)
+          {
+            bits[i] = cast(ppals[p][i]);
+          }
+        }
+        img = img.scaled(clc*2, 16);
+        img.save(QString("superblue_%1_%2.png").arg(title_letter).arg(1+p), nullptr);
+      }
+    }
+    
     
     PORTIONS = 1;
     SAMPLES = 100;

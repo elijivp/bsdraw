@@ -417,7 +417,7 @@ union relatedopts_t
   }               rel_fixed;
   struct
   {
-    mtap_qstring_fn  tapfn;
+    ontap_qstring_fn  tapfn;
     const void*     param;
     int              slen;
   }               rel_tap_qstring;
@@ -431,7 +431,7 @@ union relatedopts_t
   
   relatedopts_t(){}
   relatedopts_t(const bounds_t bnd, float mod=0.0f){  rel_fixed.LL = bnd.LL; rel_fixed.HL = bnd.HL; rel_fixed.MOD = mod; }
-  relatedopts_t(mtap_qstring_fn tapfn, const void* param, int maxlen){  rel_tap_qstring.tapfn = tapfn; rel_tap_qstring.param = param; rel_tap_qstring.slen = maxlen; /*rel_tap_qstring.sstr.reserve(maxlen); */ }
+  relatedopts_t(ontap_qstring_fn tapfn, const void* param, int maxlen){  rel_tap_qstring.tapfn = tapfn; rel_tap_qstring.param = param; rel_tap_qstring.slen = maxlen; /*rel_tap_qstring.sstr.reserve(maxlen); */ }
   relatedopts_t(int numcount, int enfrom, int recycle){  rel_enumerate.numcount = numcount;  rel_enumerate.enfrom = enfrom;  rel_enumerate.recycle = recycle; }
 };
 
@@ -498,7 +498,7 @@ public:
   }
 protected:
   virtual void  bdContentUpdateBounds(float LL, float HL, float MOD=0)=0;
-  virtual void  bdContentUpdateTaps(QString& base, mtap_qstring_fn, const void* param, float relatedoffset, const tapcontent_t&)=0;
+  virtual void  bdContentUpdateTaps(QString& base, ontap_qstring_fn, const void* param, float relatedoffset, const tapcontent_t&)=0;
   virtual void  bdContentUpdateEnumerate(int from, int count, int recycle, float relatedoffset)=0;
 public:
   MarginCallback(): c_reloffset(0), c_updatesetDimm(false)
@@ -700,7 +700,7 @@ public:
     space = newspace;
   }
 protected:
-  virtual bool  updateArea(const uarea_t&, int){ return true; }
+  virtual bool  build(int){ return true; }
   virtual void  draw(QPainter&){}
   virtual void  sizeHint(ATTACHED_TO, int* atto_size, int* minsegm_main, int* minsegm_pre, int* minsegm_post) const
   {
@@ -715,38 +715,14 @@ MarginSpace::~MarginSpace(){}
 class MarginElementCached: public MarginElement
 {
 protected:
-  friend class DrawBars;
-private:
-  uarea_t     cached_area;
-  bool        filled;
-protected:
-  bool            mec_filled() const { return filled; }
-  const uarea_t&  mec_area() const { return cached_area; }
-protected:
   virtual void  draw(QPainter&){}
-  virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
-  {
-    if (UPDATEFOR == UF_RESIZE)
-    {
-      filled = true;
-      cached_area = area;
-    }
-    return true;
-  }
-  
 protected:
   QColor        c_color;
   bool          c_color_redefined;
   virtual void  changeColor(const QColor& clr){  c_color = clr; c_color_redefined = true; }
 public:
-  MarginElementCached(): c_color_redefined(false)
-  {
-    filled = false;
-  }
-  MarginElementCached(QColor color): c_color(color), c_color_redefined(true)
-  {
-    filled = false;
-  }
+  MarginElementCached(): c_color_redefined(false) {}
+  MarginElementCached(QColor color): c_color(color), c_color_redefined(true) {}
   ~MarginElementCached();
 public:
   void    setColor(QColor color)
@@ -755,7 +731,6 @@ public:
     c_color_redefined = true;
   }
 };
-
 MarginElementCached::~MarginElementCached(){}
 
 
@@ -778,10 +753,12 @@ public:
   ~MarginBorder();
   void  setWeight(int newweight){ weight = newweight; }
 protected:
-  virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
+  virtual bool  build(int UPDATEFOR)
   {
-    if (MarginElementCached::updateArea(area, UPDATEFOR) == false)
+    if (UPDATEFOR == UF_CONTENT)
       return false;
+    
+    const uarea_t& area = current_area();
     int d1, d2;
     if (zone_mode == 0)
     {
@@ -844,11 +821,9 @@ public:
     count = space? 3 : 1;
   }
 protected:
-  virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
-  {
-    if (MarginElementCached::updateArea(area, UPDATEFOR) == false)
-      return false;
-    
+  virtual bool  build(int /*UPDATEFOR*/)
+  {    
+    const uarea_t& area = current_area();
     int d1 = useAllZone? 0 : area.segm_pre, d2 = (useAllZone? area.segment_full : area.segment_full - area.segm_post)-1;
     int nspace = space == 0? 0 : space-1;
     if (area.atto == AT_LEFT)
@@ -962,10 +937,12 @@ public:
     prepare();
   }
 protected:
-  virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
+  virtual bool  build(int UPDATEFOR)
   {
-    if (MarginElementCached::updateArea(area, UPDATEFOR) == false)
+    if (UPDATEFOR == UF_CONTENT)
       return false;
+    
+    const uarea_t& area = current_area();
     int a1 =  area.atto_toin;
     int a2 = area.atto_from;
     int d = useneispace? area.segment_full : area.segm_main;
@@ -1054,8 +1031,8 @@ public:
   {
     pos_origin = pos;
     _update_single_pos();
-    if (mec_filled())
-      _update_single_area(mec_area());
+    if (current_area_initialized())
+      _update_single_area(current_area());
   }
   void    setMarkLength(int length){ mlenmaxi = length; }
   void    setMarkWidth(int width){ mwid = width; /*needRedrawByMark = true;*/ }
@@ -1121,13 +1098,10 @@ protected:
 //        mark.rect.setCoords(offs, l1, offs, l2);
 //    }
   }
-  virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
+  virtual bool  build(int /*UPDATEFOR*/)
   {
-    if (MarginElementCached::updateArea(area, UPDATEFOR) == false)
-      return false;
-    
-    _update_single_area(area);
-    storeDimm(area.segm_main);
+    _update_single_area(current_area());
+    storeDimm(current_area().segm_main);
     return true;
   }
   virtual void  draw(QPainter& painter)
@@ -1154,11 +1128,11 @@ protected:
     if (relative)
     {
       _update_single_pos();
-      if (mec_filled())
-        _update_single_area(mec_area());
+      if (current_area_initialized())
+        _update_single_area(current_area());
     }
   }
-  virtual void  bdContentUpdateTaps(QString& /*base*/, mtap_qstring_fn /*tapfn*/, const void* /*param*/, float /*relatedoffset*/, const tapcontent_t& /*tctt*/)
+  virtual void  bdContentUpdateTaps(QString& /*base*/, ontap_qstring_fn /*tapfn*/, const void* /*param*/, float /*relatedoffset*/, const tapcontent_t& /*tctt*/)
   {
   }
   virtual void  bdContentUpdateEnumerate(int from, int count, int /*recycle*/, float /*relatedoffset*/)
@@ -1168,75 +1142,37 @@ protected:
     {
       _update_single_pos();
 //      pos_mark = c_LL 
-      if (mec_filled())
-       _update_single_area(mec_area());
+      if (current_area_initialized())
+       _update_single_area(current_area());
     }
   }
 };
 MarginSingle::~MarginSingle(){}
 
 
-class MarginPointer: public MarginSingle, public MarginTextformat
+class MarginPointerBase: public MarginSingle, public MarginTextformat
 {
+protected:
   ORIENTATION     orient;
   bool            textInnerPlaced;
   texts_t         pointer;
   Qt::Alignment   alignment;
-  float           c_value;
-  bool            f_assigned;
 public:
-  MarginPointer(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, bool textinner, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/):
+  MarginPointerBase(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, bool textinner, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/):
     MarginSingle(rounding, _marklen, pos, _relative),
-    orient(_orient), textInnerPlaced(textinner), alignment(align), c_value(-1.0f), f_assigned(false)
+    orient(_orient), textInnerPlaced(textinner), alignment(align)
   {
-    _update_pointer_pos(pos_mark);
     pointer.visible = 1;
   }
-  MarginPointer(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, bool textinner, const QFont& fnt, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/): 
+  MarginPointerBase(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, bool textinner, const QFont& fnt, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/): 
     MarginSingle(rounding, _marklen, pos, _relative), MarginTextformat(fnt),
-    orient(_orient), textInnerPlaced(textinner), alignment(align), c_value(-1.0f),  f_assigned(false)
+    orient(_orient), textInnerPlaced(textinner), alignment(align)
   {
-    _update_pointer_pos(pos_mark);
     pointer.visible = 1;
   }
-  ~MarginPointer();
-  float _update_pointer_pos(float p){ c_value = c_LL + p*(c_HL-c_LL); if (c_MOD != 0.0f) c_value -= int(c_value/c_MOD)*c_MOD;  return c_value; }
-  virtual void  setPosition(float pos01)
-  {
-    MarginSingle::setPosition(pos01);
-    assignText(&pointer, redact(_update_pointer_pos(pos_mark)));
-    if (mec_filled())
-      _update_pointer_area(mec_area(), true);
-  }
-  void  setPositionBifunc(float pos01, float posBi)
-  {
-    MarginSingle::setPosition(pos01);
-    assignText(&pointer, redact(_update_pointer_pos(posBi)));
-//    qDebug()<<"Position : "<<pos01<<" self : "<<pos_mark;
-    if (mec_filled())
-      _update_pointer_area(mec_area(), true);
-  }
-  void  setPosition(float pos01_A, float pos01_B)
-  {
-    if (mec_filled())
-    {
-      bool v = BAR_VERT[mec_area().atto]? orientationMirroredVert(orient) : orientationMirroredHorz(orient);
-      bool m = orientationTransposed(orient) ^ BAR_VERT[mec_area().atto];
-//      MarginSingle::setPosition(m? pos01_B : pos01_A);
-      float pos01 = m? pos01_B : pos01_A;
-      setPositionBifunc( v ? 1.0f - pos01 : pos01, pos01);
-    }
-  }
-  void  setVisible(bool visible)
-  {
-    pointer.visible = visible? 1 : 0;
-  }
-  bool  isVisible() const
-  {
-    return pointer.visible != 0;
-  }
-protected:
-  virtual   void    tfContentUpdate(){  assignText(&pointer, redact(c_value), m_font); }
+  ~MarginPointerBase();
+  void  setVisible(bool visible) {    pointer.visible = visible? 1 : 0; }
+  bool  isVisible() const {           return pointer.visible != 0; }
 protected:
   void _update_pointer_area(const uarea_t& area, bool updateSingle)
   {
@@ -1257,17 +1193,10 @@ protected:
     }
     pointer.pos_update_fn(&pointer);
   }
-  virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
+  virtual bool  build(int UPDATEFOR)
   {
-    if (MarginSingle::updateArea(area, UPDATEFOR) == false)
-      return false;
-    
-    if (!f_assigned)
-    {
-      assignText(&pointer, redact(_update_pointer_pos(pos_mark)));
-      f_assigned = true;
-    }
-    _update_pointer_area(area, false);
+    MarginSingle::build(UPDATEFOR);
+    _update_pointer_area(current_area(), false);
     return true;
   }
   
@@ -1287,6 +1216,80 @@ protected:
         painter.drawStaticText(pointer.c_pos_result, pointer.uin_text);
     }
   }
+}; 
+MarginPointerBase::~MarginPointerBase(){}
+
+
+
+class MarginPointerAutomatic: public MarginPointerBase
+{
+  float           c_value;
+public:
+  MarginPointerAutomatic(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, bool textinner, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/):
+    MarginPointerBase(rounding, _marklen, pos, _relative, _orient, textinner, align), c_value(-1.0f)
+  {
+    _update_pointer_pos(pos_mark);
+    assignText(&pointer, redact(_update_pointer_pos(pos_mark)));
+  }
+  MarginPointerAutomatic(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, bool textinner, const QFont& fnt, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/): 
+    MarginPointerBase(rounding, _marklen, pos, _relative, _orient, textinner, fnt, align), c_value(-1.0f)
+  {
+    _update_pointer_pos(pos_mark);
+    assignText(&pointer, redact(_update_pointer_pos(pos_mark)));
+  }
+  ~MarginPointerAutomatic();
+public:
+//  virtual void  setPosition(float pos01)
+//  {
+//    MarginSingle::setPosition(pos01);
+//    assignText(&pointer, redact(_update_pointer_pos(pos_mark)));
+//    if (current_area_initialized())
+//      _update_pointer_area(current_area(), true);
+//  }
+  virtual void  setPosition(float pos01)
+  {
+    if (current_area_initialized())
+    {
+      {
+        bool v = BAR_VERT[current_area().atto]? orientationMirroredVert(orient) : orientationMirroredHorz(orient);
+        float pos01_ = v ? 1.0f - pos01 : pos01;
+        MarginSingle::setPosition(pos01_);
+      }
+      assignText(&pointer, redact(_update_pointer_pos(pos01)));
+      _update_pointer_area(current_area(), true);
+    }
+  }
+protected:
+  float _update_pointer_pos(float p){ c_value = c_LL + p*(c_HL-c_LL); if (c_MOD != 0.0f) c_value -= int(c_value/c_MOD)*c_MOD;  return c_value; }
+  virtual   void      tfContentUpdate(){  assignText(&pointer, redact(c_value), m_font); }
+protected:
+  virtual void  bdContentUpdateBounds(float ll, float hl, float mod)
+  {
+    MarginSingle::bdContentUpdateBounds(ll, hl, mod);
+    MarginTextformat::numformatUpdate(c_LL, c_HL);
+    if (relative)
+    {
+      if (current_area_initialized())
+        _update_pointer_area(current_area(), true);
+    }
+    else
+      assignText(&pointer, redact(_update_pointer_pos(pos_mark)));
+  }
+  virtual void  bdContentUpdateTaps(QString& base, ontap_qstring_fn tapfn, const void* param, float relatedoffset, const tapcontent_t& tctt)
+  {
+    MarginSingle::bdContentUpdateTaps(base, tapfn, param, relatedoffset, tctt);
+    float LLof = c_LL + (c_HL-c_LL)*relatedoffset;
+    float HLof = c_HL + (c_HL-c_LL)*relatedoffset;
+    tapfn(0, tctt.lmardimm, tctt.lmoffset + int(LLof + pos_mark*(HLof-LLof)), param, base);
+    assignText(&pointer, redact(base));
+  }
+  virtual void  bdContentUpdateEnumerate(int from, int count, int recycle, float relatedoffset)
+  {
+    MarginSingle::bdContentUpdateEnumerate(from, count, recycle, relatedoffset);
+    MarginTextformat::numformatInteger(false);
+    assignText(&pointer, redact(_update_pointer_pos(pos_mark)));  // ntf: reloffset
+  }
+protected:
   virtual void sizeHint(ATTACHED_TO atto, int* atto_size, int* minsegm_main, int* minsegm_pre, int* minsegm_post) const
   {
     MarginSingle::sizeHint(atto, atto_size, minsegm_main, minsegm_pre, minsegm_post);
@@ -1299,36 +1302,98 @@ protected:
     *minsegm_pre += d_half_dly;
     *minsegm_post += d_half_dly;
   }
+public: // ???  
+//  void  setPositionBifunc(float pos01, float posBi)
+//  {
+//    MarginSingle::setPosition(pos01);
+//    assignText(&pointer, redact(_update_pointer_pos(posBi)));
+////    qDebug()<<"Position : "<<pos01<<" self : "<<pos_mark;
+//    if (current_area_initialized())
+//      _update_pointer_area(current_area(), true);
+//  }
+//  void  setPosition(float pos01_A, float pos01_B)
+//  {
+//    if (current_area_initialized())
+//    {
+//      bool v = BAR_VERT[current_area().atto]? orientationMirroredVert(orient) : orientationMirroredHorz(orient);
+//      bool m = orientationTransposed(orient) ^ BAR_VERT[current_area().atto];
+////      MarginSingle::setPosition(m? pos01_B : pos01_A);
+//      float pos01 = m? pos01_B : pos01_A;
+//      setPositionBifunc( v ? 1.0f - pos01 : pos01, pos01);
+//    }
+//  }
   
+//  void  setPositionBifunc(float pos01, float posBi)
+//  {
+//    MarginSingle::setPosition(pos01);
+//    assignText(&pointer, redact(_update_pointer_pos(posBi)));
+////    qDebug()<<"Position : "<<pos01<<" self : "<<pos_mark;
+//    if (current_area_initialized())
+//      _update_pointer_area(current_area(), true);
+//  }
+//  void  setPositionFFF(float pos01)
+//  {
+//    if (current_area_initialized())
+//    {
+//      bool v = BAR_VERT[current_area().atto]? orientationMirroredVert(orient) : orientationMirroredHorz(orient);
+//      setPositionBifunc( v ? 1.0f - pos01 : pos01, pos01);
+//    }
+//  }
+};
+MarginPointerAutomatic::~MarginPointerAutomatic(){}
+
+
+
+class MarginPointerManual: public MarginPointerBase
+{
+  QString         c_text;
+  unsigned int    maxlen;
+public:
+  MarginPointerManual(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, const QString& text, unsigned int maxtextlen, bool textinner, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/):
+    MarginPointerBase(rounding, _marklen, pos, _relative, _orient, textinner, align), c_text(text.left(maxtextlen)), maxlen(maxtextlen)
+  {
+    assignText(&pointer, redact(c_text));
+  }
+  MarginPointerManual(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, const QString& text, unsigned int maxtextlen, bool textinner, const QFont& fnt, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/): 
+    MarginPointerBase(rounding, _marklen, pos, _relative, _orient, textinner, fnt, align), c_text(text.left(maxtextlen)), maxlen(maxtextlen)
+  {
+    assignText(&pointer, redact(c_text));
+  }
+  ~MarginPointerManual();
+public:
+  virtual void  setPosition(float pos01)
+  {
+    MarginSingle::setPosition(pos01);
+    if (current_area_initialized())
+      _update_pointer_area(current_area(), true);
+  }
+  void    setText(const QString& text)
+  {
+    c_text = text.left(maxlen);
+    assignText(&pointer, redact(c_text));
+    if (current_area_initialized())
+      _update_pointer_area(current_area(), true);
+  }
 protected:
-  virtual void  bdContentUpdateBounds(float ll, float hl, float mod)
+  virtual   void      tfContentUpdate(){  assignText(&pointer, c_text, m_font); }
+protected:
+  virtual void  bdContentUpdateBounds(float ll, float hl, float mod){}
+  virtual void  bdContentUpdateTaps(QString& base, ontap_qstring_fn tapfn, const void* param, float relatedoffset, const tapcontent_t& tctt){}
+  virtual void  bdContentUpdateEnumerate(int from, int count, int recycle, float relatedoffset){}
+protected:
+  virtual void sizeHint(ATTACHED_TO atto, int* atto_size, int* minsegm_main, int* minsegm_pre, int* minsegm_post) const
   {
-    MarginSingle::bdContentUpdateBounds(ll, hl, mod);
-    MarginTextformat::numformatUpdate(c_LL, c_HL);
-    if (relative)
-    {
-      if (f_assigned && mec_filled())
-        _update_pointer_area(mec_area(), true);
-    }
-    else
-      assignText(&pointer, redact(_update_pointer_pos(pos_mark)));
+    MarginSingle::sizeHint(atto, atto_size, minsegm_main, minsegm_pre, minsegm_post);
+    QFontMetrics fm(m_font);
+    QSize meansize(SPACING_AFTERWIDTH + fm.averageCharWidth()*maxlen, SPACING_AFTERHEIGHT + fm.height());
+    *atto_size += (BAR_VERT[atto]? meansize.width() : meansize.height());
+    *minsegm_main += BAR_VERT[atto]? meansize.height() : meansize.width();
+    int d_half_dly = textInnerPlaced? 0 : BAR_VERT[atto]? meansize.height()/2 : meansize.width()/2;
+    *minsegm_pre += d_half_dly;
+    *minsegm_post += d_half_dly;
   }
-  virtual void  bdContentUpdateTaps(QString& base, mtap_qstring_fn tapfn, const void* param, float relatedoffset, const tapcontent_t& tctt)
-  {
-    MarginSingle::bdContentUpdateTaps(base, tapfn, param, relatedoffset, tctt);
-    float LLof = c_LL + (c_HL-c_LL)*relatedoffset;
-    float HLof = c_HL + (c_HL-c_LL)*relatedoffset;
-    tapfn(int(LLof + pos_mark*(HLof-LLof)), tctt.lmardimm, tctt.lmoffset, param, base);
-    assignText(&pointer, redact(base));
-  }
-  virtual void  bdContentUpdateEnumerate(int from, int count, int recycle, float relatedoffset)
-  {
-    MarginSingle::bdContentUpdateEnumerate(from, count, recycle, relatedoffset);
-    MarginTextformat::numformatInteger(false);
-    assignText(&pointer, redact(_update_pointer_pos(pos_mark)));  // ntf: reloffset
-  }
-}; 
-MarginPointer::~MarginPointer(){}
+};
+MarginPointerManual::~MarginPointerManual(){}
 
 
 /********************************************************************************************************************/
@@ -1357,7 +1422,7 @@ public:
   void    setMarkSize(int length, int width, int lengthmini=4)
   { mlenmaxi = length; mlenmini = lengthmini; mwid = width; /*needRedrawByMark = true;*/ }
 protected:
-  virtual   void    tfContentUpdate(){  if (mec_filled()) MarginElementCached::updateArea(mec_area(), UF_CONTENT); }
+  virtual   void    tfContentUpdate(){}
 };
 MarginMarksBase::~MarginMarksBase(){}
 
@@ -1484,14 +1549,12 @@ protected:
 //    needRedrawByMark = false;
   }
   
-  virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
+  virtual bool  build(int UPDATEFOR)
   {
-    if (MarginElementCached::updateArea(area, UPDATEFOR) == false)
+    if (UPDATEFOR == UF_CONTENT)
       return false;
-    
-//    if ((mec_filled() && mec_area().segm_main == area.segm_main) && BAR_NEEDMOVE[area.atto])
-//      return false;
-    
+      
+    const uarea_t& area = current_area();
     const int dimm_main = area.segm_main - 1;
     const int countMaxiTotal = countMaxiNoted + countMaxiHided;
     int   over_recycle = 1;
@@ -1634,7 +1697,7 @@ protected:
   }
 protected:
   virtual void  bdContentUpdateBounds(float, float, float=0){}
-  virtual void  bdContentUpdateTaps(QString&, mtap_qstring_fn, const void*, float, const tapcontent_t&){}
+  virtual void  bdContentUpdateTaps(QString&, ontap_qstring_fn, const void*, float, const tapcontent_t&){}
   virtual void  bdContentUpdateEnumerate(int, int, int, float){}
 };
 MarginINMarks::~MarginINMarks()
@@ -1675,12 +1738,11 @@ protected:
           painter.drawStaticText(texts[i].c_pos_result, texts[i].uin_text);
     }
   }
-  virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
+  virtual bool  build(int UPDATEFOR)
   {
-    bool ua = MarginINMarks::updateArea(area, UPDATEFOR);
-    if (ua == false && (UPDATEFOR != UF_CONTENT))
-      return false;
+    MarginINMarks::build(UPDATEFOR);
     
+    const uarea_t& area = current_area();
     storeDimm(area.segm_main);
     
     const int gaps[] = { 3 + mlenmaxi, 3 + mlenmaxi, 0 + mlenmaxi, 0 + mlenmaxi };
@@ -1756,7 +1818,7 @@ protected:
         assignText(&texts[i], redact(LL + i*bndstep), m_fontReplaced, m_font);
       }
   }
-  virtual void  bdContentUpdateTaps(QString& base, mtap_qstring_fn tapfn, const void* param, float /*relatedoffset*/, const tapcontent_t& tctt)
+  virtual void  bdContentUpdateTaps(QString& base, ontap_qstring_fn tapfn, const void* param, float /*relatedoffset*/, const tapcontent_t& tctt)
   {
     for (int i=0; i<countMaxiNoted + countMaxiHided; i++)
     {
@@ -1804,12 +1866,11 @@ protected:
       if (texts[i].visible)
         painter.drawStaticText(texts[i].c_pos_result, texts[i].uin_text);
   }
-  virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
+  virtual bool  build(int UPDATEFOR)
   {
-    bool ua = MarginINMarks::updateArea(area, UPDATEFOR);
-    if (ua == false && (UPDATEFOR != UF_CONTENT))
-      return false;
+    MarginINMarks::build(UPDATEFOR);
     
+    const uarea_t& area = current_area();
     storeDimm(area.segm_main);
     
     const int gaps[] = { 3 + mlenmaxi, 3 + mlenmaxi, 0 + mlenmaxi, 0 + mlenmaxi };
@@ -1873,7 +1934,7 @@ protected:
       assignText(&texts[i], redact(i == 0? LL : HL), m_fontReplaced, m_font);
     }
   }
-  virtual void  bdContentUpdateTaps(QString& base, mtap_qstring_fn tapfn, const void* param, float /*relatedoffset*/, const tapcontent_t& tctt)
+  virtual void  bdContentUpdateTaps(QString& base, ontap_qstring_fn tapfn, const void* param, float /*relatedoffset*/, const tapcontent_t& tctt)
   {
     for (int i=0; i<2; i++)
     {
@@ -1937,12 +1998,11 @@ protected:
       if (texts[i].visible)
         painter.drawStaticText(texts[i].c_pos_result, texts[i].uin_text);
   }
-  virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
+  virtual bool  build(int UPDATEFOR)
   {
-    bool ua = MarginINMarks::updateArea(area, UPDATEFOR);
-    if (ua == false && (UPDATEFOR != UF_CONTENT))
-      return false;
+    MarginINMarks::build(UPDATEFOR);
     
+    const uarea_t& area = current_area();
     storeDimm(area.segm_main);
     
     const int total = countMaxiNoted + countMaxiHided - 1;
@@ -2072,7 +2132,7 @@ protected:
         assignText(&texts[i], redact(LL + i*bndstep), m_fontReplaced, m_font);
       }
   }
-  virtual void  bdContentUpdateTaps(QString& base, mtap_qstring_fn tapfn, const void* param, float /*relatedoffset*/, const tapcontent_t& tctt)
+  virtual void  bdContentUpdateTaps(QString& base, ontap_qstring_fn tapfn, const void* param, float /*relatedoffset*/, const tapcontent_t& tctt)
   {
     for (int i=0; i<countMaxiNoted + countMaxiHided - 1; i++)
     {
@@ -2118,7 +2178,7 @@ protected:
     struct
     {
       bool                doretap;
-      mtap_qwidget_fn     ftor;
+      ontap_qwidget_fn     ftor;
       void*               fpm;
     } wf_dynamic;
     struct
@@ -2135,7 +2195,7 @@ public:
   MarginINMarksWidgetBetween(): showLastEnumer(false), submod(1), maxperpendiculardimm(0), wftype(WF_OFF){}
   ~MarginINMarksWidgetBetween();
 
-  void  init_wide(int algotype, int marksLimit, int pixStep_minSpacing, unsigned int step, int roundsteps, bool alwaysShowLast, unsigned int maxperpdimm, mtap_qwidget_fn ftor, void* fpm, QWidget* prnt)
+  void  init_wide(int algotype, int marksLimit, int pixStep_minSpacing, unsigned int step, int roundsteps, bool alwaysShowLast, unsigned int maxperpdimm, ontap_qwidget_fn ftor, void* fpm, QWidget* prnt)
   {
     MarginINMarks::init(algotype, marksLimit, pixStep_minSpacing, roundsteps, 0);
     showLastEnumer = alwaysShowLast;
@@ -2174,17 +2234,16 @@ public:
     if (wftype == WF_DYNAMIC)
     {
       wfdetails.wf_dynamic.doretap = true;
-      if (mec_filled())
-        updateArea(mec_area(), UF_CONTENT);
+      if (current_area_initialized())
+        build(UF_CONTENT);
     }
   }
 protected:
-  virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
+  virtual bool  build(int UPDATEFOR)
   {
-    bool ua = MarginINMarks::updateArea(area, UPDATEFOR);
-    if (ua == false && (UPDATEFOR != UF_CONTENT))
-      return false;
-    
+    MarginINMarks::build(UPDATEFOR);
+        
+    const uarea_t& area = current_area();
     const int total = countMaxiNoted + countMaxiHided - 1;
     
     if (wftype == WF_DYNAMIC && wfdetails.wf_dynamic.doretap)
@@ -2343,15 +2402,14 @@ protected:
         painter.drawStaticText(texts[i].c_pos_result, texts[i].uin_text);
   }
   
-  virtual bool  updateArea(const uarea_t& area, int UPDATEFOR)
+  virtual bool  build(int UPDATEFOR)
   {
-    if (MarginElementCached::updateArea(area, UPDATEFOR) == false)    // forced for strict for bounds
+    if (UPDATEFOR == UF_CONTENT)
       return false;
     
+    const uarea_t& area = current_area();
     storeDimm(area.segm_main);
-    
     recalculate(area);
-    
     return true;
   }
   virtual void sizeHint(ATTACHED_TO atto, int* atto_size, int* minsegm_main, int* minsegm_pre, int* minsegm_post) const
@@ -2368,25 +2426,25 @@ protected:
     *minsegm_post = d_half_dly;
   }
 protected:
-  virtual   void    tfContentUpdate(){  if (mec_filled()) MarginElementCached::updateArea(mec_area(), UF_CONTENT); }
+  virtual   void    tfContentUpdate(){  if (current_area_initialized()) build(UF_CONTENT); }
 protected:
   virtual void  bdContentUpdateBounds(float LL, float HL, float /*mod*/)
   {
     MarginTextformat::numformatUpdate(LL, HL);
-    if (mec_filled())
+    if (current_area_initialized())
     {
       c_multiplier = 0;
-      recalculate(mec_area());
+      recalculate(current_area());
     }
   }
-  virtual void  bdContentUpdateTaps(QString& base, mtap_qstring_fn tapfn, const void* param, float relatedoffset, const tapcontent_t& tctt)
+  virtual void  bdContentUpdateTaps(QString& base, ontap_qstring_fn tapfn, const void* param, float relatedoffset, const tapcontent_t& tctt)
   {
 //    for (int i=0; i<countMaxiNoted + countMaxiHided; i++)
 //    {
 //      tapfn(i, tctt.lmardimm, tctt.lmoffset, param, base);
 //      assignText(&texts[i], redact(base), m_fontReplaced, m_font);
 //    }
-    if (mec_filled())
+    if (current_area_initialized())
     {
       c_multiplier = 0;
     }
@@ -2394,10 +2452,10 @@ protected:
   virtual void  bdContentUpdateEnumerate(int from, int count, int recycle, float relatedoffset)
   {
     MarginTextformat::numformatInteger(false);
-    if (mec_filled())
+    if (current_area_initialized())
     {
       c_multiplier = 0;
-      recalculate(mec_area());
+      recalculate(current_area());
     }
   }
 private:
@@ -2839,7 +2897,7 @@ public:
         areaVert.atto_from = apt;
         areaVert.atto_toin = apt - elems[0][i].length + 1;
         areaVert.mirrored = elems[0][i].miralg == MIRALG_IGNORE? elems[0][i].miralg == MIRALG_INVERT? true : false : elems[0][i].miralg == MIRALG_INVERT? !c_mirroredVert : c_mirroredVert;
-        elems[0][i].pme->updateArea(areaVert, UF_LEFT);
+        elems[0][i].pme->changeArea(areaVert, UF_LEFT);
       }
     
     areaVert.atto = AT_RIGHT;
@@ -2854,7 +2912,7 @@ public:
         areaVert.atto_from = apt;
         areaVert.atto_toin = apt + elems[1][i].length - 1;
         areaVert.mirrored = elems[1][i].miralg == MIRALG_IGNORE? elems[1][i].miralg == MIRALG_INVERT? true : false : elems[1][i].miralg == MIRALG_INVERT? !c_mirroredVert : c_mirroredVert;
-        elems[1][i].pme->updateArea(areaVert, UF_RIGHT);
+        elems[1][i].pme->changeArea(areaVert, UF_RIGHT);
       }
     
     MarginElement::uarea_t areaHorz = { AT_TOP, 
@@ -2873,7 +2931,7 @@ public:
         areaHorz.atto_from = apt;
         areaHorz.atto_toin = apt - elems[2][i].length + 1;
         areaHorz.mirrored = elems[2][i].miralg == MIRALG_IGNORE? elems[2][i].miralg == MIRALG_INVERT? true : false : elems[2][i].miralg == MIRALG_INVERT? !c_mirroredHorz : c_mirroredHorz;
-        elems[2][i].pme->updateArea(areaHorz, UF_TOP);
+        elems[2][i].pme->changeArea(areaHorz, UF_TOP);
       }
     
     areaHorz.atto = AT_BOTTOM;
@@ -2888,7 +2946,7 @@ public:
         areaHorz.atto_from = apt;
         areaHorz.atto_toin = apt + elems[3][i].length - 1;
         areaHorz.mirrored = elems[3][i].miralg == MIRALG_IGNORE? elems[3][i].miralg == MIRALG_INVERT? true : false : elems[3][i].miralg == MIRALG_INVERT? !c_mirroredHorz : c_mirroredHorz;
-        elems[3][i].pme->updateArea(areaHorz, UF_BOTTOM);
+        elems[3][i].pme->changeArea(areaHorz, UF_BOTTOM);
       }
   }
   
@@ -3318,7 +3376,7 @@ MEWSpace* DrawBars::addBorderMAXFG(ATTACHED_TO atto, int weight)
 
 MEWPointer* DrawBars::addPointerRelativeOwnbounds(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen, float MOD, const char* postfix)
 {
-  MarginPointer*  pmarg = new MarginPointer(DB_ROUNDING(flags), marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
+  MarginPointerAutomatic*  pmarg = new MarginPointerAutomatic(DB_ROUNDING(flags), marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   MARG_OPTS_TEXT
   pmarg->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL), MOD));
   return (MEWPointer*)addMarginElement(atto, pmarg, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
@@ -3326,7 +3384,7 @@ MEWPointer* DrawBars::addPointerRelativeOwnbounds(ATTACHED_TO atto, int flags, f
 
 MEWPointer* DrawBars::addPointerAbsoluteOwnbounds(ATTACHED_TO atto, int flags, float pos, float LL, float HL, int marklen, float MOD, const char* postfix)
 {
-  MarginPointer*  pmarg = new MarginPointer(DB_ROUNDING(flags), marklen, pos, true, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
+  MarginPointerAutomatic*  pmarg = new MarginPointerAutomatic(DB_ROUNDING(flags), marklen, pos, true, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   MARG_OPTS_TEXT
   pmarg->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(bounds_t(LL, HL), MOD));
   return (MEWPointer*)addMarginElement(atto, pmarg, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
@@ -3334,7 +3392,7 @@ MEWPointer* DrawBars::addPointerAbsoluteOwnbounds(ATTACHED_TO atto, int flags, f
 
 MEWPointer* DrawBars::addPointerRelativeDrawbounds(ATTACHED_TO atto, int flags, float pos, int marklen, float MOD, const char* postfix)
 {
-  MarginPointer*  pmarg = new MarginPointer(DB_ROUNDING(flags), marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
+  MarginPointerAutomatic*  pmarg = new MarginPointerAutomatic(DB_ROUNDING(flags), marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   MARG_OPTS_TEXT
   pmarg->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(pDraw->bounds(), MOD));
   pImpl->elemsBoundDepended.push_back(pmarg);
@@ -3343,7 +3401,7 @@ MEWPointer* DrawBars::addPointerRelativeDrawbounds(ATTACHED_TO atto, int flags, 
 
 MEWPointer* DrawBars::addPointerAbsoluteDrawbounds(ATTACHED_TO atto, int flags, float pos, int marklen, float MOD, const char* postfix)
 {
-  MarginPointer*  pmarg = new MarginPointer(DB_ROUNDING(flags), marklen, pos, true, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
+  MarginPointerAutomatic*  pmarg = new MarginPointerAutomatic(DB_ROUNDING(flags), marklen, pos, true, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   MARG_OPTS_TEXT
   pmarg->bdContentUpdate(RF_SETBOUNDS, relatedopts_t(pDraw->bounds(), MOD));
   pImpl->elemsBoundDepended.push_back(pmarg);
@@ -3352,11 +3410,33 @@ MEWPointer* DrawBars::addPointerAbsoluteDrawbounds(ATTACHED_TO atto, int flags, 
 
 MEWPointer* DrawBars::addEPointer01Auto(ATTACHED_TO atto, int flags, float pos, int marklen, const char* postfix)
 {
-  MarginPointer*  pmarg = new MarginPointer(DB_ROUNDING(flags), marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
+  MarginPointerAutomatic*  pmarg = new MarginPointerAutomatic(DB_ROUNDING(flags), marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
   MARG_OPTS_TEXT
   int sizeDimm = BAR_VERT[atto]? int(pDraw->sizeDataVert() + 1) : int(pDraw->sizeDataHorz() + 1);
   pmarg->bdContentUpdate(RF_SETENUMERATE, relatedopts_t(sizeDimm-1, flags & DBF_ENUMERATE_FROMZERO? 0 : 1, -1)); // ?????
   return (MEWPointer*)addMarginElement(atto, pmarg, new MEWPointer, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
+}
+
+MEWPointerTAP* DrawBars::addPointerTap(ATTACHED_TO atto, int flags, float pos, int marklen, ontap_qstring_fn fn, int maxtextlen, const void* param, const char* postfix)
+{
+  MarginPointerAutomatic*  pmarg = new MarginPointerAutomatic(DB_ROUNDING(flags), marklen, pos, false, pDraw->orientation(), flags & DBF_NOTESINSIDE, Qt::AlignCenter);
+  MARG_OPTS_TEXT
+  pmarg->bdContentUpdate(RF_SETTAPS, relatedopts_t(fn, param, maxtextlen));
+  pmarg->setUpdateOnSetDimm(flags & DBF_RETAP_ON_RESIZE);
+//  if (flags & DBF_MINSIZE_BY_PIXSTEP)   ??????????????????????
+//  {
+//    if (BAR_VERT[atto])     pImpl->c_hint_draw_height = marksLimit*(minSpacing);
+//    else                    pImpl->c_hint_draw_width = marksLimit*(minSpacing);
+////    updateGeometry();
+//  }
+  return (MEWPointerTAP*)addMarginElement(atto, pmarg, new MEWPointerTAP, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
+}
+
+MEWPointerManual* DrawBars::addPointerWithManualText(ATTACHED_TO atto, int flags, float pos, int marklen, const QString& text, int maxtextlen, const char *postfix)
+{
+  MarginPointerManual*  pmarg = new MarginPointerManual(DB_ROUNDING(flags), marklen, pos, false, pDraw->orientation(), text, maxtextlen, flags & DBF_NOTESINSIDE, Qt::AlignCenter);
+  MARG_OPTS_TEXT
+  return (MEWPointerManual*)addMarginElement(atto, pmarg, new MEWPointerManual, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
 }
 
 ////////////////////////////
@@ -3627,7 +3707,7 @@ MEWScale* DrawBars::addEScalePixstepDrawbounds(ATTACHED_TO atto, int flags, int 
 
 
 
-MEWScaleTAPNN* DrawBars::addScalePixstepTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int minSpacing, const char* postfix)
+MEWScaleTAPNN* DrawBars::addScalePixstepTapNN(ATTACHED_TO atto, int flags, ontap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int minSpacing, const char* postfix)
 {
   MarginINMarks* pmarg = flags & DBF_NOTE_BORDERS_ONLY? (MarginINMarks*)new MarginINMarks2only(flags & DBF_NOTESINSIDE) : 
                                                         (MarginINMarks*)new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
@@ -3645,7 +3725,7 @@ MEWScaleTAPNN* DrawBars::addScalePixstepTapNN(ATTACHED_TO atto, int flags, mtap_
   return (MEWScaleTAPNN*)addMarginElement(atto, pmarg, new MEWScaleTAPNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
 }
 
-MEWScaleTAPNN* DrawBars::addScaleSymmetricTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int minSpacing, const char* postfix)
+MEWScaleTAPNN* DrawBars::addScaleSymmetricTapNN(ATTACHED_TO atto, int flags, ontap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int minSpacing, const char* postfix)
 {
   MarginINMarks* pmarg = flags & DBF_NOTE_BORDERS_ONLY? (MarginINMarks*)new MarginINMarks2only(flags & DBF_NOTESINSIDE) : 
                                                         (MarginINMarks*)new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
@@ -3663,7 +3743,7 @@ MEWScaleTAPNN* DrawBars::addScaleSymmetricTapNN(ATTACHED_TO atto, int flags, mta
   return (MEWScaleTAPNN*)addMarginElement(atto, pmarg, new MEWScaleTAPNN, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
 }
 
-MEWScaleTAPNN* DrawBars::addScaleRollingTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int pixStep, const char* postfix)
+MEWScaleTAPNN* DrawBars::addScaleRollingTapNN(ATTACHED_TO atto, int flags, ontap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int pixStep, const char* postfix)
 {
   MarginINMarks* pmarg = flags & DBF_NOTE_BORDERS_ONLY? (MarginINMarks*)new MarginINMarks2only(flags & DBF_NOTESINSIDE) : 
                                                         (MarginINMarks*)new MarginINMarksTextToMark(flags & DBF_NOTESINSIDE);
@@ -3684,7 +3764,7 @@ MEWScaleTAPNN* DrawBars::addScaleRollingTapNN(ATTACHED_TO atto, int flags, mtap_
 }
 
 
-MEWScaleTAPNM* DrawBars::addScalePixstepTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int minSpacing, const char* postfix)
+MEWScaleTAPNM* DrawBars::addScalePixstepTapNM(ATTACHED_TO atto, int flags, ontap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int minSpacing, const char* postfix)
 {
   MarginINMarksTextBetweenMark* pmarg = new MarginINMarksTextBetweenMark();
   pmarg->init_wide(DBMODE_STRETCHED, marksLimit, minSpacing, 1, DB_ROUNDING(flags), true, flags & DBF_DOCKTO_PREVMARK? DOCK_PREV : flags & DBF_DOCKTO_NEXTMARK? DOCK_NEXT : DOCK_BETWEEN);
@@ -3701,7 +3781,7 @@ MEWScaleTAPNM* DrawBars::addScalePixstepTapNM(ATTACHED_TO atto, int flags, mtap_
   return (MEWScaleTAPNM*)addMarginElement(atto, pmarg, new MEWScaleTAPNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
 }
 
-MEWScaleTAPNM* DrawBars::addScaleSymmetricTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int minSpacing, const char* postfix)
+MEWScaleTAPNM* DrawBars::addScaleSymmetricTapNM(ATTACHED_TO atto, int flags, ontap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int minSpacing, const char* postfix)
 {
   MarginINMarksTextBetweenMark* pmarg = new MarginINMarksTextBetweenMark();
   pmarg->init_wide(DBMODE_STRETCHED_POW2, marksLimit, minSpacing, 1, DB_ROUNDING(flags), true, flags & DBF_DOCKTO_PREVMARK? DOCK_PREV : flags & DBF_DOCKTO_NEXTMARK? DOCK_NEXT : DOCK_BETWEEN);
@@ -3718,7 +3798,7 @@ MEWScaleTAPNM* DrawBars::addScaleSymmetricTapNM(ATTACHED_TO atto, int flags, mta
   return (MEWScaleTAPNM*)addMarginElement(atto, pmarg, new MEWScaleTAPNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
 }
 
-MEWScaleTAPNM* DrawBars::addScaleRollingTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int pixStep, const char* postfix)
+MEWScaleTAPNM* DrawBars::addScaleRollingTapNM(ATTACHED_TO atto, int flags, ontap_qstring_fn fn, int maxtextlen, const void* param, int marksLimit, int pixStep, const char* postfix)
 {
   MarginINMarksTextBetweenMark* pmarg = new MarginINMarksTextBetweenMark();
   pmarg->init_wide(DBMODE_STATIC, marksLimit, pixStep, 1, DB_ROUNDING(flags), true, flags & DBF_DOCKTO_PREVMARK? DOCK_PREV : flags & DBF_DOCKTO_NEXTMARK? DOCK_NEXT : DOCK_BETWEEN);
@@ -3738,7 +3818,7 @@ MEWScaleTAPNM* DrawBars::addScaleRollingTapNM(ATTACHED_TO atto, int flags, mtap_
 }
 
 
-MEWScaleTAPNM* DrawBars::addWScalePixstepTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param, int marksLimit, int minSpacing)
+MEWScaleTAPNM* DrawBars::addWScalePixstepTapNM(ATTACHED_TO atto, int flags, ontap_qwidget_fn fn, int maxperpendiculardimm, void* param, int marksLimit, int minSpacing)
 {
   MarginINMarksWidgetBetween* pmarg = new MarginINMarksWidgetBetween();
   pmarg->init_wide(DBMODE_STRETCHED, marksLimit, minSpacing, 1, DB_ROUNDING(flags), true, maxperpendiculardimm, fn, param, this);
@@ -3751,7 +3831,7 @@ MEWScaleTAPNM* DrawBars::addWScalePixstepTapNM(ATTACHED_TO atto, int flags, mtap
   return (MEWScaleTAPNM*)addMarginElement(atto, pmarg, new MEWScaleTAPNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
 }
 
-MEWScaleTAPNM* DrawBars::addWScaleSymmetricTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param, int marksLimit, int minSpacing)
+MEWScaleTAPNM* DrawBars::addWScaleSymmetricTapNM(ATTACHED_TO atto, int flags, ontap_qwidget_fn fn, int maxperpendiculardimm, void* param, int marksLimit, int minSpacing)
 {
   MarginINMarksWidgetBetween* pmarg = new MarginINMarksWidgetBetween();
   pmarg->init_wide(DBMODE_STRETCHED_POW2, marksLimit, minSpacing, 1, DB_ROUNDING(flags), true, maxperpendiculardimm, fn, param, this);
@@ -3764,7 +3844,7 @@ MEWScaleTAPNM* DrawBars::addWScaleSymmetricTapNM(ATTACHED_TO atto, int flags, mt
   return (MEWScaleTAPNM*)addMarginElement(atto, pmarg, new MEWScaleTAPNM, flags & DBF_SHARED, flags & DBF_INTERVENTBANNED, EXTRACT_MIRALG(flags));
 }
 
-MEWScaleTAPNM* DrawBars::addWScaleRollingTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param, int marksLimit, int pixStep)
+MEWScaleTAPNM* DrawBars::addWScaleRollingTapNM(ATTACHED_TO atto, int flags, ontap_qwidget_fn fn, int maxperpendiculardimm, void* param, int marksLimit, int pixStep)
 {
   MarginINMarksWidgetBetween* pmarg = new MarginINMarksWidgetBetween();
   pmarg->init_wide(DBMODE_STATIC, marksLimit, pixStep, 1, DB_ROUNDING(flags), true, maxperpendiculardimm, fn, param, this);
@@ -4202,8 +4282,11 @@ void DrawBars::mouseDoubleClickEvent(QMouseEvent* event)
     float LL=0, HL=1; int precision=3;
     for (int i=0; i<pImpl->elemsBoundsSetupDepended.count(); i++)
     {
+      if (pImpl->elemsBoundsSetupDepended[i]->current_area_initialized() == false)
+        continue;
+      
       bool inside = false;
-      const MarginElement::uarea_t& area = pImpl->elemsBoundsSetupDepended[i]->mec_area();
+      const MarginElement::uarea_t& area = pImpl->elemsBoundsSetupDepended[i]->current_area();
       switch (area.atto)
       {
       case AT_LEFT:
@@ -4596,13 +4679,20 @@ void MEWBorder::setColor(QColor clr)
 /***/
   class MEPointerReactor: public IOverlayReactor
   {
-    MarginPointer*  m_pme;
+    MarginPointerBase*  m_pme;
     DrawBars*       m_premote;
   public:
-    MEPointerReactor(MarginPointer* ptr, DrawBars* premote): m_pme(ptr), m_premote(premote)
+    MEPointerReactor(MarginPointerBase* ptr, DrawBars* premote): m_pme(ptr), m_premote(premote)
     {   if (m_premote) m_premote->update(); }
-    MEPointerReactor(MarginPointer* ptr, DrawBars* premote, float x01, float y01): m_pme(ptr), m_premote(premote)
-    {   m_pme->setPosition(x01, y01); if (m_premote) m_premote->update(); }
+    MEPointerReactor(MarginPointerBase* ptr, DrawBars* premote, float x01, float y01): m_pme(ptr), m_premote(premote)
+    {
+      if (m_pme->current_area_initialized())
+      {
+        bool m = orientationTransposed(m_premote->draw()->orientation()) ^ BAR_VERT[m_pme->current_area().atto];
+        m_pme->setPosition(m? x01 : y01);
+      }
+      if (m_premote) m_premote->update(); 
+    }
     virtual ~MEPointerReactor();
     virtual void  overlayReactionVisible(bool v)
     {
@@ -4614,7 +4704,12 @@ void MEWBorder::setColor(QColor clr)
       if (oreact == ORM_LMPRESS || oreact == ORM_LMMOVE)
       {
 //        m_pme->setPosition(((const float*)dataptr)[0], ((const float*)dataptr)[1]);
-        m_pme->setPosition(ct->fx_01, ct->fy_01);
+//        m_pme->setPosition(ct->fx_01, ct->fy_01);
+        if (m_pme->current_area_initialized())
+        {
+          bool m = orientationTransposed(m_premote->draw()->orientation()) ^ BAR_VERT[m_pme->current_area().atto];
+          m_pme->setPosition(m? ct->fy_01 : ct->fx_01);
+        }
         if (m_premote)  m_premote->update();
       }
       else if (oreact == ORM_RMPRESS)
@@ -4629,35 +4724,29 @@ void MEWBorder::setColor(QColor clr)
 
 IOverlayReactor* MEWPointer::createReactor()
 {
-  return new MEPointerReactor((MarginPointer*)m_pme, m_premote);
+  return new MEPointerReactor((MarginPointerAutomatic*)m_pme, m_premote);
 }
 
 void MEWPointer::setPosition(float pos01)
 {
-  ((MarginPointer*)m_pme)->setPosition(pos01);
-  remoteUpdate();
-}
-
-void MEWPointer::setPositionBifunc(float pos01, float posText)
-{
-  ((MarginPointer*)m_pme)->setPositionBifunc(pos01, posText);
+  ((MarginPointerAutomatic*)m_pme)->setPosition(pos01);
   remoteUpdate();
 }
 
 void MEWPointer::setBounds(float LL, float HL)
 {
-  if ( ((MarginPointer*)m_pme)->bdContentUpdate(RF_UPBOUNDS, relatedopts_t(bounds_t(LL, HL))) )
+  if ( ((MarginPointerAutomatic*)m_pme)->bdContentUpdate(RF_UPBOUNDS, relatedopts_t(bounds_t(LL, HL))) )
     remoteUpdate();
 }
 
 void MEWPointer::setBoundLow(float LL)
 {
-  if ( ((MarginPointer*)m_pme)->bdContentUpdate(RF_UPBOUNDS, relatedopts_t(bounds_t(LL, ((MarginPointer*)m_pme)->cachedRdata().rel_fixed.HL))) )
+  if ( ((MarginPointerAutomatic*)m_pme)->bdContentUpdate(RF_UPBOUNDS, relatedopts_t(bounds_t(LL, ((MarginPointerAutomatic*)m_pme)->cachedRdata().rel_fixed.HL))) )
     remoteUpdate();
 }
 void MEWPointer::setBoundHigh(float HL)
 {
-  if ( ((MarginPointer*)m_pme)->bdContentUpdate(RF_UPBOUNDS, relatedopts_t(bounds_t(((MarginPointer*)m_pme)->cachedRdata().rel_fixed.LL, HL))) )
+  if ( ((MarginPointerAutomatic*)m_pme)->bdContentUpdate(RF_UPBOUNDS, relatedopts_t(bounds_t(((MarginPointerAutomatic*)m_pme)->cachedRdata().rel_fixed.LL, HL))) )
     remoteUpdate();
 }
 
@@ -4665,6 +4754,50 @@ void MEWPointer::setBounds(double LL, double HL){  setBounds(float(LL), float(HL
 void MEWPointer::setBoundLow(double LL){  setBoundLow(float(LL)); }
 void MEWPointer::setBoundHigh(double HL){  setBoundHigh(float(HL)); }
 
+///////////////
+
+
+IOverlayReactor* MEWPointerTAP::createReactor()
+{
+  return new MEPointerReactor((MarginPointerAutomatic*)m_pme, m_premote);
+}
+
+void MEWPointerTAP::setPosition(float pos01)
+{
+  ((MarginPointerAutomatic*)m_pme)->setPosition(pos01);
+  remoteUpdate();
+}
+
+void MEWPointerTAP::tap()
+{
+  if ( ((MarginPointerAutomatic*)m_pme)->bdContentUpdate() )
+    remoteUpdate();
+}
+
+///////////////
+
+
+IOverlayReactor* MEWPointerManual::createReactor()
+{
+  return new MEPointerReactor((MarginPointerManual*)m_pme, m_premote);
+}
+
+void MEWPointerManual::setPosition(float pos01)
+{
+  ((MarginPointerManual*)m_pme)->setPosition(pos01);
+  remoteUpdate();
+}
+
+void MEWPointerManual::setText(const QString& text)
+{
+  ((MarginPointerManual*)m_pme)->setText(text);
+  remoteUpdate();
+}
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 
 

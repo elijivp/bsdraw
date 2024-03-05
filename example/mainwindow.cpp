@@ -91,7 +91,7 @@ class MarginDebug: public MarginElement
 public:
   MarginDebug(const QString& cap, int _space=20): caption(cap), space(_space) {}
 protected:
-  virtual bool  updateArea(const uarea_t& /*uarea*/, int /*UPDATEFOR*/){ return false; }
+  virtual bool  build(int /*UPDATEFOR*/){ return false; }
   virtual void  draw(QPainter&){}
   virtual void  mouseEvent(MOUSEEVENT mev, int pos_segm, int pos_atto, int dimm_segm, int dimm_atto, bool* /*doUpdate*/, MEQWrapper* /*selfwrap*/)
   {

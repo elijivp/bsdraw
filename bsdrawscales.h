@@ -37,6 +37,7 @@ enum  ATTACHED_TO { AT_LEFT, AT_RIGHT, AT_TOP, AT_BOTTOM };
 class MarginElement
 {
 public:
+  MarginElement(): m_current_area_initialized(false){}
   virtual ~MarginElement();
 protected:
   enum UPDATEFOR  { UF_RESIZE, UF_CONTENT, UF_FORCED };
@@ -63,7 +64,26 @@ protected:
           cmp.mirrored != mirrored || cmp.ex_scaling != ex_scaling;
     }
   };
-  virtual bool  updateArea(const uarea_t& uarea, int UPDATEFOR)=0;
+private:
+  bool            m_current_area_initialized;
+  uarea_t         m_current_area;
+public:
+  bool            current_area_initialized() const {  return m_current_area_initialized; }
+  const uarea_t&  current_area() const {    return   m_current_area; }
+protected:
+  bool  changeArea(const uarea_t& area, int UPDATEFOR)
+  {
+    if (UPDATEFOR == UF_RESIZE)
+    {
+      m_current_area_initialized = true;
+      m_current_area = area;
+    }
+    if (m_current_area_initialized)
+      return build(UPDATEFOR);
+    return false;
+  }
+protected:
+  virtual bool  build(int UPDATEFOR)=0;
   virtual void  draw(QPainter&)=0;
   virtual void  mouseEvent(MOUSEEVENT /*mev*/, int /*pos_segm*/, int /*pos_atto*/, int /*dimm_segm*/, int /*dimm_atto*/, bool* /*doUpdate*/, MEQWrapper* /*selfwrap*/=nullptr){}
   virtual void  sizeHint(ATTACHED_TO atto, int* atto_size, int* minsegm_main, int* minsegm_pre, int* minsegm_post) const =0;
@@ -97,7 +117,7 @@ public slots:
 
 
 
-typedef void  (*mtap_qstring_fn)(int mark, int dimmarea, int reloffset, const void*, QString& reservedResult);
+typedef void  (*ontap_qstring_fn)(int mark, int dimmarea, int reloffset, const void*, QString& reservedResult);
 
 template <int recycle>
 void  standard_tap_symbolate(int mark, int dimmarea, int reloffset, const void*, QString& reservedResult)
@@ -107,7 +127,7 @@ void  standard_tap_symbolate(int mark, int dimmarea, int reloffset, const void*,
   reservedResult = latins[mark % int(latinslen + latinslen*(float(reloffset)/dimmarea))];
 }
 
-typedef QWidget*  (*mtap_qwidget_fn)(int mark, int dimmarea, int reloffset, void*);
+typedef QWidget*  (*ontap_qwidget_fn)(int mark, int dimmarea, int reloffset, void*);
 
 
 
@@ -121,7 +141,7 @@ public:
 
 class MEWLabel;
 class MEWSpace; class MEWBorder;
-class MEWPointer;
+class MEWPointer;   class MEWPointerTAP;  class MEWPointerManual;
 class MEWScaleNN;      // NN - 1 note per 1 mark
 class MEWScaleNM;      // NM notes between marks
 class MEWScaleTAP;  class MEWScaleTAPNN;  class MEWScaleTAPNM;
@@ -247,6 +267,8 @@ public:
   MEWPointer*         addPointerRelativeDrawbounds(ATTACHED_TO atto, int flags, float pos, int marklen=0, float MOD=0.0f, const char* postfix=nullptr);
   MEWPointer*         addPointerAbsoluteDrawbounds(ATTACHED_TO atto, int flags, float pos, int marklen=0, float MOD=0.0f, const char* postfix=nullptr);
   MEWPointer*         addEPointer01Auto(ATTACHED_TO atto, int flags, float pos, int marklen=0, const char* postfix=nullptr);
+  MEWPointerTAP*      addPointerTap(ATTACHED_TO atto, int flags, float pos, int marklen, ontap_qstring_fn fn, int maxtextlen, const void* param=nullptr, const char* postfix=nullptr);
+  MEWPointerManual*   addPointerWithManualText(ATTACHED_TO atto, int flags, float pos, int marklen, const QString& text, int maxtextlen, const char* postfix=nullptr);
   
   /// 3. Scales
   /// Example:      I i i i I i i i I i i i I
@@ -293,18 +315,18 @@ public:
   
                       ///   Tappers
                         ///   Tap = call external function for get text
-  MEWScaleTAPNN*      addScalePixstepTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int minSpacing=30, const char* postfix=nullptr);
-  MEWScaleTAPNN*      addScaleSymmetricTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int minSpacing=30, const char* postfix=nullptr);
-  MEWScaleTAPNN*      addScaleRollingTapNN(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int pixStep=30, const char* postfix=nullptr);
+  MEWScaleTAPNN*      addScalePixstepTapNN(ATTACHED_TO atto, int flags, ontap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int minSpacing=30, const char* postfix=nullptr);
+  MEWScaleTAPNN*      addScaleSymmetricTapNN(ATTACHED_TO atto, int flags, ontap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int minSpacing=30, const char* postfix=nullptr);
+  MEWScaleTAPNN*      addScaleRollingTapNN(ATTACHED_TO atto, int flags, ontap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int pixStep=30, const char* postfix=nullptr);
   
-  MEWScaleTAPNM*      addScalePixstepTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int minSpacing=30, const char* postfix=nullptr);
-  MEWScaleTAPNM*      addScaleSymmetricTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int minSpacing=30, const char* postfix=nullptr);
-  MEWScaleTAPNM*      addScaleRollingTapNM(ATTACHED_TO atto, int flags, mtap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int pixStep=30, const char* postfix=nullptr);
+  MEWScaleTAPNM*      addScalePixstepTapNM(ATTACHED_TO atto, int flags, ontap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int minSpacing=30, const char* postfix=nullptr);
+  MEWScaleTAPNM*      addScaleSymmetricTapNM(ATTACHED_TO atto, int flags, ontap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int minSpacing=30, const char* postfix=nullptr);
+  MEWScaleTAPNM*      addScaleRollingTapNM(ATTACHED_TO atto, int flags, ontap_qstring_fn fn, int maxtextlen, const void* param=nullptr, int marksLimit=11, int pixStep=30, const char* postfix=nullptr);
 
                         ///   Tap = call external function for get QWidget object
-  MEWScaleTAPNM*      addWScalePixstepTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param=nullptr, int marksLimit=11, int minSpacing=30);
-  MEWScaleTAPNM*      addWScaleSymmetricTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param=nullptr, int marksLimit=11, int minSpacing=30);
-  MEWScaleTAPNM*      addWScaleRollingTapNM(ATTACHED_TO atto, int flags, mtap_qwidget_fn fn, int maxperpendiculardimm, void* param=nullptr, int marksLimit=11, int pixStep=30);
+  MEWScaleTAPNM*      addWScalePixstepTapNM(ATTACHED_TO atto, int flags, ontap_qwidget_fn fn, int maxperpendiculardimm, void* param=nullptr, int marksLimit=11, int minSpacing=30);
+  MEWScaleTAPNM*      addWScaleSymmetricTapNM(ATTACHED_TO atto, int flags, ontap_qwidget_fn fn, int maxperpendiculardimm, void* param=nullptr, int marksLimit=11, int minSpacing=30);
+  MEWScaleTAPNM*      addWScaleRollingTapNM(ATTACHED_TO atto, int flags, ontap_qwidget_fn fn, int maxperpendiculardimm, void* param=nullptr, int marksLimit=11, int pixStep=30);
   
   MEWScaleNM*         addWScalePixstepSetNM(ATTACHED_TO atto, int flags, int maxperpendiculardimm, int marksNwidgetsCount, QWidget* wdgs[], int minSpacing=30);
   MEWScaleNM*         addWScaleSymmetricSetNM(ATTACHED_TO atto, int flags, int maxperpendiculardimm, int marksNwidgetsCount, QWidget* wdgs[], int minSpacing=30);
@@ -451,7 +473,7 @@ public:
 //  void  setPostfix(const char* str);
 public slots:
   void  setPosition(float pos01);
-  void  setPositionBifunc(float pos01, float posText);
+//  void  setPositionBifunc(float pos01, float posText);
 public slots:
   void  setBounds(float LL, float HL);
   void  setBoundLow(float LL);
@@ -459,6 +481,29 @@ public slots:
   void  setBounds(double LL, double HL);
   void  setBoundLow(double LL);
   void  setBoundHigh(double HL);
+};
+
+class MEWPointerTAP: public MEQWrapper
+{
+  Q_OBJECT
+  friend class DrawBars;
+public:
+  IOverlayReactor*    createReactor();
+public slots:
+  void  setPosition(float pos01);
+//  void  setPositionBifunc(float pos01, float posText);
+  void  tap();
+};
+
+class MEWPointerManual: public MEQWrapper
+{
+  Q_OBJECT
+  friend class DrawBars;
+public:
+  IOverlayReactor*    createReactor();
+public slots:
+  void  setPosition(float pos01);
+  void  setText(const QString&);
 };
 
 class MEWScale: public MEQWrapper

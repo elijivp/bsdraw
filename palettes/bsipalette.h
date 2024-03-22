@@ -94,74 +94,77 @@ public:
 };
 
 
+
 template<int maxCount>
-class PaletteBORDS: public PaletteSTD<maxCount, true>
+class PalettePLATES: public PaletteSTD<maxCount, true>
 {
 public:
-  PaletteBORDS(unsigned int clr1) { for (int i=0; i<maxCount; i++)  PaletteSTD<maxCount, true>::palbuf[i] = clr1; }
-#define PCD_CAST(clr, brd)  b1 = b2; b2 = int(brd*maxCount);    if (b2 > b1){ if (b2 > maxCount) b2 = maxCount; for (int i=b1; i<b2; i++)  PaletteSTD<maxCount, true>::palbuf[i] = clr; if (b2 == maxCount) return; }
-#define PCD_LAST(clr)       b1 = b2; b2 = maxCount;                                                             for (int i=b1; i<b2; i++)  PaletteSTD<maxCount, true>::palbuf[i] = clr;
-  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2)
-    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_LAST(clr2); }
-  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3)
-    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_LAST(clr3); }
-  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, unsigned int clr4)
-    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_LAST(clr4); }
-  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, unsigned int clr4, float brd4, unsigned int clr5)
-    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_LAST(clr5); }
-  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6)
-    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); PCD_LAST(clr6); }
-  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
+  PalettePLATES(unsigned int clr1) { for (int i=0; i<maxCount; i++)  PaletteSTD<maxCount, true>::palbuf[i] = clr1; }
+#define PAPL_CAST(clr, brd)  b1 = b2; b2 = int(brd*maxCount);    if (b2 > b1){ if (b2 > maxCount) b2 = maxCount; for (int i=b1; i<b2; i++)  PaletteSTD<maxCount, true>::palbuf[i] = clr; if (b2 == maxCount) return; }
+#define PAPL_LAST(clr)       b1 = b2; b2 = maxCount;                                                             for (int i=b1; i<b2; i++)  PaletteSTD<maxCount, true>::palbuf[i] = clr;
+  PalettePLATES(unsigned int clr1, float brd1, unsigned int clr2)
+    { int b2=0, b1; PAPL_CAST(clr1, brd1); PAPL_LAST(clr2); }
+  PalettePLATES(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3)
+    { int b2=0, b1; PAPL_CAST(clr1, brd1); PAPL_CAST(clr2, brd2); PAPL_LAST(clr3); }
+  PalettePLATES(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, unsigned int clr4)
+    { int b2=0, b1; PAPL_CAST(clr1, brd1); PAPL_CAST(clr2, brd2); PAPL_CAST(clr3, brd3); PAPL_LAST(clr4); }
+  PalettePLATES(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, unsigned int clr4, float brd4, unsigned int clr5)
+    { int b2=0, b1; PAPL_CAST(clr1, brd1); PAPL_CAST(clr2, brd2); PAPL_CAST(clr3, brd3); PAPL_CAST(clr4, brd4); PAPL_LAST(clr5); }
+  PalettePLATES(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6)
+    { int b2=0, b1; PAPL_CAST(clr1, brd1); PAPL_CAST(clr2, brd2); PAPL_CAST(clr3, brd3); PAPL_CAST(clr4, brd4); PAPL_CAST(clr5, brd5); PAPL_LAST(clr6); }
+  PalettePLATES(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
                unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6, float brd6, unsigned int clr7)
-    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); PCD_CAST(clr6, brd6); PCD_LAST(clr7); }
-  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
+    { int b2=0, b1; PAPL_CAST(clr1, brd1); PAPL_CAST(clr2, brd2); PAPL_CAST(clr3, brd3); PAPL_CAST(clr4, brd4); PAPL_CAST(clr5, brd5); PAPL_CAST(clr6, brd6); PAPL_LAST(clr7); }
+  PalettePLATES(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
                unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6, float brd6, unsigned int clr7, float brd7, unsigned int clr8)
-    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); PCD_CAST(clr6, brd6); PCD_CAST(clr7, brd7); PCD_LAST(clr8); }
-  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
+    { int b2=0, b1; PAPL_CAST(clr1, brd1); PAPL_CAST(clr2, brd2); PAPL_CAST(clr3, brd3); PAPL_CAST(clr4, brd4); PAPL_CAST(clr5, brd5); PAPL_CAST(clr6, brd6); PAPL_CAST(clr7, brd7); PAPL_LAST(clr8); }
+  PalettePLATES(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
                unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6, float brd6, 
                unsigned int clr7, float brd7, unsigned int clr8, float brd8, unsigned int clr9)
-    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); PCD_CAST(clr6, brd6); PCD_CAST(clr7, brd7); PCD_CAST(clr8, brd8); PCD_LAST(clr9); }
-  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
+    { int b2=0, b1; PAPL_CAST(clr1, brd1); PAPL_CAST(clr2, brd2); PAPL_CAST(clr3, brd3); PAPL_CAST(clr4, brd4); PAPL_CAST(clr5, brd5); PAPL_CAST(clr6, brd6); PAPL_CAST(clr7, brd7); PAPL_CAST(clr8, brd8); PAPL_LAST(clr9); }
+  PalettePLATES(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
                unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6, float brd6, 
                unsigned int clr7, float brd7, unsigned int clr8, float brd8, unsigned int clr9, float brd9, unsigned int clr10)
-    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); PCD_CAST(clr6, brd6); PCD_CAST(clr7, brd7); PCD_CAST(clr8, brd8); PCD_CAST(clr9, brd9); PCD_LAST(clr10); }
-  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
+    { int b2=0, b1; PAPL_CAST(clr1, brd1); PAPL_CAST(clr2, brd2); PAPL_CAST(clr3, brd3); PAPL_CAST(clr4, brd4); PAPL_CAST(clr5, brd5); PAPL_CAST(clr6, brd6); PAPL_CAST(clr7, brd7); PAPL_CAST(clr8, brd8); PAPL_CAST(clr9, brd9); PAPL_LAST(clr10); }
+  PalettePLATES(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
                unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6, float brd6, 
                unsigned int clr7, float brd7, unsigned int clr8, float brd8, unsigned int clr9, float brd9,
                unsigned int clr10, float brd10, unsigned int clr11)
-    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); 
-      PCD_CAST(clr6, brd6); PCD_CAST(clr7, brd7); PCD_CAST(clr8, brd8); PCD_CAST(clr9, brd9); PCD_CAST(clr10, brd10); PCD_LAST(clr11); }
-  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
+    { int b2=0, b1; PAPL_CAST(clr1, brd1); PAPL_CAST(clr2, brd2); PAPL_CAST(clr3, brd3); PAPL_CAST(clr4, brd4); PAPL_CAST(clr5, brd5); 
+      PAPL_CAST(clr6, brd6); PAPL_CAST(clr7, brd7); PAPL_CAST(clr8, brd8); PAPL_CAST(clr9, brd9); PAPL_CAST(clr10, brd10); PAPL_LAST(clr11); }
+  PalettePLATES(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
                unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6, float brd6, 
                unsigned int clr7, float brd7, unsigned int clr8, float brd8, unsigned int clr9, float brd9,
                unsigned int clr10, float brd10, unsigned int clr11, float brd11, unsigned int clr12)
-    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); 
-      PCD_CAST(clr6, brd6); PCD_CAST(clr7, brd7); PCD_CAST(clr8, brd8); PCD_CAST(clr9, brd9); PCD_CAST(clr10, brd10); PCD_CAST(clr11, brd11); PCD_LAST(clr12); }
-  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
+    { int b2=0, b1; PAPL_CAST(clr1, brd1); PAPL_CAST(clr2, brd2); PAPL_CAST(clr3, brd3); PAPL_CAST(clr4, brd4); PAPL_CAST(clr5, brd5); 
+      PAPL_CAST(clr6, brd6); PAPL_CAST(clr7, brd7); PAPL_CAST(clr8, brd8); PAPL_CAST(clr9, brd9); PAPL_CAST(clr10, brd10); PAPL_CAST(clr11, brd11); PAPL_LAST(clr12); }
+  PalettePLATES(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
                unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6, float brd6, 
                unsigned int clr7, float brd7, unsigned int clr8, float brd8, unsigned int clr9, float brd9,
                unsigned int clr10, float brd10, unsigned int clr11, float brd11, 
                unsigned int clr12, float brd12, unsigned int clr13)
-    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); 
-      PCD_CAST(clr6, brd6); PCD_CAST(clr7, brd7); PCD_CAST(clr8, brd8); PCD_CAST(clr9, brd9); PCD_CAST(clr10, brd10); PCD_CAST(clr11, brd11); 
-      PCD_CAST(clr12, brd12);  PCD_LAST(clr13); }
-  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
+    { int b2=0, b1; PAPL_CAST(clr1, brd1); PAPL_CAST(clr2, brd2); PAPL_CAST(clr3, brd3); PAPL_CAST(clr4, brd4); PAPL_CAST(clr5, brd5); 
+      PAPL_CAST(clr6, brd6); PAPL_CAST(clr7, brd7); PAPL_CAST(clr8, brd8); PAPL_CAST(clr9, brd9); PAPL_CAST(clr10, brd10); PAPL_CAST(clr11, brd11); 
+      PAPL_CAST(clr12, brd12);  PAPL_LAST(clr13); }
+  PalettePLATES(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
                unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6, float brd6, 
                unsigned int clr7, float brd7, unsigned int clr8, float brd8, unsigned int clr9, float brd9,
                unsigned int clr10, float brd10, unsigned int clr11, float brd11, 
                unsigned int clr12, float brd12, unsigned int clr13, float brd13, unsigned int clr14)
-    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); 
-      PCD_CAST(clr6, brd6); PCD_CAST(clr7, brd7); PCD_CAST(clr8, brd8); PCD_CAST(clr9, brd9); PCD_CAST(clr10, brd10); PCD_CAST(clr11, brd11); 
-      PCD_CAST(clr12, brd12);  PCD_CAST(clr13, brd13);  PCD_LAST(clr14); }
-  PaletteBORDS(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
+    { int b2=0, b1; PAPL_CAST(clr1, brd1); PAPL_CAST(clr2, brd2); PAPL_CAST(clr3, brd3); PAPL_CAST(clr4, brd4); PAPL_CAST(clr5, brd5); 
+      PAPL_CAST(clr6, brd6); PAPL_CAST(clr7, brd7); PAPL_CAST(clr8, brd8); PAPL_CAST(clr9, brd9); PAPL_CAST(clr10, brd10); PAPL_CAST(clr11, brd11); 
+      PAPL_CAST(clr12, brd12);  PAPL_CAST(clr13, brd13);  PAPL_LAST(clr14); }
+  PalettePLATES(unsigned int clr1, float brd1, unsigned int clr2, float brd2, unsigned int clr3, float brd3, 
                unsigned int clr4, float brd4, unsigned int clr5, float brd5, unsigned int clr6, float brd6, 
                unsigned int clr7, float brd7, unsigned int clr8, float brd8, unsigned int clr9, float brd9,
                unsigned int clr10, float brd10, unsigned int clr11, float brd11, 
                unsigned int clr12, float brd12, unsigned int clr13, float brd13, 
                unsigned int clr14, float brd14, unsigned int clr15)
-    { int b2=0, b1; PCD_CAST(clr1, brd1); PCD_CAST(clr2, brd2); PCD_CAST(clr3, brd3); PCD_CAST(clr4, brd4); PCD_CAST(clr5, brd5); 
-      PCD_CAST(clr6, brd6); PCD_CAST(clr7, brd7); PCD_CAST(clr8, brd8); PCD_CAST(clr9, brd9); PCD_CAST(clr10, brd10); PCD_CAST(clr11, brd11); 
-      PCD_CAST(clr12, brd12);  PCD_CAST(clr13, brd13);  PCD_CAST(clr14, brd14);  PCD_LAST(clr15); }
+    { int b2=0, b1; PAPL_CAST(clr1, brd1); PAPL_CAST(clr2, brd2); PAPL_CAST(clr3, brd3); PAPL_CAST(clr4, brd4); PAPL_CAST(clr5, brd5); 
+      PAPL_CAST(clr6, brd6); PAPL_CAST(clr7, brd7); PAPL_CAST(clr8, brd8); PAPL_CAST(clr9, brd9); PAPL_CAST(clr10, brd10); PAPL_CAST(clr11, brd11); 
+      PAPL_CAST(clr12, brd12);  PAPL_CAST(clr13, brd13);  PAPL_CAST(clr14, brd14);  PAPL_LAST(clr15); }
+#undef PAPL_CAST
+#undef PAPL_LAST
 };
 
 /* QT_VERSION >= x050000 usage:
@@ -312,7 +315,7 @@ public:
   
 public:
   template <int maxCount>
-  PaletteENUM(const PaletteBORDS<maxCount>& cpy)
+  PaletteENUM(const PalettePLATES<maxCount>& cpy)
   {
     int NM = TOTAL < maxCount? TOTAL : maxCount;
     for (int i=0; i<NM; i++)
@@ -322,64 +325,5 @@ public:
     m_states = NM;
   }
 };
-
-
-//template <unsigned int color> class PaletteENUM: public PaletteSTD<1, true> {
-//public: PaletteENUM(){ 
-//    PaletteSTD<1, true>::palbuf[0] = color;
-//  } };
-
-//template <unsigned int clr1, unsigned int clr2> class PaletteENUM: public PaletteSTD<2, true> {
-//public: PaletteENUM(){ 
-//    PaletteSTD<1, true>::palbuf[0] = color;
-//  } };
-
-
-/*
- * template<int maxCount>
-class PaletteIMPACT: public PaletteSTD<maxCount, true>
-{
-  float       m_k, m_b;
-private:
-  void  reconstruct(int count, ...)
-  {
-    int single = maxCount / count;
-    va_list rct;
-    va_start(rct, count);
-    for (int i=0; i<count; i++)
-    {
-      unsigned int clr = va_arg(rct, unsigned int);
-      for (int j=0; j<single; j++)
-        PaletteSTD<maxCount, true>::palbuf[i*single + j] = clr;
-    }
-    va_end(rct);
-    for (int i=single*count; i<maxCount; i++)
-      PaletteSTD<maxCount, true>::palbuf[i] = 0xFFFFFFFF;
-    m_k = 1.0f / (maxCount) * single;
-    m_b = 1.0f / (maxCount);
-  }
-public:
-  float at(int idx) const { return m_b + idx*m_k; }
-  float operator()(int idx) const { return at(idx); }
-  PaletteIMPACT(unsigned int clr1){ for (int i=0; i<maxCount; i++)  PaletteSTD<maxCount, true>::palbuf[i] = clr1; m_k = 0.0f; m_b = 0.0f; }
-  PaletteIMPACT(unsigned int clr1, unsigned int clr2){ reconstruct(2, clr1, clr2); }
-  PaletteIMPACT(unsigned int clr1, unsigned int clr2, unsigned int clr3){ reconstruct(3, clr1, clr2, clr3); }
-  PaletteIMPACT(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4){ reconstruct(4, clr1, clr2, clr3, clr4); }
-  PaletteIMPACT(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5){ reconstruct(5, clr1, clr2, clr3, clr4, clr5); }
-  PaletteIMPACT(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6){ reconstruct(6, clr1, clr2, clr3, clr4, clr5, clr6); }
-  PaletteIMPACT(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, unsigned int clr7)
-  { reconstruct(7, clr1, clr2, clr3, clr4, clr5, clr6, clr7); }
-  PaletteIMPACT(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, unsigned int clr7, unsigned int clr8)
-  { reconstruct(8, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8); }
-  PaletteIMPACT(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, unsigned int clr7, unsigned int clr8, unsigned int clr9)
-  { reconstruct(9, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9); }
-  PaletteIMPACT(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10)
-  { reconstruct(10, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10); }
-  PaletteIMPACT(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11)
-  { reconstruct(11, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11); }
-  PaletteIMPACT(unsigned int clr1, unsigned int clr2, unsigned int clr3, unsigned int clr4, unsigned int clr5, unsigned int clr6, unsigned int clr7, unsigned int clr8, unsigned int clr9, unsigned int clr10, unsigned int clr11, unsigned int clr12)
-  { reconstruct(12, clr1, clr2, clr3, clr4, clr5, clr6, clr7, clr8, clr9, clr10, clr11, clr12); }
-};
-*/
 
 #endif // IPALETTE_H

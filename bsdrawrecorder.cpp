@@ -21,7 +21,6 @@ public:
     {
       fdc.value2D("float value");
       fdc.push("dvalue = max(dvalue, value);");
-      fdc.push("value = paletrange[0] + (paletrange[1] - paletrange[0])*value;" );
       if ( fdc.splits() == SP_NONE )
         fdc.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );
       else if (fdc.splits() & SPFLAG_COLORSPLIT)

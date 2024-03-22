@@ -356,6 +356,7 @@ protected:
   virtual void  mouseDoubleClickEvent(QMouseEvent* event);
 public:
   void    connectScrollBar(QScrollBar*, bool staticView=false, bool setOrientation=true);
+  void    connectScrollBarOutsideDraw(QScrollBar*);
 public slots:
   void    slot_setScalingA(int);
   void    slot_setScalingB(int);
@@ -416,7 +417,8 @@ public slots:
   void    slot_updatedBounds();
   void    slot_updatedOrientation();
 protected slots:
-  void    scrollDataTo(int);
+  void    scrollDataTroughDrawTo(int);
+  void    scrollDataOutsideDrawTo(int);
   void    toolUpdateBoundHigh(double);
   void    toolUpdateBoundLow(double);
 };

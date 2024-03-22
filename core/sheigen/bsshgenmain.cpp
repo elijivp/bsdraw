@@ -507,7 +507,6 @@ void FshDrawMain::generic_decls_begin()
                                           "uniform highp int        scaler_a;" SHNL
                                           "uniform highp int        scaler_b;" SHNL
                                           "uniform highp sampler2D  paletsampler;" SHNL
-                                          "uniform highp vec2       paletrange;" SHNL
                                           "in highp vec2            coords;" SHNL
 #if defined BSGLSLVER && BSGLSLVER >= 420
                                           "out vec4                 outcolor;" SHNL

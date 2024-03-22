@@ -463,9 +463,8 @@ public:
                   "}" SHNL);
       }
       
-//      if (allocatedPortions > 1 && (fdc.splits() & SPFLAG_COLORSPLIT) == 0)
       {
-//        fdc.cintvar("allocatedPortions", (int)allocatedPortions);
+        fdc.cfloatvar("paletrange", coloropts.cstart, coloropts.cstop);
         switch (coloropts.cpolicy)
         {
         case CP_MONO:                 fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(allocatedPortions)*(allocatedPortions - 1 - i);" SHNL); break;
@@ -478,19 +477,6 @@ public:
         case CP_PALETTE_SPLIT:        fdc.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])/float(allocatedPortions)*(i + b_coord_ns/ab_fndimms.y);" SHNL); break;
         }
       }
-//      else
-//      {
-//        switch (coloropts.cpolicy)
-//        {
-//        case CP_MONO:                 fdc.push("float porc = paletrange[1];" SHNL); break;
-//        case CP_PAINTED:              fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - VALCLR);" SHNL); break;
-//        case CP_PAINTED_GROSS:        fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*sqrt(1.0 - VALCLR);" SHNL); break;
-//        case CP_PAINTED_SYMMETRIC:    fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
-//        case CP_REPAINTED:            fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - VALCLR);" SHNL); break;
-          
-//        case CP_PALETTE: case CP_PALETTE_SPLIT:      fdc.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
-//        }
-//      }
 
       fdc.push(  "vec3  colorGraph = texture(paletsampler, vec2(porc, 0.0)).rgb;" SHNL );
       
@@ -523,7 +509,6 @@ DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, unsigned int mem
   m_dataDimmB = 1;
   m_portionSize = samples;
   deployMemory(memForDeploy);
-  reXtractDynrange(coloropts);
 }
 
 
@@ -535,21 +520,14 @@ void DrawGraph::reConstructor(unsigned int samples)
   deployMemory();
 }
 
-void DrawGraph::reXtractDynrange(const coloropts_t& co)
-{
-  m_paletrange[PRNG_START] = co.cstart;
-  m_paletrange[PRNG_STOP] = co.cstop;
-}
-
 /// m_countPortions === graphs
 DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, const coloropts_t& copts, SPLITPORTIONS splitGraphs):
   DrawQWidget(DATEX_1D, new SheiGeneratorGraph(graphopts_t::goInterp(0.0f, DE_LINTERP), copts), graphs, OR_LRBT, splitGraphs, copts.backcolor)
-//  ,m_graphopts(graphopts_t::goInterp(0.0f, DE_LINTERP)), m_coloropts(copts)
-{ reConstructor(samples); reXtractDynrange(copts); }
+{ reConstructor(samples); }
+
 DrawGraph::DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, const coloropts_t& copts, SPLITPORTIONS splitGraphs):
   DrawQWidget(DATEX_1D, new SheiGeneratorGraph(graphopts, copts), graphs, OR_LRBT, splitGraphs, copts.backcolor)
-//  ,m_graphopts(graphopts), m_coloropts(copts)
-{ reConstructor(samples); reXtractDynrange(copts); }
+{ reConstructor(samples); }
 
 const graphopts_t& DrawGraph::graphopts() const {  return ((SheiGeneratorGraph*)m_pcsh)->graphopts;   }
 const coloropts_t& DrawGraph::coloropts() const {  return ((SheiGeneratorGraph*)m_pcsh)->coloropts;   }
@@ -563,7 +541,6 @@ void DrawGraph::setOpts(const graphopts_t& go)
 void DrawGraph::setOpts(const coloropts_t& co)
 {
   ((SheiGeneratorGraph*)m_pcsh)->coloropts = co;
-  reXtractDynrange(co);
   vmanUpInit();
 }
 
@@ -571,7 +548,6 @@ void DrawGraph::setOpts(const graphopts_t& go, const coloropts_t& co)
 {
   ((SheiGeneratorGraph*)m_pcsh)->graphopts = go;
   ((SheiGeneratorGraph*)m_pcsh)->coloropts = co;
-  reXtractDynrange(co);
   vmanUpInit();
 }
 

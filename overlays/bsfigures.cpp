@@ -255,6 +255,12 @@ OFLine::OFLine(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float e
 {
 }
 
+void OFLine::setGap(float gap, bool update)
+{
+  m_param1 = gap;
+  updateParameter(true, update);
+}
+
 int   OFLine::fshOVCoords(int overlay, bool switchedab, char* to) const
 {
   FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);

@@ -28,7 +28,8 @@ class SheiGeneratorHint_Graph: public ISheiGeneratorHint_Base
 private:
   unsigned int    m_portion;
   unsigned int    m_allocatedPortions;
-  BSCOLORPOLICY   m_cpolicy;
+  coloropts_t     m_copts;
+  float           m_admix;
 private:
   int     m_automargin;
   DRAWHINT  m_type;
@@ -36,8 +37,8 @@ private:
 public:
   int     m_mindimmA, m_mindimmB;
 public:
-  SheiGeneratorHint_Graph(int flags, unsigned int portion, unsigned int allocatedPortions, BSCOLORPOLICY cp): 
-        m_portion(portion), m_allocatedPortions(allocatedPortions), m_cpolicy(cp)
+  SheiGeneratorHint_Graph(int flags, unsigned int portion, unsigned int allocatedPortions, const coloropts_t& copts, float additionalMixWithBackground): 
+        m_portion(portion), m_allocatedPortions(allocatedPortions), m_copts(copts), m_admix(additionalMixWithBackground)
   {
     m_automargin = (flags >> 8) & 0xF;
     m_type = DRAWHINT(flags & 0xF0);
@@ -70,10 +71,10 @@ public:
     
     fdc.cintvar("i", (int)m_portion);
     
-//    if (m_allocatedPortions > 1 && (splitPortions & SPFLAG_COLORSPLIT) == 0)
     {
       fdc.cintvar("targetPortions", (int)m_allocatedPortions);
-      switch (m_cpolicy)
+      fdc.cfloatvar("paletrange", m_copts.cstart, m_copts.cstop);
+      switch (m_copts.cpolicy)
       {
       case CP_MONO:                 fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(targetPortions)*(targetPortions - 1 - i);" SHNL); break;
       case CP_PAINTED:              fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])/float(targetPortions)*(targetPortions - 1 - i + 1.0 - VALCLR);" SHNL); break;
@@ -85,17 +86,18 @@ public:
       case CP_PALETTE_SPLIT:        fdc.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])/float(targetPortions)*(i + b_coord_ns/ab_fndimms.y);" SHNL); break;
       }
     }
-//    else
 //    {
-//      switch (m_cpolicy)
+//      fdc.cintvar("targetPortions", (int)m_allocatedPortions);
+//      switch (m_copts.cpolicy)
 //      {
-//      case CP_MONO:                 fdc.push("float porc = paletrange[1];" SHNL); break;
-//      case CP_PAINTED:              fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - VALCLR);" SHNL); break;
-//      case CP_PAINTED_GROSS:        fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*sqrt(1.0 - VALCLR);" SHNL); break;
-//      case CP_PAINTED_SYMMETRIC:    fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - 0.5 + abs(VALCLR - 0.5));" SHNL); break;
-//      case CP_REPAINTED:            fdc.push("float porc = paletrange[1] - (paletrange[1] - paletrange[0])*(1.0 - VALCLR);" SHNL); break;
+//      case CP_MONO:                 fdc.push("float porc = 1.0 - 1.0/float(targetPortions)*(targetPortions - 1 - i);" SHNL); break;
+//      case CP_PAINTED:              fdc.push("float porc = 1.0 - 1.0/float(targetPortions)*(targetPortions - 1 - i + 1.0 - VALCLR);" SHNL); break;
+//      case CP_PAINTED_GROSS:        fdc.push("float porc = 1.0 - 1.0/float(targetPortions)*(targetPortions - 1 - i + 1.0 - sqrt(VALCLR));" SHNL); break;
+//      case CP_PAINTED_SYMMETRIC:    fdc.push("float porc = 1.0 - 1.0/float(targetPortions)*(targetPortions - 1 - i + 0.5 - abs(VALCLR - 0.5));" SHNL); break;
+//      case CP_REPAINTED:            fdc.push("float porc = (1.0 - 1.0*(float(targetPortions - 1 - i)/float(targetPortions)))*VALCLR;" SHNL); break;
         
-//      case CP_PALETTE: case CP_PALETTE_SPLIT:      fdc.push("float porc = paletrange[0] + (paletrange[1] - paletrange[0])*b_coord_ns/ab_fndimms.y;" SHNL); break;
+//      case CP_PALETTE:              fdc.push("float porc = b_coord_ns/ab_fndimms.y;" SHNL); break;
+//      case CP_PALETTE_SPLIT:        fdc.push("float porc = 1.0/float(targetPortions)*(i + b_coord_ns/ab_fndimms.y);" SHNL); break;
 //      }
 //    }
     
@@ -157,10 +159,15 @@ public:
     else if (m_type == DH_FILL) 
       ; /// distwell == 0
     
-    fdc.push(   
-                "mixwell = mixwell*step(distwell, 7.0)*(1.0-distwell/1.5);" SHNL
+    fdc.push(   "mixwell = mixwell*step(distwell, 7.0)*(1.0-distwell/1.5);" SHNL
                 "mixwell = max(0.0, mixwell);" SHNL
-                "vec3  colorGraph = texture(paletsampler, vec2(porc, 0.0)).rgb;" SHNL
+    );
+    if (m_admix)
+    {
+      fdc.cfloatvar("admix", 1.0f - m_admix);
+      fdc.push("mixwell = mixwell*admix;" SHNL);
+    }
+    fdc.push(   "vec3  colorGraph = texture(paletsampler, vec2(porc, 0.0)).rgb;" SHNL
                 "result = mix(result, colorGraph, mixwell);" SHNL
     );
   }
@@ -170,10 +177,11 @@ SheiGeneratorHint_Graph::~SheiGeneratorHint_Graph(){}
 class SheiGeneratorHint_Intensity: public ISheiGeneratorHint_Base
 {
   float   m_value;
+  float   m_admix;
 public:
   int     m_mindimmA, m_mindimmB;
 public:
-  SheiGeneratorHint_Intensity(float value): m_value(value) {}
+  SheiGeneratorHint_Intensity(float value, float additionalMixWithBackground): m_value(value), m_admix(additionalMixWithBackground) {}
   ~SheiGeneratorHint_Intensity();
 public:
   virtual void        shfragment_store(FshDrawComposer& fdc) const
@@ -181,16 +189,21 @@ public:
     fdc.push( "ivec2 icoords = ivec2(abc_coords*(ab_ibounds));" SHNL);
     
     fdc.cfloatvar("portionColor", m_value);
+    if (m_admix)
+    {
+      fdc.cfloatvar("admix", 1.0f - m_admix);
+      fdc.push("mixwell = mixwell*admix;" SHNL);
+    }
     fdc.push( "float distwell = 0.0;"  SHNL );
-    fdc.push( "vec3  colorGraph = texture(paletsampler, vec2(paletrange[0] + (paletrange[1] - paletrange[0])*portionColor, 0.0)).rgb;" SHNL
+    fdc.push( "vec3  colorGraph = texture(paletsampler, vec2(portionColor, 0.0)).rgb;" SHNL
               "result = mix(result, colorGraph, mixwell);" SHNL
     );
   }
 };
 SheiGeneratorHint_Intensity::~SheiGeneratorHint_Intensity(){}
 
-DrawHint::DrawHint(const DrawGraph* pdg, int portion, int flags, ORIENTATION orient, unsigned int backgroundColor):
-  DrawQWidget(DATEX_2D, new SheiGeneratorHint_Graph(flags, (unsigned int)portion, pdg->allocatedPortions(), pdg->coloropts().cpolicy), 1, 
+DrawHint::DrawHint(const DrawGraph* pdg, int portion, int flags, ORIENTATION orient, unsigned int backgroundColor, float additionalMixWithBackground):
+  DrawQWidget(DATEX_2D, new SheiGeneratorHint_Graph(flags, (unsigned int)portion, pdg->allocatedPortions(), pdg->coloropts(), additionalMixWithBackground), 1, 
                 orient, SP_NONE, backgroundColor == 0xFFFFFFFF? pdg->coloropts().backcolor : backgroundColor)
 {
   m_dataDimmA = 1;
@@ -209,8 +222,8 @@ DrawHint::DrawHint(const DrawGraph* pdg, int portion, int flags, ORIENTATION ori
   setDataPaletteRange(pdg->coloropts().cstart, pdg->coloropts().cstop);
 }
 
-DrawHint::DrawHint(float value, ORIENTATION orient, unsigned int backgroundColor):
-  DrawQWidget(DATEX_2D, new SheiGeneratorHint_Intensity(value), 1, orient, SP_NONE, backgroundColor)
+DrawHint::DrawHint(float value, ORIENTATION orient, unsigned int backgroundColor, float additionalMixWithBackground):
+  DrawQWidget(DATEX_2D, new SheiGeneratorHint_Intensity(value, additionalMixWithBackground), 1, orient, SP_NONE, backgroundColor)
 {
   m_dataDimmA = 1;
   m_dataDimmB = 1;

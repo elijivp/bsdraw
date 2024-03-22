@@ -39,7 +39,6 @@ public:
         fdc.push("float value = texture(datasampler, vec2(domain, 0.0)).r * (1-step(domain, 0.0));");    // /float(dmnlen-1)
       
       fdc.push(  "dvalue = max(dvalue, value);");
-      fdc.push(  "value = paletrange[0] + (paletrange[1] - paletrange[0])*value;" );
       
       if ( fdc.splits() == SP_NONE )
         fdc.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );

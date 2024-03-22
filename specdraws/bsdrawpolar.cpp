@@ -25,7 +25,7 @@ public:
   virtual unsigned int  shfragment_uniforms(shuniformdesc_t*, unsigned int){ return 0; }
   virtual void          shfragment_store(FshDrawComposer& fdc) const
   {
-    fdc.push("uniform highp float viewturn;");
+    fdc.push("float viewturn = 0.0;");  // HIGHP
     fdc.push("vec3 mpi = vec3(3.14159265359, 1.57079632679, 6.28318530718);");
     fdc.push("vec2 datacoords = (abc_coords - vec2(0.5, 0.5))*2;");
     
@@ -55,7 +55,6 @@ public:
     fdc.push( "{" );
     {
       fdc.value2D("float value", "datacoords");
-      fdc.push("value = paletrange[0] + (paletrange[1] - paletrange[0])*value;");
       fdc.push("dvalue = max(dvalue, value);");
       
       if ( fdc.splits() == SP_NONE )
@@ -217,7 +216,7 @@ void DrawPolar::turn(float rotate01)
   if (m_viewTurn != rotate01)
   {
     m_viewTurn = rotate01;
-    m_bitmaskPendingChanges |= PC_DATA | PC_DATADIMMS | PC_DATAPORTS | PC_DATARANGE | PC_PALETTEPARAMS;
+    m_bitmaskPendingChanges |= PC_DATA | PC_DATADIMMS | PC_DATAPORTS | PC_DATARANGE;
   //    if (m_spDivider != 0)
     if (m_splitterA > 1 || m_splitterB > 1)
       innerRescale();

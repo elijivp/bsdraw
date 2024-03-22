@@ -19,18 +19,15 @@ public:
     fdc.push( fdc.splits() == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
     fdc.push("{");
     {
-//      fdc.value2D("float value");
-//      fdc.push("dvalue = max(dvalue, value);");
       fdc.value2D("dvalue");
-      fdc.push("float value = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
       if ( fdc.splits() == SP_NONE )
-        fdc.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" SHNL);
+        fdc.push("result = result + texture(paletsampler, vec2(dvalue, float(i)/(allocatedPortions-1) )).rgb;" SHNL);
       else if (fdc.splits() & SPFLAG_COLORSPLIT)
-        fdc.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" SHNL);
+        fdc.push("result = result + texture(paletsampler, vec2(float(i + dvalue)/(allocatedPortions), 0.0)).rgb;" SHNL);
       else
-        fdc.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" SHNL);
+        fdc.push("result.rgb = mix(texture(paletsampler, vec2(dvalue, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" SHNL);
       
-      fdc.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" SHNL);
+      fdc.push( "post_mask[0] = mix(1.0, post_mask[0], step(dvalue, post_mask[1]));" SHNL);
     }
     fdc.push("}");
   }

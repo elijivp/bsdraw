@@ -129,8 +129,10 @@ protected:
 
 class OSelectorBand: public OSelectorReaction
 {
+  bool      m_dir_horz;
 public:
-  OSelectorBand(const linestyle_t& kls, float alpha=0.2f, bool moveable=false);
+  OSelectorBand(const linestyle_t& kls, float alpha=0.2f, bool dir_horz=true, bool moveable=false);
+  bool    getInterval(float* imin, float* imax) const ;
 protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };

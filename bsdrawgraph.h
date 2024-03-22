@@ -26,7 +26,6 @@ class DrawGraph: public DrawQWidget
 protected:
   DrawGraph(unsigned int samples, unsigned int graphs, unsigned int memForDeploy, const graphopts_t& graphopts, const coloropts_t& coloropts, SPLITPORTIONS splitGraphs=SP_NONE);
   void  reConstructor(unsigned int samples);
-  void  reXtractDynrange(const coloropts_t& co);
 public:
   DrawGraph(unsigned int samples, unsigned int graphs=1, const coloropts_t& copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SP_NONE);
   DrawGraph(unsigned int samples, unsigned int graphs, const graphopts_t& graphopts, const coloropts_t& copts=coloropts_t::copts(), SPLITPORTIONS splitGraphs=SP_NONE);

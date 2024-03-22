@@ -414,8 +414,26 @@ int OSelectorCirc::fshOVCoords(int overlay, bool switchedab, char *to) const
   return ocg.written();
 }
 
-OSelectorBand::OSelectorBand(const linestyle_t& kls, float alpha, bool moveable): OSelectorReaction(kls, alpha, moveable, false)
+OSelectorBand::OSelectorBand(const linestyle_t& kls, float alpha, bool dir_horz, bool moveable): OSelectorReaction(kls, alpha, moveable, false), 
+  m_dir_horz(dir_horz)
 {
+}
+
+bool OSelectorBand::getInterval(float* imin, float* imax) const
+{
+  float l,t,r,b;
+  bool result = dimms(&l, &t, &r, &b);
+  if (m_dir_horz)
+  {
+    *imin = l;
+    *imax = r;
+  }
+  else
+  {
+    *imin = t;
+    *imax = b;
+  }
+  return result;
 }
 
 int OSelectorBand::fshOVCoords(int overlay, bool switchedab, char *to) const
@@ -423,12 +441,19 @@ int OSelectorBand::fshOVCoords(int overlay, bool switchedab, char *to) const
   FshOVCoordsConstructor  ocg(this->uniforms(), overlay, to);
   ocg.goto_func_begin<coords_type_t, dimms_type_t>(this, this);
   {
+    if (m_dir_horz ^ switchedab)
     {
       ocg.push("ioffset[1] = 0;");
       ocg.goto_normed();
       ocg.push("idimms2[1] = ov_ibounds.y;");
-      ocg.trace_rect_xywh("idimms2", m_alpha);
     }
+    else
+    {
+      ocg.push("ioffset[0] = 0;");
+      ocg.goto_normed();
+      ocg.push("idimms2[0] = ov_ibounds.x;");
+    }
+    ocg.trace_rect_xywh("idimms2", m_alpha);
   }
   ocg.goto_func_end(true);
   return ocg.written();

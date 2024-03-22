@@ -106,7 +106,7 @@ void DrawQWidget::compileWhenInitializeGL(bool cflag)
   m_compileOnInitializeGL = cflag;
 }
 
-void DrawQWidget::palettePrepare(const IPalette* ppal, bool discrete, int levels)
+void DrawQWidget::palettePrepare(const IPalette* ppal, bool discrete, int levels, float range0, float range1)
 {
   const void*   palArr;
   unsigned int  palSize;
@@ -117,8 +117,27 @@ void DrawQWidget::palettePrepare(const IPalette* ppal, bool discrete, int levels
   if (palFormat == IPalette::FMT_UNKNOWN)
     return;
   
-  GLenum  formats[] = { GL_UNSIGNED_BYTE, GL_FLOAT };
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, GLsizei(palSize) / levels, levels, 0, GL_RGBA, formats[palFormat - 1], (const void*)palArr);
+  const GLenum  formats[] = { GL_UNSIGNED_BYTE, GL_FLOAT };
+  GLenum format = formats[palFormat-1];
+  
+  if (palSize > 0)
+  {
+    unsigned int   r0i = range0*palSize;  if (r0i >= palSize) r0i = palSize-1;
+    unsigned int   r1o = range1*palSize;  if (r1o > palSize)  r1o = palSize;
+    if (format == GL_UNSIGNED_BYTE)
+    {
+      const unsigned char* uiArr = (const unsigned char*)palArr;
+      palArr = (const void*)&uiArr[4*r0i];
+    }
+    else if (format == GL_FLOAT)
+    {
+      const float* flArr = (const float*)palArr;
+      palArr = (const void*)&flArr[r0i];
+    }
+    palSize = r1o - r0i;
+  }
+  
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, GLsizei(palSize) / levels, levels, 0, GL_RGBA, format, (const void*)palArr);
   if (discrete)
   {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -341,7 +360,7 @@ void DrawQWidget::initCollectAndCompileShader()
     { 
       "datasampler", "datadimm_a", "datadimm_b", "dataportions", "dataportionsize", "datarange", 
       "scaler_a", "scaler_b", 
-      "paletsampler", "paletrange"
+      "paletsampler", 
     };
     
     Q_ASSERT(_SF_COUNT == sizeof(vd_corresponding_array)/sizeof(const char*));
@@ -400,7 +419,7 @@ void DrawQWidget::initCollectAndCompileShader()
     } // init ovl
     
     unpend(PC_INIT);
-    m_bitmaskPendingChanges |= PC_DATA | PC_DATADIMMS | PC_DATAPORTS | PC_DATARANGE | PC_PALETTE | PC_PALETTEPARAMS | PC_SEC | 
+    m_bitmaskPendingChanges |= PC_DATA | PC_DATADIMMS | PC_DATAPORTS | PC_DATARANGE | PC_PALETTE | PC_SEC | 
                               PC_PARAMSOVL | 
                               PC_TFT_TEXTURE | PC_TFT_PARAMS;
     
@@ -439,7 +458,7 @@ void DrawQWidget::initializeGL()
   if (m_compileOnInitializeGL)
     initCollectAndCompileShader();
   
-  m_bitmaskPendingChanges |= PC_DATA | PC_DATADIMMS | PC_DATAPORTS | PC_DATARANGE | PC_PALETTE | PC_PALETTEPARAMS | PC_SEC | 
+  m_bitmaskPendingChanges |= PC_DATA | PC_DATADIMMS | PC_DATAPORTS | PC_DATARANGE | PC_PALETTE | PC_SEC | 
                               PC_PARAMSOVL |
                               PC_TFT_TEXTURE | PC_TFT_PARAMS; 
   //qDebug()<<"InitGL: "<<m_compileOnInitializeGL<<QString::number(m_bitmaskPendingChanges, 2);
@@ -576,18 +595,14 @@ void DrawQWidget::paintGL()
     glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
     if (m_paletptr && havePendOn(PC_PALETTE, bitmaskPendingChanges))
     {
-//        palettePrepare(m_paletptr, m_paletdiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_countPortions != 0? m_countPortions : 1);
-      palettePrepare(m_paletptr, m_paletdiscretise, m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_allocatedPortions != 0? m_allocatedPortions : 1);
+      palettePrepare( m_paletptr, m_paletdiscretise, 
+                      m_portionMeshType == ISheiGenerator::PMT_PSEUDO2D && m_allocatedPortions != 0? m_allocatedPortions : 1,
+                      m_paletprerange[0], m_paletprerange[1]);
       if (m_clearsource == CS_PALETTE)
         _colorCvt(this->colorBack());
       m_ShaderProgram.setUniformValue(loc, CORR_TEX);
     }
     CORR_TEX++;
-    
-    if (havePendOn(PC_PALETTEPARAMS, bitmaskPendingChanges))
-    {
-      if ((loc = m_locationPrimary[SF_PALETRANGE]) != -1)     m_ShaderProgram.setUniformValue(loc, *(const QVector2D*)this->m_paletrange);
-    }
   }
   
   for (unsigned int i=0; i<m_locationSecondaryCount; i++)
@@ -781,6 +796,7 @@ void DrawQWidget::paintGL()
   //                  case DT_ARRI2: m_ShaderProgram.setUniformValueArray(loc, (const QVector2D*)parr->data, parr->count); break;
   //                  case DT_ARRI3: m_ShaderProgram.setUniformValueArray(loc, (const QVector3D*)parr->data, parr->count); break;
   //                  case DT_ARRI4: m_ShaderProgram.setUniformValueArray(loc, (const QVector4D*)parr->data, parr->count); break;
+              default: break;
               }
               break;
             }
@@ -1997,6 +2013,20 @@ bool DrawQWidget::tftMove(int hoid, int sloid, float fx, float fy)
   TFT_GOTO_SLOT_PINGUP(hoid)
 }
 
+bool DrawQWidget::tftMoveX(int hoid, int sloid, float fx)
+{
+  TFT_CHECK_FULL(hoid)
+  m_holders[m_holder_current]->writings[TFT_DYNAMIC][sloid].slotinfo.fx = fx;
+  TFT_GOTO_SLOT_PINGUP(hoid)
+}
+
+bool DrawQWidget::tftMoveY(int hoid, int sloid, float fy)
+{
+  TFT_CHECK_FULL(hoid)
+  m_holders[m_holder_current]->writings[TFT_DYNAMIC][sloid].slotinfo.fy = fy;
+  TFT_GOTO_SLOT_PINGUP(hoid)
+}
+
 bool DrawQWidget::tftRotate(int hoid, int sloid, float anglerad)
 {
   TFT_CHECK_FULL(hoid)
@@ -2013,9 +2043,9 @@ bool DrawQWidget::tftSwitchTo(int hoid, int sloid, int recid)
 
 
 bool tftdynamic_t::move(float fx, float fy){ return pdraw->tftMove(hoid, sloid, fx, fy); }
-
+bool tftdynamic_t::move_x(float fx){ return pdraw->tftMoveX(hoid, sloid, fx); }
+bool tftdynamic_t::move_y(float fy){ return pdraw->tftMoveY(hoid, sloid, fy); }
 bool tftdynamic_t::rotate(float anglerad){ return pdraw->tftRotate(hoid, sloid, anglerad); }
-
 bool tftdynamic_t::switchto(int recid){ return pdraw->tftSwitchTo(hoid, sloid, recid); }
 
 ////////////////////////////////////////////////////////////////////////////////

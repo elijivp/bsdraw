@@ -138,7 +138,7 @@ public:
     fdc.push("dvalue = mix(  mappalbord[0] + (mappalbord[1] - mappalbord[0])*(1.0 - level/mapdepbord[1]), "
                             "mappalbord[2] + (mappalbord[3] - mappalbord[2])*(level/mapdepbord[2]),"
                             "step(0.0, level) );" SHNL);
-    fdc.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
+//    fdc.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
     fdc.push("result = result + texture(paletsampler, vec2(dvalue, 0.0)).rgb;" SHNL);
 #else
     fdc.push("vec2 ptc = vec2(ddcc[0] + ddcc[2], ddcc[1] + ddcc[3]);" SHNL);
@@ -199,7 +199,7 @@ public:
     //      fdc.value2D("float value");
     ////      fdc.push("value = mix(dvalue, value);");
     //      fdc.push("value = dvalue;");    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //      fdc.push("value = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
+    ////      fdc.push("value = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
     //      if ( splitPortions == SP_NONE )
     //        fdc.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" SHNL);
     //      else if (splitPortions & SPFLAG_COLORSPLIT)
@@ -1336,6 +1336,6 @@ bool MapExReactorMove::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, 
     fdc.push("dvalue = mix(  mappalbord[0] + (mappalbord[1] - mappalbord[0])*(1.0 - level/mapdepbord[1]), "
                             "mappalbord[2] + (mappalbord[3] - mappalbord[2])*(level/mapdepbord[2]),"
                             "step(0.0, level) );" SHNL);
-    fdc.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
+    //fdc.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
     fdc.push("result = result + texture(paletsampler, vec2(dvalue, 0.0)).rgb;" SHNL);
 #endif

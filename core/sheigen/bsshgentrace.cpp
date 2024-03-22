@@ -717,7 +717,7 @@ void FshOVCoordsConstructor::simplemix_square_cc(const char* halfside, float fil
 void FshOVCoordsConstructor::trace_rhomb_cc(const char* side2side, float fillcoeff)
 {   
   m_offset += msprintf(&m_to[m_offset], "vec2 sg2 = vec2(1 - 2*step(0.0, float(inormed.x)), 1 - 2*step(0.0, float(inormed.y)));" SHNL
-                                        "sg2 = vec2(sg2[0]*(inormed.x - (-1 + 2*step(0.0, float(inormed.x)))*%s), sg2[1]*inormed.y);" SHNL
+                                        "sg2 = vec2(sg2[0]*(inormed.x + (1 - 2*step(0.0, float(inormed.x)))*%s - 1), sg2[1]*inormed.y);" SHNL
                                         "_mvar[0] = (1.0 + thick - clamp(abs(sg2[0] + sg2[1]), 0.0, 1.0 + thick))/(1.0 + thick);" SHNL
                        , side2side, side2side);
   

@@ -61,6 +61,8 @@ class   tftdynamic_t
 public:
   tftdynamic_t(const tftdynamic_t& cpy): pdraw(cpy.pdraw), hoid(cpy.hoid), sloid(cpy.sloid) {}
   bool    move(float fx, float fy);
+  bool    move_x(float fx);
+  bool    move_y(float fy);
   bool    rotate(float anglerad);
   bool    switchto(int recid);
 };
@@ -91,7 +93,7 @@ class DrawQWidget:  public QOpenGLWidget,
   enum  SHEIFIELD  {  
     SF_DATASAMPLER, SF_DATADIMM_A, SF_DATADIMM_B, SF_DATAPORTIONS, SF_DATAPORTIONSIZE, SF_DATARANGE, 
     SF_SCALER_A, SF_SCALER_B,
-    SF_PALETSAMPLER, SF_PALETRANGE,
+    SF_PALETSAMPLER,
     _SF_COUNT
   };
   enum  {   MAX_OPTIONALS=32,  MAX_TEXTURES=96 };
@@ -198,7 +200,7 @@ public slots:
   void    slot_setDataPaletteRangeStart_dbl(double);
   void    slot_setDataPaletteRangeStop_dbl(double);
 protected:
-  void    palettePrepare(const IPalette *ppal, bool discrete, int levels);
+  void    palettePrepare(const IPalette *ppal, bool discrete, int levels, float range0=0.0f, float range1=1.0f);
   void    initCollectAndCompileShader();
   void    initializeGL();
   void    paintGL();
@@ -404,6 +406,8 @@ public: // tft operations
 public:
   tftdynamic_t    tftGet(int hoid, int sloid);
   bool            tftMove(int hoid, int sloid, float fx, float fy);
+  bool            tftMoveX(int hoid, int sloid, float fx);
+  bool            tftMoveY(int hoid, int sloid, float fy);
   bool            tftRotate(int hoid, int sloid, float anglerad);
   bool            tftSwitchTo(int hoid, int sloid, int recid);
 public:

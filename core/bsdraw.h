@@ -24,8 +24,19 @@ struct  bounds_t
   bounds_t(float ll=0, float hl=1): LL(ll), HL(hl){}
 };
 
-inline float length(const bounds_t& bnd){ return bnd.HL - bnd.LL; }
-inline float pos01(float value, const bounds_t& bnd){ return (value - bnd.LL)/(bnd.HL - bnd.LL); }
+inline float  length(const bounds_t& bnd){ return bnd.HL - bnd.LL; }
+inline float  pos01(float value, const bounds_t& bnd){ return (value - bnd.LL)/(bnd.HL - bnd.LL); }
+inline float  _bsdraw_clamp(float v01){ return v01 < 0.0f ? 0.0f : v01 > 1.0f? 1.0f : v01; }
+inline void   _bsdraw_clamp(float* v01){ if (*v01 < 0.0f) *v01 = 0.0f; else if (*v01 > 1.0f) *v01 = 1.0f; }
+inline void   _bsdraw_clamp(float* vbeg_01, float* vend_01){ *vbeg_01 = _bsdraw_clamp(*vbeg_01);  *vend_01 = _bsdraw_clamp(*vend_01); }
+inline void   _bsdraw_clamp_ordered(float* vbeg_01, float* vend_01)
+{ 
+  _bsdraw_clamp(vbeg_01, vend_01);
+  if (*vbeg_01 < *vend_01)  return;
+  float tmp = *vbeg_01;
+  *vbeg_01 = *vend_01;
+  *vend_01 = tmp;
+}
 
 inline  void  _bsdraw_update_kb(const bounds_t& bnd, float* k, float *b)
 {
@@ -96,6 +107,7 @@ protected:
 
   float*                m_dataStorage;
   float*                m_dataStorageCached;
+  float                 m_dataClearValue;
   unsigned int          m_dataDimmA;
   unsigned int          m_dataDimmB;
   bool                  m_dataDimmSwitchAB;
@@ -115,7 +127,7 @@ protected:
 protected:
   const IPalette*       m_paletptr;
   bool                  m_paletdiscretise;       // inited by true if portions > 1
-  float                 m_paletrange[2];
+  float                 m_paletprerange[2];
   unsigned int          m_emptycolor;
   float                 m_clearcolor[3];
   enum                  { PRNG_START, PRNG_STOP };
@@ -139,7 +151,7 @@ public:
 protected:
   /// inner. Pending changes bitmask
   enum                  PCBM  { PC_INIT=0x1, PC_DATA=0x2, PC_DATADIMMS=0x4, PC_DATAPORTS=0x8, PC_DATARANGE=0x10,
-                                PC_PALETTE=0x20, PC_PALETTEPARAMS=0x40, PC_PARAMSOVL=0x80,
+                                PC_PALETTE=0x20, PC__USEMEIMEMPTY__=0x40, PC_PARAMSOVL=0x80,
                                     PC_SEC1=0x00100, PC_SEC2=0x00200, PC_SEC3=0x00400, PC_SEC4=0x00800,
                                     PC_SEC5=0x01000, PC_SEC6=0x02000, PC_SEC7=0x04000, PC_SEC8=0x08000,
                                     PC_SEC9=0x10000, PC_SECA=0x20000, PC_SECB=0x40000, PC_SECC=0x80000,
@@ -220,7 +232,7 @@ public:
                                                         m_datex(datex), 
                                                         m_portionSize(0), m_allocatedPortions(portions), 
                                                         m_countPortions(portions), m_orient(orient), m_splitPortions(splitPortions),
-                                                        m_dataStorage(nullptr), m_dataStorageCached(nullptr),
+                                                        m_dataStorage(nullptr), m_dataStorageCached(nullptr), m_dataClearValue(0.0f),
                                                         m_dataDimmSwitchAB(orient > OR_RLTB),
                                                         m_rawResizeModeNoScaled(false),
                                                         m_scalingA(1), m_scalingB(1),
@@ -238,8 +250,8 @@ public:
     m_datasubmesh.type = datasubmesh_t::IR_OFF;
     m_datasubmesh.count = 0;
     
-    m_paletrange[PRNG_START] = 0.0f;
-    m_paletrange[PRNG_STOP] = 1.0f;
+    m_paletprerange[PRNG_START] = 0.0f;
+    m_paletprerange[PRNG_STOP] = 1.0f;
         
     unsigned int spDivider = m_splitPortions&0xFF;
     unsigned int divider2 = spDivider == 0? 1 : m_allocatedPortions / spDivider + (m_allocatedPortions % spDivider? 1 : 0);
@@ -434,25 +446,26 @@ public:
   
   void  setDataPaletteRange(float start=0.0f, float stop=1.0f)
   {
-    m_paletrange[PRNG_START] = start;
-    m_paletrange[PRNG_STOP] = stop;
-    m_bitmaskPendingChanges |= PC_PALETTEPARAMS;
+    _bsdraw_clamp(&start, &stop);
+    m_paletprerange[PRNG_START] = start;
+    m_paletprerange[PRNG_STOP] = stop;
+    m_bitmaskPendingChanges |= PC_PALETTE;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
   void  setDataPaletteRangeStart(float start)
   {
-    m_paletrange[PRNG_START] = start;
-    m_bitmaskPendingChanges |= PC_PALETTEPARAMS;
+    m_paletprerange[PRNG_START] = _bsdraw_clamp(start);
+    m_bitmaskPendingChanges |= PC_PALETTE;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
   void  setDataPaletteRangeStop(float stop)
   {
-    m_paletrange[PRNG_STOP] = stop;
-    m_bitmaskPendingChanges |= PC_PALETTEPARAMS;
+    m_paletprerange[PRNG_STOP] = _bsdraw_clamp(stop);
+    m_bitmaskPendingChanges |= PC_PALETTE;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
-  float   dataPaletteRangeStart() const {  return m_paletrange[PRNG_START]; }
-  float   dataPaletteRangeStop() const {  return m_paletrange[PRNG_STOP]; }
+  float   dataPaletteRangeStart() const {  return m_paletprerange[PRNG_START]; }
+  float   dataPaletteRangeStop() const {  return m_paletprerange[PRNG_STOP]; }
 public:
   /// 1. Data methods
   virtual void setData(const float* data)
@@ -491,6 +504,9 @@ public:
     if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();
   }
   
+  void setClearValue(float dataClearValue){ m_dataClearValue = dataClearValue; }
+  float getDataClearValue() const { return m_dataClearValue; }
+  
   void getData(float* result) const
   {
     unsigned int total = m_countPortions * m_portionSize;
@@ -513,7 +529,9 @@ public:
   {
     if (portionsLessThanAlocated > m_allocatedPortions)
       portionsLessThanAlocated = m_allocatedPortions;
-    m_countPortions = (unsigned int)portionsLessThanAlocated;
+    if (m_countPortions == portionsLessThanAlocated)
+      return;
+    m_countPortions = portionsLessThanAlocated;
     m_bitmaskPendingChanges |= PC_DATA | PC_DATAPORTS;
 //    if (m_spDivider != 0)
     if (m_splitterA > 1 || m_splitterB > 1)
@@ -586,6 +604,7 @@ public:
   
   void  setOrientation(ORIENTATION orient)
   { 
+    if (m_orient == orient) return;
     m_orient = orient;
     m_dataDimmSwitchAB = orient > OR_RLTB;
     m_bitmaskPendingChanges |= PC_INIT;

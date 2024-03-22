@@ -1780,7 +1780,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                                                           graphopts_t::goHistogramCrossMax(0.0f);
     for (unsigned int i=0; i<drawscount; i++)
     {
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(cps[i], 0.0f, 1.0f));
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, gopts, coloropts_t::copts(cps[i], 0.0f, 1.0f, 0x000000));
       if (MW_TEST == FEATURE_COLORS_HISTORGRAM)
         draws[i]->setOverpattern(overpattern_thrs_plus(OP_LINELEFT, 0.0f, color3f(0.3f,0.3f,0.3f)));
       draws[i]->setScalingLimitsHorz(7);

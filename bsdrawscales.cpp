@@ -512,19 +512,23 @@ public:
   
   void    setUpdateOnSetDimm(bool ups){ c_updatesetDimm = ups; }
   
-  void    setRelatedOffset(int offset, bool autocallupdates=true)
+  bool    setRelatedOffset(int offset, bool autocallupdates=true)
   {
+    if (tapctt.lmoffset == offset)
+      return false;
     tapctt.lmoffset = offset;
     if (tapctt.lmardimm != 0)     // ntf??
     {
-      float reloffset = tapctt.lmoffset / tapctt.lmardimm;
+      float reloffset = float(tapctt.lmoffset) / float(tapctt.lmardimm);
       if (c_reloffset != reloffset)
       {
         c_reloffset = reloffset;
         if (autocallupdates)
           bdContentUpdate(c_rtexttype, c_rdata, autocallupdates);
       }
+      return true;
     }
+    return false;
   }
   void    storeDimm(int dimm/*, bool autocallupdates=false*/)
   {
@@ -1011,22 +1015,22 @@ class MarginSingle: public MarginElementCached, public MarginCallback
   int             round;
   int             mlenmaxi, mwid;
 protected:
-  bool            relative;
+  bool            bounded;
   float           c_LL, c_HL, c_MOD;
   memark_t        mark;
   float           pos_origin;
   float           pos_mark;
 public:
-  MarginSingle(int rounding, int _marklen, float pos, bool _relative):
+  MarginSingle(int rounding, int _marklen, float pos, bool _bounded):
     round(rounding), mlenmaxi(_marklen), mwid(_marklen? 1 : 0), 
-    relative(_relative), c_LL(0.0f), c_HL(1.0f), c_MOD(0.0f),
+    bounded(_bounded), c_LL(0.0f), c_HL(1.0f), c_MOD(0.0f),
     pos_origin(pos)
   {
     _update_single_pos();
   }
   ~MarginSingle();
   int   mlen() const { return mlenmaxi; }
-  void  _update_single_pos(){  if (relative) pos_mark = (pos_origin - c_LL)/(c_HL - c_LL);  else  pos_mark = pos_origin; }
+  void  _update_single_pos(){  if (bounded) pos_mark = (pos_origin - c_LL)/(c_HL - c_LL);  else  pos_mark = pos_origin; }
   virtual void  setPosition(float pos)
   {
     pos_origin = pos;
@@ -1125,7 +1129,7 @@ protected:
   virtual void  bdContentUpdateBounds(float ll, float hl, float mod)
   {
     c_LL = ll;    c_HL = hl;    c_MOD = mod;
-    if (relative)
+    if (bounded)
     {
       _update_single_pos();
       if (current_area_initialized())
@@ -1138,7 +1142,7 @@ protected:
   virtual void  bdContentUpdateEnumerate(int from, int count, int /*recycle*/, float /*relatedoffset*/)
   {
     c_LL = from;    c_HL = from + count;    c_MOD = 0.0f;
-    if (relative)
+    if (bounded)
     {
       _update_single_pos();
 //      pos_mark = c_LL 
@@ -1158,14 +1162,14 @@ protected:
   texts_t         pointer;
   Qt::Alignment   alignment;
 public:
-  MarginPointerBase(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, bool textinner, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/):
-    MarginSingle(rounding, _marklen, pos, _relative),
+  MarginPointerBase(int rounding, int _marklen, float pos, bool _bounded, ORIENTATION _orient, bool textinner, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/):
+    MarginSingle(rounding, _marklen, pos, _bounded),
     orient(_orient), textInnerPlaced(textinner), alignment(align)
   {
     pointer.visible = 1;
   }
-  MarginPointerBase(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, bool textinner, const QFont& fnt, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/): 
-    MarginSingle(rounding, _marklen, pos, _relative), MarginTextformat(fnt),
+  MarginPointerBase(int rounding, int _marklen, float pos, bool _bounded, ORIENTATION _orient, bool textinner, const QFont& fnt, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/): 
+    MarginSingle(rounding, _marklen, pos, _bounded), MarginTextformat(fnt),
     orient(_orient), textInnerPlaced(textinner), alignment(align)
   {
     pointer.visible = 1;
@@ -1225,14 +1229,14 @@ class MarginPointerAutomatic: public MarginPointerBase
 {
   float           c_value;
 public:
-  MarginPointerAutomatic(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, bool textinner, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/):
-    MarginPointerBase(rounding, _marklen, pos, _relative, _orient, textinner, align), c_value(-1.0f)
+  MarginPointerAutomatic(int rounding, int _marklen, float pos, bool _bounded, ORIENTATION _orient, bool textinner, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/):
+    MarginPointerBase(rounding, _marklen, pos, _bounded, _orient, textinner, align), c_value(-1.0f)
   {
     _update_pointer_pos(pos_mark);
     assignText(&pointer, redact(_update_pointer_pos(pos_mark)));
   }
-  MarginPointerAutomatic(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, bool textinner, const QFont& fnt, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/): 
-    MarginPointerBase(rounding, _marklen, pos, _relative, _orient, textinner, fnt, align), c_value(-1.0f)
+  MarginPointerAutomatic(int rounding, int _marklen, float pos, bool _bounded, ORIENTATION _orient, bool textinner, const QFont& fnt, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/): 
+    MarginPointerBase(rounding, _marklen, pos, _bounded, _orient, textinner, fnt, align), c_value(-1.0f)
   {
     _update_pointer_pos(pos_mark);
     assignText(&pointer, redact(_update_pointer_pos(pos_mark)));
@@ -1260,14 +1264,19 @@ public:
     }
   }
 protected:
-  float _update_pointer_pos(float p){ c_value = c_LL + p*(c_HL-c_LL); if (c_MOD != 0.0f) c_value -= int(c_value/c_MOD)*c_MOD;  return c_value; }
+  float _update_pointer_pos(float p)
+  {
+    c_value = bounded ? p : c_LL + p*(c_HL-c_LL);
+    if (c_MOD != 0.0f) c_value -= int(c_value/c_MOD)*c_MOD;
+    return c_value;
+  }
   virtual   void      tfContentUpdate(){  assignText(&pointer, redact(c_value), m_font); }
 protected:
   virtual void  bdContentUpdateBounds(float ll, float hl, float mod)
   {
     MarginSingle::bdContentUpdateBounds(ll, hl, mod);
     MarginTextformat::numformatUpdate(c_LL, c_HL);
-    if (relative)
+    if (bounded)
     {
       if (current_area_initialized())
         _update_pointer_area(current_area(), true);
@@ -1349,13 +1358,13 @@ class MarginPointerManual: public MarginPointerBase
   QString         c_text;
   unsigned int    maxlen;
 public:
-  MarginPointerManual(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, const QString& text, unsigned int maxtextlen, bool textinner, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/):
-    MarginPointerBase(rounding, _marklen, pos, _relative, _orient, textinner, align), c_text(text.left(maxtextlen)), maxlen(maxtextlen)
+  MarginPointerManual(int rounding, int _marklen, float pos, bool _scaled, ORIENTATION _orient, const QString& text, unsigned int maxtextlen, bool textinner, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/):
+    MarginPointerBase(rounding, _marklen, pos, _scaled, _orient, textinner, align), c_text(text.left(maxtextlen)), maxlen(maxtextlen)
   {
     assignText(&pointer, redact(c_text));
   }
-  MarginPointerManual(int rounding, int _marklen, float pos, bool _relative, ORIENTATION _orient, const QString& text, unsigned int maxtextlen, bool textinner, const QFont& fnt, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/): 
-    MarginPointerBase(rounding, _marklen, pos, _relative, _orient, textinner, fnt, align), c_text(text.left(maxtextlen)), maxlen(maxtextlen)
+  MarginPointerManual(int rounding, int _marklen, float pos, bool _scaled, ORIENTATION _orient, const QString& text, unsigned int maxtextlen, bool textinner, const QFont& fnt, Qt::Alignment  align=Qt::AlignCenter/*, Qt::Orientation orient=Qt::Horizontal*/): 
+    MarginPointerBase(rounding, _marklen, pos, _scaled, _orient, textinner, fnt, align), c_text(text.left(maxtextlen)), maxlen(maxtextlen)
   {
     assignText(&pointer, redact(c_text));
   }
@@ -2891,7 +2900,7 @@ public:
     if (UF_LEFT != -1 && areaVert.segm_main > 0)
       for (int i=0; i<elems[0].count(); i++)
       {
-        if (elems[0][i].length == 0)
+        if (elems[0][i].length == 0 && !elems[0][i].shared)
           continue;
         int apt = ttr[AT_LEFT].c_size - 1 - elems[0][i].offset;
         areaVert.atto_from = apt;
@@ -2905,7 +2914,7 @@ public:
     if (UF_RIGHT != -1 && areaVert.segm_main > 0)
       for (int i=0; i<elems[1].count(); i++)
       {
-        if (elems[1][i].length == 0)
+        if (elems[1][i].length == 0 && !elems[1][i].shared)
           continue;
         int apt = c_width - 1 - ttr[AT_RIGHT].c_size + 1 + elems[1][i].offset;    // DAFUQ + 1
 //        int apt = c_width - 1 - ttr[AT_RIGHT].c_size + elems[1][i].offset;//    DAFUQ -1 ?????? 
@@ -2925,7 +2934,7 @@ public:
     if (UF_TOP != -1 && areaHorz.segm_main > 0)
       for (int i=0; i<elems[2].count(); i++)
       {
-        if (elems[2][i].length == 0)
+        if (elems[2][i].length == 0 && !elems[2][i].shared)
           continue;
         int apt = ttr[AT_TOP].c_size - 1 - elems[2][i].offset;
         areaHorz.atto_from = apt;
@@ -2939,7 +2948,7 @@ public:
     if (UF_BOTTOM != -1 && areaHorz.segm_main > 0)
       for (int i=0; i<elems[3].count(); i++)
       {
-        if (elems[3][i].length == 0)
+        if (elems[3][i].length == 0 && !elems[3][i].shared)
           continue;
         int apt = c_height - 1 - ttr[AT_BOTTOM].c_size + 1 + elems[3][i].offset;   //    DAFUQ + 1
 //        int apt = c_height - 1 - ttr[AT_BOTTOM].c_size + elems[3][i].offset;    DAFUQ -1 ?? FIND ME BUG
@@ -4012,6 +4021,60 @@ void DrawBars::mouseEvent(MarginElement::MOUSEEVENT mev, int x, int y)
     return;
   
   bool doUpdate = false;
+#if 1
+  {
+    int at = -1;
+    if (x < pImpl->ttr[AT_LEFT].c_size)
+    {
+      at = AT_LEFT;
+      x = pImpl->ttr[at].c_size - 1 - x;
+    }
+    else if (x > pImpl->c_width - pImpl->ttr[AT_RIGHT].c_size)
+    {
+      at = AT_RIGHT;
+      x = x - (pImpl->c_width - pImpl->ttr[at].c_size);
+    }
+    
+    if (at != -1)
+    {
+      int  length = 0;
+      for (int i=0; i<pImpl->elems[at].count(); i++)
+      {
+        if (pImpl->elems[at][i].shared == false)
+          length = pImpl->elems[at][i].length;
+        if (pImpl->elems[at][i].visible && x >= pImpl->elems[at][i].offset && x < pImpl->elems[at][i].offset + length)
+          pImpl->elems[at][i].pme->mouseEvent(mev, y, x - pImpl->elems[at][i].offset, pImpl->c_height, pImpl->elems[at][i].length, &doUpdate, pImpl->elems[at][i].pwp);
+      }
+    }
+  }
+  
+  {
+    int at = -1;
+    if (y < pImpl->ttr[AT_TOP].c_size)
+    {
+      at = AT_TOP;
+      y = pImpl->ttr[at].c_size - 1 - y;
+    }
+    else if (y > pImpl->c_height - pImpl->ttr[AT_BOTTOM].c_size)
+    {
+      at = AT_BOTTOM;
+      y = y - (pImpl->c_height - pImpl->ttr[at].c_size);
+    }
+    
+    if (at != -1)
+    {
+      int length = 0;
+      for (int i=0; i<pImpl->elems[at].count(); i++)
+      {
+        if (pImpl->elems[at][i].shared == false)
+          length = pImpl->elems[at][i].length;
+        if (pImpl->elems[at][i].visible && y >= pImpl->elems[at][i].offset && y < pImpl->elems[at][i].offset + length)
+          pImpl->elems[at][i].pme->mouseEvent(mev, x, y - pImpl->elems[at][i].offset, pImpl->c_width, pImpl->elems[at][i].length, &doUpdate, pImpl->elems[at][i].pwp);
+      }
+    }
+  }
+  
+#else
   if (x < pImpl->ttr[AT_LEFT].c_size)
   {
     int at = AT_LEFT;
@@ -4052,6 +4115,7 @@ void DrawBars::mouseEvent(MarginElement::MOUSEEVENT mev, int x, int y)
         pImpl->elems[at][i].pme->mouseEvent(mev, x, y - pImpl->elems[at][i].offset, pImpl->c_width, pImpl->elems[at][i].length, &doUpdate, pImpl->elems[at][i].pwp);
     }
   }
+#endif
   
   if (doUpdate)
     update();
@@ -4380,7 +4444,12 @@ void DrawBars::mouseDoubleClickEvent(QMouseEvent* event)
 void DrawBars::connectScrollBar(QScrollBar* qsb, bool staticView, bool setOrientation)
 {
   pDraw->connectScrollBar(qsb, staticView, setOrientation);
-  QObject::connect(qsb, SIGNAL(valueChanged(int)), this, SLOT(scrollDataTo(int)));
+  QObject::connect(qsb, SIGNAL(valueChanged(int)), this, SLOT(scrollDataTroughDrawTo(int)));
+}
+
+void DrawBars::connectScrollBarOutsideDraw(QScrollBar* qsb)
+{
+  QObject::connect(qsb, SIGNAL(valueChanged(int)), this, SLOT(scrollDataOutsideDrawTo(int)));
 }
 
 void DrawBars::slot_setScalingA(int sh){  pDraw->slot_setScalingA(sh);  }
@@ -4489,18 +4558,30 @@ void DrawBars::slot_updatedOrientation()
   }
 }
 
-void DrawBars::scrollDataTo(int)
+void DrawBars::scrollDataTroughDrawTo(int)
 {
   int cnt = pImpl->elemsScrollDepended.count();
   if (cnt)
   {
+    bool goUpdate = false;
     int sv = pDraw->scrollValue();
     for (int i=0; i<cnt; i++)
-    {
-      pImpl->elemsScrollDepended[i]->setRelatedOffset(sv);
-//      pImpl->elemsBoundDepended[i]->relatedTextup();
-    }
-    update();
+      goUpdate |= pImpl->elemsScrollDepended[i]->setRelatedOffset(sv);
+    if (goUpdate)
+      update();
+  }
+}
+
+void DrawBars::scrollDataOutsideDrawTo(int sv)
+{
+  int cnt = pImpl->elemsScrollDepended.count();
+  if (cnt)
+  {
+    bool goUpdate = false;
+    for (int i=0; i<cnt; i++)
+      goUpdate |= pImpl->elemsScrollDepended[i]->setRelatedOffset(sv);
+    if (goUpdate)
+      update();
   }
 }
 

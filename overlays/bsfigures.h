@@ -94,6 +94,8 @@ public:
 public:
   OFLine(COORDINATION cn, float start_x, float start_y, float end_x, float end_y, const linestyle_t& linestyle=linestyle_solid(1,1,1));
   OFLine(OVLCoordsStatic* pcoords, float offset_x, float offset_y, float end_x, float end_y, const linestyle_t& linestyle=linestyle_solid(1,1,1));
+public:
+  void    setGap(float gap, bool update=true);
 protected:
   virtual int   fshOVCoords(int overlay, bool switchedab, char* to) const;
 };

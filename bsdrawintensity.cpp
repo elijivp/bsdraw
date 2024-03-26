@@ -132,7 +132,7 @@ DrawIntensePoints::DrawIntensePoints(unsigned int samplesHorz, unsigned int samp
 
 /////////
 /// no clearData() cause of possible changed LL and!! innerupdate by data
-#define DCIP_DATA_CLEAR {   unsigned int total = m_countPortions * m_dataDimmA * m_dataDimmB;    for (unsigned int _i=0; _i<total; _i++)  m_dataStorage[_i] = 0;  }
+#define DCIP_DATA_CLEAR {   unsigned int total = m_countPortions * m_dataDimmA * m_dataDimmB;    for (unsigned int _i=0; _i<total; _i++)  m_dataStorage[_i] = m_dataClearValue;  }
 #define DCIP_MULS(cr)       static int crcast[] = { 0, 1, 2, 3, 0, 1, 2, 2, 3, 3 }; \
                             static unsigned int crmuls[][2] = { {1,1}, {m_dataDimmA-1, m_dataDimmB-1}, {1, m_dataDimmB-1}, {m_dataDimmA-1, 1} }; \
                             unsigned int (&muls)[2] = crmuls[crcast[cr]];

@@ -499,7 +499,7 @@ public:
   {
     unsigned int total = m_allocatedPortions * m_portionSize;
     for (unsigned int i=0; i<total; i++)
-      m_dataStorage[i] = 0;
+      m_dataStorage[i] = m_dataClearValue;
     m_bitmaskPendingChanges |= PC_DATA;
     if (!autoUpdateBanned(RD_BYDATA)) callWidgetUpdate();
   }

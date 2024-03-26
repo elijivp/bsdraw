@@ -81,7 +81,7 @@ void DrawRecorder::clearData()
     {
       for (unsigned int j = 0; j < m_dataDimmA; ++j)
       {
-        m_dataStorage[p*m_dataDimmB*m_dataDimmA + i*m_dataDimmA + j] = 0;
+        m_dataStorage[p*m_dataDimmB*m_dataDimmA + i*m_dataDimmA + j] = m_dataClearValue;
       }
     }
   DrawQWidget::vmanUpData();  // clearData?
@@ -120,7 +120,7 @@ void DrawRecorder::fillMatrix()
         {
           for (unsigned int j = 0; j < m_dataDimmA; ++j)
           {
-            m_dataStorage[p*m_dataDimmB*m_dataDimmA + i*m_dataDimmA + j] = 0;
+            m_dataStorage[p*m_dataDimmB*m_dataDimmA + i*m_dataDimmA + j] = m_dataClearValue;
           }
         }
       }
@@ -135,7 +135,7 @@ void DrawRecorder::fillMatrix()
         {
           for (unsigned int j = 0; j < m_dataDimmA; ++j)
           {
-            m_dataStorage[p*m_dataDimmB*m_dataDimmA + i*m_dataDimmA + j] = 0;
+            m_dataStorage[p*m_dataDimmB*m_dataDimmA + i*m_dataDimmA + j] = m_dataClearValue;
           }
         }
       }

@@ -2299,6 +2299,20 @@ BSQClickerXY::BSQClickerXY(QObject* parent): QObject(parent)
 
 bool BSQClickerXY::reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool*)
 {
+  if (oreact == ORM_LMPRESS || oreact == ORM_RMPRESS)
+  {
+    emit clicked(ct->fx_01, ct->fy_01);
+    return true;
+  }
+  return false;
+}
+
+BSQClickerXY_WR::BSQClickerXY_WR(QObject* parent): QObject(parent)
+{
+}
+
+bool BSQClickerXY_WR::reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE oreact, const coordstriumv_t* ct, bool*)
+{
   if (oreact == ORM_LMPRESS)
   {
     emit clicked(ct->fx_01, ct->fy_01);
@@ -2311,6 +2325,7 @@ bool BSQClickerXY::reactionMouse(DrawQWidget*, OVL_REACTION_MOUSE oreact, const 
   }
   return false;
 }
+
 
 
 BSQClickerPoint::BSQClickerPoint(OVL_REACTION_MOUSE em, QObject* parent): QObject(parent), emitter(em)

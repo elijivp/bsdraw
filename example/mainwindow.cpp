@@ -2464,6 +2464,29 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     sigtype = ST_SIN;
     lw = LW_0x1;
   }
+//  else if (MW_TEST == DEBUG_CONTOUR)
+//  {
+//    LINES = 1;
+//    SAMPLES = 80;
+//    PORTIONS = 1;
+    
+//    const int countDraws = 1;
+//    DrawQWidget* pdraws[countDraws];
+//    pdraws[0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(PR_SUMMARY));
+////    pdraws[0] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogram(PR_VALUEAROUND));
+////    pdraws[0]->setOverpattern(overpattern_thrs_plus(OP_LINELEFTTOP, 0.0f, color3f(0.3f,0.3f,0.3f)));
+////    pdraws[0]->setScalingLimitsSynced(10); // 1 point now is 10x10 pixels (minimum)
+//    pdraws[0]->setScalingLimitsA(10); // 1 point now is 10x10 pixels (minimum)
+//    AFTERCREATE_DRAW1C
+    
+////    pdraws[0]->setOverpattern(overpattern_any(OP_CONTOUR, 0.0f, 2));
+//    pdraws[0]->setOverpattern(overpattern_any(OP_LINELEFTRIGHT, 0.0f, 2));
+//    float colorset[OContourSuper::SLOTS] = { 0.1f, 0.2f, 0.6f, 0.7f, 1.0f  };
+//    pdraws[0]->ovlPushBack(new OContourSuper(&palette_gnu_PuYe, false, colorset, 1, 2));
+    
+//    sigtype = ST_SIN;
+//    sp = SP_ONCE;
+//  }
   
   
 #ifdef SYNCSCALING

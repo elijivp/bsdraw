@@ -77,7 +77,7 @@ int OContour::fshOVCoords(int overlay, bool switchedab, char *to) const
       ocg.var_const_fixed("bnd", m_from, m_to);
       make_contour_constants(&ocg, m_checkmask);
       
-      ocg.push( "for (int p=0; p<portions; p++){");
+      ocg.push( "for (int p=0; p<dataportions; p++){");
       {
         ocg.push( "_fvar = getValue2D(p, (inoscaled + vec2(0.49, 0.49))/vec2(ov_indimms.xy));"
                   "_mvar[0] = 1.0 - step(bnd.x, _fvar)*step(_fvar, bnd.y);"
@@ -164,7 +164,7 @@ int OCover::fshOVCoords(int overlay, bool switchedab, char *to) const
     ocg.push( "result = cover;"
               "vec3 maxes = vec3(0);"
               );
-    ocg.push( "for (int p=0; p<portions; p++){"
+    ocg.push( "for (int p=0; p<dataportions; p++){"
                 "_fvar = getValue2D(p, coords);"
                 "maxes[0] = max(maxes[0], step(bnd.x, _fvar)*step(_fvar, bnd.y));"
                 "maxes[1] = max(maxes[1], 1.0 - step(bnd.x, _fvar));"
@@ -206,7 +206,7 @@ int OSlice::fshOVCoords(int overlay, bool switchedab, char *to) const
     ocg.var_const_fixed("clr", m_slice_r, m_slice_g, m_slice_b);
     ocg.push( "result = clr;" );
     ocg.var_const_fixed("cover", m_cover);
-    ocg.push( "for (int p=0; p<portions; p++){"
+    ocg.push( "for (int p=0; p<dataportions; p++){"
                 "_fvar = cover*getValue2D(p, coords);"
                 "mixwell = max(mixwell, _fvar);"
               "}"

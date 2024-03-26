@@ -56,7 +56,7 @@ FshOVCoordsConstructor::FshOVCoordsConstructor(const _Ovldraw::uniforms_t &ufms,
   memcpy(&m_to[m_offset], _overstart, sizeof(_overstart)-1);  m_offset += sizeof(_overstart) - 1;
   
   {
-    static const char _overinc_getvalue[] = "uniform highp int portions;"  SHNL
+    static const char _overinc_getvalue[] = "uniform highp int dataportions;"  SHNL
                                             "float getValue1D(in int portion, in float x);" SHNL
                                             "float getValue2D(in int portion, in vec2 x);" SHNL;
     if (ocg_include_bits & OINC_GETVALUE){    memcpy(&m_to[m_offset], _overinc_getvalue, sizeof(_overinc_getvalue)-1);  m_offset += sizeof(_overinc_getvalue) - 1;   }

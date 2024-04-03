@@ -127,7 +127,7 @@ int OGridRegular::fshOVCoords(int overlay, bool switchedab, char *to) const
       if (m_maxsteps > 0)
       {
         ocg.var_fixed("grid_limit", m_maxsteps);
-        ocg.push("limiter = limiter*(1.0 - step(float(grid_limit), float(optiid)));");
+        ocg.push("limiter = limiter*(1.0 - step(float(grid_limit), float(abs(optiid))));");
       }
       if (m_bordergrids == false)
       {

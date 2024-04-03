@@ -1450,6 +1450,7 @@ protected:
   int           pixStep_pixSpace;
   int           miniPerMaxi;
   int           round; // 0 - default rounding, 1 - no round, 2 - no round and +1 for all except first and last
+  bool          rap;  //restoreanchorpixel
 public:
   MarginINMarks(): //needRedrawByMark(false),
     algoType(DBMODE_STRETCHED_POW2),
@@ -1459,7 +1460,8 @@ public:
   }
   ~MarginINMarks();
   
-  void  init(int algotype, int marksLimit, int pixStep_minSpacing, int roundsteps, int _miniPerMaxi) /// marksLimit = 0 for init later
+  void  init(int algotype, int marksLimit, int pixStep_minSpacing, int roundsteps, int _miniPerMaxi, bool restoreanchorpixel=false) 
+                                                    /// marksLimit = 0 for init later
   {
     algoType = algotype;
     pixStep_pixSpace = pixStep_minSpacing;
@@ -1467,6 +1469,7 @@ public:
       pixStep_pixSpace = INT_MAX;
     miniPerMaxi = _miniPerMaxi;
     round = roundsteps;
+    rap = restoreanchorpixel;
     setMarksCount(marksLimit);
   }
   
@@ -1673,6 +1676,8 @@ protected:
           m++;
           if (jumpfrom && i + over_step[0] == jumpfrom){ i = jumpto - over_step[0]; jumpfrom = 0; }
         }
+        if (o == 0 && m > 0 && rap)
+          ua_marks[0].anchor.ry() += area.mirrored ? 1 : -1;
       }
       else
       {
@@ -1693,6 +1698,8 @@ protected:
           m++;
           if (jumpfrom && i + over_step[0] == jumpfrom){ i = jumpto - over_step[0]; jumpfrom = 0; }
         }
+        if (o == 0 && m > 0 && rap)
+          ua_marks[0].anchor.rx() += area.mirrored ? 1 : -1;
       }
     } // for over
     
@@ -1985,7 +1992,7 @@ public:
 
   void  init_wide(int algotype, int marksLimit, int pixStep_minSpacing, unsigned int step, int roundsteps, bool alwaysShowLast, int dockto)
   {
-    MarginINMarks::init(algotype, marksLimit, pixStep_minSpacing, roundsteps, 0);
+    MarginINMarks::init(algotype, marksLimit, pixStep_minSpacing, roundsteps, 0, true);
     docking = dockto;
     showLastEnumer = alwaysShowLast;
     submod = step;
@@ -2206,7 +2213,7 @@ public:
 
   void  init_wide(int algotype, int marksLimit, int pixStep_minSpacing, unsigned int step, int roundsteps, bool alwaysShowLast, unsigned int maxperpdimm, ontap_qwidget_fn ftor, void* fpm, QWidget* prnt)
   {
-    MarginINMarks::init(algotype, marksLimit, pixStep_minSpacing, roundsteps, 0);
+    MarginINMarks::init(algotype, marksLimit, pixStep_minSpacing, roundsteps, 0, true);
     showLastEnumer = alwaysShowLast;
     submod = step;
     maxperpendiculardimm = maxperpdimm;
@@ -2220,7 +2227,7 @@ public:
   }
   void  init_wide(int algotype, int marksNwidgetsCount, int pixStep_minSpacing, unsigned int step, int roundsteps, bool alwaysShowLast, unsigned int maxperpdimm, QWidget* wdgs[], QWidget* prnt)
   {
-    MarginINMarks::init(algotype, marksNwidgetsCount, pixStep_minSpacing, roundsteps, 0);
+    MarginINMarks::init(algotype, marksNwidgetsCount, pixStep_minSpacing, roundsteps, 0, true);
     showLastEnumer = alwaysShowLast;
     submod = step;
     maxperpendiculardimm = maxperpdimm;

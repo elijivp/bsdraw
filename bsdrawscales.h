@@ -473,6 +473,9 @@ public:
   IOverlayReactor*    createReactor();
 //  void  setPrefix(const char* str);
 //  void  setPostfix(const char* str);
+public:
+  void  setMarkLen(int len);
+  void  setMarkGap(int gap);
 public slots:
   void  setPosition(float pos01);
 //  void  setPositionBifunc(float pos01, float posText);
@@ -519,7 +522,8 @@ public:
 //  void  setPostfix(const char* str);
 public slots:
   void  setFont(const QFont& font);
-  void  setMarkLen(int mlen);
+  void  setMarkLen(int len);
+  void  setMarkGap(int gap);
 //  void  setMarkColor(const QColor& clr);
   void  setMarkMiniLen(int mlen);
 //public slots:

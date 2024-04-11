@@ -48,7 +48,10 @@ struct        texts_t
   QPoint      pos_mark_dopdock;
   posfunc_fn  pos_update_fn;
   QPoint      c_pos_result;
-  texts_t(): visible(0), pos_update_fn(nullptr) {}
+  texts_t(): visible(0), pos_update_fn(nullptr)
+  {
+    uin_text.setTextFormat(Qt::PlainText);
+  }
 };
 
 struct        memark_t
@@ -1013,7 +1016,7 @@ MarginLabel::~MarginLabel(){}
 class MarginSingle: public MarginElementCached, public MarginCallback
 {
   int             round;
-  int             mlenmaxi, mwid;
+  int             mlenmaxi, mwid, mlengap;
 protected:
   bool            bounded;
   float           c_LL, c_HL, c_MOD;
@@ -1022,7 +1025,7 @@ protected:
   float           pos_mark;
 public:
   MarginSingle(int rounding, int _marklen, float pos, bool _bounded):
-    round(rounding), mlenmaxi(_marklen), mwid(_marklen? 1 : 0), 
+    round(rounding), mlenmaxi(_marklen), mwid(_marklen? 1 : 0), mlengap(3), 
     bounded(_bounded), c_LL(0.0f), c_HL(1.0f), c_MOD(0.0f),
     pos_origin(pos)
   {
@@ -1030,6 +1033,7 @@ public:
   }
   ~MarginSingle();
   int   mlen() const { return mlenmaxi; }
+  int   mgap() const { return mlengap; }
   void  _update_single_pos(){  if (bounded) pos_mark = (pos_origin - c_LL)/(c_HL - c_LL);  else  pos_mark = pos_origin; }
   virtual void  setPosition(float pos)
   {
@@ -1041,6 +1045,7 @@ public:
   void    setMarkLength(int length){ mlenmaxi = length; }
   void    setMarkWidth(int width){ mwid = width; /*needRedrawByMark = true;*/ }
   void    setMarkSize(int length, int width){ mlenmaxi = length; mwid = width; /*needRedrawByMark = true;*/ }
+  void    setMarkGap(int gap){ mlengap = gap; }
 protected:
   void _update_single_area(const uarea_t& area)
   {
@@ -1182,7 +1187,7 @@ protected:
   {
     if (updateSingle)
       MarginSingle::_update_single_area(area);
-    const int gaps[] = { 3 + mlen(), 3 + mlen(), 0 + mlen(), 0 + mlen()};
+    const int gaps[] = { mgap() + mlen(), mgap() + mlen(), 0 + mlen(), 0 + mlen()};
     pointer.pos_mark = mark.anchor;
     pointer.pos_gap = gaps[area.atto];
     pointer.pos_update_fn = POSFUNC_NN_MID[area.atto];
@@ -1419,17 +1424,19 @@ MarginPointerManual::~MarginPointerManual(){}
 class MarginMarksBase: public MarginElementCached, public MarginCallback, public MarginTextformat
 {
 protected:
-  int           mlenmaxi, mlenmini, mwid;
+  int           mlenmaxi, mlenmini, mwid, mlengap;
 protected:
-  MarginMarksBase(): mlenmaxi(4), mlenmini(2), mwid(1){}
+  MarginMarksBase(): mlenmaxi(4), mlenmini(2), mwid(1), mlengap(3){}
   ~MarginMarksBase();
   int   mlen() const { return mlenmaxi; }
+  int   mgap() const { return mlengap; }
 public:
   void    setMarkLength(int length){ mlenmaxi = length; /*needRedrawByMark = true;*/ }
   void    setMarkMiniLength(int length){ mlenmini = length; /*needRedrawByMark = true;*/ }
   void    setMarkWidth(int width){ mwid = width; /*needRedrawByMark = true;*/ }
   void    setMarkSize(int length, int width, int lengthmini=4)
   { mlenmaxi = length; mlenmini = lengthmini; mwid = width; /*needRedrawByMark = true;*/ }
+  void    setMarkGap(int gap){ mlengap = gap; }
 protected:
   virtual   void    tfContentUpdate(){}
 };
@@ -1761,7 +1768,7 @@ protected:
     const uarea_t& area = current_area();
     storeDimm(area.segm_main);
     
-    const int gaps[] = { 3 + mlenmaxi, 3 + mlenmaxi, 0 + mlenmaxi, 0 + mlenmaxi };
+    const int gaps[] = { mgap()+ mlenmaxi, mgap() + mlenmaxi, 0 + mlenmaxi, 0 + mlenmaxi };
     void  (*lposfunc_nn_mid)(texts_t*) = POSFUNC_NN_MID[area.atto];
     void  (*lposfunc_nn_fnbeg)(texts_t*) = area.mirrored? POSFUNC_NN_DOWN[area.atto] : POSFUNC_NN_UP[area.atto];
     void  (*lposfunc_nn_fnend)(texts_t*) = area.mirrored? POSFUNC_NN_UP[area.atto] : POSFUNC_NN_DOWN[area.atto];
@@ -1889,7 +1896,7 @@ protected:
     const uarea_t& area = current_area();
     storeDimm(area.segm_main);
     
-    const int gaps[] = { 3 + mlenmaxi, 3 + mlenmaxi, 0 + mlenmaxi, 0 + mlenmaxi };
+    const int gaps[] = { mlengap + mlenmaxi, mlengap + mlenmaxi, 0 + mlenmaxi, 0 + mlenmaxi };
     int lmp[] = { 0, algoType == DBMODE_STATIC? countMaxiNoted - 1 : countMaxiNoted + countMaxiHided - 1 };
     
     for (int i=0; i<2; i++)
@@ -2488,7 +2495,7 @@ private:
     const int countMaxiTotal = countMaxiNoted + countMaxiHided;
     float LL = cachedRdata().rel_fixed.LL, HL = cachedRdata().rel_fixed.HL;
     bool isMOD = cachedRdata().rel_fixed.MOD != 0.0f;
-    const int gaps[] = { 3 + mlenmaxi, 3 + mlenmaxi, 0 + mlenmaxi, 0 + mlenmaxi };
+    const int gaps[] = { mlengap + mlenmaxi, mlengap + mlenmaxi, 0 + mlenmaxi, 0 + mlenmaxi };
     bool  doChangeLabel = false;
     
     int l1 = area.atto_from;
@@ -4425,19 +4432,26 @@ void DrawBars::mouseDoubleClickEvent(QMouseEvent* event)
         float values[] = { HL, LL };
         for (int i=0; i<2; i++)
         {
-          QDoubleSpinBox* qle = new QDoubleSpinBox();
-          qle->setRange(-FLT_MAX, +FLT_MAX);
-          qle->setDecimals(precision);
-          qle->setValue(values[i]);
-          qle->setAlignment(Qt::AlignRight);
-          qle->setFixedWidth(120);
+          QDoubleSpinBox* qdsb = new QDoubleSpinBox();
+          qdsb->setRange(-FLT_MAX, +FLT_MAX);
+          qdsb->setDecimals(precision);
+          qdsb->setValue(values[i]);
+          qdsb->setAlignment(Qt::AlignRight);
+          qdsb->setFixedWidth(120);
           if (i == 0)
-            focused = qle;
-          lay->addWidget(qle);
+            focused = qdsb;
+          lay->addWidget(qdsb);
+#if QT_VERSION >= 0x050000
           if (i == 0)
-            QObject::connect(qle, SIGNAL(valueChanged(double)), this, SLOT(toolUpdateBoundHigh(double)));
+            QObject::connect(qdsb, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &DrawBars::toolUpdateBoundHigh);
           else
-            QObject::connect(qle, SIGNAL(valueChanged(double)), this, SLOT(toolUpdateBoundLow(double)));
+            QObject::connect(qdsb, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &DrawBars::toolUpdateBoundLow);
+#else
+          if (i == 0)
+            QObject::connect(qdsb, SIGNAL(valueChanged(double)), this, SLOT(toolUpdateBoundHigh(double)));
+          else
+            QObject::connect(qdsb, SIGNAL(valueChanged(double)), this, SLOT(toolUpdateBoundLow(double)));
+#endif
         }
       }
       boundsSetup->setLayout(lay);
@@ -4451,12 +4465,20 @@ void DrawBars::mouseDoubleClickEvent(QMouseEvent* event)
 void DrawBars::connectScrollBar(QScrollBar* qsb, bool staticView, bool setOrientation)
 {
   pDraw->connectScrollBar(qsb, staticView, setOrientation);
+#if QT_VERSION >= 0x050000
+  QObject::connect(qsb, &QScrollBar::valueChanged, this, &DrawBars::scrollDataTroughDrawTo);
+#else
   QObject::connect(qsb, SIGNAL(valueChanged(int)), this, SLOT(scrollDataTroughDrawTo(int)));
+#endif
 }
 
 void DrawBars::connectScrollBarOutsideDraw(QScrollBar* qsb)
 {
+#if QT_VERSION >= 0x050000
+  QObject::connect(qsb, &QScrollBar::valueChanged, this, &DrawBars::scrollDataOutsideDrawTo);
+#else
   QObject::connect(qsb, SIGNAL(valueChanged(int)), this, SLOT(scrollDataOutsideDrawTo(int)));
+#endif
 }
 
 void DrawBars::slot_setScalingA(int sh){  pDraw->slot_setScalingA(sh);  }
@@ -4815,6 +4837,18 @@ IOverlayReactor* MEWPointer::createReactor()
   return new MEPointerReactor((MarginPointerAutomatic*)m_pme, m_premote);
 }
 
+void MEWPointer::setMarkLen(int len)
+{
+  ((MarginPointerBase*)m_pme)->setMarkLength(len);
+  remoteRebound();
+}
+
+void MEWPointer::setMarkGap(int gap)
+{
+  ((MarginPointerBase*)m_pme)->setMarkGap(gap);
+  remoteRebound();
+}
+
 void MEWPointer::setPosition(float pos01)
 {
   ((MarginPointerAutomatic*)m_pme)->setPosition(pos01);
@@ -4905,9 +4939,15 @@ void MEWScale::setFont(const QFont& m_font)
   remoteRebound();
 }
 
-void MEWScale::setMarkLen(int mlen)
+void MEWScale::setMarkLen(int len)
 {
-  ((MarginMarksBase*)m_pme)->setMarkLength(mlen);
+  ((MarginMarksBase*)m_pme)->setMarkLength(len);
+  remoteRebound();
+}
+
+void MEWScale::setMarkGap(int gap)
+{
+  ((MarginMarksBase*)m_pme)->setMarkGap(gap);
   remoteRebound();
 }
 

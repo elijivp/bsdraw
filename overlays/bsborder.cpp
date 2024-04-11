@@ -70,9 +70,9 @@ int OShadow::fshOVCoords(int overlay, bool switchedab, char *to) const
       ocg.goto_normed();
       
       const char* dds[] = { "inormed.x",
-                            "ov_ibounds.y - 1 - inormed.y",
-                            "ov_ibounds.x - 1 - inormed.x",
                             "inormed.y",
+                            "ov_ibounds.x - 1 - inormed.x",
+                            "ov_ibounds.y - 1 - inormed.y",
                           };
       ocg.push("ivec2 dd = ivec2(9999, 0);");
       for (int i=0; i<4; i++)

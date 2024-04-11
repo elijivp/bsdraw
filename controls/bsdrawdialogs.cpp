@@ -141,11 +141,11 @@ BSGridDialog::BSGridDialog(EXAMPLE exm, bool vertical, const overlayconfig_t& bc
   d->ocfg = bc;
   
   this->setWindowTitle(QString::fromUtf8("Мастер создания сетки"));
-  BS_INIT_NOTCUTED(QVBoxLayout)
-  BS_START_LAYOUT_IF(vertical, QHBoxLayout, QVBoxLayout)
-    BS_START_LAYOUT_IF(vertical, QVBoxLayout, QHBoxLayout)
+  BS_INIT_V_NOTCUTED
+  BS_START_LAY_HV_IF(vertical)
+    BS_START_LAY_VH_IF(vertical)
     {
-      BS_START_GROUP_HMIN_VMIN(QString::fromUtf8("Образец"), QVBoxLayout)
+      BS_START_GROUP_V_HMIN_VMIN(QString::fromUtf8("Образец"))
         QButtonGroup* qbg = new QButtonGroup(this);
         const char* cc[] = { "Серый", "Черный", "Белый", "Цветной" };
         for (int i=0; i<sizeof(cc)/sizeof(const char*); i++)
@@ -179,15 +179,15 @@ BSGridDialog::BSGridDialog(EXAMPLE exm, bool vertical, const overlayconfig_t& bc
     }
     BS_STOP
     
-    BS_START_LAYOUT_IF(vertical, QVBoxLayout, QHBoxLayout)
+    BS_START_LAY_VH_IF(vertical)
     {
       BS_STRETCH      
-      BS_START_GROUP_HMIN_VMIN(QString::fromUtf8("Наложение"), QVBoxLayout)
+      BS_START_GROUP_V_HMIN_VMIN(QString::fromUtf8("Наложение"))
         const char* strnames[] = { "Толщина", "Прозрачность", "Отсечение" };
         float* values[] = { &d->ocfg.basics.thickness, &d->ocfg.basics.opacity, &d->ocfg.basics.slice_hl };
         for (int i=0; i<3; i++)
         {
-          BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+          BS_START_LAY_H_HMAX_VMIN
             TAU_TEXT_ADD(-1, strnames[i])
             BS_STRETCH
             QSpinBox* qsb = new QSpinBox;
@@ -204,12 +204,12 @@ BSGridDialog::BSGridDialog(EXAMPLE exm, bool vertical, const overlayconfig_t& bc
           BS_STOP
         }
       BS_STOP_EX_ALIGNED(0, Qt::AlignHCenter)
-      BS_START_GROUP_HMIN_VMIN(QString::fromUtf8("Место"), QVBoxLayout)
+      BS_START_GROUP_V_HMIN_VMIN(QString::fromUtf8("Место"))
         const char* strnames[] = { "Начало", "Шаг" };
         float* values[] = { &d->ocfg.center, &d->ocfg.step };
         for (int i=0; i<2; i++)
         {
-          BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+          BS_START_LAY_H_HMAX_VMIN
 //            TAU_TEXT_ADD(-1, strnames[i]))
             TAU_TEXT_ADD(-1, strnames[i])
             BS_STRETCH
@@ -228,14 +228,14 @@ BSGridDialog::BSGridDialog(EXAMPLE exm, bool vertical, const overlayconfig_t& bc
     }
     BS_STOP
 
-    BS_START_LAYOUT_IF(vertical, QVBoxLayout, QHBoxLayout)
+    BS_START_LAY_VH_IF(vertical)
       BS_STRETCH
-      BS_START_GROUP_HMIN_VMIN(QString::fromUtf8("Форма"), QVBoxLayout)
+      BS_START_GROUP_V_HMIN_VMIN(QString::fromUtf8("Форма"))
         const char* strnames[] = { "Отрезок", "Пропуск", "Точка" };
         unsigned int* values[] = { &d->ocfg.kls.lenstroke, &d->ocfg.kls.lenspace, &d->ocfg.kls.countdot };
         for (int i=0; i<3; i++)
         {
-          BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+          BS_START_LAY_H_HMAX_VMIN
             TAU_TEXT_ADD(-1, strnames[i])
             BS_STRETCH
             QSpinBox* qsb = new QSpinBox;
@@ -249,7 +249,7 @@ BSGridDialog::BSGridDialog(EXAMPLE exm, bool vertical, const overlayconfig_t& bc
           BS_STOP
         }
       BS_STOP_EX_ALIGNED(0, Qt::AlignHCenter)
-      BS_START_GROUP_HMIN_VMIN(QString::fromUtf8("Тип цвета"), QVBoxLayout)
+      BS_START_GROUP_V_HMIN_VMIN(QString::fromUtf8("Тип цвета"))
         const char* strnames[] = { "Инверсия 1", "Инверсия 2", "Инверсия 3" };
         Q_ASSERT( d->ocfg.kls.inversive >= 0 && d->ocfg.kls.inversive < sizeof(strnames)/sizeof(const char*) + 1);
       
@@ -264,12 +264,12 @@ BSGridDialog::BSGridDialog(EXAMPLE exm, bool vertical, const overlayconfig_t& bc
         qbt->button(d->ocfg.kls.inversive)->setChecked(true);
         QObject::connect(qbt, SIGNAL(buttonClicked(int)), this, SLOT(mocdoct(int)));
       BS_STOP_EX_ALIGNED(0, Qt::AlignHCenter)
-      BS_START_GROUP_HMIN_VMIN(QString::fromUtf8("Цвет"), QVBoxLayout)
+      BS_START_GROUP_V_HMIN_VMIN(QString::fromUtf8("Цвет"))
         const char* strnames[] = { "Красный", "Зелёный", "Синий" };
         float* values[] = { &d->ocfg.kls.r, &d->ocfg.kls.g, &d->ocfg.kls.b };
         for (int i=0; i<3; i++)
         {
-          BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+          BS_START_LAY_H_HMAX_VMIN
             TAU_TEXT_ADD(-1, strnames[i])
             BS_STRETCH
             QSpinBox* qsb = new QSpinBox;
@@ -288,7 +288,7 @@ BSGridDialog::BSGridDialog(EXAMPLE exm, bool vertical, const overlayconfig_t& bc
     BS_STOP
   BS_STOP
   
-  BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
+  BS_START_LAY_H_HMAX_VMIN
     BS_STRETCH
     TAU_BTN(btnAccept, TauSetup("Принять", -1, 0, 0));
     QObject::connect(btnAccept, SIGNAL(clicked()), this, SLOT(accept()));

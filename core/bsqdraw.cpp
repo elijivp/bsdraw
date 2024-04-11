@@ -1457,7 +1457,11 @@ void DrawQWidget::connectScrollBar(QScrollBar *qsb, bool staticView, bool setOri
     }
   }
   m_sbStatic = staticView;
+#if QT_VERSION >= 0x050000
+  QObject::connect(qsb, &QAbstractSlider::valueChanged, this, &DrawQWidget::scrollDataTo);
+#else
   QObject::connect(qsb, SIGNAL(valueChanged(int)), this, SLOT(scrollDataTo(int)));
+#endif
 }
 
 void DrawQWidget::slot_setScalingA(int s){  setScalingLimitsA((unsigned int)s, (unsigned int)s); }

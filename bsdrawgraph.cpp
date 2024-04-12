@@ -343,14 +343,22 @@ public:
       else if (isHistogram)
       {
         fdc.push(                               
-                  "float fmix_max = max(fy_ns[0], fy_ns[2]); " SHNL
-                  "float fy_addit = (fmix_max - fy_ns[1])*ab_iscaler.y;" SHNL
-                  "fy_addit = fy_addit*step(0.0, fy_addit);" SHNL
-                  "fmix_max = fmix_max + 1.0 - step(fmix_max, fy_ns[1]);" SHNL      /// adding 1 outside pixel for future shading
-                  "fmix_max = (fmix_max - b_coord_ns)/(fmix_max-fy_ns[1]);" SHNL
-                  "fmix_max = fmix_max*step(0.0, fmix_max)*(1.0 - step(1.0, fmix_max));" SHNL   /// shot is not in (->0)
-                  "fmix_max = mix(fmix_max, 0.2, (1.0-step(fmix_max, 0.0))*step(fmix_max, 0.2));" SHNL    /// 0.2 level for all 0..0.2
-                  "fmix_max = mix(fmix_max, 1.0, step(1.0, fmix_max));" SHNL
+//                  "float fmix_max = max(fy_ns[0], fy_ns[2]); " SHNL
+//                  "float fy_addit = (fmix_max - fy_ns[1])*ab_iscaler.y;" SHNL
+//                  "fy_addit = fy_addit*step(0.0, fy_addit);" SHNL
+//                  "fmix_max = fmix_max + 1.0 - step(fmix_max, fy_ns[1]);" SHNL      /// adding 1 outside pixel for future shading
+//                  "fmix_max = (fmix_max - b_coord_ns)/(fmix_max-fy_ns[1]);" SHNL
+//                  "fmix_max = fmix_max*step(0.0, fmix_max)*(1.0 - step(1.0, fmix_max));" SHNL   /// ???????????????? shot is not in (->0)
+//                  "fmix_max = mix(fmix_max, 0.2, (1.0-step(fmix_max, 0.0))*step(fmix_max, 0.2));" SHNL    /// ???????????????? 0.2 level for all 0..0.2
+//                  "fmix_max = mix(fmix_max, 1.0, step(1.0, fmix_max));" SHNL
+
+#if 0
+        "float fmix_max = max(fy_ns[0], fy_ns[2]); " SHNL
+        "fmix_max = fmix_max + 1.0 - step(fmix_max, fy_ns[1]);" SHNL      /// adding 1 outside pixel for future shading
+        "fmix_max = (fmix_max - b_coord_ns)/(fmix_max-fy_ns[1]);" SHNL
+        "fmix_max = fmix_max*step(0.0, fmix_max)*(1.0 - step(1.0, fmix_max));" SHNL   /// shot is not in (->0)
+        "fmix_max = mix(fmix_max, 0.2, (1.0-step(fmix_max, 0.0))*step(fmix_max, 0.2));" SHNL    /// 0.2 level for all 0..0.2
+        "fmix_max = mix(fmix_max, 1.0, step(1.0, fmix_max));" SHNL
               
                   "float fmix_self = b_coord_ns - fy_ns[1];" SHNL
                   "vec3 fhit = vec3(step(fmix_self, 0.0), 0.0, 0.0);" SHNL
@@ -358,7 +366,15 @@ public:
 //                  "fhit.z = (1.0 - fhit.x)*step(fmix_self, 1.0)*(0.25+specsmooth*0.375);" SHNL
                   "float mixwellp =  max(fhit.y, specopc*(max(fhit.x, fmix_max)) );" SHNL
           
-                  "float fneiprec = iy_view[1] + fy_addit;" SHNL
+                  "float fy_addit = (max(fy_ns[0], fy_ns[2]) - fy_ns[1])*ab_iscaler.y;" SHNL
+                  "float fneiprec = iy_view[1] + 0*fy_addit*step(0.0, fy_addit);" SHNL
+#else
+                  "float fmix_self = b_coord_ns - fy_ns[1];" SHNL
+                  "vec3 fhit = vec3(step(fmix_self, 0.0), 0.0, 0.0);" SHNL
+                  "fhit.y = fhit.x*step(0.0, fmix_self);" SHNL
+                  "float mixwellp =  max(fhit.y, specopc*fhit.x);" SHNL
+                  "float fneiprec = iy_view[1];" SHNL
+#endif
                   );
         
         if (graphopts.postrect == PR_VALUEAROUND || graphopts.postrect == PR_SUMMARY)

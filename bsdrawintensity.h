@@ -28,6 +28,7 @@ protected:
 /// dynamic portion size:   Check portionSize() before each call setData
 class DrawIntensityUpsizeA: public DrawQWidget
 {
+  Q_OBJECT
   unsigned int          m_minA;
   unsigned int          m_maxA;
 public:
@@ -35,9 +36,12 @@ public:
 public:
   virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
   virtual int           sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool changedScalingA, bool changedScalingB);
+signals:
+  void      sig_portionDimmChanged();
 };
 class DrawIntensityUpsizeB: public DrawQWidget
 {
+  Q_OBJECT
   unsigned int          m_minB;
   unsigned int          m_maxB;
 public:
@@ -45,6 +49,8 @@ public:
 public:
   virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
   virtual int           sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool changedScalingA, bool changedScalingB);
+signals:
+  void      sig_portionDimmChanged();
 };
 
 

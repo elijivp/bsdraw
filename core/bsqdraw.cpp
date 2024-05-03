@@ -946,12 +946,14 @@ void DrawQWidget::resizeGL(int w, int h)
   w -= m_cttrLeft + m_cttrRight;
   h -= m_cttrTop + m_cttrBottom;
   
-//  qDebug()<<"DrawQWidget PRE resizeEv: "<<QSize(w,h)<<m_dataDimmA<<m_dataDimmB<<m_scalingA<<m_scalingB;
+//  if (objectName() == "AAA")
+//    qDebug()<<"DrawQWidget PRE resizeEv: "<<QSize(w,h)<<m_dataDimmA<<m_dataDimmB<<m_scalingA<<m_scalingB;
   if (m_dataDimmSwitchAB)
     adjustSizeAndScale(h, w);
   else
     adjustSizeAndScale(w, h);
-//  qDebug()<<"DrawQWidget resizeEv: "<<m_dataDimmA<<m_dataDimmB<<m_scalingA<<m_scalingB;
+//  if (objectName() == "AAA")
+//    qDebug()<<"DrawQWidget resizeEv: "<<m_dataDimmA<<m_dataDimmB<<m_scalingA<<m_scalingB;
   
   if (m_rawResizeModeNoScaled)
   {

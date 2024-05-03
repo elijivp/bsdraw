@@ -386,6 +386,9 @@ bool DrawMapEx::loadTo(double lat, double lon)
   return true;
 }
 
+double DrawMapEx::currentLat() const { return pImpl->center.lat; }
+double DrawMapEx::currentLon() const { return pImpl->center.lon; }
+
 float     DrawMapEx::zoom() const { return pImpl->zoom; }
 void      DrawMapEx::setZoom(float zoom, bool update)
 {
@@ -519,8 +522,8 @@ void DrawMapEx::viewToMMRel(float dx, float dy, bool update)
 
 void DrawMapEx::relpos(float* x01, float* y01) const
 {
-  *x01 = 0.5f - pImpl->mdx/this->metersInPixel()/this->sizeHorz();
-  *y01 = 0.5f + pImpl->mdy/this->metersInPixel()/this->sizeVert();
+  *x01 = 0.5f - pImpl->mdx/metersHorz();
+  *y01 = 0.5f + pImpl->mdy/metersVert();
 }
 
 

@@ -18,6 +18,8 @@ public:
   void        paletteBounds(float* pblow, float* pbgaplow, float* pbgaphigh, float* pbhigh) const;
 public:
   bool        loadTo(double lat, double lon);
+  double      currentLat() const;
+  double      currentLon() const;
   
   float       zoom() const;
   void        setZoom(float zoom, bool update = true);
@@ -36,7 +38,7 @@ public:
   void        setProflimitSurfAuto(bool update = true);
   void        setProflimitAuto(bool update = true);
 public:
-  float       metersInPixel() const ;
+  float       metersInPixel() const;
   void        coordsLL(double* plat, double* plon) const;
   void        viewToMM(float x, float y, bool update = true);
   void        viewToMMRel(float dx, float dy, bool update = true);
@@ -47,6 +49,10 @@ public:
   void        coordsLLOfViewCenter(double* plat, double* plon) const;
   void        coordsEEOfViewCenter(float* px, float* py) const;
   void        coordsOfViewCenter(float* px, float* py) const;
+public:
+  float       metersHorz() const { return metersInPixel()*sizeHorz(); }
+  float       metersVert() const { return metersInPixel()*sizeVert(); }
+  float       rectangularityVH() const { return float(sizeVert())/float(sizeHorz()); }
 public:
   void        relpos(float* x01, float* y01) const;
 public:

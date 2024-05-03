@@ -81,8 +81,13 @@ int DrawIntensityUpsizeA::sizeAndScaleChanged(bool changedDimmA, bool /*changedD
 {
   if (changedDimmA || changedScalingA)
   {
-    m_portionSize = sizeDataA()*sizeDataB();
-    return PC_DATA | PC_DATADIMMS;
+    unsigned int new_portionSize = sizeDataA()*sizeDataB();
+    if (m_portionSize != new_portionSize)
+    {
+      m_portionSize = new_portionSize;
+      emit sig_portionDimmChanged();
+      return PC_DATA | PC_DATADIMMS;
+    }
   }
   return 0;
 }
@@ -115,8 +120,13 @@ int DrawIntensityUpsizeB::sizeAndScaleChanged(bool /*changedDimmA*/, bool change
 {
   if (changedDimmB || changedScalingB)
   {
-    m_portionSize = sizeDataA()*sizeDataB();
-    return PC_DATA | PC_DATADIMMS;
+    unsigned int new_portionSize = sizeDataA()*sizeDataB();
+    if (m_portionSize != new_portionSize)
+    {
+      m_portionSize = new_portionSize;
+      emit sig_portionDimmChanged();
+      return PC_DATA | PC_DATADIMMS;
+    }
   }
   return 0;
 }

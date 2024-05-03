@@ -23,6 +23,7 @@
 /// 2D graph
 class DrawGraph: public DrawQWidget
 {
+  Q_OBJECT
 protected:
   DrawGraph(unsigned int samples, unsigned int graphs, unsigned int memForDeploy, const graphopts_t& graphopts, const coloropts_t& coloropts, SPLITPORTIONS splitGraphs=SP_NONE);
   void  reConstructor(unsigned int samples);
@@ -42,6 +43,7 @@ public:
 /// 2D graph dynamic portion size:   Check portionSize() before each call setData
 class DrawGraphUpsizeA: public DrawGraph
 {
+  Q_OBJECT
   unsigned int          m_minsamples;
   unsigned int          m_maxsamples;
   void  reConstructorEx(unsigned int samples);
@@ -51,6 +53,8 @@ public:
 public:
   virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
   virtual int           sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool changedScalingA, bool changedScalingB);
+signals:
+  void      sig_portionDimmChanged();
 };
 
 /// 2D graph with data append
@@ -69,6 +73,7 @@ public:
 /// 2D graph with saved data for ScrollBar connecting
 class DrawGraphMoveEx: public DrawGraph
 {
+  Q_OBJECT
 private:
   unsigned int          m_stepSamples;
   int                   m_filloffset;

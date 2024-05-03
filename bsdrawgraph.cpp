@@ -614,8 +614,13 @@ int DrawGraphUpsizeA::sizeAndScaleChanged(bool changedDimmA, bool /*changedDimmB
 {
   if (changedDimmA || changedScalingA)
   {
-    m_portionSize = sizeDataA();
-    return PC_DATADIMMS;
+    unsigned int new_portionSize = sizeDataA();
+    if (m_portionSize != new_portionSize)
+    {
+      m_portionSize = new_portionSize;
+      emit sig_portionDimmChanged();
+      return PC_DATADIMMS;
+    }
   }
   return 0;
 }

@@ -6,14 +6,17 @@
 
 QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4) {
-  QT += widgets
-  CONFIG += c++11
-}
-lessThan(QT_MAJOR_VERSION, 5) {
+equals(QT_MAJOR_VERSION, 4) {
   QT += opengl
   DEFINES += "nullptr=0"
   CONFIG += c++0x
+}
+equals(QT_MAJOR_VERSION, 5) {
+  QT += opengl widgets
+  CONFIG += c++11
+}
+equals(QT_MAJOR_VERSION, 6) {
+  QT += openglwidgets
 }
 
 TARGET = simple_example_1D

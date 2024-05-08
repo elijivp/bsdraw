@@ -16,12 +16,12 @@
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)2
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)4
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)9
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)17
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)20
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)29
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)36
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)58
 
-//#define ONLY_OVERVIEWS
+#define ONLY_OVERVIEWS
 
 
 #ifndef MW_TEST_NOCHOOSE_DEFAULT
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
   
 
 #ifdef ONLY_OVERVIEWS
-  const int tstart = 1, tstop = 18;
+  const int tstart = 1, tstop = 21;
 #else
   const int tstart = 0, tstop = sizeof(testnames)/sizeof(const char*);
 #endif
@@ -69,10 +69,6 @@ int main(int argc, char *argv[])
     QString tname(testnames[i]);
     tname = tname.replace('_', " ");
     tests<<QString::number(i) + ". " + tname;
-#ifdef ONLY_OVERVIEWS
-    if (i == 17)
-      break;
-#endif
   }
   QString prepend = "You can change GLSL version\nby changing BSGLSLVER in .pro file *\n\n";
 //  QString result = QInputDialog::getItem(nullptr, "bsdraw", prepend + "Choose test:", tests, 1, false, &ok);

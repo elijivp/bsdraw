@@ -2466,3 +2466,18 @@ bool BSQSelectorB::reactionMouse(DrawQWidget* pwdg, OVL_REACTION_MOUSE oreact, c
   else if (oreact == m_drop)  emit selectionDropped();
   return false;
 }
+
+
+
+
+BSQTrackerXY::BSQTrackerXY(QObject* parent)
+{
+  
+}
+
+bool BSQTrackerXY::reactionTracking(DrawQWidget*, const coordstriumv_t* ct, bool*)
+{
+  emit tracked(ct->fx_0n1, ct->fy_0n1, ct->fx_pix, ct->fy_pix);
+  return false; 
+}
+

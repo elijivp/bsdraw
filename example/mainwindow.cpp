@@ -700,7 +700,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     AFTERCREATE_DRAW2D
     sigtype = ST_MOVE;
   }
-  else if (MW_TEST == EXTRA_IMPULSE)
+  else if (MW_TEST == EXTRA_SUBMESH)
   {
     LINES = 1;
     SAMPLES = 5;
@@ -1033,137 +1033,26 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     DrawQWidget* pdraw = new DrawGraph(SAMPLES, PORTIONS, 
                                         graphopts_t::goInterp(0.45f, DE_LINTERP), 
                                         coloropts_t::copts(CP_MONO, 0.0f, 0.75f, 0x00666666));
-    
-    {
-//      pdraw->tftPushDynamicDA("Hello Wogld!", CR_RELATIVE, 0.5f, 0.5f, 0);
-    }
-    {
-      QFont bigfont("Ubuntu", 6, 200, true);
-      pdraw->tftHoldingRegister(bigfont, 10, 2);
-    }
-    {
-      QFont smallfont("Ubuntu", 9, 500);
-      pdraw->tftHoldingRegister(smallfont, 6, 8);
-    }
-//    pdraw->tftHoldingRelease();
-    {
-//      pdraw->tftPushBack("Second type!", CR_RELATIVE, 0.5f, 0.1f, 0, false);
-////      pdraw->tftPushBack("ABCDEFGHIJKLMNOPQRSTUVWZYZ", CR_RELATIVE, 0.25f, 0.25f);
-////      pdraw->tftPushBack("SUPERTEST RECORD", CR_PIXEL, 100, 100);
-      int rpa = pdraw->tftRecordsPerArea();
-////      qDebug()<<rpa;
-      const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      int ctr = 0;
       
-//      pdraw->tftHoldingSwitch(0);
-      
-//      pdraw->tftPushBack("Third type!", CR_RELATIVE, 0.5f, 0.8f, 0, false);
-      
-#if 0
-      static const int TTL = 20;
-      for (int i=0; i<TTL; i++)
-        for (int j=0; j<TTL; j++)
-          pdraw->tftPushDynamicDA("ETOJOPA", CR_RELATIVE, 0.05f + i/float(TTL-1)*0.9f, 0.05f + j/float(TTL-1)*0.9f, 0);
-      
-      QTimer* tm = new QTimer();
-      tm->setSingleShot(false);
-      tm->setInterval(16);
-      static int tc=0;
-      QObject::connect(tm, &QTimer::timeout, [=]()
-      { 
-        for (int i=0; i<TTL*TTL; i++)
-          pdraw->tftRotate(1, i, (i+tc)/20.0f*M_PI*2); 
-        tc += 1;
-      });
-      QTimer::singleShot(2000, tm, SLOT(start()));
-#elif 0
-      static const int TTL = 20;
-      for (int i=0; i<TTL; i++)
-        for (int j=0; j<TTL; j++)
-          pdraw->tftPushStatic("ETOJOPA", CR_RELATIVE, 0.05f + i/float(TTL-1)*0.9f, 0.05f + j/float(TTL-1)*0.9f, 0);
-#else
-      
-      ovl_visir = pdraw->ovlPushBack(new OActiveCursor());
-      
-      
-      char buffer[32];
-      for (int i=0; i<360; i++)
-      {
-        sprintf(buffer, "%d°", i);
-        pdraw->tftAddRecord(buffer);
-      }
-      
-      int TOT = 12*4;
-      for (int i=0; i<TOT; i++)
-      {
-        float pr = i/float(TOT)*M_PI*2.0f;
-//        pdraw->tftPushDynamicFA(i*360/TOT, CR_RELATIVE, 0.5f + 0.3f*sin(pr), 0.5f + 0.3f*cos(pr));
-        pdraw->tftPushDynamicFA(i*360/TOT, CR_RELATIVE, 0.3f*sin(pr), 0.3f*cos(pr), ovl_visir);
-      }
-      
-      QTimer* tm = new QTimer();
-      tm->setSingleShot(false);
-      tm->setInterval(30);
-      static int tc=0;
-      QObject::connect(tm, &QTimer::timeout, [=]()
-      { 
-        for (int j=0; j<pdraw->tftDynamicsCount(); j++)
-          pdraw->tftSwitchTo(j, (pdraw->tftRecordIndex(j) + 1) % pdraw->tftRecordsCount());
-      } );
-      QTimer::singleShot(2000, tm, SLOT(start()));
-#endif
-      
-      
-      
-//      int total = 15;
-//      for (int i=0; i<total; i++)
-//      {
-//        pdraw->tftPushBack("Hello Wogld!", CR_RELATIVE, 0.1f + 0.8f*i/(total-1), 0.5f, i*M_PI*2/float(total-1), true);
-//      }
-//      int total = rpa*2 + 3;
-////      int total = 70;
-//      for (int i=0; i<total; i++)
-//      {
-//        char buffer[56];
-//        sprintf(buffer, "%c %d", alphabet[i/10 % sizeof(alphabet)], ctr++);
-//        if (ctr >= 10)
-//          ctr = 0;
-//        pdraw->tftPushDynamicDA(buffer, CR_RELATIVE, 0.1f + 0.8f*i/float(total), 0.1f + 0.8f*i/float(total));
-//      }
-//      QTimer* tm = new QTimer();
-//      tm->setSingleShot(false);
-//      tm->setInterval(30);
-//      static int tc=0;
-//      QObject::connect(tm, &QTimer::timeout, [=]()
-//      { 
-//        for (int i=0; i<rpa*2 + 3; i++)
-//          pdraw->tftMove(0, i, 0.2f + 0.6f*rand()/float(RAND_MAX), 0.2f + 0.6f*rand()/float(RAND_MAX)); 
-//        tc += 1;
-//      });
-//      QTimer::singleShot(2000, tm, SLOT(start()));
-      
-      
-    }
-    
 //    // 2 overlays just for effects
-//    {
-//      pdraw->ovlPushBack(new OGridCells(24, 16, linestyle_white(0,1,1)));
-//      pdraw->ovlGet(1)->setOpacity(0.9f);
-//      pdraw->ovlPushBack(new OShadow(10,10,10,10, 0.75f, color3f_white()));
-//    }
+    {
+      pdraw->ovlPushBack(new OGridCells(24, 16, linestyle_white(0,1,1)));
+      pdraw->ovlGet(1)->setOpacity(0.9f);
+      pdraw->ovlPushBack(new OShadow(10,10,10,10, 0.75f, color3f_white()));
+    }
     
     DrawBars* pdrawbars = new DrawBars(pdraw, DrawBars::CP_DEFAULT);
     pdrawbars->addScaleSymmetricEmpty(AT_RIGHT, 0, 32, 20, 4);
     
     // 4 pointers for all 4 sides, attached to one overlay
     {
-//      MEWPointer* mpHL = pdrawbars->addPointerAbsoluteDrawbounds(AT_LEFT, DBF_NOTESINSIDE, 0.5f, 6, 0.0f, "°");
-//      MEWPointer* mpHR = pdrawbars->addPointerAbsoluteDrawbounds(AT_RIGHT,  DBF_NOTESINSIDE, 0.5f, 0, 0.0f, "°");
-//      MEWPointer* mpVT = pdrawbars->addPointerAbsoluteDrawbounds(AT_TOP, DBF_NOTESINSIDE, 0.5f, 6, 0.0f, "s");
-//      MEWPointer* mpVB = pdrawbars->addPointerAbsoluteDrawbounds(AT_BOTTOM, DBF_NOTESINSIDE, 0.5f, 4, 0.0f, "s");
-//      OActiveCursorCarrier4* oac = new OActiveCursorCarrier4(mpHL->createReactor(), mpHR->createReactor(), mpVB->createReactor(), mpVT->createReactor());
-//      int oap = pdrawbars->getDraw()->ovlPushBack(oac);
-//      pdrawbars->getDraw()->ovlPushBack(new OFLine(OFLine::LT_CROSS, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_red(1,0,0)), oap);
+      MEWPointer* mpHL = pdrawbars->addPointerAbsoluteDrawbounds(AT_LEFT, DBF_NOTESINSIDE, 0.5f, 6, 0.0f, "°");
+      MEWPointer* mpHR = pdrawbars->addPointerAbsoluteDrawbounds(AT_RIGHT,  DBF_NOTESINSIDE, 0.5f, 0, 0.0f, "°");
+      MEWPointer* mpVT = pdrawbars->addPointerAbsoluteDrawbounds(AT_TOP, DBF_NOTESINSIDE, 0.5f, 6, 0.0f, "s");
+      MEWPointer* mpVB = pdrawbars->addPointerAbsoluteDrawbounds(AT_BOTTOM, DBF_NOTESINSIDE, 0.5f, 4, 0.0f, "s");
+      OActiveCursorCarrier4* oac = new OActiveCursorCarrier4(mpHL->createReactor(), mpHR->createReactor(), mpVB->createReactor(), mpVT->createReactor());
+      int oap = pdrawbars->getDraw()->ovlPushBack(oac);
+      pdrawbars->getDraw()->ovlPushBack(new OFLine(OFLine::LT_CROSS, CR_RELATIVE, 0,0, CR_RELATIVE, 0, -1, linestyle_red(1,0,0)), oap);
     }
     
     pdrawbars->addSpace(AT_BOTTOM, 8);
@@ -1174,6 +1063,227 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     AFTERCREATE_DRAWBARS1
     sp = SP_ONCE;
     sigtype = ST_GEN_NORM;
+  }
+  else if (MW_TEST == OVERVIEW_TFTS_1)
+  {
+    LINES = 1;
+    SAMPLES = 20;
+    PORTIONS = 4;
+    
+    DrawQWidget* pdraw = new DrawGraph(SAMPLES, PORTIONS, 
+                                        graphopts_t::goInterp(0.45f, DE_LINTERP), 
+                                        coloropts_t::copts(CP_MONO, 0.0f, 0.75f, 0x00666666));
+    { /// Static titles
+      QFont fnt(this->font());
+      fnt.setPointSize(12);
+      fnt.setItalic(true);
+      pdraw->tftHoldingRegister(fnt, 32, 1);
+      pdraw->tftAddRecord("Hello world!");
+      pdraw->tftAddRecord("Click me");
+      pdraw->tftPushStatic(0, CR_RELATIVE, 0.48f, 0.52f);
+      pdraw->tftPushStatic(1, CR_RELATIVE, 0.47f, 0.47f);
+    }
+    
+    { /// Dynamic records
+      QFont fnt(this->font());
+      fnt.setPointSize(10);
+      fnt.setBold(true);
+      pdraw->tftHoldingRegister(fnt, 6, 8);   // auto switching on new holding
+      
+      ovl_visir = pdraw->ovlPushBack(new OActiveCursor(CR_RELATIVE, 0.5f, 0.5f));
+      char buffer[32];
+      for (int i=0; i<360; i++)
+      {
+        sprintf(buffer, "%d°", i);
+        pdraw->tftAddRecord(buffer);
+      }
+      int TOT = 12*4;
+      for (int i=0; i<TOT; i++)
+      {
+        float pr = i/float(TOT)*M_PI*2.0f;
+        pdraw->tftPushDynamicFA(i*360/TOT, CR_RELATIVE, 0.3f*sin(pr), 0.3f*cos(pr), ovl_visir);
+      }
+      
+      QTimer* tm = new QTimer();
+      tm->setSingleShot(false);
+      tm->setInterval(30);
+      QObject::connect(tm, &QTimer::timeout, [=]()
+      { 
+        for (int j=0; j<pdraw->tftDynamicsCount(); j++)
+          pdraw->tftSwitchTo(j, (pdraw->tftRecordIndex(j) + 1) % pdraw->tftRecordsCount());
+      } );
+      QTimer::singleShot(2000, tm, SLOT(start()));
+    }
+        
+    DrawBars* pdrawbars = new DrawBars(pdraw, DrawBars::CP_DEFAULT);
+    ATTACHED_TO atto[] = { AT_LEFT, AT_RIGHT, AT_TOP, AT_BOTTOM };
+    for (unsigned int i=0; i<sizeof(atto)/sizeof(ATTACHED_TO); i++)
+    {
+      pdrawbars->addScaleSymmetricEmpty(atto[i], 0, 32, 20, 4);
+      pdrawbars->addSpace(atto[i], 16);
+    }
+    
+    AFTERCREATE_DRAWBARS1
+    sp = SP_ONCE;
+    sigtype = ST_PEAK3;
+  }
+  else if (MW_TEST == OVERVIEW_TFTS_2)
+  {
+    LINES = 10;
+    SAMPLES = 10;
+    PORTIONS = 1;
+    
+    DrawQWidget* pdraw = new DrawIntensity(SAMPLES, LINES, PORTIONS, OR_LRBT);
+    pdraw->setDataPalette(&palette_idl_BuPuGn_inv);
+    pdraw->setDataPaletteRange(0.49f, 1.0f);
+    pdraw->setOverpattern(overpattern_any(OP_CONTOUR, 0.3f, 0));
+    {
+      QFont fnt(this->font());
+      fnt.setPointSize(12);
+      fnt.setItalic(true);
+      pdraw->tftHoldingRegister(fnt, 4, 8);
+    }
+    {
+      static const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      static const int TOT = sizeof(alphabet);
+      char buffer[2] = { ' ', '\0' };
+      for (int i=0; i<TOT; i++)
+      {
+        buffer[0] = alphabet[i];
+        pdraw->tftAddRecord(buffer);
+      }
+      
+      static tftdynamic_t   g_dyns[TOT];
+      static int            g_map_dynid[10][10];
+      for (int l=0; l<LINES; l++)
+        for (int s=0; s<SAMPLES; s++)
+          g_map_dynid[l][s] = -1;
+      Q_ASSERT(LINES == 10 && SAMPLES == 10);
+      for (int i=0; i<TOT; i++)
+      {
+        while (true)
+        {
+          int l = rand()%LINES;
+          int s = rand()%SAMPLES;
+          if (g_map_dynid[l][s] == -1)
+          {
+            g_map_dynid[l][s] = i;
+            g_dyns[i] = pdraw->tftPushDynamicFA(i, CR_RELATIVE, 
+                          0.5f/SAMPLES + s/float(SAMPLES), 0.5f/LINES + l/float(LINES));
+            break;
+          }
+        }
+      }
+      
+      QTimer* tm = new QTimer();
+      tm->setSingleShot(false);
+      tm->setInterval(150);
+//      static const int rmap[][2] = { {-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {1, 1}, {-1, 1}, {1, -1} };
+      static const int rmap[][2] = { {-1, 0}, {1, 0}, {0, -1}, {0, 1} };
+      static const int rmapsize = sizeof(rmap)/sizeof(rmap[0]);
+      QObject::connect(tm, &QTimer::timeout, [=]()
+      {
+        const float* datacur = pdraw->getDataPtr();
+        for (int l=0; l<LINES; l++)
+          for (int s=0; s<SAMPLES; s++)
+          {
+            if (g_map_dynid[l][s] == -1)
+              continue;
+            int lmax = l, smax = s;
+            for (int i=0; i<rmapsize; i++)
+            {
+//              int l1 = (LINES + l + rmap[i][0]) % LINES;
+//              int s1 = (SAMPLES + s + rmap[i][1]) % SAMPLES;
+              int l1 = l + rmap[i][0];
+              int s1 = s + rmap[i][1];
+              if (l1 < 0 || l1 >= LINES || s1 < 0 || s1 >= SAMPLES)
+                continue;
+              if (g_map_dynid[l1][s1] != -1)
+                continue;
+              if (datacur[l1*SAMPLES + s1] > datacur[lmax*SAMPLES + smax])
+              {
+                lmax = l1;
+                smax = s1;
+              }
+            }
+            if (lmax == l && smax == s)
+              continue;
+            g_map_dynid[lmax][smax] = g_map_dynid[l][s];
+            g_map_dynid[l][s] = -1;
+            g_dyns[g_map_dynid[lmax][smax]].move(0.5f/SAMPLES + smax/float(SAMPLES), 0.5f/LINES + lmax/float(LINES));
+          }
+      } );
+      QTimer::singleShot(2000, tm, SLOT(start()));
+    }
+    
+    DrawBars* pdrawbars = new DrawBars(pdraw, DrawBars::CP_DEFAULT);
+    AFTERCREATE_DRAWBARS1
+    sp = SP_SLOWEST;
+    sigtype = ST_RAND;
+  }
+  else if (MW_TEST == OVERVIEW_TFTS_3)
+  {
+    LINES = 1;
+    SAMPLES = 100;
+    PORTIONS = 1;
+    
+    DrawQWidget* pdraw = new DrawGraph(SAMPLES, PORTIONS, 
+                                        graphopts_t::goInterp(0.25f, DE_LINTERP_SCALINGCENTER), 
+                                        coloropts_t::copts(CP_MONO, 0.25f, 0.25f, 0x00FFFFFF));
+    BSQTrackerXY* tracker = new BSQTrackerXY;
+    pdraw->setProactive(tracker);
+    pdraw->setMouseTracking(true);
+    {
+      QFont fnt(this->font());
+      fnt.setPointSize(12);
+      fnt.setItalic(true);
+      pdraw->tftHoldingRegister(fnt, 6, 10);
+    }
+    {
+      char buffer[4];
+      for (int i=0; i<101; i++)
+      {
+        sprintf(buffer, "%d%%", i);
+        pdraw->tftAddRecord(buffer);
+      }
+      static tftdynamic_t   g_dyns[101];
+      static tftdynamic_t   g_dynact;
+      for (int i=0; i<101; i++)
+        g_dyns[i] = pdraw->tftPushDynamicFA(i, CR_RELATIVE, -1.0f, -1.0f);
+      
+      QObject::connect(tracker, &BSQTrackerXY::tracked, [=](float x, float y, float, float)
+      {
+        const float* datacur = pdraw->getDataPtr();
+        int scl = pdraw->scalingA();
+        int left = int(x*SAMPLES - 0.5f);
+        float offs01 = (x*SAMPLES - left)/2.0f;
+        int validx = qRound(left + offs01);
+        if (validx < 0) validx = 0;
+        else if (validx >= SAMPLES) validx = SAMPLES - 1;
+        
+        float y1 = (datacur[validx] - pdraw->boundLow())/(pdraw->boundHigh() - pdraw->boundLow()) + 12.0f/pdraw->height();
+        
+        int lvl = (datacur[validx] / pdraw->boundHigh())*100;
+        if (lvl > 100)
+        {
+          if (g_dynact.attached())
+            g_dynact.move(-1,-1);
+        }
+        tftdynamic_t dynext = g_dyns[lvl];
+        if (g_dynact != dynext)
+        {
+          if (g_dynact.attached())
+            g_dynact.move(-1,-1);
+          g_dynact = dynext;
+        }
+        g_dynact.move(x, y1);
+      } );
+    }
+    
+    DrawBars* pdrawbars = new DrawBars(pdraw, DrawBars::CP_DEFAULT);
+    AFTERCREATE_DRAWBARS1
+    sp = SP_ONCE;
+    sigtype = ST_MOVE;
   }
   else if (MW_TEST == DEMO_1) /// Demo 1
   {
@@ -1815,7 +1925,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     sigtype = ST_MOVE;
   }
-  else if (MW_TEST == IMPULSE_HORZ)
+  else if (MW_TEST == SUBMESH_HORZ)
   {
     SAMPLES = 5;
     LINES = 1;
@@ -1848,7 +1958,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     sigtype = ST_RAMP;
 //    sigtype = ST_SIN;
   }
-  else if (MW_TEST == IMPULSE_VERT)
+  else if (MW_TEST == SUBMESH_VERT)
   {
     SAMPLES = 1;
     LINES = 5;
@@ -3155,16 +3265,16 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           NEW_DOUBLESPIN_ADDMAPPED(/*new BSUOD_DPM(1, dpm)*/1, changeOverpatternThreshold, 0, Qt::AlignCenter)
           TAU_TEXT_ADD(0, "Type: ");
           {
-            QStringList dpmMain; dpmMain<<QString::fromUtf8("Contour")
-                                     <<QString::fromUtf8("Line left")<<QString::fromUtf8("Line right")<<QString::fromUtf8("Line bottom")<<QString::fromUtf8("Line top")
-                                     <<QString::fromUtf8("Line left-rigth")<<QString::fromUtf8("Line bottom-top")<<QString::fromUtf8("Lines left-bot")<<QString::fromUtf8("Lines right-bot")
-                                     <<QString::fromUtf8("Lines left-top")<<QString::fromUtf8("Lines right-top")<<QString::fromUtf8("Grid")
-                                     <<QString::fromUtf8("Dot")<<QString::fromUtf8("Dot left-bot")<<QString::fromUtf8("Dot contour")<<QString::fromUtf8("/")<<QString::fromUtf8("\\")
-                                     <<QString::fromUtf8("Cross")<<QString::fromUtf8("Fill")<<QString::fromUtf8("Squares")
-                                     <<QString::fromUtf8("Circle")<<QString::fromUtf8("Circle rev")<<QString::fromUtf8("Crosspuf")
-                                     <<QString::fromUtf8("Rhomb")<<QString::fromUtf8("Suriken")<<QString::fromUtf8("Suriken rev")
-                                     <<QString::fromUtf8("Donut")<<QString::fromUtf8("Cross2")<<QString::fromUtf8("Umbrella")
-                                     <<QString::fromUtf8("Hourglass")<<QString::fromUtf8("Star")<<QString::fromUtf8("Bull")<<QString::fromUtf8("Bulr")
+            QStringList dpmMain; dpmMain<<QString::fromUtf8("INT: Contour")
+                                     <<QString::fromUtf8("INT: Line left")<<QString::fromUtf8("INT: Line right")<<QString::fromUtf8("INT: Line bottom")<<QString::fromUtf8("INT: Line top")
+                                     <<QString::fromUtf8("INT: Line left-rigth")<<QString::fromUtf8("INT: Line bottom-top")<<QString::fromUtf8("INT: Lines left-bot")<<QString::fromUtf8("INT: Lines right-bot")
+                                     <<QString::fromUtf8("INT: Lines left-top")<<QString::fromUtf8("INT: Lines right-top")<<QString::fromUtf8("INT: Grid")
+                                     <<QString::fromUtf8("INT: Dot")<<QString::fromUtf8("INT: Dot left-bot")<<QString::fromUtf8("INT: Dot contour")<<QString::fromUtf8("INT: /")<<QString::fromUtf8("INT: \\")
+                                     <<QString::fromUtf8("INT: Cross")<<QString::fromUtf8("INT: Fill")<<QString::fromUtf8("INT: Squares")
+                                     <<QString::fromUtf8("FLT: Circle")<<QString::fromUtf8("FLT: Circle rev")<<QString::fromUtf8("FLT: Crosspuf")
+                                     <<QString::fromUtf8("FLT: Rhomb")<<QString::fromUtf8("FLT: Suriken")<<QString::fromUtf8("FLT: Suriken rev")
+                                     <<QString::fromUtf8("FLT: Donut")<<QString::fromUtf8("FLT: Cross2")<<QString::fromUtf8("FLT: Umbrella")
+                                     <<QString::fromUtf8("FLT: Hourglass")<<QString::fromUtf8("FLT: Star")<<QString::fromUtf8("FLT: Bull")<<QString::fromUtf8("FLT: Bulr")
                                        ;
             QComboBox* qcb = new QComboBox;
             qcb->addItems(dpmMain);
@@ -3174,7 +3284,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             BSADD(qcb, 0, Qt::AlignHCenter);
           }
             
-          TAU_TEXT_ADD(0, "Integer settings: ")
+          TAU_TEXT_ADD(0, "Integer (INT) settings: ")
           BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
             BS_STRETCH
             TAU_TEXT_ADD(0, "Weight: ")
@@ -3187,7 +3297,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
             BSADD(qcb3);
             BS_SPACING(32)
           BS_STOP
-          TAU_TEXT_ADD(0, "Float settings: ")
+          TAU_TEXT_ADD(0, "Float (FLT) settings: ")
           TAU_TEXT_ADD(0, "    Weight: ")
           BS_START_LAYOUT_HMAX_VMIN(QHBoxLayout)
             BS_SPACING(32)
@@ -4961,12 +5071,12 @@ void MainWindow::changeOverpattern(int sigid)
     {
       if (sigid < _OP_TOTAL)
       {
-        ovp.masktype = true;
+        ovp.masktype = overpattern_t::OMASK_INT;
         ovp.mask = sigid;
       }
       else
       {
-        ovp.masktype = false;
+        ovp.masktype = overpattern_t::OMASK_FLOAT;
         ovp.mask = sigid-_OP_TOTAL;
       }
       break;

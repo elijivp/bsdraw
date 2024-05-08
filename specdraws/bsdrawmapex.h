@@ -65,6 +65,9 @@ public:
 protected:
   virtual void            processGlLocation(int secidx, int secflags, int loc, int TEX);
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
+  virtual int             sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool changedScalingA, bool changedScalingB);
+signals:
+  void        sig_resized();
 };
 
 

@@ -59,12 +59,19 @@ class   tftdynamic_t
   friend class  DrawQWidget;
   tftdynamic_t(DrawQWidget* _pdraw, int hid, int sid): pdraw(_pdraw), hoid(hid), sloid(sid){}
 public:
+  tftdynamic_t(): pdraw(nullptr), hoid(-1), sloid(-1) {}
+  bool    attached() const { return pdraw != nullptr; }
+  void    detach(){ pdraw = nullptr; }
+  
   tftdynamic_t(const tftdynamic_t& cpy): pdraw(cpy.pdraw), hoid(cpy.hoid), sloid(cpy.sloid) {}
   bool    move(float fx, float fy);
   bool    move_x(float fx);
   bool    move_y(float fy);
   bool    rotate(float anglerad);
   bool    switchto(int recid);
+public:
+  bool operator == (const tftdynamic_t& d2){ return pdraw == d2.pdraw && hoid == d2.hoid && sloid == d2.sloid; }
+  bool operator != (const tftdynamic_t& d2){ return !(*this == d2); }
 };
 ////////////////
 
@@ -376,6 +383,7 @@ public:
   int             tftAddRecord(const char* text);
   int             tftAddRecords(int count, const char* text[]);   // convert texts into records, returns first record id
 public:
+                  /// FA - fixed angle, DA - rotateable
   tftdynamic_t    tftPushDynamicFA(int recid, COORDINATION cr, float fx, float fy);   // horizontal, unrotateable, more fast
   tftdynamic_t    tftPushDynamicFA(const char* text, COORDINATION cr, float fx, float fy);
   tftdynamic_t    tftPushDynamicFA(int recid, COORDINATION cr, float fx, float fy, int ovlroot);   // horizontal, unrotateable, more fast
@@ -529,6 +537,17 @@ public:
 signals:
   void  selectionChanged(int);
   void  selectionDropped();
+};
+
+
+class BSQTrackerXY: public QObject, public DrawEventReactor
+{
+  Q_OBJECT
+public:
+  BSQTrackerXY(QObject* parent=nullptr);    // dont forget enable tracking by setMouseTracking(true)
+  virtual bool  reactionTracking(class DrawQWidget*, const coordstriumv_t* ct, bool* /*doStop*/);
+signals:
+  void  tracked(float x01, float y01, float xpix, float ypix);
 };
 
 ////////////////////////////////////////

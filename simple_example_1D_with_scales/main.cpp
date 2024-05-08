@@ -23,9 +23,10 @@ int main(int argc, char *argv[])
   pDraw->setData(arr_random);     // default draw bounds are 0..1
   
   DrawBars* pDB = new DrawBars(pDraw, DrawBars::CP_FROM_DRAWPALETTE);
-  pDB->addContour(AT_TOP, 0);   // horizontal line, serving as a delimiter, if you need it
-  pDB->addScaleNativeOwnbounds(AT_TOP, 0, 0, 1000.0f, 50.0f, 0.0f, 20, 50);
-  pDB->addScaleSymmetricOwnbounds(AT_LEFT, 0, 0.0f, 10.0f, 20, 32);
+  pDB->addBorder(AT_BOTTOM, 1, QColor(60,60,60));   // horizontal line, serving as a delimiter, if you need it
+  pDB->addScaleNativeOwnbounds(AT_BOTTOM, 0, 0, 1000.0f, 50.0f, 0.0f, 20, 50, 0);
+  pDB->addBorder(AT_LEFT, 1, QColor(60,60,60));   // vertical line, serving as a delimiter, if you need it
+  pDB->addScaleSymmetricOwnbounds(AT_LEFT, 0, 0.0f, 10.0f, 20, 32, 0);
   pDB->show();  // resize me :)
   
   return a.exec();

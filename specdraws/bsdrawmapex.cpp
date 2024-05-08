@@ -351,6 +351,8 @@ bool DrawMapEx::loadTo(double lat, double lon)
   delete []dataline;
   fclose(file);
   
+  pImpl->mdx = 0.0f;
+  pImpl->mdy = 0.0f;
   pImpl->cc01[0] = 0.0f;
   pImpl->cc01[1] = 0.0f;
   pImpl->cc01[2] = pImpl->center.ex;
@@ -788,6 +790,12 @@ void DrawMapEx::sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA
   *scalingA = (unsigned int)sizeA <= m_dataDimmA? 1 : (sizeA / m_dataDimmA);
   *scalingB = (unsigned int)sizeB <= m_dataDimmB? 1 : (sizeB / m_dataDimmB);
   clampScaling(scalingA, scalingB);
+}
+
+int DrawMapEx::sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool changedScalingA, bool changedScalingB)
+{
+  if (changedDimmA || changedDimmB || changedScalingA || changedScalingB)
+    emit sig_resized();
 }
 
 

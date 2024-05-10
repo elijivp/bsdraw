@@ -3,7 +3,7 @@ Source code for 4 principal types of graphs, drawed by fragment and vertex shade
 
 * Technology: Qt widgets, inherits QOpenGLWidget (Qt>=5) or QGLWidget (Qt<5) class.
 * Shaders: generated as source code and compiled after initializeGl stage on first show.
-* Compatibility: tested on qt4.8, qt5.5, qt5.12 (win/linux). GLSL version 1.30+
+* Compatibility: tested on qt4.8, qt5.5, qt5.12, qt5.14(win/linux), qt6.3(linux). GLSL version 1.30+
 * Features: fast, cross-platform, universal.
 * Note: main define called BSGLSLVER prepends each shader with string "#version %BSGLSLVER%". 
 All shaders in bsdraw are compatible with glsl 130, but by default BSGLSLVER is not set. So
@@ -982,6 +982,83 @@ And we attach to him our pointer. Example below
     pdraw->setData(data);
 
 </p></details>
+
+
+## TFTs
+
+__TFT__ is a method to add titles on draw. Deploy text record on special implicit texture called holding, so you can use text multiple times. 
+Add static or dynamic titles, linked with text record. You can move and swap titles later. You also can rotate static and dynamic titles.
+
+![overview_tfts_1.png](/demoimages/overview_tfts_1.png)
+
+![overview_tfts_2.png](/demoimages/overview_tfts_2.png)
+
+<details><summary>Code snippet</summary><p>
+    SAMPLES = 20;
+    PORTIONS = 4;
+    
+    DrawQWidget* pdraw = new DrawGraph(SAMPLES, PORTIONS, 
+                                        graphopts_t::goInterp(0.45f, DE_LINTERP), 
+                                        coloropts_t::copts(CP_MONO, 0.0f, 0.75f, 0x00666666));
+    { /// Static titles
+      QFont fnt(this->font());
+      fnt.setPointSize(12);
+      fnt.setItalic(true);
+      pdraw->tftHoldingRegister(fnt, 32, 1);  // 1. Register holding
+      pdraw->tftAddRecord("Hello world!");    // 2. Add record
+      pdraw->tftAddRecord("Click me");
+      pdraw->tftPushStatic(0, CR_RELATIVE, 0.48f, 0.52f);   // 3. Deploy title
+      pdraw->tftPushStatic(1, CR_RELATIVE, 0.47f, 0.47f);
+    }
+    
+    { /// Dynamic records
+      QFont fnt(this->font());
+      fnt.setPointSize(10);
+      fnt.setBold(true);
+      pdraw->tftHoldingRegister(fnt, 6, 8);   // auto switching on new holding
+      
+      ovl_visir = pdraw->ovlPushBack(new OActiveCursor(CR_RELATIVE, 0.5f, 0.5f));
+      char buffer[32];
+      for (int i=0; i<360; i++)
+      {
+        sprintf(buffer, "%d°", i);
+        pdraw->tftAddRecord(buffer);
+      }
+      int TOT = 12*4;
+      for (int i=0; i<TOT; i++)
+      {
+        float pr = i/float(TOT)*M_PI*2.0f;
+        pdraw->tftPushDynamicFA(i*360/TOT, CR_RELATIVE, 0.3f*sin(pr), 0.3f*cos(pr), ovl_visir);
+      }
+      
+      QTimer* tm = new QTimer();
+      tm->setSingleShot(false);
+      tm->setInterval(30);
+      QObject::connect(tm, &QTimer::timeout, [=]()
+      { 
+        for (int j=0; j<pdraw->tftDynamicsCount(); j++)
+          pdraw->tftSwitchTo(j, (pdraw->tftRecordIndex(j) + 1) % pdraw->tftRecordsCount());
+      } );
+      QTimer::singleShot(2000, tm, SLOT(start()));
+    }
+        
+    DrawBars* pdrawbars = new DrawBars(pdraw, DrawBars::CP_DEFAULT);
+    ATTACHED_TO atto[] = { AT_LEFT, AT_RIGHT, AT_TOP, AT_BOTTOM };
+    for (unsigned int i=0; i<sizeof(atto)/sizeof(ATTACHED_TO); i++)
+    {
+      pdrawbars->addScaleSymmetricEmpty(atto[i], 0, 32, 20, 4);
+      pdrawbars->addSpace(atto[i], 16);
+    }
+    
+    this->layout()->addWidget(pdrawbars);
+
+    const float* data = someGeneratedData; // at least [SAMPLES x PORTIONS] of floats
+    pdraw->setData(data);
+
+</p></details>
+
+
+
 
 
 ## Examples Usage

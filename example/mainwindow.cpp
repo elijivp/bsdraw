@@ -1077,10 +1077,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       QFont fnt(this->font());
       fnt.setPointSize(12);
       fnt.setItalic(true);
-      pdraw->tftHoldingRegister(fnt, 32, 1);
-      pdraw->tftAddRecord("Hello world!");
+      pdraw->tftHoldingRegister(fnt, 32, 1);  // 1. Register holding
+      pdraw->tftAddRecord("Hello world!");    // 2. Add record
       pdraw->tftAddRecord("Click me");
-      pdraw->tftPushStatic(0, CR_RELATIVE, 0.48f, 0.52f);
+      pdraw->tftPushStatic(0, CR_RELATIVE, 0.48f, 0.52f);   // 3. Deploy title
       pdraw->tftPushStatic(1, CR_RELATIVE, 0.47f, 0.47f);
     }
     

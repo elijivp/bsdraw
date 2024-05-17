@@ -116,7 +116,7 @@ int OPolyLine::fshOVCoords(int overlay, bool switchedab, char *to) const
     {
       ocg.goto_normed("point.xy", ptpixing, true);
       ocg.var_static(DT_2F, "point_temp=nextpoint");
-      ocg.xyscale_xy_pixel("nextpoint", ptpixing);
+      ocg.xyscale_xy_pixel_f("nextpoint", ptpixing);
       ocg.push("nextpoint = nextpoint - ioffset;");
       ocg.trace_line_from_normed_to("nextpoint");
       ocg.push("point = point_temp;");
@@ -356,11 +356,11 @@ int OHighlight::fshOVCoords(int overlay, bool switchedab, char *to) const
   {
     int cw = ocg.register_xyscaler_pixel(m_cr);
     ocg.var_fixed("gap", (float)m_gap);
-    ocg.xyscale_x_pixel("gap", cw);
+    ocg.xyscale_x_pixel_rounded("gap", cw);
     if (m_limit > 0)
     {
       ocg.var_fixed("limit", (float)m_limit);
-      ocg.xyscale_x_pixel("limit", cw);
+      ocg.xyscale_x_pixel_rounded("limit", cw);
     }
     
     ocg.goto_normed();
@@ -511,9 +511,9 @@ int OSegment::fshOVCoords(int overlay, bool switchedab, char* to) const
   {
     int cw = ocg.register_xyscaler_pixel(m_cr);
     ocg.var_fixed("gap", (float)m_gap);
-    ocg.xyscale_x_pixel("gap", cw);
+    ocg.xyscale_x_pixel_rounded("gap", cw);
     ocg.var_fixed("size", (float)m_size);
-    ocg.xyscale_x_pixel("size", cw);
+    ocg.xyscale_x_pixel_rounded("size", cw);
     
     ocg.goto_normed();
     ocg.trace_2linehorz_c("size", "gap");

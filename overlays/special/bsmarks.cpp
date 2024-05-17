@@ -43,7 +43,7 @@ int OMarkDashs::fshOVCoords(int overlay, bool switchedab, char *to) const
     int fc = 0;
     if (m_featcn != CR_SAME)
       fc = ocg.register_xyscaler_pixel(m_featcn);
-    ocg.xyscale_y_pixel("marksize", fc);
+    ocg.xyscale_y_pixel_rounded("marksize", fc);
     
     ocg.param_for_arr_begin("mark");
     {
@@ -105,7 +105,7 @@ int OCluster::fshOVCoords(int overlay, bool switchedab, char *to) const
     int fc = 0;
     if (m_featcn != CR_SAME)
       fc = ocg.register_xyscaler_pixel(m_featcn);
-    ocg.xyscale_x_pixel("fsize", fc);
+    ocg.xyscale_x_pixel_f("fsize", fc);
     
 //    ocg.var_fixed("opacity", m_figopc);
     

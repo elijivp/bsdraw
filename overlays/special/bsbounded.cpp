@@ -209,13 +209,13 @@ int _OLevelSet::fshOVCoords(int overlay, bool switchedab, char* to) const
     int fc = ocg.register_xyscaler_pixel(m_cn);
     if (m_lt == LT_HORZ)//_BYLEFT || m_lt == LT_HORZ_BYRIGHT)
     {
-      ocg.xyscale_x_pixel("cs_mr1", fc);
-      ocg.xyscale_x_pixel("cs_mr2", fc);
+      ocg.xyscale_x_pixel_rounded("cs_mr1", fc);
+      ocg.xyscale_x_pixel_rounded("cs_mr2", fc);
     }
     else
     {
-      ocg.xyscale_y_pixel("cs_mr1", fc);
-      ocg.xyscale_y_pixel("cs_mr2", fc);
+      ocg.xyscale_y_pixel_rounded("cs_mr1", fc);
+      ocg.xyscale_y_pixel_rounded("cs_mr2", fc);
     }
     
     ocg.var_array_ff_empty("oc", dtarr.count);
@@ -232,12 +232,12 @@ int _OLevelSet::fshOVCoords(int overlay, bool switchedab, char* to) const
       
       if (m_lt == LT_HORZ) //_BYLEFT || m_lt == LT_HORZ_BYRIGHT)
       {
-        ocg.xyscale_y_pixel("oc[i][1]", fc);
+        ocg.xyscale_y_pixel_rounded("oc[i][1]", fc);
         ocg.push("float rs = oc[i][1] - float(icoords.y);");
       }
       else
       {
-        ocg.xyscale_x_pixel("oc[i][1]", fc);
+        ocg.xyscale_x_pixel_rounded("oc[i][1]", fc);
         ocg.push("float rs = oc[i][1] - float(icoords.x);");
       }
       ocg.push("float cup = step(1.0, oc[i][0]) * step(abs(rs), abs(loffs));");

@@ -116,8 +116,8 @@ int OGridRegular::fshOVCoords(int overlay, bool switchedab, char *to) const
       
       if (ishorz_regular)       ocg.xyscale_y_01("grid_step", step_xys_01);
       else if (isvert_regular)  ocg.xyscale_x_01("grid_step", step_xys_01);
-      else if (ishorz_risk){    ocg.xyscale_y_01("grid_step", step_xys_01);   ocg.xyscale_x_pixel("grid_height", risk_pixing_height);   }
-      else if (isvert_risk){    ocg.xyscale_x_01("grid_step", step_xys_01);   ocg.xyscale_y_pixel("grid_height", risk_pixing_height);   }
+      else if (ishorz_risk){    ocg.xyscale_y_01("grid_step", step_xys_01);   ocg.xyscale_x_pixel_rounded("grid_height", risk_pixing_height);   }
+      else if (isvert_risk){    ocg.xyscale_x_01("grid_step", step_xys_01);   ocg.xyscale_y_pixel_rounded("grid_height", risk_pixing_height);   }
       
 //      ocg.push( "int optiid = int(crossed/grid_step + sign(crossed)*0.49);"
       ocg.push( "int optiid = int(crossed/grid_step + sign(crossed)*0.5);"
@@ -139,12 +139,12 @@ int OGridRegular::fshOVCoords(int overlay, bool switchedab, char *to) const
   
       if (ishorz_regular || ishorz_risk)
       {
-        ocg.xyscale_y_pixel("offset", step_xys_px);
+        ocg.xyscale_y_pixel_f("offset", step_xys_px);
         ocg.trace_2linehorz_c(ishorz_risk? "grid_height" : nullptr, nullptr, "offset", "limiter");
       }
       else if (isvert_regular || isvert_risk)
       {
-        ocg.xyscale_x_pixel("offset", step_xys_px);
+        ocg.xyscale_x_pixel_f("offset", step_xys_px);
         ocg.trace_2linevert_c(isvert_risk? "grid_height" : nullptr, nullptr, "offset", "limiter");
       }
     }
@@ -180,7 +180,7 @@ int OGridCircular::fshOVCoords(int overlay, bool switchedab, char *to) const
       int fc = 0;
       if (m_featcn != CR_SAME)
         fc = ocg.register_xyscaler_pixel(m_featcn);
-      ocg.xyscale_x_pixel("grid_step", fc);
+      ocg.xyscale_x_pixel_f("grid_step", fc);
       
 //      ocg.var_const_static(DT_1F, "border = 1.5");
       ocg.var_fixed("border", m_border);
@@ -227,8 +227,8 @@ int OGridDecart::fshOVCoords(int overlay, bool switchedab, char *to) const
     
     ocg.var_fixed("cs_lims_lr", m_limits[0], m_limits[1]);
     ocg.var_fixed("cs_lims_tb", m_limits[2], m_limits[3]);
-    ocg.xyscale_xy_pixel("cs_lims_lr", 0);
-    ocg.xyscale_xy_pixel("cs_lims_tb", 0);
+    ocg.xyscale_xy_pixel_rounded("cs_lims_lr", 0);
+    ocg.xyscale_xy_pixel_rounded("cs_lims_tb", 0);
     if (m_limits[0] != 0.0f)  ocg.trace_linehorz_r(m_limits[0] < 0? nullptr:"cs_lims_lr[0]");
     if (m_limits[1] != 0.0f)  ocg.trace_linehorz_l(m_limits[1] < 0? nullptr:"cs_lims_lr[1]");
     
@@ -253,7 +253,7 @@ int OGridDecart::fshOVCoords(int overlay, bool switchedab, char *to) const
       
       int sh = (int)(m_riskheight/2) + 1;
       ocg.var_fixed("risk_height", sh == 0? 1 : sh);
-      ocg.xyscale_xy_pixel("offset", steps_xys_px);
+      ocg.xyscale_xy_pixel_f("offset", steps_xys_px);
       ocg.trace_2linevert_c("risk_height", "2", "offset.x",
                               m_limits[0] < 0?
                                 m_limits[1] < 0? nullptr : "mix(step(offset.x, cs_lims_lr[1]), 1.0, step(offset.x, 0.0))" :

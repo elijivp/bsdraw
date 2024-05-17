@@ -101,10 +101,13 @@ enum  DTYPE       /// Trace/simple shader datatypes
               DT_ARRI, DT_ARRI2, DT_ARRI3, DT_ARRI4, 
               DT_1I, DT_2I, DT_3I, DT_4I,
                   _DT_TEXTURES_BEGIN,
-              DT_SAMP4=_DT_TEXTURES_BEGIN, DT_2D3F, DT_TEXTURE, DT_PALETTE
+              DT_SAMP4=_DT_TEXTURES_BEGIN, DT_2D3F, DT_TEXTURE, DT_PALETTE, 
+                  _DT_TEXTUREARRAYS_BEGIN,
+              DT_TEXTURE_2D_ARRAY= _DT_TEXTUREARRAYS_BEGIN
 };
 
-inline bool dtIsTexture(DTYPE dtype) { return dtype >= _DT_TEXTURES_BEGIN; }
+inline bool dtIsTexture(DTYPE dtype) { return dtype >= _DT_TEXTURES_BEGIN && dtype < _DT_TEXTUREARRAYS_BEGIN; }
+inline bool dtIsTextureArray(DTYPE dtype) { return dtype >= _DT_TEXTUREARRAYS_BEGIN; }
 
 struct dmtype_t
 {
@@ -137,6 +140,14 @@ struct dmtype_image_t
   int           type;
   unsigned int  w, h;
   const void*   data;
+};
+
+struct dmtype_samplerarray_t    /// rgba for now, nte
+{
+  unsigned int    w, h;
+  unsigned int    layers; // data arr count
+  const void**    data;
+  bool            linsmooth;
 };
 
 class IPalette;

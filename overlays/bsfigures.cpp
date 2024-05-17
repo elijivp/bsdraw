@@ -270,7 +270,8 @@ int   OFLine::fshOVCoords(int overlay, bool switchedab, char* to) const
     if (m_lt == -1)
     {
       ocg.var_fixed("endpoint", m_param1, m_param2);
-      ocg.xyscale_xy_pixel("endpoint", 0);
+//      ocg.xyscale_xy_pixel("endpoint", 0);
+      ocg.xyscale_xy_pixel_f("endpoint", 0);
       ocg.push("endpoint = endpoint - ioffset;");
       ocg.trace_line_from_normed_to("endpoint");
     }
@@ -283,13 +284,13 @@ int   OFLine::fshOVCoords(int overlay, bool switchedab, char* to) const
         int fc = ocg.register_xyscaler_pixel(m_featcn);
         if (m_lt == LT_HORZ_SYMMETRIC || m_lt == LT_HORZ_BYLEFT || m_lt == LT_CROSS)
         {
-          ocg.xyscale_x_pixel("cs_gap", fc);
-          ocg.xyscale_x_pixel("cs_size", fc);
+          ocg.xyscale_x_pixel_rounded("cs_gap", fc);
+          ocg.xyscale_x_pixel_rounded("cs_size", fc);
         }
         else
         {
-          ocg.xyscale_y_pixel("cs_gap", fc);
-          ocg.xyscale_y_pixel("cs_size", fc);
+          ocg.xyscale_y_pixel_rounded("cs_gap", fc);
+          ocg.xyscale_y_pixel_rounded("cs_size", fc);
         }
       }
 //      ocg.var_fixed("cs_size2", (float)(m_param2 - m_param1));
@@ -359,7 +360,7 @@ int   OFRay::fshOVCoords(int overlay, bool switchedab, char* to) const
     {
       int relcn = ocg.register_xyscaler_pixel(m_additcn == CR_SAME? this->getCoordination() : m_additcn);
       ocg.var_fixed("limit", m_length);
-      ocg.xyscale_x_pixel("limit", relcn);
+      ocg.xyscale_x_pixel_f("limit", relcn);  // ?_f?
       limit = "limit";
     }
     ocg.trace_ray_trough("icoords - ioffset - inormed;", limit);
@@ -398,7 +399,7 @@ int   OFArrow::fshOVCoords(int overlay, bool switchedab, char* to) const
   {
     ocg.goto_normed();
     ocg.var_static(DT_2F, "norm_end = endpoint");
-    ocg.xyscale_xy_pixel("norm_end", 0);
+    ocg.xyscale_xy_pixel_f("norm_end", 0);
     ocg.push("norm_end = norm_end - ioffset;");
 //    ocg.push("angle = atan2(norm_end.x, norm_end.y);");
     ocg.push("angle = atan(norm_end.x, norm_end.y);");
@@ -412,7 +413,7 @@ int   OFArrow::fshOVCoords(int overlay, bool switchedab, char* to) const
       if (i == 0) ocg.push("newangle = angle - 0.25;");
       else ocg.push("newangle = angle + 0.25;");
       ocg.push("arrow = 1.0*vec2(sin(newangle), cos(newangle));");
-      ocg.xyscale_xy_pixel("arrow", arrow_pixing);
+      ocg.xyscale_xy_pixel_f("arrow", arrow_pixing);
       ocg.trace_line_from_normed_to("arrow");
     }
   }
@@ -448,7 +449,7 @@ int OFCross::fshOVCoords(int overlay, bool switchedab, char *to) const
   {
     ocg.goto_normed();
     ocg.var_fixed("cs_gap", m_gap);
-    ocg.xyscale_x_pixel("cs_gap", 1);
+    ocg.xyscale_x_pixel_rounded("cs_gap", 1);
     ocg.trace_lines_x("idimms1", "cs_gap");
   }
   ocg.goto_func_end(true);
@@ -522,7 +523,7 @@ int   OFVisir::fshOVCoords(int overlay, bool switchedab, char* to) const
   {
     ocg.goto_normed();
     ocg.var_fixed("gap", m_gap, m_gap);
-    ocg.xyscale_xy_pixel("gap", 1);
+    ocg.xyscale_xy_pixel_rounded("gap", 1);
 
     ocg.push("vec2 nosig = vec2(-1.0 + 2.0*step(0.0, float(inormed.x)), -1.0 + 2.0*step(0.0, float(inormed.y)));");
     
@@ -570,7 +571,7 @@ int   OFFactor::fshOVCoords(int overlay, bool switchedab, char* to) const
   {
     ocg.goto_normed();
     ocg.var_fixed("gap", m_gap, m_gap);
-    ocg.xyscale_xy_pixel("gap", 1);
+    ocg.xyscale_xy_pixel_rounded("gap", 1);
     
     ocg.var_static(DT_2F, "cs_sizegapped = idimms2 - gap");
     ocg.trace_2linehorz_c("cs_sizegapped.x", "gap.x");
@@ -606,7 +607,7 @@ int   OFPointrun::fshOVCoords(int overlay, bool switchedab, char* to) const
     ocg.goto_normed();
     int amp = ocg.register_xyscaler_pixel(m_cr);
     ocg.var_fixed("gap", m_gap);
-    ocg.xyscale_x_pixel("gap", amp);
+    ocg.xyscale_x_pixel_rounded("gap", amp);
     
     
     if (m_speed <= 0)
@@ -658,7 +659,7 @@ int   OFSubjectif::fshOVCoords(int overlay, bool switchedab, char* to) const
   {
     ocg.goto_normed();
     ocg.var_fixed("gap", m_gap);
-    ocg.xyscale_x_pixel("gap", 1);
+    ocg.xyscale_x_pixel_rounded("gap", 1);
     
 //    ocg.push("ivec2 ofs = ivec2(sign(inormed.x)*idimms2.x, sign(inormed.y)*idimms2.y);");   // symmetric cross in center
     
@@ -700,7 +701,7 @@ int   OFObjectif::fshOVCoords(int overlay, bool switchedab, char* to) const
   {
     ocg.goto_normed();
     ocg.var_fixed("gap", m_gap[0], m_gap[1]);
-    ocg.xyscale_xy_pixel("gap", 1);
+    ocg.xyscale_xy_pixel_rounded("gap", 1);
     
 //    ocg.push("ivec2 ofs = ivec2(sign(inormed.x)*idimms2.x, sign(inormed.y)*idimms2.y);");   // symmetric cross in center
     ocg.push("ivec2 ofs = ivec2(mix(idimms2.x, -idimms2.x, step(float(inormed.x), 0)), mix(idimms2.y, -idimms2.y, step(float(inormed.y), 0)));");

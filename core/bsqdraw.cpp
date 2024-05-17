@@ -235,15 +235,14 @@ void DrawQWidget::initCollectAndCompileShader()
       fdm.generic_decls_add_ovl_input(i, m_overlays[i]._varname);
       _Ovldraw::uniforms_t  uf = m_overlays[i].povl->uniforms();
       m_overlays[i].uf_count = uf.count;
-      m_overlays[i].texcount = 0;
       for (unsigned int j=0; j<uf.count; j++)
       {
         m_overlays[i].uf_arr[j]._location = -1;
         m_overlays[i].uf_arr[j].type = uf.arr[j].type;
         m_overlays[i].uf_arr[j].dataptr = uf.arr[j].dataptr;
+        m_overlays[i].uf_arr[j].c_istex = dtIsTexture(m_overlays[i].uf_arr[j].type);
+        m_overlays[i].uf_arr[j].c_istexarray = dtIsTextureArray(m_overlays[i].uf_arr[j].type);
         fdm.generic_decls_add_ovl_nameonly(i, j, m_overlays[i].uf_arr[j].type, m_overlays[i].uf_arr[j]._varname);
-        if (dtIsTexture(m_overlays[i].uf_arr[j].type))
-          m_overlays[i].texcount += 1;
       }
     }
   }
@@ -378,7 +377,6 @@ void DrawQWidget::initCollectAndCompileShader()
     {
       m_locationSecondary[i].location = m_ShaderProgram.uniformLocation(additufm_desc[i].varname);
       m_locationSecondary[i].istexture = additufm_desc[i].type >= _DT_TEXTURES_BEGIN;
-      //qDebug()<<additufm_desc[i].varname<<additufm_desc[i].istexture<<m_locationSecondary[i].location<<m_texturesCount;
       if (m_locationSecondary[i].istexture)
         glGenTextures(1, &m_textures[m_texturesCount++]);
     }
@@ -392,6 +390,7 @@ void DrawQWidget::initCollectAndCompileShader()
         if (m_holders[t] == nullptr)  continue;
         
         glGenTextures(1, &m_textures[m_texturesCount++]);
+        
         m_holders[t]->_location = m_ShaderProgram.uniformLocation(m_holders[t]->_varname);
         m_holders[t]->ponger = 0;
         
@@ -411,9 +410,11 @@ void DrawQWidget::initCollectAndCompileShader()
       {
         m_overlays[i]._location = m_ShaderProgram.uniformLocation(m_overlays[i]._varname);  /// ! cannot hide by upcount
         for (unsigned int j=0; j<m_overlays[i].uf_count; j++)
+        {
           m_overlays[i].uf_arr[j]._location = m_ShaderProgram.uniformLocation(m_overlays[i].uf_arr[j]._varname);
-        for (unsigned int t=0; t<m_overlays[i].texcount; t++)
-          glGenTextures(1, &m_textures[m_texturesCount++]);
+          if (m_overlays[i].uf_arr[j].c_istex || m_overlays[i].uf_arr[j].c_istexarray)
+            glGenTextures(1, &m_textures[m_texturesCount++]);
+        }
         m_overlays[i].ponger_reinit = m_overlays[i].ponger_update = 0;
       }
     } // init ovl
@@ -746,11 +747,21 @@ void DrawQWidget::paintGL()
   {
     for (unsigned int o=0; o<m_overlaysCount; o++)
     {
-      for (unsigned int i=0; i<m_overlays[o].texcount; i++)
+//      for (unsigned int i=0; i<m_overlays[o].texcount; i++)
+//      {
+//        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+//        glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
+//        CORR_TEX++;
+//      }
+      overlay_t& ovl = m_overlays[o];
+      for (unsigned int i=0; i<ovl.uf_count; i++)
       {
-        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
-        glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
-        CORR_TEX++;
+        if (ovl.uf_arr[i].c_istex || ovl.uf_arr[i].c_istexarray)
+        {
+          glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+          glBindTexture(ovl.uf_arr[i].c_istex ? GL_TEXTURE_2D : GL_TEXTURE_2D_ARRAY, m_textures[CORR_TEX]);
+          CORR_TEX++;
+        }
       }
     }
   }
@@ -879,6 +890,47 @@ void DrawQWidget::paintGL()
               CORR_TEX++;
               break;
             }
+            case DT_TEXTURE_2D_ARRAY:
+            {
+              glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+              glBindTexture(GL_TEXTURE_2D_ARRAY, m_textures[CORR_TEX]);
+              
+              const dmtype_samplerarray_t* psmparr = (const dmtype_samplerarray_t*)ufm.dataptr;
+              const GLint   gl_internalFormat = GL_RGBA8;
+              const GLenum  gl_format = GL_RGBA;
+              const GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
+              int width = psmparr->w;
+              int height = psmparr->h;
+              
+              {
+                int LAY = psmparr->layers;
+                glTexStorage3D(  GL_TEXTURE_2D_ARRAY, LAY, gl_internalFormat, width, height, LAY);
+                for (int r=0; r<LAY; r++)
+                  glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, r, width, height, 1, gl_format, gl_texture_type, psmparr->data[r]);
+//                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, psmparr->linsmooth ? GL_LINEAR : GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, psmparr->linsmooth ? GL_LINEAR : GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+                glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+                glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+                
+                glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+                glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+                glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+                glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+#if QT_VERSION >= 0x050000
+                glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+                glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
+#endif
+                glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+              }
+              
+              m_ShaderProgram.setUniformValue(loc, CORR_TEX);
+              CORR_TEX++;
+              break;
+            }
             default:
             qDebug()<<"BSDraw failure: unknown parameter type!";
             break;
@@ -889,11 +941,20 @@ void DrawQWidget::paintGL()
       } // if upcount
       else
       {
-        for (unsigned int i=0; i<ovl.texcount; i++)
+//        for (unsigned int i=0; i<ovl.texcount; i++)
+//        {
+//          glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+//          glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
+//          CORR_TEX++;
+//        }
+        for (unsigned int i=0; i<ovl.uf_count; i++)
         {
-          glActiveTexture(GL_TEXTURE0 + CORR_TEX);
-          glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
-          CORR_TEX++;
+          if (ovl.uf_arr[i].c_istex || ovl.uf_arr[i].c_istexarray)
+          {
+            glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+            glBindTexture(ovl.uf_arr[i].c_istex ? GL_TEXTURE_2D : GL_TEXTURE_2D_ARRAY, m_textures[CORR_TEX]);
+            CORR_TEX++;
+          }
         }
       }
     } // for overlays

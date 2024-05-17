@@ -146,9 +146,12 @@ public:
   void  var_static(const char* name, const char* value);
   void  var_const_static(DTYPE type, const char* name_eq_value);
   
-  void  xyscale_x_pixel(const char* name, int resc_idx);
-  void  xyscale_y_pixel(const char* name, int resc_idx);
-  void  xyscale_xy_pixel(const char* name, int resc_idx);
+  void  xyscale_x_pixel_f(const char* name, int resc_idx);
+  void  xyscale_x_pixel_rounded(const char* name, int resc_idx);
+  void  xyscale_y_pixel_f(const char* name, int resc_idx);
+  void  xyscale_y_pixel_rounded(const char* name, int resc_idx);
+  void  xyscale_xy_pixel_f(const char* name, int resc_idx);
+  void  xyscale_xy_pixel_rounded(const char* name, int resc_idx);
   
   void  xyscale_x_01(const char* name, int resc_idx);
   void  xyscale_y_01(const char* name, int resc_idx);

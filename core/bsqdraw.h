@@ -136,6 +136,7 @@ protected:
   float                   m_viewAlignVert;
   float                   m_viewTurn;
 protected:
+//  enum  { TT_SINGLE, TT_2DARRAY };
   unsigned int            m_textures[MAX_TEXTURES];
   unsigned int            m_texturesCount;
 public:

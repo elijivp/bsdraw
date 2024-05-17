@@ -505,11 +505,14 @@ void FshOVCoordsConstructor::var_const_static(DTYPE type, const char *name_eq_va
 
 
 
-void FshOVCoordsConstructor::xyscale_x_pixel(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(float(%s*xyscaler_px_%d.x)" _RPLUS_05 ");" SHNL, name, name, resc_idx); }
+void FshOVCoordsConstructor::xyscale_x_pixel_f(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = float(%s*xyscaler_px_%d.x);" SHNL, name, name, resc_idx); }
+void FshOVCoordsConstructor::xyscale_x_pixel_rounded(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(float(%s*xyscaler_px_%d.x)" _RPLUS_05 ");" SHNL, name, name, resc_idx); }
 
-void FshOVCoordsConstructor::xyscale_y_pixel(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(float(%s*xyscaler_px_%d.y)" _RPLUS_05 ");" SHNL, name, name, resc_idx); }
+void FshOVCoordsConstructor::xyscale_y_pixel_f(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = float(%s*xyscaler_px_%d.y);" SHNL, name, name, resc_idx); }
+void FshOVCoordsConstructor::xyscale_y_pixel_rounded(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(float(%s*xyscaler_px_%d.y)" _RPLUS_05 ");" SHNL, name, name, resc_idx); }
 
-void FshOVCoordsConstructor::xyscale_xy_pixel(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(vec2(%s*xyscaler_px_%d)" _RPLUS_05 ");" SHNL, name, name, resc_idx); }
+void FshOVCoordsConstructor::xyscale_xy_pixel_f(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = vec2(%s*xyscaler_px_%d);" SHNL, name, name, resc_idx); }
+void FshOVCoordsConstructor::xyscale_xy_pixel_rounded(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(vec2(%s*xyscaler_px_%d)" _RPLUS_05 ");" SHNL, name, name, resc_idx); }
 
 void FshOVCoordsConstructor::xyscale_x_01(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = %s/xyscaler_01_%d.x;" SHNL, name, name, resc_idx); }
 

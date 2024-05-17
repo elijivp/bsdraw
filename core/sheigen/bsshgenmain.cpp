@@ -798,12 +798,18 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft)
     }
     else
     {
+//      m_offset += msprintf(&m_to[m_offset],       SHGP "vec3  tcoords = vec3((int(mod(tft_rec,%d))/%d + (rc.x/%f + 0.5))*%f, "
+//                                                                             "1.0 - (mod(mod(tft_rec,%d),%d) + pc)*%f, "
+//                                                                             "float(tft_rec/%d)/%f);" SHNL,
+//                                                    limit, tft.limitrows, float(tft.recordwidth), oneroww,
+//                                                    limit, tft.limitrows, onerowh, 
+//                                                    limit, float(tft.texcount == 1? 1 : tft.texcount-1));
       m_offset += msprintf(&m_to[m_offset],       SHGP "vec3  tcoords = vec3((int(mod(tft_rec,%d))/%d + (rc.x/%f + 0.5))*%f, "
                                                                              "1.0 - (mod(mod(tft_rec,%d),%d) + pc)*%f, "
-                                                                             "float(tft_rec/%d)/%f);" SHNL,
+                                                                             "float(tft_rec/%d));" SHNL, // MEOW!!
                                                     limit, tft.limitrows, float(tft.recordwidth), oneroww,
                                                     limit, tft.limitrows, onerowh, 
-                                                    limit, float(tft.texcount == 1? 1 : tft.texcount-1));
+                                                    limit);
     }
 #else
     if (tft.limitcols == 1)

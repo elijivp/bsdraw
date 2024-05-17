@@ -12,7 +12,8 @@ static const char* glsl_types[] = { "float", "vec2", "vec3", "vec4",
                                     "int",  "ivec2", "ivec3", "ivec4", 
 //                                    "vec2", "vec3", "vec4", 
                                     "int", "ivec2", "ivec3", "ivec4",
-                                    "sampler2D", "sampler2D", "sampler2D", "sampler2D"
+                                    "sampler2D", "sampler2D", "sampler2D", "sampler2D",
+                                    "sampler2DArray"
                                      };
 
 #ifndef SHNL

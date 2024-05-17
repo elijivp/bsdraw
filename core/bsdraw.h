@@ -185,6 +185,9 @@ protected:
     DTYPE               type;
     const void*         dataptr;
     
+    bool                c_istex;
+    bool                c_istexarray;
+    
     int                 _location;
     char                _varname[64];
   };
@@ -204,7 +207,6 @@ protected:
     char                  _varname[64];
     
     unsigned int          uf_count;
-    unsigned int          texcount;
     uniform_located_t     uf_arr[OVLUFLIMIT];
     
     void      _reinit(Ovldraw* p, OVL_ORIENTATION o, unsigned int ufcount)
@@ -215,12 +217,11 @@ protected:
       prct_bans = 0;
       ponger_reinit = ponger_update = 0;
       _location = -1;
-      texcount = 0;
       uf_count = ufcount;
       driven_id = -1;
     }
     void      _setdriven(int driverid){ driven_id = driverid; }
-    overlay_t(): povl(nullptr), orient(OO_INHERITED), prct(nullptr), prct_bans(0), uf_count(0), texcount(0){}
+    overlay_t(): povl(nullptr), orient(OO_INHERITED), prct(nullptr), prct_bans(0), uf_count(0){}
 //    ~overlay_t() { if (uf_count) delete[]uf_arr; }
   }                     m_overlays[OVLLIMIT];
   unsigned int          m_overlaysCount;

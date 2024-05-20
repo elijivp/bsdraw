@@ -48,30 +48,40 @@ public:
       bool isInterpD = graphopts.graphtype == GT_LINTERP_D;
       
       
-      if (!isHistogram) /// for graphs and dots [0.0,1.0] values (their visual repr) are inside draw area
-      {
+      if (isHistogram)   /// for histograms 0.0 is under area, 1.0 is full filled area
+      { 
         static const char graph_locals[] = 
-                                          "vec2  ab_datadm = vec2(ab_indimms) - vec2(1);" SHNL     // ab - ABoriented, dm - dimm
-                                          "vec2  ab_viewdm = vec2(ab_ibounds) - vec2(1);" SHNL     
-                                          "float bself_datasc = floor(abc_coords.y*ab_datadm.y);" SHNL
+                                          "vec2  ab_datadm = vec2(ab_indimms);" SHNL     // ab - ABoriented, dm - dimm
+                                          "vec2  ab_viewdm = vec2(ab_ibounds);" SHNL     // - vec2(1) here destroys overpatterns
+                                          "float bself_datasc = 1.0 + floor(abc_coords.y*ab_datadm.y);" SHNL
                                           "float bself_viewsc = floor(abc_coords.y*ab_viewdm.y);" SHNL
                                         ;
         fdc.push(graph_locals);
-      }
-      else    /// for histograms 0.0 is under area, 1.0 is full filled area
-      {
-        static const char graph_locals[] = 
-                                          "vec2  ab_datadm = vec2(ab_indimms);" SHNL     // ab - ABoriented, dm - dimm
-                                          "vec2  ab_viewdm = vec2(ab_ibounds);" SHNL     
-                                          "float bself_datasc = floor(abc_coords.y*ab_datadm.y);" SHNL
-                                          "float bself_viewsc = floor(abc_coords.y*ab_viewdm.y);" SHNL   /// ! no floor.  ???????????
-                                        ;
-        fdc.push(graph_locals);
-      }
-      
-      
-      if (isHistogram)
         fdc.push("vec4 neib = vec4(0.0, 0.0, 0.0, 0.0);" SHNL);  /// min, max, max_allow
+      }
+      else   /// for graphs and dots [0.0,1.0] values (their visual repr) are inside draw area
+      {
+        if (isInterpD)
+        {
+          static const char graph_locals[] = 
+                                            "vec2  ab_datadm = vec2(ab_indimms) - vec2(1);" SHNL     // ab - ABoriented, dm - dimm
+                                            "vec2  ab_viewdm = vec2(ab_ibounds) - vec2(1);" SHNL     
+                                            "float bself_datasc = abc_coords.y*ab_datadm.y;" SHNL
+                                            "float bself_viewsc = abc_coords.y*ab_viewdm.y;" SHNL   /// ! no floor.  ???????????
+                                          ;
+          fdc.push(graph_locals);
+        }
+        else
+        {
+          static const char graph_locals[] = 
+                                            "vec2  ab_datadm = vec2(ab_indimms);" SHNL     // ab - ABoriented, dm - dimm
+                                            "vec2  ab_viewdm = vec2(ab_ibounds);" SHNL     
+                                            "float bself_datasc = abc_coords.y*ab_datadm.y;" SHNL
+                                            "float bself_viewsc = abc_coords.y*ab_viewdm.y;" SHNL   /// ! no floor.  ???????????
+                                          ;
+          fdc.push(graph_locals);
+        }
+      }
       
       if (isHistogram || isInterp || isInterpD)
         fdc.cfloatvar("specsmooth", graphopts.smooth < -0.5f? -0.5f : graphopts.smooth);
@@ -178,8 +188,10 @@ public:
                     "float ax[fcnt], bv[fcnt];" SHNL
                     "for (int j=0; j<fcnt; j++)" SHNL
                     "{" SHNL
-                      "ax[j] = floor(abc_coords.x*ab_datadm.x - fcnt/2.0 + 1 + j)/ab_datadm.x;" SHNL      ///  FLOOR???????     I DONT UNDERSTAND!!
+//                      "ax[j] = floor(abc_coords.x*ab_datadm.x - fcnt/2.0 + 1 + j)/ab_datadm.x;" SHNL      ///  FLOOR???????     I DONT UNDERSTAND!!
+//                      "bv[j] = getValue1D(i, ax[j]);" SHNL
 //                      "ax[j] = (abc_coords.x*ab_datadm.x - fcnt/2.0 + 1 + j)/ab_datadm.x;" SHNL      ///  FLOOR???????
+                      "ax[j] = floor(abc_coords.x*ab_datadm.x - fcnt/2.0 + 1 + j)/ab_datadm.x;" SHNL      ///  FLOOR???????     I DONT UNDERSTAND!!
                       "bv[j] = getValue1D(i, ax[j]);" SHNL
                     "}" SHNL
 //                    "vec2  bv_datasc = floor(bv*ab_datadm.y);" SHNL
@@ -521,7 +533,8 @@ public:
                   );
         
         if (graphopts.postrect == PR_VALUEAROUND || graphopts.postrect == PR_SUMMARY)
-          fdc.push("ivec2 fhit_rect = ivec2(0, int(bv_datasc[1])*(ab_iscaler.y) + ab_iscaler.y - 1);" SHNL);
+//          fdc.push("ivec2 fhit_rect = ivec2(0, int(bv_datasc[1])*(ab_iscaler.y) + ab_iscaler.y - 1);" SHNL);
+          fdc.push("ivec2 fhit_rect = ivec2(ab_iscaler.y, int(bv_datasc[1])*(ab_iscaler.y) + ab_iscaler.y - 1);" SHNL); // ab_iscaler.y compensates (0,1]
 //          fdc.push("ivec2 fhit_rect = ivec2(0, int(bv_datasc[1]*(ab_iscaler.y+1) + 0.5)-1);" SHNL);
         
         if (graphopts.graphtype == GT_HISTOGRAM_MESH)
@@ -564,10 +577,12 @@ public:
           fdc.push("post_mask[0] = post_mask[0]*(1.0 - fhit.y)*(1.0 - fhit.x) + fhit.y*fhit.x;" SHNL);
         else if (graphopts.postrect == PR_VALUEAROUND)
           fdc.push("post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL
-                   "imrect.ga = int(1.0 - fhit.x)*imrect.ga + int(fhit.x)*ivec2(bself_viewsc - fhit_rect[0], fhit_rect[1] - fhit_rect[0]);" SHNL);
+//                   "imrect.ga = int(1.0 - fhit.x)*imrect.ga + int(fhit.x)*ivec2(bself_viewsc - fhit_rect[0], fhit_rect[1] - fhit_rect[0]);" SHNL);
+                   "imrect.ga = int(1.0 - fhit.x)*imrect.ga + int(fhit.x)*ivec2(bself_viewsc + fhit_rect[0], fhit_rect[1]);" SHNL);
         else if (graphopts.postrect == PR_SUMMARY)
           fdc.push("post_mask[0] = post_mask[0]*(1.0 - (fhit.x + fhit.z)) + (fhit.x + fhit.z);" SHNL
-                   "imrect.ga = int(1.0 - (fhit.x - fhit.y))*imrect.ga + int(fhit.x - fhit.y)*ivec2(bself_viewsc - fhit_rect[0], fhit_rect[1] - fhit_rect[0]);" SHNL);
+//                   "imrect.ga = int(1.0 - (fhit.x - fhit.y))*imrect.ga + int(fhit.x - fhit.y)*ivec2(bself_viewsc - fhit_rect[0], fhit_rect[1] - fhit_rect[0]);" SHNL);
+                   "imrect.ga = int(1.0 - (fhit.x - fhit.y))*imrect.ga + int(fhit.x - fhit.y)*ivec2(bself_viewsc + fhit_rect[0], fhit_rect[1]);" SHNL);
       }
       
       

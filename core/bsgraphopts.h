@@ -52,8 +52,13 @@ struct  graphopts_t
   static graphopts_t goInterp(float smoothcoef, BSDESCALING ds=DE_NONE, int dotsize=0, float dotsmooth=0.0f)
   { graphopts_t result = { GT_LINTERP_B, ds, 0.0f, dotsize, dotsmooth, smoothcoef, PR_STANDARD}; return result; }
   
-  static graphopts_t goInterpD(int dotsize=0, float dotsmooth=0.0f)
-  { graphopts_t result = { GT_LINTERP_D, DE_NONE, 0.0f, dotsize, dotsmooth, 0.25f, PR_STANDARD }; return result;  }
+  static graphopts_t goInterpB(BSDESCALING ds, int dotsize=0, float dotsmooth=0.0f)
+  { graphopts_t result = { GT_LINTERP_B, ds, 0.0f, dotsize, dotsmooth, 0.5f, PR_STANDARD }; return result;  }
+  static graphopts_t goInterpB(float smoothcoef, BSDESCALING ds=DE_NONE, int dotsize=0, float dotsmooth=0.0f)
+  { graphopts_t result = { GT_LINTERP_B, ds, 0.0f, dotsize, dotsmooth, smoothcoef, PR_STANDARD}; return result; }
+    
+  static graphopts_t goInterpD(float smoothcoef, float dsmooth)
+  { graphopts_t result = { GT_LINTERP_D, DE_NONE, dsmooth, 0, 0, smoothcoef, PR_STANDARD}; return result; }
   static graphopts_t goInterpD(float smoothcoef, float dsmooth, int dotsize, float dotsmooth=0.0f)
   { graphopts_t result = { GT_LINTERP_D, DE_NONE, dsmooth, dotsize, dotsmooth, smoothcoef, PR_STANDARD}; return result; }
   

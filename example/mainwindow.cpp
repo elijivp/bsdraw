@@ -585,8 +585,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     AFTERCREATE_DRAW2D
     
+    sigtype = ST_GEN_NORM;
     sp = SP_SLOWEST;
-    sigtype = ST_GEN_NORM;    
+//    sigtype = ST_ZOZ;
+//    sp = SP_ONCE;
   }
   else if (MW_TEST == OVERVIEW_1D_1)
   {

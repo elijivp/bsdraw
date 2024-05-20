@@ -116,7 +116,7 @@ int OPolyLine::fshOVCoords(int overlay, bool switchedab, char *to) const
     {
       ocg.goto_normed("point.xy", ptpixing, true);
       ocg.var_static(DT_2F, "point_temp=nextpoint");
-      ocg.xyscale_xy_pixel_f("nextpoint", ptpixing);
+      ocg.xyscale_xy_pixel_rounded("nextpoint", ptpixing);
       ocg.push("nextpoint = nextpoint - ioffset;");
       ocg.trace_line_from_normed_to("nextpoint");
       ocg.push("point = point_temp;");

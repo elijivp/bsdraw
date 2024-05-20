@@ -142,6 +142,7 @@ int OImageOriginal::fshOVCoords(int overlay, bool switchedab, char *to) const
     }
     ocg.push("_fvar = step(0.0,float(inormed.x))*step(0.0,float(inormed.y))*step(float(inormed.x), float(idimms2.x - 1))*step(float(inormed.y), float(idimms2.y - 1));");
     ocg.push( "vec2  tcoords = inormed/vec2(idimms2.x - 1, idimms2.y - 1);" );     // yep, -1
+//    ocg.push( "vec2  tcoords = inormed/vec2(idimms2);" );
     ocg.push( "vec4 pixel = texture(");  ocg.param_get(); ocg.push(", vec2(tcoords.x, 1.0 - tcoords.y));");
     m_dmti.type == dmtype_image_t::RGB? ocg.push("result = pixel.rgb;") : ocg.push("result = pixel.bgr;");
     ocg.push(m_banalpha? "mixwell = _fvar;" : "mixwell = _fvar*pixel.a;");

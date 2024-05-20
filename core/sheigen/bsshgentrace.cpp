@@ -9,34 +9,28 @@
 
 #include "bsshgenparams.h"
 
-//#define _PLUS_049 " + 0.4999"
-//#define _MINUS_049 " - 0.4999"
-//#define _PLUS_VEC2049 " + vec2(0.4999)"
-//#define _PLUS_VEC4049 " + vec4(0.4999)"
-
-//#define _PLUS_049 " + 0.499"
-//#define _MINUS_049 " - 0.499"
-//#define _PLUS_VEC2049 " + vec2(0.499)"
-//#define _PLUS_VEC4049 " + vec4(0.499)"
-
-//#define _PLUS_049 " + 0.49"
-//#define _MINUS_049 " - 0.49"
-//#define _PLUS_VEC2049 " + vec2(0.49)"
-//#define _PLUS_VEC4049 " + vec4(0.49)"
-
-//#define _PLUS_049 " + 0.5"
-//#define _MINUS_049 " - 0.5"
-//#define _PLUS_VEC2049 " + vec2(0.5)"
-//#define _PLUS_VEC4049 " + vec4(0.5)"
-
-#define _PLUS_049 
-#define _MINUS_049 
-#define _PLUS_VEC2049 
-#define _PLUS_VEC4049 
+// ???
+#define _PLUS_05 
+#define _MINUS_05 
+//#define _PLUS_05 " + 0.5"
+//#define _MINUS_05 " - 0.5"
 
 
-#define _RPLUS_05 " + 0.5"
-//#define _RPLUS_05
+
+
+
+
+
+//#define _XYPIX_
+//#define _XYPIX_V2 
+//#define _XYPIX_V4 
+
+#define _XYPIX_ " + 0.5"
+#define _XYPIX_V2 " + vec2(0.5)"
+#define _XYPIX_V4 " + vec4(0.5)"
+
+#define _XYREG_PIX_DECREASED        // xyscaler_pix = ov_iboudns - vec2(1)
+#define _XYREG_REL_DECREASED        // xyscaler_01 = 1.0/(ov_iboudns - vec2(1))
 
 
 FshOVCoordsConstructor::FshOVCoordsConstructor(const _Ovldraw::uniforms_t &ufms, int overlay, char *deststring, int ocg_include_bits): 
@@ -76,7 +70,11 @@ void FshOVCoordsConstructor::_gtb()
 { 
   m_offset += msprintf(&m_to[m_offset], "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition){" SHNL, 
                        m_overlay);
-  m_offset += msprintf(&m_to[m_offset],   "ivec2 icoords = ivec2(coords*ov_ibounds);" SHNL );
+#ifdef _XYREG_PIX_DECREASED
+  m_offset += msprintf(&m_to[m_offset],   "ivec2 icoords = ivec2(floor(coords*(ov_ibounds - ivec2(1))" _XYPIX_ "));" SHNL );
+#else
+  m_offset += msprintf(&m_to[m_offset],   "ivec2 icoords = ivec2(floor(coords*ov_ibounds" _XYPIX_ "));" SHNL );
+#endif
   
   static const char _vars[] =             "vec3 result = vec3(0.0);" SHNL
                                           "float mixwell = 0.0;" SHNL
@@ -95,7 +93,7 @@ void FshOVCoordsConstructor::_gtb_coords(const _bs_unzip_t &bsu)
       m_offset += msprintf(&m_to[m_offset], "vec2(%f, %f)", bsu.ffs[0], bsu.ffs[1]);
     else if (bsu.type >= 2)
       m_offset += msprintf(&m_to[m_offset], "ovlprm%d_%d", m_overlay, m_paramsctr++);
-    m_offset += msprintf(&m_to[m_offset],  " * xyscaler_px_%d" _PLUS_VEC2049 ");" SHNL, coordspixing);
+    m_offset += msprintf(&m_to[m_offset],  " * xyscaler_px_%d" _XYPIX_V2 ");" SHNL, coordspixing);
   }
   else
     m_offset += msprintf(&m_to[m_offset],  "ivec2 ioffset = ivec2(0,0);\n");
@@ -132,7 +130,7 @@ void FshOVCoordsConstructor::_gtb_dimms(const _bs_unzip_t &bsu)
         m_offset += msprintf(&m_to[m_offset], "%f", bsu.ffs[0]);
       else if (bsu.type == 2)
         m_offset += msprintf(&m_to[m_offset], "ovlprm%d_%d", m_overlay, m_paramsctr++);
-      m_offset += msprintf(&m_to[m_offset],  " * _fvar" _PLUS_049 "));" SHNL, dimmpixing);
+      m_offset += msprintf(&m_to[m_offset],  " * _fvar" _XYPIX_ "));" SHNL, dimmpixing);
     }
     else if (bsu.type == 3 || bsu.type == 4)
     {
@@ -141,7 +139,7 @@ void FshOVCoordsConstructor::_gtb_dimms(const _bs_unzip_t &bsu)
         m_offset += msprintf(&m_to[m_offset], "vec2(%f, %f)", bsu.ffs[0], bsu.ffs[1]);
       else if (bsu.type == 4)
         m_offset += msprintf(&m_to[m_offset], "ovlprm%d_%d", m_overlay, m_paramsctr++);
-      m_offset += msprintf(&m_to[m_offset],  " * vec2(xyscaler_px_%d.x, xyscaler_px_%d.y) " _PLUS_VEC2049 "));" SHNL, dimmpixing,dimmpixing);
+      m_offset += msprintf(&m_to[m_offset],  " * vec2(xyscaler_px_%d.x, xyscaler_px_%d.y) " _XYPIX_V2 "));" SHNL, dimmpixing,dimmpixing);
     }
     else if (bsu.type == 5 || bsu.type == 6)
     {
@@ -154,11 +152,11 @@ void FshOVCoordsConstructor::_gtb_dimms(const _bs_unzip_t &bsu)
       {
         m_offset += msprintf(&m_to[m_offset], "ovlprm%d_%d", m_overlay, m_paramsctr++);
       }
-      m_offset += msprintf(&m_to[m_offset],  " * vec4(xyscaler_px_%d.x, xyscaler_px_%d.y, xyscaler_px_%d.x, xyscaler_px_%d.y)) " _PLUS_VEC4049 "));" SHNL, dimmpixing,dimmpixing,dimmpixing,dimmpixing);
+      m_offset += msprintf(&m_to[m_offset],  " * vec4(xyscaler_px_%d.x, xyscaler_px_%d.y, xyscaler_px_%d.x, xyscaler_px_%d.y)) " _XYPIX_V4 "));" SHNL, dimmpixing,dimmpixing,dimmpixing,dimmpixing);
     }
     else if (bsu.type == 7)
     {
-      m_offset += msprintf(&m_to[m_offset],  "ivec2 idimms2 = ivec2(floor(ovlprm%d_%d * vec2(xyscaler_px_%d.x, xyscaler_px_%d.y) " _PLUS_VEC2049 "));" SHNL, m_overlay, m_paramsctr++, dimmpixing, dimmpixing);
+      m_offset += msprintf(&m_to[m_offset],  "ivec2 idimms2 = ivec2(floor(ovlprm%d_%d * vec2(xyscaler_px_%d.x, xyscaler_px_%d.y) " _XYPIX_V2 "));" SHNL, m_overlay, m_paramsctr++, dimmpixing, dimmpixing);
     }
   }
 }
@@ -171,77 +169,11 @@ void FshOVCoordsConstructor::math_pi()
   m_maths |= (1 << (int)MM_PI);
 }
 
-#if 0
 
 int FshOVCoordsConstructor::register_xyscaler_pixel(COORDINATION con)
 {
   if (con == CR_SAME) return -1;
-  static const char* coordination[] = {  /// CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
-                                         "ivec2 xyscaler_px_%d = ov_iscaler;" SHNL,
-                                         "ivec2 xyscaler_px_%d = ov_ibounds;" SHNL,
-                                         "ivec2 xyscaler_px_%d = ivec2(ov_iscaler.x, ov_ibounds.y);" SHNL,
-                                         "ivec2 xyscaler_px_%d = ivec2(ov_ibounds.x, ov_iscaler.y);" SHNL,
-                                         
-                                         ///  CR_ABSOLUTE_NOSCALED, CR_RELATIVE_NOSCALED, CR_XABS_YREL_NOSCALED, CR_XREL_YABS_NOSCALED
-                                         "ivec2 xyscaler_px_%d = ivec2(1, 1);" SHNL,
-                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x, ov_indimms.y);" SHNL,
-                                         "ivec2 xyscaler_px_%d = ivec2(1, ov_indimms.y);" SHNL,
-                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x, 1);" SHNL,
-                                         
-                                         ///  CR_XABS_YABS_NOSCALED_SCALED, CR_XABS_YABS_SCALED_NOSCALED, CR_XREL_YREL_NOSCALED_SCALED, CR_XREL_YREL_SCALED_NOSCALED, 
-                                         "ivec2 xyscaler_px_%d = ivec2(1, ov_iscaler.y);" SHNL,
-                                         "ivec2 xyscaler_px_%d = ivec2(ov_iscaler.x, 1);" SHNL,
-                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x, ov_ibounds.y);" SHNL,
-                                         "ivec2 xyscaler_px_%d = ivec2(ov_ibounds.x, ov_indimms.y);" SHNL,
-                                         
-                                         /// CR_XABS_YREL_NOSCALED_SCALED, CR_XABS_YREL_SCALED_NOSCALED, CR_XREL_YABS_NOSCALED_SCALED, CR_XREL_YABS_SCALED_NOSCALED,
-                                         "ivec2 xyscaler_px_%d = ivec2(1, ov_ibounds.y);" SHNL,
-                                         "ivec2 xyscaler_px_%d = ivec2(ov_iscaler.x, ov_indimms.y);" SHNL,
-                                         "ivec2 xyscaler_px_%d = ivec2(ov_ibounds.x, 1);" SHNL,
-                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x, ov_iscaler.y);" SHNL
-                                      } ;
-  m_offset += msprintf(&m_to[m_offset], coordination[(int)con], m_pixingsctr);
-  return m_pixingsctr++;
-}
-
-int FshOVCoordsConstructor::register_xyscaler_01(COORDINATION con)
-{
-  if (con == CR_SAME) return -1;
-  static const char* coordination[] = {  /// CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
-//                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x-1, ov_indimms.y-1);" SHNL,   // ntf!
-                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x, ov_indimms.y);" SHNL,   // ntf!
-                                         "vec2 xyscaler_01_%d = vec2(1.0, 1.0);" SHNL,
-                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x, 1);" SHNL,
-                                         "vec2 xyscaler_01_%d = vec2(1, ov_indimms.y);" SHNL,
-                                         
-                                         ///  CR_ABSOLUTE_NOSCALED, CR_RELATIVE_NOSCALED, CR_XABS_YREL_NOSCALED, CR_XREL_YABS_NOSCALED
-                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds);" SHNL,
-                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, ov_iscaler.y);" SHNL,
-                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds.x, ov_iscaler.y);" SHNL,
-                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, ov_ibounds.y);" SHNL,
-                                         
-                                         ///  CR_XABS_YABS_NOSCALED_SCALED, CR_XABS_YABS_SCALED_NOSCALED, CR_XREL_YREL_NOSCALED_SCALED, CR_XREL_YREL_SCALED_NOSCALED, 
-                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x, ov_ibounds.y);" SHNL,
-                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds.x, ov_indimms.y);" SHNL,
-                                         "vec2 xyscaler_01_%d = vec2(1, ov_iscaler.y);" SHNL,
-                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, 1);" SHNL,
-                                         
-                                         /// CR_XABS_YREL_NOSCALED_SCALED, CR_XABS_YREL_SCALED_NOSCALED, CR_XREL_YABS_NOSCALED_SCALED, CR_XREL_YABS_SCALED_NOSCALED,
-                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds.x, 1);" SHNL,
-                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x, ov_iscaler.y);" SHNL,
-                                         "vec2 xyscaler_01_%d = vec2(1, ov_ibounds.y);" SHNL,
-                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, ov_indimms.y);" SHNL
-                                      } ;
-  m_offset += msprintf(&m_to[m_offset], coordination[(int)con], m_relingsctr);
-  return m_relingsctr++;
-}
-
-#else
-
-
-int FshOVCoordsConstructor::register_xyscaler_pixel(COORDINATION con)
-{
-  if (con == CR_SAME) return -1;
+#ifdef _XYREG_PIX_DECREASED
   static const char* coordination[] = {  /// CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
                                          "ivec2 xyscaler_px_%d = ov_iscaler;" SHNL,
                                          "ivec2 xyscaler_px_%d = ov_ibounds - ivec2(1);" SHNL,
@@ -266,13 +198,44 @@ int FshOVCoordsConstructor::register_xyscaler_pixel(COORDINATION con)
                                          "ivec2 xyscaler_px_%d = ivec2(ov_ibounds.x-1, 1);" SHNL,
                                          "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x-1, ov_iscaler.y);" SHNL
                                       } ;
+  
+#else
+  
+  static const char* coordination[] = {  /// CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
+                                         "ivec2 xyscaler_px_%d = ov_iscaler;" SHNL,
+                                         "ivec2 xyscaler_px_%d = ov_ibounds;" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_iscaler.x, ov_ibounds.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_ibounds.x, ov_iscaler.y);" SHNL,
+                                         
+                                         ///  CR_ABSOLUTE_NOSCALED, CR_RELATIVE_NOSCALED, CR_XABS_YREL_NOSCALED, CR_XREL_YABS_NOSCALED
+                                         "ivec2 xyscaler_px_%d = ivec2(1, 1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x, ov_indimms.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(1, ov_indimms.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x, 1);" SHNL,
+                                         
+                                         ///  CR_XABS_YABS_NOSCALED_SCALED, CR_XABS_YABS_SCALED_NOSCALED, CR_XREL_YREL_NOSCALED_SCALED, CR_XREL_YREL_SCALED_NOSCALED, 
+                                         "ivec2 xyscaler_px_%d = ivec2(1, ov_iscaler.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_iscaler.x, 1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x, ov_ibounds.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_ibounds.x, ov_indimms.y);" SHNL,
+                                         
+                                         /// CR_XABS_YREL_NOSCALED_SCALED, CR_XABS_YREL_SCALED_NOSCALED, CR_XREL_YABS_NOSCALED_SCALED, CR_XREL_YABS_SCALED_NOSCALED,
+                                         "ivec2 xyscaler_px_%d = ivec2(1, ov_ibounds.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_iscaler.x, ov_indimms.y);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_ibounds.x, 1);" SHNL,
+                                         "ivec2 xyscaler_px_%d = ivec2(ov_indimms.x, ov_iscaler.y);" SHNL
+                                      } ;
+#endif
+  
   m_offset += msprintf(&m_to[m_offset], coordination[(int)con], m_pixingsctr);
   return m_pixingsctr++;
 }
 
+
 int FshOVCoordsConstructor::register_xyscaler_01(COORDINATION con)
 {
   if (con == CR_SAME) return -1;
+#ifdef _XYREG_REL_DECREASED
   static const char* coordination[] = {  /// CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
                                          "vec2 xyscaler_01_%d = vec2(ov_indimms.x-1, ov_indimms.y-1);" SHNL,
                                          "vec2 xyscaler_01_%d = vec2(1.0, 1.0);" SHNL,
@@ -297,11 +260,39 @@ int FshOVCoordsConstructor::register_xyscaler_01(COORDINATION con)
                                          "vec2 xyscaler_01_%d = vec2(1, ov_ibounds.y-1);" SHNL,
                                          "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, ov_indimms.y-1);" SHNL
                                       } ;
+  
+#else
+  
+  static const char* coordination[] = {  /// CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
+                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x, ov_indimms.y);" SHNL,   // ntf!
+                                         "vec2 xyscaler_01_%d = vec2(1.0, 1.0);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x, 1);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(1, ov_indimms.y);" SHNL,
+                                         
+                                         ///  CR_ABSOLUTE_NOSCALED, CR_RELATIVE_NOSCALED, CR_XABS_YREL_NOSCALED, CR_XREL_YABS_NOSCALED
+                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, ov_iscaler.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds.x, ov_iscaler.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, ov_ibounds.y);" SHNL,
+                                         
+                                         ///  CR_XABS_YABS_NOSCALED_SCALED, CR_XABS_YABS_SCALED_NOSCALED, CR_XREL_YREL_NOSCALED_SCALED, CR_XREL_YREL_SCALED_NOSCALED, 
+                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x, ov_ibounds.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds.x, ov_indimms.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(1, ov_iscaler.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, 1);" SHNL,
+                                         
+                                         /// CR_XABS_YREL_NOSCALED_SCALED, CR_XABS_YREL_SCALED_NOSCALED, CR_XREL_YABS_NOSCALED_SCALED, CR_XREL_YABS_SCALED_NOSCALED,
+                                         "vec2 xyscaler_01_%d = vec2(ov_ibounds.x, 1);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_indimms.x, ov_iscaler.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(1, ov_ibounds.y);" SHNL,
+                                         "vec2 xyscaler_01_%d = vec2(ov_iscaler.x, ov_indimms.y);" SHNL
+                                      } ;
+#endif
+  
   m_offset += msprintf(&m_to[m_offset], coordination[(int)con], m_relingsctr);
   return m_relingsctr++;
 }
 
-#endif
 
 void FshOVCoordsConstructor::param_alias(const char *name, int memslot)
 {
@@ -413,11 +404,11 @@ void FshOVCoordsConstructor::goto_normed(const char *someparam, int pixing, bool
 {
   if (saveasoffset)
   {
-    m_offset += msprintf(&m_to[m_offset], "ioffset = ivec2(floor((%s * xyscaler_px_%d) " _PLUS_VEC2049 "));" SHNL, someparam, pixing);
+    m_offset += msprintf(&m_to[m_offset], "ioffset = ivec2(floor((%s * xyscaler_px_%d) " _XYPIX_V2 "));" SHNL, someparam, pixing);
     m_offset += msprintf(&m_to[m_offset], "ivec2 inormed = icoords - ioffset;" SHNL);
   }
   else
-    m_offset += msprintf(&m_to[m_offset], "ivec2 inormed = icoords - ivec2(floor((%s * xyscaler_px_%d) " _PLUS_VEC2049 "));" SHNL, someparam, pixing);
+    m_offset += msprintf(&m_to[m_offset], "ivec2 inormed = icoords - ivec2(floor((%s * xyscaler_px_%d) " _XYPIX_V2 "));" SHNL, someparam, pixing);
 }
 
 void FshOVCoordsConstructor::goto_normed_empty()
@@ -506,13 +497,13 @@ void FshOVCoordsConstructor::var_const_static(DTYPE type, const char *name_eq_va
 
 
 void FshOVCoordsConstructor::xyscale_x_pixel_f(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = float(%s*xyscaler_px_%d.x);" SHNL, name, name, resc_idx); }
-void FshOVCoordsConstructor::xyscale_x_pixel_rounded(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(float(%s*xyscaler_px_%d.x)" _RPLUS_05 ");" SHNL, name, name, resc_idx); }
+void FshOVCoordsConstructor::xyscale_x_pixel_rounded(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(float(%s*xyscaler_px_%d.x)" _XYPIX_ ");" SHNL, name, name, resc_idx); }
 
 void FshOVCoordsConstructor::xyscale_y_pixel_f(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = float(%s*xyscaler_px_%d.y);" SHNL, name, name, resc_idx); }
-void FshOVCoordsConstructor::xyscale_y_pixel_rounded(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(float(%s*xyscaler_px_%d.y)" _RPLUS_05 ");" SHNL, name, name, resc_idx); }
+void FshOVCoordsConstructor::xyscale_y_pixel_rounded(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(float(%s*xyscaler_px_%d.y)" _XYPIX_ ");" SHNL, name, name, resc_idx); }
 
 void FshOVCoordsConstructor::xyscale_xy_pixel_f(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = vec2(%s*xyscaler_px_%d);" SHNL, name, name, resc_idx); }
-void FshOVCoordsConstructor::xyscale_xy_pixel_rounded(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(vec2(%s*xyscaler_px_%d)" _RPLUS_05 ");" SHNL, name, name, resc_idx); }
+void FshOVCoordsConstructor::xyscale_xy_pixel_rounded(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = floor(vec2(%s*xyscaler_px_%d)" _XYPIX_ ");" SHNL, name, name, resc_idx); }
 
 void FshOVCoordsConstructor::xyscale_x_01(const char *name, int resc_idx){  m_offset += msprintf(&m_to[m_offset], "%s = %s/xyscaler_01_%d.x;" SHNL, name, name, resc_idx); }
 
@@ -613,7 +604,7 @@ void FshOVCoordsConstructor::trace_triangle_cc(const char *side, int direction, 
   char rd_plus[48];     msprintf(rd_plus, "(0.707*%s)", side);
   char rd_minus[48];    msprintf(rd_minus, "(-0.707*%s)", side);
   
-  m_offset += msprintf(&m_to[m_offset],   "vec3 _tri = vec3(float(inormed.y) + %s" _PLUS_049 " - 1.0, 0.0, 0.0);" SHNL
+  m_offset += msprintf(&m_to[m_offset],   "vec3 _tri = vec3(float(inormed.y) + %s" _PLUS_05 " - 1.0, 0.0, 0.0);" SHNL
                                           "_tri[1] = %s;" SHNL, 
                       direction == 0 || direction == 2? rd_plus :
                       direction == 1 || direction == 3? rd_minus : "",
@@ -623,7 +614,7 @@ void FshOVCoordsConstructor::trace_triangle_cc(const char *side, int direction, 
                                       );
   m_offset += msprintf(&m_to[m_offset],
                           "_tri[0] = 1.0 - (abs(_tri[0]))/(%s*0.866*2.0);"
-                          "_tri[2] = _tri[1]*_tri[0]*%s " _MINUS_049";" SHNL    /// otrezok
+                          "_tri[2] = _tri[1]*_tri[0]*%s " _MINUS_05";" SHNL    /// otrezok
                           "_mvar[0] = (1.0+thick - clamp(float(abs(inormed.x) - int(_tri[2])), 0.0, 1.0+thick))/(1.0+thick) * (1.0-step(_tri[2], 0.1));" SHNL
                           "_tri[2] = step(float(abs(inormed.x)), _tri[2]-1.0);"
                           "_mvar[0] = mix(_mvar[0], %F, _tri[2]);" SHNL
@@ -797,7 +788,7 @@ void FshOVCoordsConstructor::simplemix_cross_cc(const char* side, float fillcoef
 }
 
 //                                              crosslimit                                           offset                                                 
-#define TRACE_MAIN_CONDITION(idx)  "_mvar[0] = %s * (1.0+thick - clamp(abs(inormed["#idx"] - floor(float(%s)" _PLUS_049 ")), 0.0, 1.0+thick))/(1.0+thick);"
+#define TRACE_MAIN_CONDITION(idx)  "_mvar[0] = %s * (1.0+thick - clamp(abs(inormed["#idx"] - floor(float(%s)" _PLUS_05 ")), 0.0, 1.0+thick))/(1.0+thick);"
 
 #define TRACE_MVAR_INSIDER(a)        isize == nullptr? "_mvar[1] = "#a" - %s;" SHNL \
                                                         "_mvar[0] = _mvar[0] * step(0.0, _mvar[1]);" SHNL \

@@ -532,7 +532,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     pdraws[4] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogramLastBack(PR_VALUEAROUND));
     pdraws[4]->setOverpattern(overpattern_any(OP_LINELEFT, 0.0f));
     pdraws[4]->setScalingLimitsSynced(10); // 1 point now is 10x10 pixels (minimum)
-    
+
     AFTERCREATE_DRAW1C
     sigtype = ST_GEN_NORM;
   }
@@ -633,7 +633,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     pdraws[2] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(smoothcoeff, DE_LINTERP_SCALINGCENTER, 4, 0.8f));
     pdraws[2]->ovlPushBack(new OTextColored("DE_LINETERP_SCALINGCENTER", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x11FFFFFF, 0x00000000));
     
-    pdraws[3] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp2(smoothcoeff, DE_LINTERP, 4, 0.8f));
+    pdraws[3] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterpBSS(smoothcoeff, DE_LINTERP, 4, 0.8f));
     pdraws[3]->ovlPushBack(new OTextColored("DE_LINETERP #2 (glsl' smoothstep)", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x11FFFFFF, 0x00000000));
     pdraws[4] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(smoothcoeff, DE_SINTERP, 4, 0.8f));
     pdraws[4]->ovlPushBack(new OTextColored("DE_SINETERP", CR_XABS_YREL_NOSCALED, 10.0f, 0.65f, 12, 0x00000000, 0x11FFFFFF, 0x00000000));
@@ -753,6 +753,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       for (unsigned int c=0; c<countCOLUMNS; c++)
       {
         pdraws[r][c] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(smoothtest[r][c], DE_LINTERP));
+//        pdraws[r][c] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterpD(smoothtest[r][c], 0.0f, 0));
         {
           QString gname = QString("smooth ") + QString::number(smoothtest[r][c]);
           pdraws[r][c]->ovlPushBack(new OTextColored(gname.toUtf8().data(), CR_RELATIVE, 0.55f, 0.05f, 12, 0x00000000, 0x44FFFFFF, 0x00000000));
@@ -774,7 +775,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     const char* ornames[] = { "LRBT",  "TBLR",  "BTRL",  "BTLR",  "TBRL",  "RLTB" };
     for (unsigned int i=0; i<drawscount; i++)
     {
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp2(0.5, DE_NONE), coloropts_t::copts(0x00111111));
+      draws[i] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterpBSS(0.5, DE_NONE), coloropts_t::copts(0x00111111));
       draws[i]->setOrientation(orients[i]);
       draws[i]->ovlPushBack(new OTextColored(ornames[i], CR_RELATIVE, i == 1 || i == 3 ? 0.6f : 0.15f, i == 0? 0.7f : 0.05f,
                                              12, 0x00FFFF00, 0xFFFFFFFF, 0x00FFFF00), OO_AREA_LRBT);
@@ -1608,7 +1609,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     LINES = 1;
     PORTIONS = 2;
     PRECREATE(3, 3);
-    BSGRAPHTYPE     gts[] = { GT_HISTOGRAM_CROSSMAX, GT_LINTERP, GT_DOTS };
+    BSGRAPHTYPE     gts[] = { GT_HISTOGRAM_CROSSMAX, GT_LINTERP_B, GT_DOTS };
     BSCOLORPOLICY   dclr[] = { CP_MONO, CP_MONO, CP_REPAINTED };
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
@@ -1755,7 +1756,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PORTIONS = 29;
     PRECREATE(5, 1);
     
-    graphopts_t  gopts = { GT_LINTERP, DE_LINTERP, 0.0f, 0, 0.0f, 0.6f, PR_STANDARD };
+    graphopts_t  gopts = { GT_LINTERP_B, DE_LINTERP, 0.0f, 0, 0.0f, 0.6f, PR_STANDARD };
 //    graphopts_t  gopts = { GT_DOTS, DE_NONE, 0.0f, 0, 0.0f, 0.2f, PR_STANDARD };
     draws[0] = new DrawGraph(SAMPLES, PORTIONS_MIN, gopts, coloropts_t::copts(CP_MONO, 0.332f, 1.0f));
     draws[0]->setScalingLimitsVert(1);
@@ -1791,7 +1792,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                            0.2f,  0.3f,  0.4f,
                            0.6f,  0.8f,  1.0f
                          };
-    graphopts_t  gopts = { GT_LINTERP, DE_NONE, 0.0f, 0, 0.0f, 0.5f, PR_STANDARD };
+    graphopts_t  gopts = { GT_LINTERP_B, DE_NONE, 0.0f, 0, 0.0f, 0.5f, PR_STANDARD };
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
       {
@@ -1824,7 +1825,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
        graphopts_t::goInterp(-1.0f, DE_LINTERP_SCALINGCENTER), 
       
        graphopts_t::goDots(0, 0.0f, DE_NONE), 
-       graphopts_t::goInterp2(0.2f, DE_LINTERP), 
+       graphopts_t::goInterpBSS(0.2f, DE_LINTERP), 
        graphopts_t::goInterp(0.2f, DE_SINTERP), 
        graphopts_t::goInterp(0.2f, DE_QINTERP), 
       
@@ -1857,7 +1858,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(9, 9);
     float smooths[] = { -2.0f, -1.0f, -0.5f, -0.3f, 0.0f, 0.3f,  0.5f, 1.0f, 2.0f };
     float opacitys[] = { -2.0f, -1.0f, -0.5f, -0.3f, 0.0f, 0.3f,  0.5f, 1.0f, 2.0f };
-    graphopts_t  gopts = { GT_LINTERP, DE_QINTERP, 0.0f, 0, 0.0f, 0.5f, PR_STANDARD };
+    graphopts_t  gopts = { GT_LINTERP_B, DE_QINTERP, 0.0f, 0, 0.0f, 0.5f, PR_STANDARD };
+//    graphopts_t  gopts = { GT_LINTERP_D, DE_QINTERP, 0.0f, 0, 0.0f, 0.5f, PR_STANDARD };
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
       {
@@ -2047,7 +2049,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     PRECREATE(12, 4);
     for (unsigned int i=0; i<drawscount; i++)
     {
-      draws[i] = new DrawGraphMove(SAMPLES, 1, PORTIONS, graphopts_t::goInterp2(DE_NONE), coloropts_t::copts(CP_MONO, 1.0, 0.5, 0x00111111));
+      draws[i] = new DrawGraphMove(SAMPLES, 1, PORTIONS, graphopts_t::goInterpBSS(DE_NONE), coloropts_t::copts(CP_MONO, 1.0, 0.5, 0x00111111));
     }
     
     sigtype = ST_10;

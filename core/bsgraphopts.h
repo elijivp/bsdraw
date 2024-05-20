@@ -5,8 +5,9 @@ class IPalette;
 
 enum  BSGRAPHTYPE {
                     GT_DOTS,                /// most simple, most lightweight
-                    GT_LINTERP,             /// standard linear interpolation (default)
-                    GT_LINTERPSMOOTH,       /// linear interpolation through glsl smoothstep method
+                    GT_LINTERP_B,           /// linear interpolation through B-oriented straight lines
+                    GT_LINTERP_BSS,         /// linear interpolation through B-oriented straight lines and glsl smoothstep method
+                    GT_LINTERP_D,           /// linear interpolation diagonal
                     GT_HISTOGRAM,           /// histogram
                     GT_HISTOGRAM_CROSSMAX,  /// histogram with max of many graphs on cross
                     GT_HISTOGRAM_CROSSMIN,  /// histogram with all graphs on cross
@@ -46,20 +47,25 @@ struct  graphopts_t
   BSPOSTRECT      postrect;
 
   // 1. typical linterp graph
-  static graphopts_t goInterp(BSDESCALING ds, int dsize=0, float dsmooth=0.0f)
-  { graphopts_t result = { GT_LINTERP, ds, 0.0f, dsize, dsmooth, 0.5f, PR_STANDARD }; return result;  }
-  static graphopts_t goInterp(float smoothcoef, BSDESCALING ds=DE_NONE, int dsize=0, float dsmooth=0.0f)
-  { graphopts_t result = { GT_LINTERP, ds, 0.0f, dsize, dsmooth, smoothcoef, PR_STANDARD}; return result; }
+  static graphopts_t goInterp(BSDESCALING ds, int dotsize=0, float dotsmooth=0.0f)
+  { graphopts_t result = { GT_LINTERP_B, ds, 0.0f, dotsize, dotsmooth, 0.5f, PR_STANDARD }; return result;  }
+  static graphopts_t goInterp(float smoothcoef, BSDESCALING ds=DE_NONE, int dotsize=0, float dotsmooth=0.0f)
+  { graphopts_t result = { GT_LINTERP_B, ds, 0.0f, dotsize, dotsmooth, smoothcoef, PR_STANDARD}; return result; }
   
-  static graphopts_t goInterp2(BSDESCALING ds, int dsize=0, float dsmooth=0.0f)
-  { graphopts_t result = { GT_LINTERPSMOOTH, ds, 0.0f, dsize, dsmooth, 0.0f, PR_STANDARD}; return result; }
-  static graphopts_t goInterp2(float smoothcoef, BSDESCALING ds, int dsize=0, float dsmooth=0.0f)
-  { graphopts_t result = { GT_LINTERPSMOOTH, ds, 0.0f, dsize, dsmooth, smoothcoef, PR_STANDARD}; return result; }
+  static graphopts_t goInterpD(int dotsize=0, float dotsmooth=0.0f)
+  { graphopts_t result = { GT_LINTERP_D, DE_NONE, 0.0f, dotsize, dotsmooth, 0.25f, PR_STANDARD }; return result;  }
+  static graphopts_t goInterpD(float smoothcoef, float dsmooth, int dotsize, float dotsmooth=0.0f)
+  { graphopts_t result = { GT_LINTERP_D, DE_NONE, dsmooth, dotsize, dotsmooth, smoothcoef, PR_STANDARD}; return result; }
   
-  static graphopts_t goDots(int dsize=0, float dsmooth=0.0f, BSDESCALING ds=DE_NONE)
-  { graphopts_t result = { GT_DOTS, ds, 0.0f, dsize, dsmooth, 0.0f, PR_STANDARD}; return result; }
-  static graphopts_t goDots(BSDESCALING ds, int dsize=0, float dsmooth=0.0f)
-  { graphopts_t result = { GT_DOTS, ds, 0.0f, dsize, dsmooth, 0.0f, PR_STANDARD}; return result; }
+  static graphopts_t goInterpBSS(BSDESCALING ds, int dotsize=0, float dotsmooth=0.0f)
+  { graphopts_t result = { GT_LINTERP_BSS, ds, 0.0f, dotsize, dotsmooth, 0.0f, PR_STANDARD}; return result; }
+  static graphopts_t goInterpBSS(float smoothcoef, BSDESCALING ds, int dotsize=0, float dotsmooth=0.0f)
+  { graphopts_t result = { GT_LINTERP_BSS, ds, 0.0f, dotsize, dotsmooth, smoothcoef, PR_STANDARD}; return result; }
+  
+  static graphopts_t goDots(int dotsize=0, float dotsmooth=0.0f, BSDESCALING ds=DE_NONE)
+  { graphopts_t result = { GT_DOTS, ds, 0.0f, dotsize, dotsmooth, 0.0f, PR_STANDARD}; return result; }
+  static graphopts_t goDots(BSDESCALING ds, int dotsize=0, float dotsmooth=0.0f)
+  { graphopts_t result = { GT_DOTS, ds, 0.0f, dotsize, dotsmooth, 0.0f, PR_STANDARD}; return result; }
   
   static graphopts_t goHistogram(float opacity=0.0f, BSDESCALING ds=DE_NONE, float smoothcoef=0.0f, BSPOSTRECT pr=PR_STANDARD)
   { graphopts_t result = { GT_HISTOGRAM, ds, opacity, 0, 0.0f, smoothcoef, pr}; return result; }

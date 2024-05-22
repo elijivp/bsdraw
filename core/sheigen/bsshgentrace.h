@@ -102,6 +102,8 @@ public:
   void  goto_normed(const char* someparam, int pixing, bool saveasoffset = false);
   void  goto_normed_empty();
   void  goto_normed_rotated(const char* angleRadName);
+  void  goto_normed_f();
+  void  goto_normed_f_empty();
 public:
   void  var_fixed(const char* name, float value);
   void  var_const_fixed(const char* name, float value);

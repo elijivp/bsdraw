@@ -68,12 +68,16 @@ FshOVCoordsConstructor::FshOVCoordsConstructor(const _Ovldraw::uniforms_t &ufms,
 
 void FshOVCoordsConstructor::_gtb()
 { 
-  m_offset += msprintf(&m_to[m_offset], "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 selfposition){" SHNL, 
+  m_offset += msprintf(&m_to[m_offset], "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in vec2 root_offset_px, in vec3 post_in, out vec2 this_offset_px){" SHNL, 
                        m_overlay);
 #ifdef _XYREG_PIX_DECREASED
-  m_offset += msprintf(&m_to[m_offset],   "ivec2 icoords = ivec2(floor(coords*(ov_ibounds - ivec2(1))" _XYPIX_ "));" SHNL );
+  m_offset += msprintf(&m_to[m_offset],   "vec2  fcoords = coords*(ov_ibounds - ivec2(1));" SHNL );
+  m_offset += msprintf(&m_to[m_offset],   "ivec2 icoords = ivec2(floor(fcoords" _XYPIX_ "));" SHNL );
+//  m_offset += msprintf(&m_to[m_offset],   "ivec2 icoords = ivec2(floor(coords*(ov_ibounds - ivec2(1))" _XYPIX_ "));" SHNL );
 #else
-  m_offset += msprintf(&m_to[m_offset],   "ivec2 icoords = ivec2(floor(coords*ov_ibounds" _XYPIX_ "));" SHNL );
+  m_offset += msprintf(&m_to[m_offset],   "vec2  fcoords = coords*ov_ibounds;" SHNL );
+  m_offset += msprintf(&m_to[m_offset],   "ivec2 icoords = ivec2(floor(fcoords" _XYPIX_ "));" SHNL );
+//  m_offset += msprintf(&m_to[m_offset],   "ivec2 icoords = ivec2(floor(coords*ov_ibounds" _XYPIX_ "));" SHNL );
 #endif
   
   static const char _vars[] =             "vec3 result = vec3(0.0);" SHNL
@@ -85,20 +89,36 @@ void FshOVCoordsConstructor::_gtb()
 
 void FshOVCoordsConstructor::_gtb_coords(const _bs_unzip_t &bsu)
 {
-  if (bsu.type)
+//  if (bsu.type)
+//  {
+//    int coordspixing = register_xyscaler_pixel(bsu.cr);
+//    m_offset += msprintf(&m_to[m_offset], "ivec2 ioffset = ivec2(");
+//    if (bsu.type == 1)
+//      m_offset += msprintf(&m_to[m_offset], "vec2(%f, %f)", bsu.ffs[0], bsu.ffs[1]);
+//    else if (bsu.type >= 2)
+//      m_offset += msprintf(&m_to[m_offset], "ovlprm%d_%d", m_overlay, m_paramsctr++);
+//    m_offset += msprintf(&m_to[m_offset],  " * xyscaler_px_%d" _XYPIX_V2 ");" SHNL, coordspixing);
+//  }
+//  else
+//    m_offset += msprintf(&m_to[m_offset],  "ivec2 ioffset = ivec2(0,0);\n");
+  
+//  m_offset += msprintf(&m_to[m_offset],  "ioffset = ioffset + root_offset_px;" SHNL);
+  
+  if (bsu.type == 0)
+    m_offset += msprintf(&m_to[m_offset], "vec2 foffset = root_offset_px;" SHNL);
+  else
   {
     int coordspixing = register_xyscaler_pixel(bsu.cr);
-    m_offset += msprintf(&m_to[m_offset], "ivec2 ioffset = ivec2(");
+    
+    m_offset += msprintf(&m_to[m_offset], "vec2 foffset = ");
     if (bsu.type == 1)
       m_offset += msprintf(&m_to[m_offset], "vec2(%f, %f)", bsu.ffs[0], bsu.ffs[1]);
     else if (bsu.type >= 2)
-      m_offset += msprintf(&m_to[m_offset], "ovlprm%d_%d", m_overlay, m_paramsctr++);
-    m_offset += msprintf(&m_to[m_offset],  " * xyscaler_px_%d" _XYPIX_V2 ");" SHNL, coordspixing);
-  }
-  else
-    m_offset += msprintf(&m_to[m_offset],  "ivec2 ioffset = ivec2(0,0);\n");
+      m_offset += msprintf(&m_to[m_offset], "vec2(ovlprm%d_%d)", m_overlay, m_paramsctr++);
   
-  m_offset += msprintf(&m_to[m_offset],  "ioffset = ioffset + mastercoords;" SHNL);
+    m_offset += msprintf(&m_to[m_offset],  " * xyscaler_px_%d + root_offset_px;" SHNL, coordspixing);   //" _XYPIX_V2 "
+  }
+  m_offset += msprintf(&m_to[m_offset],  "ivec2 ioffset = ivec2(foffset" _XYPIX_V2 ");" SHNL);
 }
 
 void FshOVCoordsConstructor::_gtb_dimms(const _bs_unzip_t &bsu)
@@ -393,7 +413,7 @@ void FshOVCoordsConstructor::param_for_carr_double_begin(const char* name1, cons
   m_paramsctr += 3;
 }
 
-void FshOVCoordsConstructor::param_for_end() {  m_offset += msprintf(&m_to[m_offset], "}");  }
+void FshOVCoordsConstructor::param_for_end() {  m_offset += msprintf(&m_to[m_offset], "}" SHNL);  }
 
 void FshOVCoordsConstructor::goto_normed()
 {
@@ -406,6 +426,7 @@ void FshOVCoordsConstructor::goto_normed(const char *someparam, int pixing, bool
   {
     m_offset += msprintf(&m_to[m_offset], "ioffset = ivec2(floor((%s * xyscaler_px_%d) " _XYPIX_V2 "));" SHNL, someparam, pixing);
     m_offset += msprintf(&m_to[m_offset], "ivec2 inormed = icoords - ioffset;" SHNL);
+    m_offset += msprintf(&m_to[m_offset], "foffset = vec2(ioffset);" SHNL);
   }
   else
     m_offset += msprintf(&m_to[m_offset], "ivec2 inormed = icoords - ivec2(floor((%s * xyscaler_px_%d) " _XYPIX_V2 "));" SHNL, someparam, pixing);
@@ -419,6 +440,17 @@ void FshOVCoordsConstructor::goto_normed_empty()
 void FshOVCoordsConstructor::goto_normed_rotated(const char *angleRadName)
 {
   m_offset += msprintf(&m_to[m_offset], "mat2 rotationMatrix = mat2 (cos(%s), -sin(%s), sin(%s), cos(%s));  inormed = inormed*rotationMatrix;" SHNL, angleRadName, angleRadName, angleRadName, angleRadName);
+}
+
+
+void FshOVCoordsConstructor::goto_normed_f()
+{
+  m_offset += msprintf(&m_to[m_offset], "vec2 fnormed = fcoords - foffset;" SHNL);
+}
+
+void FshOVCoordsConstructor::goto_normed_f_empty()
+{
+  m_offset += msprintf(&m_to[m_offset], "vec2 fnormed = vec2(0,0);" SHNL);
 }
 
 void FshOVCoordsConstructor::var_fixed(const char *name, float value){  m_offset += msprintf(&m_to[m_offset], "float %s = %f;" SHNL, name, value); }
@@ -938,8 +970,9 @@ void FshOVCoordsConstructor::goto_func_end(bool traced)
     static const char _overtraced[] = "mixwell = result[0];" SHNL;
     memcpy(&m_to[m_offset], _overtraced, sizeof(_overtraced)-1); m_offset += sizeof(_overtraced) - 1;
   }
-//  m_offset += msprintf(&m_to[m_offset], "selfposition = ioffset; return vec4(result.x, result.y, 0.0, clamp(mixwell, 0.0, 1.0)); }" SHNL);
-  m_offset += msprintf(&m_to[m_offset], "selfposition = ioffset; return vec4(result, mixwell); }" SHNL);
+//  m_offset += msprintf(&m_to[m_offset], "this_offset_px = ioffset; return vec4(result.x, result.y, 0.0, clamp(mixwell, 0.0, 1.0)); }" SHNL);
+  m_offset += msprintf(&m_to[m_offset], "this_offset_px = foffset; " SHNL
+                                        "return vec4(result, mixwell); }" SHNL);
 }
 
 

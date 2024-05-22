@@ -857,7 +857,7 @@ bool MapExReactorMove::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, 
   {
     float nextzoom = orm == ORW_AWAY ? self->zoom()*1.05f : self->zoom()*1/1.05f;
     if (nextzoom < 0.0001f)     nextzoom = 0.0001f;
-    else if (nextzoom > 16.0f)   nextzoom = 16.0f;
+    else if (nextzoom > 24.0f)   nextzoom = 24.0f;
     self->setZoom(nextzoom);
     emit zoomChanged(self->zoom());
     return true;

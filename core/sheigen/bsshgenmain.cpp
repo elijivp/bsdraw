@@ -565,7 +565,7 @@ void FshDrawMain::generic_decls_add_ovl_input(int ovlid, char* result)
   msprintf(result, "ovlprm%d_in", ovlid+1);
   m_offset += msprintf(&m_to[m_offset], SHNL
                                         "uniform highp vec4 \t%s;" SHNL
-                                        "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in ivec2 mastercoords, in vec3 post_in, out ivec2 shapeself);" SHNL
+                                        "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in vec2 root_offset_px, in vec3 post_in, out vec2 shapeself);" SHNL
                                         "vec3 overlayColor%d(in vec4 in_variant, in vec3 color);" SHNL,
                        result, ovlid+1, ovlid+1);
 }
@@ -765,7 +765,7 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft)
     if (tft.driven_id == -1)
       m_offset += msprintf(&m_to[m_offset],       SHGP "tft_slot.xy = tft_slot.xy*%s;" SHNL, cr_to_px_str(tft.slotdata.cr));
     else
-      m_offset += msprintf(&m_to[m_offset],       SHGP "tft_slot.xy = ovl_pos_%d.xy + tft_slot.xy*%s;" SHNL, tft.driven_id, cr_to_px_str(tft.slotdata.cr));
+      m_offset += msprintf(&m_to[m_offset],       SHGP "tft_slot.xy = ovl_offset_px_%d.xy + tft_slot.xy*%s;" SHNL, tft.driven_id, cr_to_px_str(tft.slotdata.cr));
     
     m_offset += msprintf(&m_to[m_offset],       SHGP "vec2  rc = xy_coords*xy_ibounds - tft_slot.xy + vec2(0.499);" SHNL);
     
@@ -1061,7 +1061,7 @@ void FshDrawMain::generic_main_prepare_ovl()
   static const char fsh_decltrace[] =     SHNL
                                           SHGP "vec4   ovTrace;" SHNL
                                           SHGP "vec4   ovlprm_in;" SHNL
-                                          SHGP "ivec2  ovltransfer;" SHNL
+                                          SHGP "vec2   ovl_offset_px_transfer;" SHNL
                                           SHNL;
   memcpy(&m_to[m_offset], fsh_decltrace, sizeof(fsh_decltrace) - 1);  m_offset += sizeof(fsh_decltrace) - 1;
 }
@@ -1071,7 +1071,7 @@ void FshDrawMain::generic_main_process_ovl(ORIENTATION orient, int i, int link, 
   bool transposed = orientationTransposed(orient);
   
   m_offset += msprintf(&m_to[m_offset],   SHGP "ovlprm_in = ovlprm%d_in;" SHNL    // opacity, thickness, slice
-                                          SHGP "ovltransfer = ivec2(0,0);" SHNL, i+1);
+                                          SHGP "ovl_offset_px_transfer = vec2(0,0);" SHNL, i+1);
   
   if (link >= 0)
     m_offset += msprintf(&m_to[m_offset], SHGP "bool ovl_visible_%d = ovl_visible_%d && step(1.0, ovlprm_in[0]) != 1;" SHNL, i+1, link + 1 );
@@ -1129,16 +1129,16 @@ void FshDrawMain::generic_main_process_ovl(ORIENTATION orient, int i, int link, 
                                           i+1, i+1, ocall_indimms, ocall_iscaler, ocall_ibounds, ocall_ovcoords);
   
   if (link >= 0)
-    m_offset += msprintf(&m_to[m_offset],       SHG2 "ovl_pos_%d, vec3(post_mask[0], post_mask[3], ppb_in), ovltransfer);" SHNL
+    m_offset += msprintf(&m_to[m_offset],       SHG2 "ovl_offset_px_%d, vec3(post_mask[0], post_mask[3], ppb_in), ovl_offset_px_transfer);" SHNL
                                           , link + 1);
   else
-    m_offset += msprintf(&m_to[m_offset],       SHG2 "ivec2(0,0), vec3(post_mask[0], post_mask[3], ppb_in), ovltransfer);" SHNL );
+    m_offset += msprintf(&m_to[m_offset],       SHG2 "ivec2(0,0), vec3(post_mask[0], post_mask[3], ppb_in), ovl_offset_px_transfer);" SHNL );
   
   
   m_offset += msprintf(&m_to[m_offset],     SHG2    "if (sign(ovTrace[3]) != 0.0 && (step(mixwell, 0.0) == 1 || (step(dvalue, ovlprm_in[2]) == 0 && step(ovlprm_in[3], dvalue) == 0)) )" SHNL
                                               SHG2 SHGP "result = mix(result, overlayColor%d(ovTrace, result), 1.0 - ovlprm_in[0]);" SHNL
                                           SHGP "}" SHNL
-                                          SHGP "ivec2 ovl_pos_%d = ovltransfer;" SHNL
+                                          SHGP "vec2 ovl_offset_px_%d = ovl_offset_px_transfer;" SHNL
                                           , 
                                           i+1, i+1);
 }

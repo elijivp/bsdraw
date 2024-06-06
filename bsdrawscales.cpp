@@ -28,7 +28,7 @@ enum
   DBMODE_STATIC=3
 };
 
-enum  {   SPACING_AFTERWIDTH=6, SPACING_AFTERHEIGHT=4 };
+enum  {   SPACING_AFTERWIDTH=6, SPACING_AFTERHEIGHT=1 };
 
 
 MarginElement::~MarginElement()

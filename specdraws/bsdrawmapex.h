@@ -40,6 +40,7 @@ public:
 public:
   float       metersInPixel() const;
   void        coordsLL(double* plat, double* plon) const;
+  void        coordsLL(float x, float y, double* plat, double* plon) const;
   void        viewToMM(float x, float y, bool update = true);
   void        viewToMMRel(float dx, float dy, bool update = true);
   
@@ -71,17 +72,32 @@ signals:
 };
 
 
-class MapExReactorMove: public QObject, public DrawEventReactor
+class MapExReactor: public QObject, public DrawEventReactor
 {
   Q_OBJECT
   float         lx,ly;
+  bool          doAppZoom;
 public:
-  MapExReactorMove(QObject* parent=nullptr);
+  MapExReactor(bool applyZoom, QObject* parent=nullptr);
 protected:
   virtual bool  reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* /*doStop*/);
   virtual bool  reactionWheel(class DrawQWidget* draw, OVL_REACTION_WHEEL orm, const coordstriumv_t* ct, bool* /*doStop*/);
 signals:
   void          coordsChanged(double lat, double lon);
+  void          zoomChanged(double zoom);
+};
+
+class MapExReactorSkol: public QObject, public DrawEventReactor
+{
+  Q_OBJECT
+  bool          doAppZoom;
+public:
+  MapExReactorSkol(bool applyZoom, QObject* parent=nullptr);
+protected:
+  virtual bool  reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* /*doStop*/);
+  virtual bool  reactionWheel(class DrawQWidget* draw, OVL_REACTION_WHEEL orm, const coordstriumv_t* ct, bool* /*doStop*/);
+signals:
+  void          skolChanged(float x, float y, double lat, double lon);
   void          zoomChanged(double zoom);
 };
 

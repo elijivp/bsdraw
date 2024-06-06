@@ -496,6 +496,11 @@ void DrawMapEx::coordsLL(double* plat, double* plon) const
   *plon = pImpl->center.lon;
 }
 
+void DrawMapEx::coordsLL(float x, float y, double* plat, double* plon) const
+{
+  Q_ASSERT(false);
+}
+
 #ifdef DMETERS
 
 float DrawMapEx::metersInPixel() const
@@ -802,11 +807,12 @@ int DrawMapEx::sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool ch
 
 
 
-MapExReactorMove::MapExReactorMove(QObject* parent): QObject(parent)
+MapExReactor::MapExReactor(bool applyZoom, QObject* parent): QObject(parent)
 {
+  doAppZoom = applyZoom;
 }
 
-bool MapExReactorMove::reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool*)
+bool MapExReactor::reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool*)
 {
   DrawMapEx* self = (DrawMapEx*)draw;
   
@@ -849,17 +855,78 @@ bool MapExReactorMove::reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, 
   return false;
 }
 
-bool MapExReactorMove::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, const coordstriumv_t* ct, bool*)
+bool MapExReactor::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, const coordstriumv_t* ct, bool*)
 {
   DrawMapEx* self = (DrawMapEx*)draw;
   
   if (orm == ORW_AWAY || orm == ORW_TOWARD)
   {
-    float nextzoom = orm == ORW_AWAY ? self->zoom()*1.05f : self->zoom()*1/1.05f;
-    if (nextzoom < 0.0001f)     nextzoom = 0.0001f;
-    else if (nextzoom > 24.0f)   nextzoom = 24.0f;
-    self->setZoom(nextzoom);
-    emit zoomChanged(self->zoom());
+    float mulc = orm == ORW_AWAY ? 1.05f : 1.0f/1.05f;
+    if (doAppZoom)
+    {
+      float nextzoom = self->zoom()*mulc;
+      if (nextzoom < 0.0001f)     nextzoom = 0.0001f;
+      else if (nextzoom > 24.0f)   nextzoom = 24.0f;
+        self->setZoom(nextzoom);
+      emit zoomChanged(nextzoom);
+    }
+    else
+    {
+      emit zoomChanged(mulc);
+    }
+    return true;
+  }
+  return false;
+}
+
+/////////////////////////////////
+
+
+
+
+MapExReactorSkol::MapExReactorSkol(bool applyZoom, QObject* parent): QObject(parent)
+{
+  doAppZoom = applyZoom;
+}
+
+bool MapExReactorSkol::reactionMouse(DrawQWidget *draw, OVL_REACTION_MOUSE orm, const coordstriumv_t *ct, bool *)
+{
+  DrawMapEx* self = (DrawMapEx*)draw;
+  
+  float x = ct->fx_pix;
+  float y = ct->fy_pix;
+  if (orm == ORM_LMPRESS || orm == ORM_LMMOVE)
+  {
+    double lat, lon;
+    self->coordsLL(&lat, &lon);
+    emit skolChanged(ct->fx_01, ct->fy_01, lat, lon);
+    return true;
+  }
+  else if (orm == ORM_RMPRESS)
+  {
+  }
+  return false;
+}
+
+bool MapExReactorSkol::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, const coordstriumv_t* ct, bool*)
+{
+  DrawMapEx* self = (DrawMapEx*)draw;
+  
+  if (orm == ORW_AWAY || orm == ORW_TOWARD)
+  {
+    float mulc = orm == ORW_AWAY ? 1.05f : 1.0f/1.05f;
+    if (doAppZoom)
+    {
+      float nextzoom = self->zoom()*mulc;
+      if (nextzoom < 0.0001f)     nextzoom = 0.0001f;
+      else if (nextzoom > 24.0f)   nextzoom = 24.0f;
+        self->setZoom(nextzoom);
+      emit zoomChanged(nextzoom);
+    }
+    else
+    {
+      emit zoomChanged(mulc);
+    }
     return true;
   }
   return false;

@@ -161,9 +161,9 @@ void OPolyLine::point(int idx, float* x, float* y) const
   }
 }
 
-void  OPolyLine::updatePoints()
+void  OPolyLine::updatePoints(bool update)
 {
-  updateParameter(false, true);
+  updateParameter(false, update);
 }
 
 ////////////////////////////////

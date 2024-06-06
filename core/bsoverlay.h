@@ -57,11 +57,11 @@ public:
     m_dm_palette.discrete = discrete;
     appendUniform(DT_PALETTE, &m_dm_palette, true);
   }
-  void  setPalette(const IPalette* ipal, bool discrete)
+  void  setPalette(const IPalette* ipal, bool discrete, bool update=true)
   {
     m_dm_palette.ppal = ipal;
     m_dm_palette.discrete = discrete;
-    _Ovldraw::updateParameter(true, true); 
+    _Ovldraw::updateParameter(false, update); 
   }
 protected:
   virtual int fshColor(int overlay, char *to) const;

@@ -72,33 +72,56 @@ signals:
 };
 
 
-class MapExReactor: public QObject, public DrawEventReactor
+/////
+
+class _MapReactorZoom: public QObject, public DrawEventReactor
+{
+  Q_OBJECT
+  bool          doAppZoom;
+public:
+  _MapReactorZoom(bool applyZoom, QObject* parent=nullptr);
+protected:
+  virtual bool  reactionWheel(class DrawQWidget* draw, OVL_REACTION_WHEEL orm, const coordstriumv_t* ct, bool* /*doStop*/);
+signals:
+  void          zoomChanged(double zoom);
+};
+
+class MapExReactor: public _MapReactorZoom
 {
   Q_OBJECT
   float         lx,ly;
-  bool          doAppZoom;
 public:
   MapExReactor(bool applyZoom, QObject* parent=nullptr);
 protected:
   virtual bool  reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* /*doStop*/);
-  virtual bool  reactionWheel(class DrawQWidget* draw, OVL_REACTION_WHEEL orm, const coordstriumv_t* ct, bool* /*doStop*/);
 signals:
   void          coordsChanged(double lat, double lon);
-  void          zoomChanged(double zoom);
 };
 
-class MapExReactorSkol: public QObject, public DrawEventReactor
+class MapExReactorSkol: public _MapReactorZoom
 {
   Q_OBJECT
-  bool          doAppZoom;
 public:
   MapExReactorSkol(bool applyZoom, QObject* parent=nullptr);
 protected:
   virtual bool  reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* /*doStop*/);
-  virtual bool  reactionWheel(class DrawQWidget* draw, OVL_REACTION_WHEEL orm, const coordstriumv_t* ct, bool* /*doStop*/);
 signals:
   void          skolChanged(float x, float y, double lat, double lon);
-  void          zoomChanged(double zoom);
+};
+
+class MapExReactorClickable: public _MapReactorZoom
+{
+  Q_OBJECT
+  class QElapsedTimer*  qel;
+  float         lx,ly;
+public:
+  MapExReactorClickable(bool applyZoom, QObject* parent=nullptr);
+  ~MapExReactorClickable();
+protected:
+  virtual bool  reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* /*doStop*/);
+signals:
+  void          clicked(float xpix, float ypix, double lat, double lon);
+  void          coordsChanged(double lat, double lon);
 };
 
 #endif // DRAWCOREMAPEX_H

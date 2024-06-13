@@ -654,7 +654,7 @@ void DrawQWidget::paintGL()
         if (subPendOn)
         {
           int LAY = m_holders[t]->recbook.size();
-          glTexStorage3D(  GL_TEXTURE_2D_ARRAY, LAY, gl_internalFormat, width, height, LAY);
+          glTexStorage3D(  GL_TEXTURE_2D_ARRAY, /*LAY*/1, gl_internalFormat, width, height, LAY);
           for (int r=0; r<LAY; r++)
           {
             const tftpage_t&  area = m_holders[t]->recbook[r];
@@ -664,6 +664,10 @@ void DrawQWidget::paintGL()
           glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
           glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
           glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+          
+          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BASE_LEVEL, 0);
+          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, /*LAY*/1);
+          
           glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
           glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
           
@@ -675,7 +679,7 @@ void DrawQWidget::paintGL()
           glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
           glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
   #endif
-          glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+//          glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
           
           m_holders[t]->ponger = m_holders[t]->pinger;
         }
@@ -904,27 +908,33 @@ void DrawQWidget::paintGL()
               
               {
                 int LAY = psmparr->layers;
-                glTexStorage3D(  GL_TEXTURE_2D_ARRAY, LAY, gl_internalFormat, width, height, LAY);
+                glTexStorage3D(  GL_TEXTURE_2D_ARRAY, 1/*LAY*/, gl_internalFormat, width, height, LAY);
                 for (int r=0; r<LAY; r++)
                   glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, r, width, height, 1, gl_format, gl_texture_type, psmparr->data[r]);
-//                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, psmparr->linsmooth ? GL_LINEAR : GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, psmparr->linsmooth ? GL_LINEAR : GL_NEAREST);
+                
+                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BASE_LEVEL, 0);
+                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, /*LAY-*/1);
+                
                 glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
                 glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
                 glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
                 glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
                 
                 glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+                glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+                
                 glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
                 glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
                 glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
 #if QT_VERSION >= 0x050000
-                glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
                 glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
 #endif
-                glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+//                if (psmparr->generatemipmapdafuq)
+//                  glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
               }
               
               m_ShaderProgram.setUniformValue(loc, CORR_TEX);

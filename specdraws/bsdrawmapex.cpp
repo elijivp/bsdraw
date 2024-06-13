@@ -1,6 +1,7 @@
 #include "bsdrawmapex.h"
 
 #include <math.h>
+#include <QElapsedTimer>
 
 #include "../core/sheigen/bsshgenmain.h"
 
@@ -807,55 +808,13 @@ int DrawMapEx::sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool ch
 
 
 
-MapExReactor::MapExReactor(bool applyZoom, QObject* parent): QObject(parent)
+
+_MapReactorZoom::_MapReactorZoom(bool applyZoom, QObject* parent): QObject(parent)
 {
   doAppZoom = applyZoom;
 }
 
-bool MapExReactor::reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool*)
-{
-  DrawMapEx* self = (DrawMapEx*)draw;
-  
-  float x = ct->fx_pix;
-  float y = ct->fy_pix;
-  if (orm == ORM_LMPRESS || orm == ORM_LMMOVE)
-  {
-#ifdef DMETERS
-    if (orm == ORM_LMMOVE)
-    {
-      self->viewToMMRel((lx - x)*self->metersInPixel(), (ly - y)*self->metersInPixel());
-    }
-    lx = x;
-    ly = y;
-    if (orm == ORM_LMMOVE)
-    {
-      double lat, lon;
-      self->coordsLL(&lat, &lon);
-      emit coordsChanged(lat, lon);
-    }
-    return true;
-#else
-    if (orm == ORM_LMMOVE)
-      self->viewToRel(lx - x, ly - y);
-//      self->viewToRel((lx - x)/self->zoom(), (ly - y)/self->zoom());
-    lx = x;
-    ly = y;
-    if (orm == ORM_LMMOVE)
-    {
-      double lat, lon;
-      self->coordsLLOfViewCenter(&lat, &lon);
-      emit coordsChanged(lat, lon);
-    }
-    return true;
-#endif
-  }
-  else if (orm == ORM_RMPRESS)
-  {
-  }
-  return false;
-}
-
-bool MapExReactor::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, const coordstriumv_t* ct, bool*)
+bool _MapReactorZoom::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, const coordstriumv_t* ct, bool*)
 {
   DrawMapEx* self = (DrawMapEx*)draw;
   
@@ -879,14 +838,47 @@ bool MapExReactor::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, cons
   return false;
 }
 
+
+
+
+MapExReactor::MapExReactor(bool applyZoom, QObject* parent): _MapReactorZoom(applyZoom, parent)
+{
+}
+
+bool MapExReactor::reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool*)
+{
+  DrawMapEx* self = (DrawMapEx*)draw;
+  
+  float x = ct->fx_pix;
+  float y = ct->fy_pix;
+  if (orm == ORM_LMPRESS || orm == ORM_LMMOVE)
+  {
+    if (orm == ORM_LMMOVE)
+    {
+      self->viewToMMRel((lx - x)*self->metersInPixel(), (ly - y)*self->metersInPixel());
+    }
+    lx = x;
+    ly = y;
+    if (orm == ORM_LMMOVE)
+    {
+      double lat, lon;
+      self->coordsLL(&lat, &lon);
+      emit coordsChanged(lat, lon);
+    }
+    return true;
+  }
+  
+  if (orm == ORM_RMPRESS)
+  {
+  }
+  return false;
+}
+
 /////////////////////////////////
 
 
-
-
-MapExReactorSkol::MapExReactorSkol(bool applyZoom, QObject* parent): QObject(parent)
+MapExReactorSkol::MapExReactorSkol(bool applyZoom, QObject* parent): _MapReactorZoom(applyZoom, parent)
 {
-  doAppZoom = applyZoom;
 }
 
 bool MapExReactorSkol::reactionMouse(DrawQWidget *draw, OVL_REACTION_MOUSE orm, const coordstriumv_t *ct, bool *)
@@ -908,29 +900,66 @@ bool MapExReactorSkol::reactionMouse(DrawQWidget *draw, OVL_REACTION_MOUSE orm, 
   return false;
 }
 
-bool MapExReactorSkol::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, const coordstriumv_t* ct, bool*)
+
+/////////////////////////////////
+
+MapExReactorClickable::MapExReactorClickable(bool applyZoom, QObject* parent): _MapReactorZoom(applyZoom, parent)
+{
+  qel = new QElapsedTimer();
+}
+
+MapExReactorClickable::~MapExReactorClickable()
+{
+  delete qel;
+}
+
+bool MapExReactorClickable::reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool*)
 {
   DrawMapEx* self = (DrawMapEx*)draw;
   
-  if (orm == ORW_AWAY || orm == ORW_TOWARD)
+  float x = ct->fx_pix;
+  float y = ct->fy_pix;
+  if (orm == ORM_LMPRESS || orm == ORM_LMMOVE)
   {
-    float mulc = orm == ORW_AWAY ? 1.05f : 1.0f/1.05f;
-    if (doAppZoom)
+    if (orm == ORM_LMPRESS)
     {
-      float nextzoom = self->zoom()*mulc;
-      if (nextzoom < 0.0001f)     nextzoom = 0.0001f;
-      else if (nextzoom > 24.0f)   nextzoom = 24.0f;
-        self->setZoom(nextzoom);
-      emit zoomChanged(nextzoom);
+      qel->start();
     }
-    else
+    if (orm == ORM_LMMOVE)
     {
-      emit zoomChanged(mulc);
+      qel->invalidate();
+      self->viewToMMRel((lx - x)*self->metersInPixel(), (ly - y)*self->metersInPixel());
+    }
+    lx = x;
+    ly = y;
+    if (orm == ORM_LMMOVE)
+    {
+      double lat, lon;
+      self->coordsLL(&lat, &lon);
+      emit coordsChanged(lat, lon);
     }
     return true;
   }
+  if (orm == ORM_LMRELEASE)
+  {
+    if (qel->isValid() && qel->elapsed() < 400)
+    {
+      double lat, lon;
+      self->coordsLL(&lat, &lon);
+      emit clicked(ct->fx_pix, ct->fy_pix, lat, lon);
+      return true;
+    }
+  }
+  
+  
+  if (orm == ORM_RMPRESS)
+  {
+  }
   return false;
 }
+
+
+
 
 /*
 
@@ -1417,3 +1446,4 @@ bool MapExReactorSkol::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, 
     //fdc.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
     fdc.push("result = result + texture(paletsampler, vec2(dvalue, 0.0)).rgb;" SHNL);
 #endif
+    

@@ -148,6 +148,7 @@ struct dmtype_samplerarray_t    /// rgba for now, nte
   unsigned int    layers; // data arr count
   const void**    data;
   bool            linsmooth;
+  bool            generatemipmapdafuq;
 };
 
 class IPalette;

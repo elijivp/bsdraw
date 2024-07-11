@@ -39,6 +39,8 @@ OSprites::OSprites(QImage* image, OVLQImage::IMAGECONVERT icvt, float sizemultip
   
   m_dm_palette.ppal = ipal;
   m_dm_palette.discrete = discrete;
+  m_dm_palette.prerange[0] = 0.0f;
+  m_dm_palette.prerange[1] = 1.0f;
   appendUniform(DT_SAMP4, &m_dm_palette);
 }
 

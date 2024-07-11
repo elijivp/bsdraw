@@ -156,7 +156,20 @@ struct dmtype_palette_t
 {
   const IPalette*   ppal;
   bool              discrete;
+  float             prerange[2];
 };
+
+inline float  _bsdraw_clamp(float v01){ return v01 < 0.0f ? 0.0f : v01 > 1.0f? 1.0f : v01; }
+inline void   _bsdraw_clamp(float* v01){ if (*v01 < 0.0f) *v01 = 0.0f; else if (*v01 > 1.0f) *v01 = 1.0f; }
+inline void   _bsdraw_clamp(float* vbeg_01, float* vend_01){ *vbeg_01 = _bsdraw_clamp(*vbeg_01);  *vend_01 = _bsdraw_clamp(*vend_01); }
+inline void   _bsdraw_clamp_ordered(float* vbeg_01, float* vend_01)
+{ 
+  _bsdraw_clamp(vbeg_01, vend_01);
+  if (*vbeg_01 < *vend_01)  return;
+  float tmp = *vbeg_01;
+  *vbeg_01 = *vend_01;
+  *vend_01 = tmp;
+}
 
 enum  COORDINATION      { CR_ABSOLUTE, CR_RELATIVE, CR_XABS_YREL, CR_XREL_YABS,
                           CR_ABSOLUTE_NOSCALED, CR_RELATIVE_NOSCALED, CR_XABS_YREL_NOSCALED, CR_XREL_YABS_NOSCALED,

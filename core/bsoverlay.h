@@ -55,12 +55,21 @@ public:
   {
     m_dm_palette.ppal = ipal;
     m_dm_palette.discrete = discrete;
+    m_dm_palette.prerange[0] = 0.0f;
+    m_dm_palette.prerange[1] = 1.0f;
     appendUniform(DT_PALETTE, &m_dm_palette, true);
   }
   void  setPalette(const IPalette* ipal, bool discrete, bool update=true)
   {
     m_dm_palette.ppal = ipal;
     m_dm_palette.discrete = discrete;
+    _Ovldraw::updateParameter(false, update); 
+  }
+  void  setPaletteRange(float range_min, float range_max, bool update=true)
+  {
+    _bsdraw_clamp(&range_min, &range_max);
+    m_dm_palette.prerange[0] = range_min;
+    m_dm_palette.prerange[1] = range_max;
     _Ovldraw::updateParameter(false, update); 
   }
 protected:

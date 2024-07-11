@@ -26,17 +26,6 @@ struct  bounds_t
 
 inline float  length(const bounds_t& bnd){ return bnd.HL - bnd.LL; }
 inline float  pos01(float value, const bounds_t& bnd){ return (value - bnd.LL)/(bnd.HL - bnd.LL); }
-inline float  _bsdraw_clamp(float v01){ return v01 < 0.0f ? 0.0f : v01 > 1.0f? 1.0f : v01; }
-inline void   _bsdraw_clamp(float* v01){ if (*v01 < 0.0f) *v01 = 0.0f; else if (*v01 > 1.0f) *v01 = 1.0f; }
-inline void   _bsdraw_clamp(float* vbeg_01, float* vend_01){ *vbeg_01 = _bsdraw_clamp(*vbeg_01);  *vend_01 = _bsdraw_clamp(*vend_01); }
-inline void   _bsdraw_clamp_ordered(float* vbeg_01, float* vend_01)
-{ 
-  _bsdraw_clamp(vbeg_01, vend_01);
-  if (*vbeg_01 < *vend_01)  return;
-  float tmp = *vbeg_01;
-  *vbeg_01 = *vend_01;
-  *vend_01 = tmp;
-}
 
 inline  void  _bsdraw_update_kb(const bounds_t& bnd, float* k, float *b)
 {

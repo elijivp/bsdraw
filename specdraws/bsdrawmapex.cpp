@@ -802,6 +802,7 @@ int DrawMapEx::sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool ch
 {
   if (changedDimmA || changedDimmB || changedScalingA || changedScalingB)
     emit sig_resized();
+  return 0;
 }
 
 
@@ -825,7 +826,7 @@ bool _MapReactorZoom::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, c
     {
       float nextzoom = self->zoom()*mulc;
       if (nextzoom < 0.0001f)     nextzoom = 0.0001f;
-      else if (nextzoom > 24.0f)   nextzoom = 24.0f;
+      else if (nextzoom > 48.0f)   nextzoom = 48.0f;
         self->setZoom(nextzoom);
       emit zoomChanged(nextzoom);
     }

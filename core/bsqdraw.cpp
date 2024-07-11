@@ -887,7 +887,7 @@ void DrawQWidget::paintGL()
               else if (ufm.type == DT_PALETTE)
               {
                 const dmtype_palette_t* cdp = (const dmtype_palette_t*)ufm.dataptr;
-                palettePrepare(cdp->ppal, cdp->discrete, 1);
+                palettePrepare(cdp->ppal, cdp->discrete, 1, cdp->prerange[0], cdp->prerange[1]);
               }
               
               m_ShaderProgram.setUniformValue(loc, CORR_TEX);
@@ -2081,36 +2081,36 @@ tftdynamic_t DrawQWidget::tftGet(int hoid, int sloid)
 bool DrawQWidget::tftMove(int hoid, int sloid, float fx, float fy)
 {
   TFT_CHECK_FULL(hoid)
-  m_holders[m_holder_current]->writings[TFT_DYNAMIC][sloid].slotinfo.fx = fx;
-  m_holders[m_holder_current]->writings[TFT_DYNAMIC][sloid].slotinfo.fy = fy;
+  m_holders[hoid]->writings[TFT_DYNAMIC][sloid].slotinfo.fx = fx;
+  m_holders[hoid]->writings[TFT_DYNAMIC][sloid].slotinfo.fy = fy;
   TFT_GOTO_SLOT_PINGUP(hoid)
 }
 
 bool DrawQWidget::tftMoveX(int hoid, int sloid, float fx)
 {
   TFT_CHECK_FULL(hoid)
-  m_holders[m_holder_current]->writings[TFT_DYNAMIC][sloid].slotinfo.fx = fx;
+  m_holders[hoid]->writings[TFT_DYNAMIC][sloid].slotinfo.fx = fx;
   TFT_GOTO_SLOT_PINGUP(hoid)
 }
 
 bool DrawQWidget::tftMoveY(int hoid, int sloid, float fy)
 {
   TFT_CHECK_FULL(hoid)
-  m_holders[m_holder_current]->writings[TFT_DYNAMIC][sloid].slotinfo.fy = fy;
+  m_holders[hoid]->writings[TFT_DYNAMIC][sloid].slotinfo.fy = fy;
   TFT_GOTO_SLOT_PINGUP(hoid)
 }
 
 bool DrawQWidget::tftRotate(int hoid, int sloid, float anglerad)
 {
   TFT_CHECK_FULL(hoid)
-  m_holders[m_holder_current]->writings[TFT_DYNAMIC][sloid].slotinfo.rotate = anglerad;
+  m_holders[hoid]->writings[TFT_DYNAMIC][sloid].slotinfo.rotate = anglerad;
   TFT_GOTO_SLOT_PINGUP(hoid)
 }
 
 bool DrawQWidget::tftSwitchTo(int hoid, int sloid, int recid)
 {
   TFT_CHECK_FULL(hoid)
-  m_holders[m_holder_current]->writings[TFT_DYNAMIC][sloid].recid = recid;
+  m_holders[hoid]->writings[TFT_DYNAMIC][sloid].recid = recid;
   TFT_GOTO_SLOT_PINGUP(hoid)
 }
 

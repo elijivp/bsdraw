@@ -565,8 +565,10 @@ void FshDrawMain::generic_decls_add_ovl_input(int ovlid, char* result)
   msprintf(result, "ovlprm%d_in", ovlid+1);
   m_offset += msprintf(&m_to[m_offset], SHNL
                                         "uniform highp vec4 \t%s;" SHNL
-                                        "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in vec2 root_offset_px, in vec3 post_in, out vec2 shapeself);" SHNL
-                                        "vec3 overlayColor%d(in vec4 in_variant, in vec3 color);" SHNL,
+                                        "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, "
+                                                               "in vec2 coords, in float dvalue, in float thick, "
+                                                               "in vec2 root_offset_px, in vec3 post_in, out vec2 shapeself);" SHNL
+                                        "vec3 overlayColor%d(in vec3 color_drawed, in vec3 color_ovled, in vec4 in_variant);" SHNL,
                        result, ovlid+1, ovlid+1);
 }
 
@@ -1054,13 +1056,14 @@ void FshDrawMain::generic_main_process_fsp(const overpattern_t &fsp, float fspop
                              1.0f - fspopacity
                          );
   } // if mask
+  m_offset += msprintf(&m_to[m_offset],     SHGP "vec3 result_drawed = result;" SHNL);
 }
 
 void FshDrawMain::generic_main_prepare_ovl()
 {
   static const char fsh_decltrace[] =     SHNL
                                           SHGP "vec4   ovTrace;" SHNL
-                                          SHGP "vec4   ovlprm_in;" SHNL
+                                          SHGP "vec4   ovlprm_in;" SHNL   /// visibility, opacity, slice_ll, slice_hl
                                           SHGP "vec2   ovl_offset_px_transfer;" SHNL
                                           SHNL;
   memcpy(&m_to[m_offset], fsh_decltrace, sizeof(fsh_decltrace) - 1);  m_offset += sizeof(fsh_decltrace) - 1;
@@ -1125,7 +1128,7 @@ void FshDrawMain::generic_main_process_ovl(ORIENTATION orient, int i, int link, 
   
   m_offset += msprintf(&m_to[m_offset],   SHGP "if  (ovl_visible_%d)" SHNL
                                           SHGP "{" SHNL
-                                          SHG2    "ovTrace = overlayOVCoords%d(ispcell, %s, %s, %s, %s, ovlprm_in[1], ",
+                                          SHG2    "ovTrace = overlayOVCoords%d(ispcell, %s, %s, %s, %s, dvalue, ovlprm_in[1], ",
                                           i+1, i+1, ocall_indimms, ocall_iscaler, ocall_ibounds, ocall_ovcoords);
   
   if (link >= 0)
@@ -1135,8 +1138,15 @@ void FshDrawMain::generic_main_process_ovl(ORIENTATION orient, int i, int link, 
     m_offset += msprintf(&m_to[m_offset],       SHG2 "ivec2(0,0), vec3(post_mask[0], post_mask[3], ppb_in), ovl_offset_px_transfer);" SHNL );
   
   
-  m_offset += msprintf(&m_to[m_offset],     SHG2    "if (sign(ovTrace[3]) != 0.0 && (step(mixwell, 0.0) == 1 || (step(dvalue, ovlprm_in[2]) == 0 && step(ovlprm_in[3], dvalue) == 0)) )" SHNL
-                                              SHG2 SHGP "result = mix(result, overlayColor%d(ovTrace, result), 1.0 - ovlprm_in[0]);" SHNL
+//  m_offset += msprintf(&m_to[m_offset],     SHG2    "if (sign(ovTrace[3]) != 0.0 && (step(mixwell, 0.0) == 1 || (step(dvalue, ovlprm_in[2]) == 0 && step(ovlprm_in[3], dvalue) == 0)) )" SHNL
+//                                              SHG2 SHGP "result = mix(result, asd overlayColor%d(ovTrace, result), 1.0 - ovlprm_in[0]);" SHNL
+//                                          SHGP "}" SHNL
+//                                          SHGP "vec2 ovl_offset_px_%d = ovl_offset_px_transfer;" SHNL
+//                                          , 
+//                                          i+1, i+1);
+  
+//  m_offset += msprintf(&m_to[m_offset],     SHG2    "result = mix(result, asd overlayColor%d(ovTrace, result), (1.0 - ovlprm_in[0])*step(ovlprm_in[2], dvalue)*step(dvalue, ovlprm_in[3]));" SHNL 
+  m_offset += msprintf(&m_to[m_offset],     SHG2    "result = mix(result, overlayColor%d(result_drawed, result, ovTrace), (1.0 - ovlprm_in[0])*(1.0 - step(dvalue, ovlprm_in[2])*step(ovlprm_in[3],dvalue)));" SHNL 
                                           SHGP "}" SHNL
                                           SHGP "vec2 ovl_offset_px_%d = ovl_offset_px_transfer;" SHNL
                                           , 

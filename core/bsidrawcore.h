@@ -93,6 +93,7 @@ enum  SPLITPORTIONS     { SP_NONE=0,
                            SP_COLUMNS_BT_8_COLORSPLIT =SPFLAG_COLORSPLIT|0x0008,    SP_ROWS_RL_8_COLORSPLIT   =SPFLAG_COLORSPLIT|0x0108
                         };
 
+enum  SUMMODEPORTIONS { SMP_SUM, SMP_MEANSUM };
 
 enum  DTYPE       /// Trace/simple shader datatypes
 {

@@ -7,7 +7,9 @@
 
 class SheiGeneratorRecorder: public ISheiGenerator
 {
+  SUMMODEPORTIONS       m_smp;
 public:
+  SheiGeneratorRecorder(SUMMODEPORTIONS smp): m_smp(smp){}
   virtual const char*   shaderName() const {  return "2DREC"; }
   virtual int           portionMeshType() const { return PMT_PSEUDO2D; }
   virtual unsigned int  shvertex_pendingSize() const  {  return VshMainGenerator2D::pendingSize(); }
@@ -21,10 +23,21 @@ public:
     {
       fdc.value2D("float value");
       fdc.push("dvalue = max(dvalue, value);");
+      /// result=vec3(0) by DrawCore constructor and m_emptycolor=0
       if ( fdc.splits() == SP_NONE )
-        fdc.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );
+      {
+        if (m_smp == SMP_SUM)
+          fdc.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1))).rgb;" );
+        else if (m_smp == SMP_MEANSUM)
+          fdc.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1))).rgb/vec3(allocatedPortions);" );
+      }
       else if (fdc.splits() & SPFLAG_COLORSPLIT)
-        fdc.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" );
+      {
+        if (m_smp == SMP_SUM)
+          fdc.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" );
+        else if (m_smp == SMP_MEANSUM)
+          fdc.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb/vec3(allocatedPortions);" );
+      }
       else
         fdc.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" );
       
@@ -34,9 +47,10 @@ public:
   }
 };
 
-DrawRecorder::DrawRecorder(unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory, 
-                           unsigned int portions, ORIENTATION orient, SPLITPORTIONS splitPortions, unsigned int resizeLimit): 
-  DrawQWidget(DATEX_15D, new SheiGeneratorRecorder, portions, orient, splitPortions, 0x00000000),
+DrawRecorder::DrawRecorder( unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory, 
+                            unsigned int portions, ORIENTATION orient, 
+                            SPLITPORTIONS splitPortions, SUMMODEPORTIONS summodePortions, unsigned int resizeLimit): 
+  DrawQWidget(DATEX_15D, new SheiGeneratorRecorder(summodePortions), portions, orient, splitPortions, 0x00000000),
   m_filldirection(FILL_DEFAULT), m_stopped(0), m_memory(portions, samplesHorz, linesMemory), m_resizelim(resizeLimit)
 {
   m_dataDimmA = samplesHorz;
@@ -200,9 +214,10 @@ void DrawRecorder::scrollDataToAbs(int v)
 
 /**********************************************************************************************************************/
 
-DrawRecorderPaged::DrawRecorderPaged(unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory, unsigned int portions, 
-                                 unsigned int pages, ORIENTATION orient, SPLITPORTIONS splitPortions, unsigned int resizeLimit):
-  DrawRecorder(samplesHorz, linesStart, linesMemory, portions, orient, splitPortions, resizeLimit),
+DrawRecorderPaged::DrawRecorderPaged( unsigned int samplesHorz, unsigned int linesStart, unsigned int linesMemory, unsigned int portions, 
+                                      unsigned int pages, ORIENTATION orient, 
+                                      SPLITPORTIONS splitPortions, SUMMODEPORTIONS summodePortions, unsigned int resizeLimit):
+  DrawRecorder(samplesHorz, linesStart, linesMemory, portions, orient, splitPortions, summodePortions, resizeLimit),
   m_pagescount(pages == 0? 1 : pages)
 {
   m_pages = new MemExpand2D::mem_t[m_pagescount];

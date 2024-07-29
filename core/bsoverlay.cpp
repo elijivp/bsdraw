@@ -4,6 +4,7 @@
 /// Created By: Elijah Vlasov
 #include "bsoverlay.h"
 #include "sheigen/bsshgencolor.h"
+#include "sheigen/bsshgenparams.h"
 
 
 int Ovldraw_ColorForegoing::fshColor(int overlay, char* to) const
@@ -28,7 +29,7 @@ int Ovldraw_ColorDomestic::fshColor(int overlay, char* to) const
 {
   FshOVColorConstructor ocg(overlay, to);
   ocg.goto_func_begin();
-  ocg.push("mixwell = in_variant[3];");
+  ocg.push("mixwell = in_variant[3];" SHNL);
   ocg.brushResult(m_color);
   ocg.goto_func_end();
   return ocg.written();
@@ -47,6 +48,39 @@ int Ovldraw_ColorTraced::fshColor(int overlay, char* to) const
 }
 
 int Ovldraw_ColorThroughPalette::fshColor(int overlay, char* to) const
+{
+  FshOVColorConstructor ocg(uniforms(), overlay, to, 0);
+  ocg.goto_func_begin();
+  ocg.push("result = texture("); ocg.param_get(); ocg.push(", vec2(in_variant[0], 0.0)).rgb;" SHNL);
+  ocg.push("mixwell = in_variant[3];" SHNL);
+//  if (true)
+//  {
+////    ocg.push("result = mix(vec3(0), result, mixwell);"
+////             "mixwell = 1.0 - step(mixwell, 0.0);");
+//    ocg.push("result = mix(result, mix(vec3(0), result, mixwell), step(0.5, mixwell));"
+//             "mixwell = mix(mixwell, 1.0 - step(mixwell, 0.0), step(0.5, mixwell));");
+//  }
+  ocg.goto_func_end();
+  return ocg.written();
+}
+
+
+
+int Ovldraw_ColorMixback::fshColor(int overlay, char* to) const
+{
+  FshOVColorConstructor ocg(overlay, to);
+  ocg.goto_func_begin();
+  ocg.push("result = color_drawed;" SHNL
+           "mixwell = in_variant[3];" SHNL);
+  ocg.goto_func_end();
+  return ocg.written();
+}
+
+
+/*
+
+  
+int Ovldraw_ColorThroughPaletteWithInversation::fshColor(int overlay, char* to) const
 {
   FshOVColorConstructor ocg(uniforms(), overlay, to, 0);
   ocg.goto_func_begin();
@@ -72,3 +106,4 @@ int Ovldraw_ColorThroughPalette::fshColor(int overlay, char* to) const
   return ocg.written();
 }
 
+*/

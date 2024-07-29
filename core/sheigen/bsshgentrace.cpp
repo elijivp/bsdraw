@@ -68,7 +68,9 @@ FshOVCoordsConstructor::FshOVCoordsConstructor(const _Ovldraw::uniforms_t &ufms,
 
 void FshOVCoordsConstructor::_gtb()
 { 
-  m_offset += msprintf(&m_to[m_offset], "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in vec2 root_offset_px, in vec3 post_in, out vec2 this_offset_px){" SHNL, 
+  m_offset += msprintf(&m_to[m_offset], "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, "
+                                                               "in vec2 coords, in float dvalue, in float thick, "
+                                                               "in vec2 root_offset_px, in vec3 post_in, out vec2 this_offset_px){" SHNL, 
                        m_overlay);
 #ifdef _XYREG_PIX_DECREASED
   m_offset += msprintf(&m_to[m_offset],   "vec2  fcoords = coords*(ov_ibounds - ivec2(1));" SHNL );

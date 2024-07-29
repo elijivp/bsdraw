@@ -29,7 +29,7 @@ FshOVColorConstructor::FshOVColorConstructor(const _Ovldraw::uniforms_t& ufms, i
 
 void FshOVColorConstructor::goto_func_begin()
 {
-  m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec4 in_variant, in vec3 undercolor) " SHNL
+  m_offset += msprintf(&m_to[m_offset],   "vec3 overlayColor%d(in vec3 color_drawed, in vec3 color_ovled, in vec4 in_variant) " SHNL
                                           "{" SHNL
                                             "vec3 result;" SHNL
                                             "float mixwell = 0.0;" SHNL,
@@ -115,16 +115,16 @@ void FshOVColorConstructor::brushResult(const linestyle_t &kls)
 
 void FshOVColorConstructor::invertResult(int idx)
 {
-  static const char* decl_inversive[] = {     "result = 1.0 - undercolor;" SHNL,
-                                              "result = step(0.5, undercolor); result = (vec3(0.5,0.5,0.5) - result) + undercolor;" SHNL,
-                                              "result.x = step(0.5, (undercolor.r + undercolor.g + undercolor.b)/3.0); result = (1.0 - result.x) * vec3(1.0,1.0,1.0);" SHNL, 
-                                              "result = vec3(1.0 - undercolor.g, 1.0 - undercolor.b, 1.0 - undercolor.r);" SHNL, 
-                                              "result = step(0.5, undercolor); result = (vec3(0.5,0.5,0.5) - result) + vec3(1.0 - undercolor.g, 1.0 - undercolor.b, 1.0 - undercolor.r);" SHNL,
+  static const char* decl_inversive[] = {     "result = 1.0 - color_ovled;" SHNL,
+                                              "result = step(0.5, color_ovled); result = (vec3(0.5,0.5,0.5) - result) + color_ovled;" SHNL,
+                                              "result.x = step(0.5, (color_ovled.r + color_ovled.g + color_ovled.b)/3.0); result = (1.0 - result.x) * vec3(1.0,1.0,1.0);" SHNL, 
+                                              "result = vec3(1.0 - color_ovled.g, 1.0 - color_ovled.b, 1.0 - color_ovled.r);" SHNL, 
+                                              "result = step(0.5, color_ovled); result = (vec3(0.5,0.5,0.5) - result) + vec3(1.0 - color_ovled.g, 1.0 - color_ovled.b, 1.0 - color_ovled.r);" SHNL,
                                         };
   
   const int limidx = sizeof(decl_inversive)/sizeof(const char*);
   if (idx <= 0 || idx > limidx)
-    m_offset += msprintf(&m_to[m_offset], "result = undercolor;");  // fake eba
+    m_offset += msprintf(&m_to[m_offset], "result = color_ovled;");  // fake eba
   else
     m_offset += msprintf(&m_to[m_offset], "%s", decl_inversive[idx-1]);
 }
@@ -137,7 +137,7 @@ void FshOVColorConstructor::push(const char *text)
 
 void FshOVColorConstructor::goto_func_end()
 {
-  m_offset += msprintf(&m_to[m_offset],   "return mix(undercolor, result, mixwell);" SHNL
+  m_offset += msprintf(&m_to[m_offset],   "return mix(color_ovled, result, mixwell);" SHNL
                                         "}" SHNL);
 }
 

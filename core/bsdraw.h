@@ -115,7 +115,8 @@ protected:
   bool                  m_dataTextureInterp;
 protected:
   const IPalette*       m_paletptr;
-  bool                  m_paletdiscretise;       // inited by true if portions > 1
+  bool                  m_paletdiscretise;        // inited by true if portions > 1
+  bool                  m_paletdiscretiseforced;
   float                 m_paletprerange[2];
   unsigned int          m_emptycolor;
   float                 m_clearcolor[3];
@@ -229,7 +230,8 @@ public:
                                                         m_scalingAMin(1), m_scalingAMax(0),
                                                         m_scalingBMin(1), m_scalingBMax(0), m_scalingIsSynced(false),
                                                         m_dataTextureInterp(false),
-                                                        m_paletptr(nullptr), m_paletdiscretise(false), m_emptycolor(emptycolor),
+                                                        m_paletptr(nullptr), m_paletdiscretise(false), m_paletdiscretiseforced(false),
+                                                        m_emptycolor(emptycolor),
                                                         m_doclearbackground(true), m_clearsource(CS_WIDGET),
                                                         m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
                                                         m_overpattern(overpattern_off()), m_overpatternOpacity(0.0f), 
@@ -414,16 +416,19 @@ public:
   void  setDataPalette(const IPalette* ppal)
   {
     m_paletptr = ppal;
-    m_paletdiscretise = ppal->paletteDiscretion();
+    if (m_paletdiscretiseforced == false)
+      m_paletdiscretise = ppal->paletteDiscretion();
     m_bitmaskPendingChanges |= PC_PALETTE;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
   void  setDataPaletteDiscretion(bool d)
   {
+    m_paletdiscretiseforced = true;
     m_paletdiscretise = d;
     m_bitmaskPendingChanges |= PC_PALETTE;
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
+  void  unsetDataPaletteDiscretionForced(){ m_paletdiscretiseforced = false; }
   void  setDataPalette(const IPalette* ppal, bool discrete)
   {
     m_paletptr = ppal;
@@ -432,6 +437,8 @@ public:
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
   const IPalette* dataPalette() const { return m_paletptr; }
+  bool            dataPaletteDiscretion()const { return m_paletdiscretise; }
+  bool            dataPaletteDiscretionForced()const { return m_paletdiscretiseforced; }
   bool            dataPaletteInterpolation()const { return m_dataTextureInterp; }
   
   void  setDataPaletteRange(float start=0.0f, float stop=1.0f)
@@ -734,6 +741,13 @@ public:
     m_bitmaskPendingChanges |= PC_INIT;
     if (!autoUpdateBanned(RD_BYOVL_ADDREMOVE)) callWidgetUpdate();
   }
+  void      _ovlDebugRemoveAll()
+  {
+    for (unsigned int i=0; i<m_overlaysCount; i++)
+      if (m_overlays[i].povl != &m_overlaySingleEmpty)
+        m_overlays[i]._reinit(&m_overlaySingleEmpty, OO_INHERITED, 0);
+    m_overlaysCount = 0;
+  }
 private:
   void _ovlSet(int idx, Ovldraw* povl, OVL_ORIENTATION orient, bool owner, bool doRoot, int rootidx)
   {
@@ -749,8 +763,12 @@ private:
   {
     for (unsigned int i=0; i<m_overlaysCount; i++)
       if (m_overlays[i].povl != &m_overlaySingleEmpty)
-        if (m_overlays[i].povl->preDelete(this) == true)
-          delete m_overlays[i].povl;
+      {
+        Ovldraw* removable = m_overlays[i].povl;
+        m_overlays[i]._reinit(&m_overlaySingleEmpty, OO_INHERITED, 0);
+        if (removable->preDelete(this) == true)
+          delete removable;
+      }
     m_overlaysCount = 0;
   }
   bool  _ovlRemove(int idx, Ovldraw** old)

@@ -20,7 +20,8 @@
 class DrawIntensity: public DrawQWidget
 {
 public:
-  DrawIntensity(unsigned int samplesA, unsigned int samplesB, unsigned int portions=1, ORIENTATION orient=OR_LRBT, SPLITPORTIONS splitPortions=SP_NONE);
+  DrawIntensity(unsigned int samplesA, unsigned int samplesB, unsigned int portions=1, ORIENTATION orient=OR_LRBT, 
+                                          SPLITPORTIONS splitPortions=SP_NONE, SUMMODEPORTIONS summodePortions=SMP_SUM);
 protected:
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
 };
@@ -32,7 +33,8 @@ class DrawIntensityUpsizeA: public DrawQWidget
   unsigned int          m_minA;
   unsigned int          m_maxA;
 public:
-  DrawIntensityUpsizeA(unsigned int samplesAmin, unsigned int samplesAmax, unsigned int samplesB, unsigned int portions=1, ORIENTATION orient=OR_LRBT, SPLITPORTIONS splitPortions=SP_NONE);
+  DrawIntensityUpsizeA(unsigned int samplesAmin, unsigned int samplesAmax, unsigned int samplesB, unsigned int portions=1, ORIENTATION orient=OR_LRBT, 
+                                          SPLITPORTIONS splitPortions=SP_NONE, SUMMODEPORTIONS summodePortions=SMP_SUM);
 public:
   virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
   virtual int           sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool changedScalingA, bool changedScalingB);
@@ -45,7 +47,8 @@ class DrawIntensityUpsizeB: public DrawQWidget
   unsigned int          m_minB;
   unsigned int          m_maxB;
 public:
-  DrawIntensityUpsizeB(unsigned int samplesA, unsigned int samplesBmin, unsigned int samplesBmax, unsigned int portions=1, ORIENTATION orient=OR_LRBT, SPLITPORTIONS splitPortions=SP_NONE);
+  DrawIntensityUpsizeB(unsigned int samplesA, unsigned int samplesBmin, unsigned int samplesBmax, unsigned int portions=1, ORIENTATION orient=OR_LRBT, 
+                                          SPLITPORTIONS splitPortions=SP_NONE, SUMMODEPORTIONS summodePortions=SMP_SUM);
 public:
   virtual void          sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;
   virtual int           sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool changedScalingA, bool changedScalingB);
@@ -61,7 +64,8 @@ class DrawIntensePoints: public DrawIntensity
 public:
   enum { DCIP_NONE=0, DCIP_CLEAR2BUF };
 public:
-  DrawIntensePoints(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions=1, ORIENTATION orient=OR_LRBT, SPLITPORTIONS splitPortions=SP_NONE, int dcip = DCIP_NONE);
+  DrawIntensePoints(unsigned int samplesHorz, unsigned int samplesVert, unsigned int portions=1, ORIENTATION orient=OR_LRBT, 
+                                          SPLITPORTIONS splitPortions=SP_NONE, SUMMODEPORTIONS summodePortions=SMP_SUM, int dcip = DCIP_NONE);
 public:
   /// standard method 'setData' still working
   /// Additional methods for data:

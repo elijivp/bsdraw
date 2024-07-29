@@ -45,7 +45,7 @@ protected:
   virtual int fshColor(int overlay, char *to) const;
 };
 
-/// Shader takes nondirect color and mixwell from fshOVCoords result: in_variant[0..4] = [ptr_to_color inversation - mixwell]
+/// Shader takes nondirect color and mixwell from fshOVCoords result: in_variant[0..4] = [ptr_to_color -- mixwell]
 class Ovldraw_ColorThroughPalette: public Ovldraw
 {
 private:
@@ -59,19 +59,32 @@ public:
     m_dm_palette.prerange[1] = 1.0f;
     appendUniform(DT_PALETTE, &m_dm_palette, true);
   }
-  void  setPalette(const IPalette* ipal, bool discrete, bool update=true)
+  void  setPalette(const IPalette* ipal, bool update)
   {
     m_dm_palette.ppal = ipal;
+    _Ovldraw::updateParameter(false, update); 
+  }
+  void  setPaletteDiscretion(bool discrete, bool update)
+  {
     m_dm_palette.discrete = discrete;
     _Ovldraw::updateParameter(false, update); 
   }
-  void  setPaletteRange(float range_min, float range_max, bool update=true)
+  void  setPaletteRange(float range_min, float range_max, bool update)
   {
     _bsdraw_clamp(&range_min, &range_max);
     m_dm_palette.prerange[0] = range_min;
     m_dm_palette.prerange[1] = range_max;
     _Ovldraw::updateParameter(false, update); 
   }
+protected:
+  virtual int fshColor(int overlay, char *to) const;
+};
+
+/// Shader takes outsideline, path position and mixwell from fshOVCoords result: in_variant[0..4] = [ols path - mixwell]
+class Ovldraw_ColorMixback: public Ovldraw
+{
+public:
+  Ovldraw_ColorMixback(bool visible=true): Ovldraw(visible){}
 protected:
   virtual int fshColor(int overlay, char *to) const;
 };

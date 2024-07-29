@@ -121,6 +121,7 @@ protected:
   virtual bool  reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* /*doStop*/);
 signals:
   void          clicked(float xpix, float ypix, double lat, double lon);
+  void          doubleclicked(float xpix, float ypix);
   void          coordsChanged(double lat, double lon);
 };
 

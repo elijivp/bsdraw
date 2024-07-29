@@ -132,55 +132,18 @@ public:
     fdc.push("vec2  tcoords = (vec2(xy_coords.x, 1.0-xy_coords.y) - vec2(0.5))/mmii/vec2(cc.z) + cc.xy;" SHNL);  // + cc.xy
     fdc.push("vec3  mpx = texture(mapsampler, tcoords).rgb;" SHNL);
     fdc.push("float level = mpx[0] + mapdepbord[0];" SHNL);
-    fdc.push("dvalue = mix(  mappalbord[0] + (mappalbord[1] - mappalbord[0])*(1.0 - level/mapdepbord[1]), "
-                            "mappalbord[2] + (mappalbord[3] - mappalbord[2])*(level/mapdepbord[2]),"
-                            "step(0.0, level) );" SHNL);
-//    fdc.push("dvalue = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
-    fdc.push("result = result + texture(paletsampler, vec2(dvalue, 0.0)).rgb;" SHNL);
-#ifdef RULER
-    {
-      fdc.push("float thick = 2.0;");
-      fdc.push("vec2 pt  = vec2(ab_coords.x*ab_ibounds.x, ab_coords.y*ab_ibounds.y);" SHNL);
-      fdc.push("vec2 ptb = vec2(measurer[0]*ab_ibounds.x, measurer[1]*ab_ibounds.y) - pt;" SHNL);
-      fdc.push("vec2 pte = vec2(measurer[2]*ab_ibounds.x, measurer[3]*ab_ibounds.y) - pt;" SHNL);
-      fdc.push("vec2 bz = vec2(step(pte.x, 0.0)*step(0.0, pte.x), step(pte.y, 0.0)*step(0.0, pte.y));" SHNL
-               "vec2 cz = vec2(1.0/(pte.x-ptb.x), 1.0/(pte.y-ptb.y));" SHNL
-               "float dist = abs( (1-bz[0])*(1-bz[1])*(ptb.y*cz[1] - ptb.x*cz[0])/sqrt(cz[0]*cz[0] + cz[1]*cz[1]) + ptb.x*bz[0] + ptb.y*bz[1] );" SHNL
-               "float dz = step(length((ptb + pte)/2.0), length(pte-ptb)/2.0 + 1.0 + thick);" SHNL // center point and radius
-               "float ez = 1.0 - step(mod(int(sqrt(length(ptb)*length(ptb) - dist*dist)), 30), 2.0);" SHNL
-               "result = mix(result, vec3(0.0), (1.0 - clamp((dist-1)/(1.0+thick), 0.0, 1.0))*dz*ez);" SHNL 
-               "result = mix(result, vec3(0.0), (1.0 - clamp((dist)/(1.0+thick), 0.0, 1.0))*dz*ez);" SHNL 
-               "result = mix(result, vec3(1.0), (1.0 - clamp((0.5+dist)/(1.0+thick), 0.0, 1.0))*dz*ez);" SHNL 
-      );
-    }
-#endif
-    
+    fdc.push("float value = mix( mappalbord[0] + (mappalbord[1] - mappalbord[0])*(1.0 - level/mapdepbord[1]), "
+                                "mappalbord[2] + (mappalbord[3] - mappalbord[2])*(level/mapdepbord[2]),"
+                                "step(0.0, level) );" SHNL);
+    fdc.push("result = texture(paletsampler, vec2(value, 0.0)).rgb;" SHNL);
+    fdc.push("dvalue = level;" SHNL);
     fdc.push("post_mask[0] = mix(1.0, post_mask[0], step(dvalue, post_mask[1]));" SHNL);
-    //    fdc.push( splitPortions == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
-    //    fdc.push("{");
-    //    {
-    //      fdc.value2D("float value");
-    ////      fdc.push("value = mix(dvalue, value);");
-    //      fdc.push("value = dvalue;");    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //      fdc.push("value = paletrange[0] + (paletrange[1] - paletrange[0])*dvalue;" SHNL);
-    //      if ( splitPortions == SP_NONE )
-    //        fdc.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" SHNL);
-    //      else if (splitPortions & SPFLAG_COLORSPLIT)
-    //        fdc.push("result = result + texture(paletsampler, vec2(float(i + value)/(allocatedPortions), 0.0)).rgb;" SHNL);
-    //      else
-    //        fdc.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" SHNL);
-          
-    //      fdc.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" SHNL);
-    //    }
-    //    fdc.push("}");
   }
 };
 
 
-
-
 DrawMap::DrawMap(const char* mappath, int map_x_size, int map_y_size, unsigned int samplesA, unsigned int samplesB, ORIENTATION orient, SPLITPORTIONS splitPortions): 
-  DrawQWidget(DATEX_2D, new SheiGeneratorMap(), 1, orient, splitPortions, 0xFFFFFFFF)
+  DrawQWidget(DATEX_2D, new SheiGeneratorMap(), 1, orient, splitPortions, 0x00000000)
 {
   m_dataDimmA = samplesA;
   m_dataDimmB = samplesB;

@@ -27,12 +27,15 @@ extern int msprintf(char* to, const char* format, ...);
 
 int OvldrawEmpty::fshOVCoords(int overlay, bool /*switchedab*/, char* to) const
 {
-  return msprintf(to, "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, in vec2 coords, in float thick, in vec2 root_offset_px, in vec3 post_in, out vec2 this_offset_px){ return vec4(0.0,0.0,0.0,0.0); }\n", overlay);
+  return msprintf(to, "vec4 overlayOVCoords%d(in ivec2 ispcell, in ivec2 ov_indimms, in ivec2 ov_iscaler, in ivec2 ov_ibounds, "
+                                             "in vec2 coords, in float dvalue, in float thick, "
+                                             "in vec2 root_offset_px, in vec3 post_in, out vec2 this_offset_px)"
+                                          "{ return vec4(0.0,0.0,0.0,0.0); }\n", overlay);
 }
 
 int OvldrawEmpty::fshColor(int overlay, char* to) const
 {
-  return msprintf(to, "vec3 overlayColor%d(in vec4 overcolor, in vec3 undercolor) { return undercolor; }\n", overlay);
+  return msprintf(to, "vec3 overlayColor%d(in vec3 color_drawed, in vec3 color_ovled, in vec4 in_variant) { return color_ovled; }\n", overlay);
 }
 
 ////////////////////////////////////////

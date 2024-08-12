@@ -264,7 +264,7 @@ void DrawQWidget::initCollectAndCompileShader()
     {
       fdm.generic_main_prepare_ovl();
       for (unsigned int i=0; i<m_overlaysCount; i++)
-        fdm.generic_main_process_ovl(m_orient, i, m_overlays[i].driven_id, m_overlays[i].orient);
+        fdm.generic_main_process_ovl(m_orient, i, m_overlays[i].driven_id, m_overlays[i].povl->getOmode(), m_overlays[i].orient);
     }
   }
   if (havetft)

@@ -601,17 +601,23 @@ struct ovlbasics_t
 
 class Ovldraw: virtual public _Ovldraw
 {
+public:
+  enum OPC_MODE { OPC_MODE_MIX, OPC_MODE_ADD, OPC_MODE_SUB, OPC_MODE_REPLADD, OPC_MODE_REPLSUB };
 private:
-  bool                    m_visible;
+  OPC_MODE                m_omode;
   ovlbasics_t             m_ots;
+  bool                    m_visible;
 protected:
-  Ovldraw(bool visible): m_visible(visible)
+  Ovldraw(bool visible): m_omode(OPC_MODE_MIX), m_visible(visible)
   {
     m_ots.opacity = 0.0f;
     m_ots.thickness = 0.0f;
     m_ots.slice_ll = -1e+8f;
     m_ots.slice_hl =  1e+8f;
   }
+public:
+  void  setOmode(OPC_MODE omode){ m_omode = omode; updateParameter(true, true); }  /// !! true!
+  OPC_MODE  getOmode() const { return m_omode; }
 public:
   void  setOpacity(float opacity, bool update=true){ m_ots.opacity = opacity; updateParameter(false, update); }  /// 1.0f for invisible
   float getOpacity() const { return m_ots.opacity; }

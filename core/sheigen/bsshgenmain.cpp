@@ -1069,7 +1069,7 @@ void FshDrawMain::generic_main_prepare_ovl()
   memcpy(&m_to[m_offset], fsh_decltrace, sizeof(fsh_decltrace) - 1);  m_offset += sizeof(fsh_decltrace) - 1;
 }
 
-void FshDrawMain::generic_main_process_ovl(ORIENTATION orient, int i, int link, OVL_ORIENTATION ovlorient)
+void FshDrawMain::generic_main_process_ovl(ORIENTATION orient, int i, int link, Ovldraw::OPC_MODE omode, OVL_ORIENTATION ovlorient)
 {
   bool transposed = orientationTransposed(orient);
   
@@ -1146,11 +1146,36 @@ void FshDrawMain::generic_main_process_ovl(ORIENTATION orient, int i, int link, 
 //                                          i+1, i+1);
   
 //  m_offset += msprintf(&m_to[m_offset],     SHG2    "result = mix(result, asd overlayColor%d(ovTrace, result), (1.0 - ovlprm_in[0])*step(ovlprm_in[2], dvalue)*step(dvalue, ovlprm_in[3]));" SHNL 
-  m_offset += msprintf(&m_to[m_offset],     SHG2    "result = mix(result, overlayColor%d(result_drawed, result, ovTrace), (1.0 - ovlprm_in[0])*(1.0 - step(dvalue, ovlprm_in[2])*step(ovlprm_in[3],dvalue)));" SHNL 
-                                          SHGP "}" SHNL
+  
+  
+  switch (omode)
+  {
+  case Ovldraw::OPC_MODE_MIX: 
+    m_offset += msprintf(&m_to[m_offset],     SHG2    "result = mix(result, overlayColor%d(result_drawed, result, ovTrace), "
+                                                        "(1.0 - ovlprm_in[0])*(1.0 - step(dvalue, ovlprm_in[2])*step(ovlprm_in[3],dvalue)));" SHNL, i+1);
+    break;
+  case Ovldraw::OPC_MODE_ADD: 
+    m_offset += msprintf(&m_to[m_offset],     SHG2    "result = result + vec3(ovlprm_in[0])*overlayColor%d(vec3(0), vec3(0), ovTrace)"
+                                                        "*(1.0 - step(dvalue, ovlprm_in[2])*step(ovlprm_in[3],dvalue));" SHNL, i+1);
+    break;
+  case Ovldraw::OPC_MODE_SUB: 
+    m_offset += msprintf(&m_to[m_offset],     SHG2    "result = result - vec3(ovlprm_in[0])*overlayColor%d(vec3(0), vec3(0), ovTrace)"
+                                                        "*(1.0 - step(dvalue, ovlprm_in[2])*step(ovlprm_in[3],dvalue));" SHNL, i+1);
+    break;
+  case Ovldraw::OPC_MODE_REPLADD: 
+    m_offset += msprintf(&m_to[m_offset],     SHG2    "result = result - vec3(ovlprm_in[0]/2.0) + vec3(ovlprm_in[0])*overlayColor%d(vec3(0), vec3(0), ovTrace)"
+                                                        "*(1.0 - step(dvalue, ovlprm_in[2])*step(ovlprm_in[3],dvalue));" SHNL, i+1);
+    break;
+  case Ovldraw::OPC_MODE_REPLSUB: 
+    m_offset += msprintf(&m_to[m_offset],     SHG2    "result = result + vec3(ovlprm_in[0]/2.0) - vec3(ovlprm_in[0])*overlayColor%d(vec3(0), vec3(0), ovTrace)"
+                                                        "*(1.0 - step(dvalue, ovlprm_in[2])*step(ovlprm_in[3],dvalue));" SHNL, i+1);
+    break;
+  }
+  
+  
+  m_offset += msprintf(&m_to[m_offset],   SHGP "}" SHNL
                                           SHGP "vec2 ovl_offset_px_%d = ovl_offset_px_transfer;" SHNL
-                                          , 
-                                          i+1, i+1);
+                                          , i+1);
 }
 
 void FshDrawMain::generic_main_end()

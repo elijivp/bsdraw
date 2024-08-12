@@ -462,7 +462,7 @@ float DrawMapEx::metersInPixel() const
 }
 
 
-void DrawMapEx::viewToMM(float x, float y, bool update)
+void DrawMapEx::viewToMM(float x, float y)
 {
   pImpl->mdx = x;
   pImpl->mdy = y;
@@ -471,13 +471,12 @@ void DrawMapEx::viewToMM(float x, float y, bool update)
   pImpl->cc01[2] = pImpl->center.ex;
   pImpl->cc01[3] = pImpl->center.ey;
   
-  if (update)
-    DrawQWidget::vmanUpSec(BIT_SET_ON(UP_COORDS));
+  DrawQWidget::vmanUpSec(BIT_SET_ON(UP_COORDS));
 }
 
-void DrawMapEx::viewToMMRel(float dx, float dy, bool update)
+void DrawMapEx::viewToMMRel(float dx, float dy)
 {
-  viewToMM(pImpl->mdx + dx, pImpl->mdy + dy, update);
+  viewToMM(pImpl->mdx + dx, pImpl->mdy + dy);
 }
 
 void DrawMapEx::relpos(float* x01, float* y01) const
@@ -765,6 +764,8 @@ int DrawMapEx::sizeAndScaleChanged(bool changedDimmA, bool changedDimmB, bool ch
 _MapReactorZoom::_MapReactorZoom(bool applyZoom, QObject* parent): QObject(parent)
 {
   doAppZoom = applyZoom;
+  zoomLimits[0] = 0.0001f;
+  zoomLimits[1] = 48.0f;
 }
 
 bool _MapReactorZoom::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, const coordstriumv_t* ct, bool*)
@@ -777,9 +778,9 @@ bool _MapReactorZoom::reactionWheel(DrawQWidget* draw, OVL_REACTION_WHEEL orm, c
     if (doAppZoom)
     {
       float nextzoom = self->zoom()*mulc;
-      if (nextzoom < 0.0001f)     nextzoom = 0.0001f;
-      else if (nextzoom > 48.0f)   nextzoom = 48.0f;
-        self->setZoom(nextzoom);
+      if (nextzoom < zoomClosest())       nextzoom = zoomClosest();
+      else if (nextzoom > zoomFarest())   nextzoom = zoomFarest();
+      self->setZoom(nextzoom);
       emit zoomChanged(nextzoom);
     }
     else

@@ -41,8 +41,8 @@ public:
   float       metersInPixel() const;
   void        coordsLL(double* plat, double* plon) const;
   void        coordsLL(float x, float y, double* plat, double* plon) const;
-  void        viewToMM(float x, float y, bool update = true);
-  void        viewToMMRel(float dx, float dy, bool update = true);
+  void        viewToMM(float x, float y);
+  void        viewToMMRel(float dx, float dy);
   
   void        viewToLL(double lat, double lon, bool update = true);
   void        viewToLLRel(double dlat, double dlon, bool update = true);
@@ -78,8 +78,11 @@ class _MapReactorZoom: public QObject, public DrawEventReactor
 {
   Q_OBJECT
   bool          doAppZoom;
+  float         zoomLimits[2];
 public:
   _MapReactorZoom(bool applyZoom, QObject* parent=nullptr);
+  float         zoomClosest() const { return zoomLimits[0]; }
+  float         zoomFarest() const { return zoomLimits[1]; }
 protected:
   virtual bool  reactionWheel(class DrawQWidget* draw, OVL_REACTION_WHEEL orm, const coordstriumv_t* ct, bool* /*doStop*/);
 signals:

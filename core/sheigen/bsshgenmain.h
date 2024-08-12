@@ -85,7 +85,7 @@ public:
   
   void          generic_main_process_fsp(const overpattern_t& fsp, float fspopacity);
   void          generic_main_prepare_ovl();
-  void          generic_main_process_ovl(ORIENTATION orient, int i, int link, OVL_ORIENTATION ovlorient);
+  void          generic_main_process_ovl(ORIENTATION orient, int i, int link, Ovldraw::OPC_MODE omode, OVL_ORIENTATION ovlorient);
   void          generic_main_end();
 };
 

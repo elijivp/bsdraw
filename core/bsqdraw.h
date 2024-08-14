@@ -317,10 +317,7 @@ public:
   
   struct  tftreclink_t
   {
-    int           recid;
-    tftslot_t     slotinfo;
-    bool          unrotateable;
-    int           driven_id;
+    tftfrag_t     frag;
     int           pinger;   // only for dynamic
     int           ponger;   // only for dynamic
   };

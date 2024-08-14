@@ -63,6 +63,7 @@ public:
   float       distanceOO(float x1, float y1, float x2, float y2) const;    // OO - own, own
   float       distanceByTop() const;
   float       distanceByBottom() const;
+  float       distanceByVert() const;
 protected:
   virtual void            processGlLocation(int secidx, int secflags, int loc, int TEX);
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;

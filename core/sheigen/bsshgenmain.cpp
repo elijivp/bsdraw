@@ -744,37 +744,55 @@ const char* cr_to_px_str(COORDINATION con)
 #define TFT_OPTIMISE2
 
 #if 1
+
 void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft)
 {
   m_offset += msprintf(&m_to[m_offset],     "{" SHNL);
   {
     int limit = tft.limitrows * tft.limitcols;
-    bool gorotate = tft.isunrotateable == false;
-    if (tft.isstatic)
+    bool gorotate = tft.frag->unrotateable == false;
+    
+    if (tft.frag->ar_length == 0)
     {
-      m_offset += msprintf(&m_to[m_offset],     
-                                                SHGP "int  tft_rec = %d;" SHNL
-                                                SHGP "vec4 tft_slot = vec4(%F, %F, %F, %F);" SHNL, 
-                                                      tft.recordid/* / tft.limitrows*/,
-                                                      tft.slotdata.fx, tft.slotdata.fy, tft.slotdata.scale, tft.slotdata.rotate);
-      if (tft.slotdata.rotate > -0.0001f && tft.slotdata.rotate < 0.0001f)
-        gorotate = false;
+      if (tft.isstatic)
+      {
+        m_offset += msprintf(&m_to[m_offset],     
+                                                  SHGP "int  tft_rec = %d;" SHNL
+                                                  SHGP "vec4 tft_slot = vec4(%F, %F, %F, %F);" SHNL, 
+                                                        tft.frag->recordid/* / tft.limitrows*/,
+                                                        tft.frag->slotdata.fx, tft.frag->slotdata.fy, tft.frag->slotdata.scale, tft.frag->slotdata.rotate);
+        if (tft.frag->slotdata.rotate > -0.0001f && tft.frag->slotdata.rotate < 0.0001f)
+          gorotate = false;
+      }
+      else
+      {
+        m_offset += msprintf(&m_to[m_offset],     SHGP "int  tft_rec = tft_i_%d[%d];" SHNL
+                                                  SHGP "vec4 tft_slot = tft_c_%d[%d];" SHNL, tft.texid, tft.varid, tft.texid, tft.varid);
+      }
     }
     else
-      m_offset += msprintf(&m_to[m_offset],     SHGP "int  tft_rec = tft_i_%d[%d];" SHNL
-                                                SHGP "vec4 tft_slot = tft_c_%d[%d];" SHNL, tft.texid, tft.varid, tft.texid, tft.varid);
+    {
+      if (tft.isstatic)
+      {
+        Q_ASSERT(false);
+      }
+      else
+      {
+        m_offset += msprintf(&m_to[m_offset],     SHGP "int  tft_rec = tft_i_%d[%d];" SHNL
+                                                  SHGP "vec4 tft_slot = tft_c_%d[%d];" SHNL, tft.texid, tft.varid, tft.texid, tft.varid);
+      }
+    }
     
-    if (tft.driven_id == -1)
-      m_offset += msprintf(&m_to[m_offset],       SHGP "tft_slot.xy = tft_slot.xy*%s;" SHNL, cr_to_px_str(tft.slotdata.cr));
+    if (tft.frag->driven_id == -1)
+      m_offset += msprintf(&m_to[m_offset],       SHGP "tft_slot.xy = tft_slot.xy*%s;" SHNL, cr_to_px_str(tft.frag->slotdata.cr));
     else
-      m_offset += msprintf(&m_to[m_offset],       SHGP "tft_slot.xy = ovl_offset_px_%d.xy + tft_slot.xy*%s;" SHNL, tft.driven_id, cr_to_px_str(tft.slotdata.cr));
+      m_offset += msprintf(&m_to[m_offset],       SHGP "tft_slot.xy = ovl_offset_px_%d.xy + tft_slot.xy*%s;" SHNL, tft.frag->driven_id, cr_to_px_str(tft.frag->slotdata.cr));
     
     m_offset += msprintf(&m_to[m_offset],       SHGP "vec2  rc = xy_coords*xy_ibounds - tft_slot.xy + vec2(0.499);" SHNL);
     
 #ifdef TFT_OPTIMISE
     const float lenmax = tft.isstatic ? sqrt(tft.textwidth*tft.textwidth/4.0f + tft.recordheight*tft.recordheight/4.0f) :
                                         sqrt(tft.recordwidth*tft.recordwidth/4.0f + tft.recordheight*tft.recordheight/4.0f);
-//    m_offset += msprintf(&m_to[m_offset],       SHGP "if (step(distance(rc, vec2(%f, %f)), 0.0) == 1.0)" SHNL
     m_offset += msprintf(&m_to[m_offset],       SHGP "if (length(rc) < %f)" SHNL
                                                 SHGP "{" SHNL, lenmax);
 #endif
@@ -835,7 +853,9 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft)
   }
   m_offset += msprintf(&m_to[m_offset],     "}" SHNL);
 }
+
 #else
+
 void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft)
 {
   m_offset += msprintf(&m_to[m_offset],     "{" SHNL);
@@ -848,14 +868,14 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft)
                                                 SHGP "int  tft_rec = %d;" SHNL
                                                 SHGP "vec4 tft_slot = vec4(%F, %F, %F, %F);" SHNL, 
                                                       tft.recordid/* / tft.limitrows*/,
-                                                      tft.slotdata.fx, tft.slotdata.fy, tft.slotdata.scale, tft.slotdata.rotate);
-      if (tft.slotdata.rotate > -0.0001f && tft.slotdata.rotate < 0.0001f)
+                                                      tft.frag->slotdata.fx, tft.frag->slotdata.fy, tft.frag->slotdata.scale, tft.frag->slotdata.rotate);
+      if (tft.frag->slotdata.rotate > -0.0001f && tft.frag->slotdata.rotate < 0.0001f)
         gorotate = false;
     }
     else
       m_offset += msprintf(&m_to[m_offset],     SHGP "int  tft_rec = tft_i_%d[%d];" SHNL
                                                 SHGP "vec4 tft_slot = tft_c_%d[%d];" SHNL, tft.texid, tft.varid, tft.texid, tft.varid);
-    m_offset += msprintf(&m_to[m_offset],       SHGP "tft_slot.xy = tft_slot.xy*%s;" SHNL, cr_to_px_str(tft.slotdata.cr));
+    m_offset += msprintf(&m_to[m_offset],       SHGP "tft_slot.xy = tft_slot.xy*%s;" SHNL, cr_to_px_str(tft.frag->slotdata.cr));
     m_offset += msprintf(&m_to[m_offset],       SHGP "vec2  rc = ab_coords*ab_ibounds - tft_slot.xy + vec2(0.499);" SHNL);
     
 #ifdef TFT_OPTIMISE

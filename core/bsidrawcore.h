@@ -670,6 +670,16 @@ struct tftslot_t
   float             rotate;
 };
 
+struct tftfrag_t
+{
+  int               recordid;
+  tftslot_t         slotdata;
+  bool              unrotateable;
+  int               driven_id;
+  
+  int               ar_length;
+};
+
 struct tftfraginfo_t
 {
   int               texid;
@@ -680,13 +690,10 @@ struct tftfraginfo_t
   int               recordwidth;
   int               recordheight;
   int               textwidth;
-  int               recordid;
   
-  int               varid;
   bool              isstatic;
-  bool              isunrotateable;
-  int               driven_id;
-  tftslot_t         slotdata;
+  int               varid;
+  const tftfrag_t*  frag;
 };
 
 class FshDrawComposer;

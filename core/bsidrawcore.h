@@ -676,8 +676,6 @@ struct tftfrag_t
   tftslot_t         slotdata;
   bool              unrotateable;
   int               driven_id;
-  
-  int               ar_length;
 };
 
 struct tftfraginfo_t

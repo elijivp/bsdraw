@@ -310,14 +310,18 @@ protected:
     float*        rawData() { return m_extendeddataarr; }
   };
 public:
-  enum  { TFT_HOLDERS=16, TFT_MAXAREA=32, TFT_TEXTMAXLEN=64, TFT_SLOTLIMIT=1024,
+  enum  { TFT_HOLDERS=16, TFT_MAXAREA=32, TFT_TEXTMAXLEN=64, 
+          TFT_SLOTLIMIT_STATIC=512,
+          TFT_SLOTLIMIT_DYNAMIC=1024,
     TFT_STATIC=0,
-    TFT_DYNAMIC=1
+    TFT_DYNAMIC=1,
+    _TFT_COUNT
   };
   
   struct  tftreclink_t
   {
     tftfrag_t     frag;
+    bool          grouped;
     int           pinger;   // only for dynamic
     int           ponger;   // only for dynamic
   };
@@ -352,7 +356,11 @@ public:
     tftpage_t                 recbook;
 #endif
     
-    std::vector<tftreclink_t> writings[2];  // TFT_STATIC, TFT_DYNAMIC
+    tftreclink_t              wristatic_records[TFT_SLOTLIMIT_STATIC];
+    tftreclink_t              wridynamic_records[TFT_SLOTLIMIT_DYNAMIC];
+    tftreclink_t*             writings[_TFT_COUNT];
+    unsigned int              writingscount[_TFT_COUNT];
+    bool                      writingsGrouping[_TFT_COUNT];
       
     int                       pinger;
     int                       ponger;
@@ -390,11 +398,15 @@ public:
   tftdynamic_t    tftPushDynamicDA(const char* text, COORDINATION cr, float fx, float fy, float rotate);
   tftdynamic_t    tftPushDynamicDA(int recid, COORDINATION cr, float fx, float fy, float rotate, int ovlroot);  // rotateable
   tftdynamic_t    tftPushDynamicDA(const char* text, COORDINATION cr, float fx, float fy, float rotate, int ovlroot);
+  void            tftEnableDynamicClosestMode();
+  void            tftDisableDynamicClosestMode();
   
   tftstatic_t     tftPushStatic(int recid, COORDINATION cr, float fx, float fy, float rotate=0.0f);
   tftstatic_t     tftPushStatic(const char* text, COORDINATION cr, float fx, float fy, float rotate=0.0f);
   tftstatic_t     tftPushStatic(int recid, COORDINATION cr, float fx, float fy, float rotate, int ovlroot);
   tftstatic_t     tftPushStatic(const char* text, COORDINATION cr, float fx, float fy, float rotate, int ovlroot);
+  void            tftEnableStaticClosestMode();
+  void            tftDisableStaticClosestMode();
   
   int             tftRecordsCount() const;
   int             tftDynamicsCount() const;

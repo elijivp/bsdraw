@@ -750,7 +750,7 @@ const char* cr_to_px_str(COORDINATION con)
 
 #if 1
 
-void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft, bool ingroup, bool ingroup_last)
+void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft, GROUPING gp)
 {
   m_offset += msprintf(&m_to[m_offset],     "{" SHNL);
   {
@@ -784,7 +784,7 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft, bool ingrou
                                                   SHGP "tft_dd[0] = length(tft_slot[0].xy);" SHNL
         );
     
-    if (ingroup)
+    if (gp != GP_OFF)
     {
       m_offset += msprintf(&m_to[m_offset],       SHGP "if (tft_dd[0] <= tft_dd[1] || tft_fc == 0) {" SHNL
                                                   SHGP   "tft_rec[2] = tft_rec[1];" SHNL
@@ -803,9 +803,9 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft, bool ingrou
         );
     }
     
-    if (ingroup_last || !ingroup)
+    if (gp == GP_OFF || gp == GP_ONCLOSE)
     {
-      if (!ingroup)
+      if (gp == GP_OFF)
       {
         m_offset += msprintf(&m_to[m_offset],     SHGP "{" SHNL 
                                                   SHGP "int i = 0;" SHNL );
@@ -882,17 +882,14 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft, bool ingrou
       m_offset += msprintf(&m_to[m_offset],     SHG2 "}" SHNL); // for
       
       
-      if (!ingroup)
-      {
-      }
-      else if (ingroup_last)
+      if (gp == GP_ONCLOSE)
       {
         m_offset += msprintf(&m_to[m_offset],     SHGP "tft_fc=0;" SHNL );
       }
     }
   }
   m_offset += msprintf(&m_to[m_offset],     "}" SHNL);
-  qDebug()<<m_to;
+//  qDebug()<<m_to;
 }
 
 #else

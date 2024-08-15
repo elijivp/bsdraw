@@ -192,8 +192,8 @@ void DrawQWidget::initCollectAndCompileShader()
   for (unsigned int t=0; t<TFT_HOLDERS; t++)
     if (m_holders[t] != nullptr)
     {
-      fshps += m_holders[t]->writings[TFT_STATIC].size()*1024;
-      fshps += m_holders[t]->writings[TFT_DYNAMIC].size()*1024;
+      fshps += m_holders[t]->writingscount[TFT_STATIC]*1024;
+      fshps += m_holders[t]->writingscount[TFT_DYNAMIC]*1024;
     }
   if (fshps < 32768)
     fshps = 32768;
@@ -225,9 +225,9 @@ void DrawQWidget::initCollectAndCompileShader()
       fdm.generic_decls_add_tft_area(t, m_holders[t]->_varname);
       m_holders[t]->_location_i = -1;
       m_holders[t]->_location_c = -1;
-      if (m_holders[t]->writings[TFT_DYNAMIC].empty() == false)
-        fdm.generic_decls_add_tft_dslots(t, m_holders[t]->writings[TFT_DYNAMIC].size(), m_holders[t]->_varname_i, m_holders[t]->_varname_c);
-      havetft |= m_holders[t]->writings[TFT_STATIC].empty() == false || m_holders[t]->writings[TFT_DYNAMIC].empty() == false;
+      if (m_holders[t]->writingscount[TFT_DYNAMIC] > 0)
+        fdm.generic_decls_add_tft_dslots(t, m_holders[t]->writingscount[TFT_DYNAMIC], m_holders[t]->_varname_i, m_holders[t]->_varname_c);
+      havetft |= m_holders[t]->writingscount[TFT_STATIC] > 0 || m_holders[t]->writingscount[TFT_DYNAMIC] > 0;
     }
   }
   bool haveovl = m_overlaysCount > 0;
@@ -274,9 +274,9 @@ void DrawQWidget::initCollectAndCompileShader()
     {
       if (m_holders[t] == nullptr)
         continue;
-      for (int s=0; s<2; s++)
+      for (int s=0; s<_TFT_COUNT; s++)
       {
-        for (unsigned int i=0; i<m_holders[t]->writings[s].size(); i++)
+        for (unsigned int i=0; i<m_holders[t]->writingscount[s]; i++)
         {
           int recid_short = m_holders[t]->writings[s][i].frag.recordid % m_holders[t]->c_total;
 #ifndef BSGLSLOLD
@@ -290,11 +290,19 @@ void DrawQWidget::initCollectAndCompileShader()
           tftfraginfo_t tfi = {  int(t), 1,
                                  m_holders[t]->limrows, m_holders[t]->limcols, 
                                  m_holders[t]->record_width, m_holders[t]->record_height, m_holders[t]->recbook.records[recid_short].width, 
-                                 s == TFT_STATIC, int(i), &m_holders[t]->writings[s][i].frag
+                                 s == TFT_STATIC, int(i), &writings[i].frag
           };
 #endif
-          fdm.generic_main_process_tft(tfi, true, i == m_holders[t]->writings[s].size()-1);
-//          fdm.generic_main_process_tft(tfi, false, false);
+          FshDrawMain::GROUPING gpmode = FshDrawMain::GP_OFF;
+          if (m_holders[t]->writings[s][i].grouped)
+          {
+            gpmode = FshDrawMain::GP_ON;
+            if (i + 1 == m_holders[t]->writingscount[s])
+              gpmode = FshDrawMain::GP_ONCLOSE;
+            else if (m_holders[t]->writings[s][i + 1].grouped == false)
+              gpmode = FshDrawMain::GP_ONCLOSE;
+          }
+          fdm.generic_main_process_tft(tfi, gpmode);
         }
       }
     }
@@ -396,12 +404,12 @@ void DrawQWidget::initCollectAndCompileShader()
         m_holders[t]->_location = m_ShaderProgram.uniformLocation(m_holders[t]->_varname);
         m_holders[t]->ponger = 0;
         
-        if (m_holders[t]->writings[TFT_DYNAMIC].empty() == false)
+        if (m_holders[t]->writingscount[TFT_DYNAMIC] > 0)
         {
           m_holders[t]->_location_i = m_ShaderProgram.uniformLocation(m_holders[t]->_varname_i);
           m_holders[t]->_location_c = m_ShaderProgram.uniformLocation(m_holders[t]->_varname_c);
         }
-        for (unsigned int i=0; i<m_holders[t]->writings[TFT_DYNAMIC].size(); i++)
+        for (unsigned int i=0; i<m_holders[t]->writingscount[TFT_DYNAMIC]; i++)
           m_holders[t]->writings[TFT_DYNAMIC][i].ponger = 0;
       }
     }
@@ -725,13 +733,13 @@ void DrawQWidget::paintGL()
     {
       if (m_holders[t] == nullptr)
         continue;
-      int         arr_i[TFT_SLOTLIMIT];
-      QVector4D   arr_c[TFT_SLOTLIMIT];
+      int         arr_i[TFT_SLOTLIMIT_DYNAMIC];
+      QVector4D   arr_c[TFT_SLOTLIMIT_DYNAMIC];
       
-      if (m_holders[t]->writings[TFT_DYNAMIC].empty() == false)
+      if (m_holders[t]->writingscount[TFT_DYNAMIC] > 0)
       {
         bool ppp = forceSubPendOn;
-        for (unsigned int i=0; i<m_holders[t]->writings[TFT_DYNAMIC].size(); i++)
+        for (unsigned int i=0; i<m_holders[t]->writingscount[TFT_DYNAMIC]; i++)
         {
           ppp |= m_holders[t]->writings[TFT_DYNAMIC][i].ponger != m_holders[t]->writings[TFT_DYNAMIC][i].pinger;
           arr_i[i] = m_holders[t]->writings[TFT_DYNAMIC][i].frag.recordid;
@@ -741,8 +749,8 @@ void DrawQWidget::paintGL()
         }
         if (ppp)
         {
-          m_ShaderProgram.setUniformValueArray(m_holders[t]->_location_i, arr_i, m_holders[t]->writings[TFT_DYNAMIC].size());
-          m_ShaderProgram.setUniformValueArray(m_holders[t]->_location_c, arr_c, m_holders[t]->writings[TFT_DYNAMIC].size());
+          m_ShaderProgram.setUniformValueArray(m_holders[t]->_location_i, arr_i, m_holders[t]->writingscount[TFT_DYNAMIC]);
+          m_ShaderProgram.setUniformValueArray(m_holders[t]->_location_c, arr_c, m_holders[t]->writingscount[TFT_DYNAMIC]);
         }
       }
     } // for
@@ -1664,6 +1672,14 @@ int DrawQWidget::_tft_holding_alloc(QFont font, int maxtextlen, int limitcolumns
       m_holders[i]->limrows = 1080 / m_holders[i]->record_height;
       m_holders[i]->c_total = m_holders[i]->limrows*m_holders[i]->limcols;
       
+      m_holders[i]->writings[TFT_STATIC] = m_holders[i]->wristatic_records;
+      m_holders[i]->writings[TFT_DYNAMIC] = m_holders[i]->wridynamic_records;
+      for (int j=0; j<_TFT_COUNT; j++)
+      {
+        m_holders[i]->writingscount[j] = 0;
+        m_holders[i]->writingsGrouping[j] = true;
+      }
+      
 #ifndef BSGLSLOLD
       {
         tftpage_t area;
@@ -1786,8 +1802,10 @@ int DrawQWidget::_tft_record_push(DrawQWidget::TFTholder* holder, const char* te
 
 int  DrawQWidget::_tft_reclink_push(int type, const DrawQWidget::tftreclink_t& ts)
 {
-  m_holders[m_holder_current]->writings[type].push_back(ts);
-  int sid = m_holders[m_holder_current]->writings[type].size()-1;  
+  m_holders[m_holder_current]->writings[type][m_holders[m_holder_current]->writingscount[type]] = ts;
+  m_holders[m_holder_current]->writings[type][m_holders[m_holder_current]->writingscount[type]].grouped = 
+                                    m_holders[m_holder_current]->writingsGrouping[type];
+  int sid = m_holders[m_holder_current]->writingscount[type]++;
   if (ts.frag.recordid != -1)
   {
     m_bitmaskPendingChanges |= PC_INIT | PC_TFT_TEXTURE | PC_TFT_PARAMS;
@@ -1867,7 +1885,7 @@ int DrawQWidget::tftAddRecords(int count, const char* text[])
 
 tftdynamic_t DrawQWidget::tftPushDynamicFA(int recid, COORDINATION cr, float fx, float fy)
 {
-  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, 0.0f }, true, -1, 0 }, 1, 0 };
+  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, 0.0f }, true, -1 }, 1, 0 };
   int rsid = _tft_reclink_push(TFT_DYNAMIC, ts);
   return tftdynamic_t(this, m_holder_current, rsid);
 }
@@ -1882,7 +1900,7 @@ tftdynamic_t DrawQWidget::tftPushDynamicFA(const char* text, COORDINATION cr, fl
 
 tftdynamic_t DrawQWidget::tftPushDynamicFA(int recid, COORDINATION cr, float fx, float fy, int ovlroot)
 {
-  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, 0.0f }, true, ovlroot, 0 }, 1, 0 };
+  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, 0.0f }, true, ovlroot }, 1, 0 };
   int rsid = _tft_reclink_push(TFT_DYNAMIC, ts);
   return tftdynamic_t(this, m_holder_current, rsid);
 }
@@ -1897,7 +1915,7 @@ tftdynamic_t DrawQWidget::tftPushDynamicFA(const char* text, COORDINATION cr, fl
 
 tftdynamic_t DrawQWidget::tftPushDynamicDA(int recid, COORDINATION cr, float fx, float fy, float rotate)
 {
-  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, rotate }, false, -1, 0 }, 1, 0 };
+  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, rotate }, false, -1 }, 1, 0 };
   int rsid = _tft_reclink_push(TFT_DYNAMIC, ts);
   return tftdynamic_t(this, m_holder_current, rsid);
 }
@@ -1912,7 +1930,7 @@ tftdynamic_t DrawQWidget::tftPushDynamicDA(const char* text, COORDINATION cr, fl
 
 tftdynamic_t DrawQWidget::tftPushDynamicDA(int recid, COORDINATION cr, float fx, float fy, float rotate, int ovlroot)
 {
-  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, rotate }, false, ovlroot, 0 }, 1, 0 };
+  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, rotate }, false, ovlroot }, 1, 0 };
   int rsid = _tft_reclink_push(TFT_DYNAMIC, ts);
   return tftdynamic_t(this, m_holder_current, rsid);
 }
@@ -1925,9 +1943,21 @@ tftdynamic_t DrawQWidget::tftPushDynamicDA(const char* text, COORDINATION cr, fl
   return tftPushDynamicDA(recid, cr, fx, fy, rotate, ovlroot);
 }
 
+void DrawQWidget::tftEnableDynamicClosestMode()
+{
+  if (m_holder_current != -1)
+    m_holders[m_holder_current]->writingsGrouping[TFT_DYNAMIC] = true;
+}
+
+void DrawQWidget::tftDisableDynamicClosestMode()
+{
+  if (m_holder_current != -1)
+    m_holders[m_holder_current]->writingsGrouping[TFT_DYNAMIC] = false;
+}
+
 tftstatic_t DrawQWidget::tftPushStatic(int recid, COORDINATION cr, float fx, float fy, float rotate)
 {
-  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, rotate }, false, -1, 0 }, 1, 0 };
+  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, rotate }, false, -1 }, 1, 0 };
   _tft_reclink_push(TFT_STATIC, ts);
   return tftstatic_t(m_holder_current, recid);
 }
@@ -1942,7 +1972,7 @@ tftstatic_t DrawQWidget::tftPushStatic(const char* text, COORDINATION cr, float 
 
 tftstatic_t DrawQWidget::tftPushStatic(int recid, COORDINATION cr, float fx, float fy, float rotate, int ovlroot)
 {
-  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, rotate }, false, ovlroot, 0 }, 1, 0 };
+  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, rotate }, false, ovlroot }, 1, 0 };
   _tft_reclink_push(TFT_STATIC, ts);
   return tftstatic_t(m_holder_current, recid);
 }
@@ -1955,6 +1985,17 @@ tftstatic_t DrawQWidget::tftPushStatic(const char* text, COORDINATION cr, float 
   return tftPushStatic(recid, cr, fx, fy, rotate, ovlroot);
 }
 
+void DrawQWidget::tftEnableStaticClosestMode()
+{
+  if (m_holder_current != -1)
+    m_holders[m_holder_current]->writingsGrouping[TFT_STATIC] = true;
+}
+
+void DrawQWidget::tftDisableStaticClosestMode()
+{
+  if (m_holder_current != -1)
+    m_holders[m_holder_current]->writingsGrouping[TFT_STATIC] = false;
+}
 
 
 
@@ -1971,7 +2012,7 @@ int DrawQWidget::tftRecordsCount() const
 int DrawQWidget::tftDynamicsCount() const
 {
   if (m_holder_current == -1) return 0;
-  return m_holders[m_holder_current]->writings[TFT_DYNAMIC].size();
+  return m_holders[m_holder_current]->writingscount[TFT_DYNAMIC];
 }
 
 int DrawQWidget::tftRecordsPerArea() const
@@ -1982,12 +2023,12 @@ int DrawQWidget::tftRecordsPerArea() const
 
 
 #define TFT_CHECK_SHORT(hoid, badret)     if (hoid == -1) return badret; \
-                                          if (sloid >= int(m_holders[hoid]->writings[TFT_DYNAMIC].size())) \
+                                          if (sloid >= int(m_holders[hoid]->writingscount[TFT_DYNAMIC])) \
                                             return badret;
 #define TFT_CHECK_FULL(hoid) \
                                 Q_ASSERT(hoid >= 0 && hoid < TFT_HOLDERS); \
                                 if (m_holders[hoid] == nullptr) return false; \
-                                if (sloid >= int(m_holders[hoid]->writings[TFT_DYNAMIC].size())) \
+                                if (sloid >= int(m_holders[hoid]->writingscount[TFT_DYNAMIC])) \
                                   return false;
 
 

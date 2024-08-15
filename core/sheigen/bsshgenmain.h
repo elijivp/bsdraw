@@ -81,7 +81,8 @@ public:
 //  void          generic_main_tftadd(const char* name, float arr[]);
 //  void          generic_main_process_tft(const char* holdingname, const char* varname, int record, int limitrows, int arr[]);
   void          generic_main_prepare_tft();
-  void          generic_main_process_tft(const tftfraginfo_t& tft, bool ingroup, bool ingroup_last);
+  enum GROUPING  { GP_OFF, GP_ON, GP_ONCLOSE };
+  void          generic_main_process_tft(const tftfraginfo_t& tft, GROUPING);
   
   void          generic_main_process_fsp(const overpattern_t& fsp, float fspopacity);
   void          generic_main_prepare_ovl();

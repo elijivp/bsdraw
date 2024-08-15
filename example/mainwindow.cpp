@@ -1104,19 +1104,24 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       for (int i=0; i<TOT; i++)
       {
         float pr = i/float(TOT)*M_PI*2.0f;
+//        if (i == TOT/3)
+//          pdraw->tftEnableDynamicClosestMode();
+//        else if (i == TOT*2/3)
+//          pdraw->tftDisableDynamicClosestMode();
+          
         pdraw->tftPushDynamicFA(i*360/TOT, CR_RELATIVE, 0.3f*sin(pr), 0.3f*cos(pr), ovl_visir);
       }
       
       QTimer* tm = new QTimer();
       tm->setSingleShot(false);
-      tm->setInterval(3000);
+      tm->setInterval(30);
       QObject::connect(tm, &QTimer::timeout, [=]()
       { 
-//        for (int j=0; j<pdraw->tftDynamicsCount(); j++)
-//          pdraw->tftSwitchTo(j, (pdraw->tftRecordIndex(j) + 1) % pdraw->tftRecordsCount());
-        
         for (int j=0; j<pdraw->tftDynamicsCount(); j++)
-          pdraw->tftMove(j, 0.0f - 0.1f + 0.2f*rand()/float(RAND_MAX), 0.0f + -0.1f + 0.2f*rand()/float(RAND_MAX));
+          pdraw->tftSwitchTo(j, (pdraw->tftRecordIndex(j) + 1) % pdraw->tftRecordsCount());
+        
+//        for (int j=0; j<pdraw->tftDynamicsCount(); j++)
+//          pdraw->tftMove(j, 0.0f - 0.1f + 0.2f*rand()/float(RAND_MAX), 0.0f + -0.1f + 0.2f*rand()/float(RAND_MAX));
       } );
       QTimer::singleShot(2000, tm, SLOT(start()));
     }

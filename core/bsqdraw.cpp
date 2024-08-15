@@ -293,7 +293,8 @@ void DrawQWidget::initCollectAndCompileShader()
                                  s == TFT_STATIC, int(i), &m_holders[t]->writings[s][i].frag
           };
 #endif
-          fdm.generic_main_process_tft(tfi);
+          fdm.generic_main_process_tft(tfi, true, i == m_holders[t]->writings[s].size()-1);
+//          fdm.generic_main_process_tft(tfi, false, false);
         }
       }
     }

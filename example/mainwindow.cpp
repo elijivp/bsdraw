@@ -1109,11 +1109,14 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       
       QTimer* tm = new QTimer();
       tm->setSingleShot(false);
-      tm->setInterval(30);
+      tm->setInterval(3000);
       QObject::connect(tm, &QTimer::timeout, [=]()
       { 
+//        for (int j=0; j<pdraw->tftDynamicsCount(); j++)
+//          pdraw->tftSwitchTo(j, (pdraw->tftRecordIndex(j) + 1) % pdraw->tftRecordsCount());
+        
         for (int j=0; j<pdraw->tftDynamicsCount(); j++)
-          pdraw->tftSwitchTo(j, (pdraw->tftRecordIndex(j) + 1) % pdraw->tftRecordsCount());
+          pdraw->tftMove(j, 0.0f - 0.1f + 0.2f*rand()/float(RAND_MAX), 0.0f + -0.1f + 0.2f*rand()/float(RAND_MAX));
       } );
       QTimer::singleShot(2000, tm, SLOT(start()));
     }

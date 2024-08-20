@@ -124,9 +124,10 @@ public:
 protected:
   virtual bool  reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE orm, const coordstriumv_t* ct, bool* /*doStop*/);
 signals:
-  void          clicked(float xpix, float ypix, double lat, double lon);
+  void          clickedLM(float xpix, float ypix);
   void          doubleclicked(float xpix, float ypix);
   void          coordsChanged(double lat, double lon);
+  void          actionRM(bool released, float xpix, float ypix);
 };
 
 #endif // DRAWCOREMAPEX_H

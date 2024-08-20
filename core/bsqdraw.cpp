@@ -744,7 +744,7 @@ void DrawQWidget::paintGL()
           ppp |= m_holders[t]->writings[TFT_DYNAMIC][i].ponger != m_holders[t]->writings[TFT_DYNAMIC][i].pinger;
           arr_i[i] = m_holders[t]->writings[TFT_DYNAMIC][i].frag.recordid;
           arr_c[i] = QVector4D(   m_holders[t]->writings[TFT_DYNAMIC][i].frag.slotdata.fx, m_holders[t]->writings[TFT_DYNAMIC][i].frag.slotdata.fy, 
-                                  m_holders[t]->writings[TFT_DYNAMIC][i].frag.slotdata.scale, m_holders[t]->writings[TFT_DYNAMIC][i].frag.slotdata.rotate );
+                                  m_holders[t]->writings[TFT_DYNAMIC][i].frag.slotdata.opacity, m_holders[t]->writings[TFT_DYNAMIC][i].frag.slotdata.rotate );
           m_holders[t]->writings[TFT_DYNAMIC][i].ponger = m_holders[t]->writings[TFT_DYNAMIC][i].pinger;
         }
         if (ppp)
@@ -1885,7 +1885,7 @@ int DrawQWidget::tftAddRecords(int count, const char* text[])
 
 tftdynamic_t DrawQWidget::tftPushDynamicFA(int recid, COORDINATION cr, float fx, float fy)
 {
-  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, 0.0f }, true, -1 }, 1, 0 };
+  tftreclink_t ts = { { recid, { cr, fx, fy, 0.0f, 0.0f }, true, -1 }, false, 1, 0 };
   int rsid = _tft_reclink_push(TFT_DYNAMIC, ts);
   return tftdynamic_t(this, m_holder_current, rsid);
 }
@@ -1900,7 +1900,7 @@ tftdynamic_t DrawQWidget::tftPushDynamicFA(const char* text, COORDINATION cr, fl
 
 tftdynamic_t DrawQWidget::tftPushDynamicFA(int recid, COORDINATION cr, float fx, float fy, int ovlroot)
 {
-  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, 0.0f }, true, ovlroot }, 1, 0 };
+  tftreclink_t ts = { { recid, { cr, fx, fy, 0.0f, 0.0f }, true, ovlroot }, false, 1, 0 };
   int rsid = _tft_reclink_push(TFT_DYNAMIC, ts);
   return tftdynamic_t(this, m_holder_current, rsid);
 }
@@ -1915,7 +1915,7 @@ tftdynamic_t DrawQWidget::tftPushDynamicFA(const char* text, COORDINATION cr, fl
 
 tftdynamic_t DrawQWidget::tftPushDynamicDA(int recid, COORDINATION cr, float fx, float fy, float rotate)
 {
-  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, rotate }, false, -1 }, 1, 0 };
+  tftreclink_t ts = { { recid, { cr, fx, fy, 0.0f, rotate }, false, -1 }, false, 1, 0 };
   int rsid = _tft_reclink_push(TFT_DYNAMIC, ts);
   return tftdynamic_t(this, m_holder_current, rsid);
 }
@@ -1930,7 +1930,7 @@ tftdynamic_t DrawQWidget::tftPushDynamicDA(const char* text, COORDINATION cr, fl
 
 tftdynamic_t DrawQWidget::tftPushDynamicDA(int recid, COORDINATION cr, float fx, float fy, float rotate, int ovlroot)
 {
-  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, rotate }, false, ovlroot }, 1, 0 };
+  tftreclink_t ts = { { recid, { cr, fx, fy, 0.0f, rotate }, false, ovlroot }, false, 1, 0 };
   int rsid = _tft_reclink_push(TFT_DYNAMIC, ts);
   return tftdynamic_t(this, m_holder_current, rsid);
 }
@@ -1957,7 +1957,7 @@ void DrawQWidget::tftDisableDynamicClosestMode()
 
 tftstatic_t DrawQWidget::tftPushStatic(int recid, COORDINATION cr, float fx, float fy, float rotate)
 {
-  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, rotate }, false, -1 }, 1, 0 };
+  tftreclink_t ts = { { recid, { cr, fx, fy, 0.0f, rotate }, false, -1 }, false, 1, 0 };
   _tft_reclink_push(TFT_STATIC, ts);
   return tftstatic_t(m_holder_current, recid);
 }
@@ -1972,7 +1972,7 @@ tftstatic_t DrawQWidget::tftPushStatic(const char* text, COORDINATION cr, float 
 
 tftstatic_t DrawQWidget::tftPushStatic(int recid, COORDINATION cr, float fx, float fy, float rotate, int ovlroot)
 {
-  tftreclink_t ts = { { recid, { cr, fx, fy, 1.0f, rotate }, false, ovlroot }, 1, 0 };
+  tftreclink_t ts = { { recid, { cr, fx, fy, 0.0f, rotate }, false, ovlroot }, false, 1, 0 };
   _tft_reclink_push(TFT_STATIC, ts);
   return tftstatic_t(m_holder_current, recid);
 }
@@ -2107,10 +2107,27 @@ bool DrawQWidget::tftRotate(int sloid, float anglerad)
   TFT_GOTO_SLOT_PINGUP(m_holder_current)
 }
 
+bool DrawQWidget::tftOpacity(int sloid, float opacity)
+{
+  TFT_CHECK_SHORT(m_holder_current, false)
+  m_holders[m_holder_current]->writings[TFT_DYNAMIC][sloid].frag.slotdata.opacity = opacity;
+  TFT_GOTO_SLOT_PINGUP(m_holder_current)
+}
+
 bool DrawQWidget::tftSwitchTo(int sloid, int recid)
 {
   TFT_CHECK_SHORT(m_holder_current, false)
   m_holders[m_holder_current]->writings[TFT_DYNAMIC][sloid].frag.recordid = recid;
+  TFT_GOTO_SLOT_PINGUP(m_holder_current)
+}
+
+bool DrawQWidget::tftSetup(int sloid, int recid, float fx, float fy, float opacity)
+{
+  TFT_CHECK_SHORT(m_holder_current, false)
+  m_holders[m_holder_current]->writings[TFT_DYNAMIC][sloid].frag.recordid = recid;
+  m_holders[m_holder_current]->writings[TFT_DYNAMIC][sloid].frag.slotdata.fx = fx;
+  m_holders[m_holder_current]->writings[TFT_DYNAMIC][sloid].frag.slotdata.fy = fy;
+  m_holders[m_holder_current]->writings[TFT_DYNAMIC][sloid].frag.slotdata.opacity = opacity;
   TFT_GOTO_SLOT_PINGUP(m_holder_current)
 }
 
@@ -2150,10 +2167,27 @@ bool DrawQWidget::tftRotate(int hoid, int sloid, float anglerad)
   TFT_GOTO_SLOT_PINGUP(hoid)
 }
 
+bool DrawQWidget::tftOpacity(int hoid, int sloid, float opacity)
+{
+  TFT_CHECK_FULL(hoid)
+  m_holders[hoid]->writings[TFT_DYNAMIC][sloid].frag.slotdata.opacity = opacity;
+  TFT_GOTO_SLOT_PINGUP(hoid)
+}
+
 bool DrawQWidget::tftSwitchTo(int hoid, int sloid, int recid)
 {
   TFT_CHECK_FULL(hoid)
   m_holders[hoid]->writings[TFT_DYNAMIC][sloid].frag.recordid = recid;
+  TFT_GOTO_SLOT_PINGUP(hoid)
+}
+
+bool DrawQWidget::tftSetup(int hoid, int sloid, int recid, float fx, float fy, float opacity)
+{
+  TFT_CHECK_FULL(hoid)
+  m_holders[hoid]->writings[TFT_DYNAMIC][sloid].frag.recordid = recid;
+  m_holders[hoid]->writings[TFT_DYNAMIC][sloid].frag.slotdata.fx = fx;
+  m_holders[hoid]->writings[TFT_DYNAMIC][sloid].frag.slotdata.fy = fy;
+  m_holders[hoid]->writings[TFT_DYNAMIC][sloid].frag.slotdata.opacity = opacity;
   TFT_GOTO_SLOT_PINGUP(hoid)
 }
 
@@ -2162,7 +2196,9 @@ bool tftdynamic_t::move(float fx, float fy){ return pdraw->tftMove(hoid, sloid, 
 bool tftdynamic_t::move_x(float fx){ return pdraw->tftMoveX(hoid, sloid, fx); }
 bool tftdynamic_t::move_y(float fy){ return pdraw->tftMoveY(hoid, sloid, fy); }
 bool tftdynamic_t::rotate(float anglerad){ return pdraw->tftRotate(hoid, sloid, anglerad); }
+bool tftdynamic_t::opacity(float opacity){ return pdraw->tftOpacity(hoid, sloid, opacity); }
 bool tftdynamic_t::switchto(int recid){ return pdraw->tftSwitchTo(hoid, sloid, recid); }
+bool tftdynamic_t::setup(int recid, float fx, float fy, float opacity){ return pdraw->tftSetup(hoid, sloid, recid, fx, fy, opacity); }
 
 ////////////////////////////////////////////////////////////////////////////////
 

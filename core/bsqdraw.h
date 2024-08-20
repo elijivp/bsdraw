@@ -68,7 +68,9 @@ public:
   bool    move_x(float fx);
   bool    move_y(float fy);
   bool    rotate(float anglerad);
+  bool    opacity(float opacity);
   bool    switchto(int recid);
+  bool    setup(int recid, float fx, float fy, float opacity=0);
 public:
   bool operator == (const tftdynamic_t& d2){ return pdraw == d2.pdraw && hoid == d2.hoid && sloid == d2.sloid; }
   bool operator != (const tftdynamic_t& d2){ return !(*this == d2); }
@@ -420,14 +422,18 @@ public:
 public: // tft operations
   bool            tftMove(int sloid, float fx, float fy);
   bool            tftRotate(int sloid, float anglerad);
+  bool            tftOpacity(int sloid, float opacity);
   bool            tftSwitchTo(int sloid, int recid);
+  bool            tftSetup(int sloid, int recid, float fx, float fy, float opacity=0.0f);
 public:
   tftdynamic_t    tftGet(int hoid, int sloid);
   bool            tftMove(int hoid, int sloid, float fx, float fy);
   bool            tftMoveX(int hoid, int sloid, float fx);
   bool            tftMoveY(int hoid, int sloid, float fy);
   bool            tftRotate(int hoid, int sloid, float anglerad);
+  bool            tftOpacity(int hoid, int sloid, float opacity);
   bool            tftSwitchTo(int hoid, int sloid, int recid);
+  bool            tftSetup(int hoid, int sloid, int recid, float fx, float fy, float opacity=0.0f);
 public:
 };
 

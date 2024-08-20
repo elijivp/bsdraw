@@ -616,7 +616,7 @@ float DrawMapEx::depthByPIX(float xpix, float ypix, bool* valid) const
   if (y >= pImpl->LIMIT_HEIGHT){ y = pImpl->LIMIT_HEIGHT-1; inside = false; }
   
   if (valid)  *valid = inside;
-  return pImpl->data[y*pImpl->LIMIT_WIDTH + x].depth;
+  return pImpl->data[y*pImpl->LIMIT_WIDTH + x].depth + zeroLevel();
 }
 
 void      DrawMapEx::coordsOOByPix(float px, float py, float* pdx, float* pdy) const
@@ -878,48 +878,49 @@ bool MapExReactorClickable::reactionMouse(DrawQWidget* draw, OVL_REACTION_MOUSE 
   
   float x = ct->fx_pix;
   float y = ct->fy_pix;
-  if (orm == ORM_LMPRESS || orm == ORM_LMMOVE)
-  {
-    if (orm == ORM_LMPRESS)
-    {
-      qel->start();
-    }
-    if (orm == ORM_LMMOVE)
-    {
-      qel->invalidate();
-      self->viewToMMRel((lx - x)*self->metersInPixel(), (ly - y)*self->metersInPixel());
-    }
-    lx = x;
-    ly = y;
-    if (orm == ORM_LMMOVE)
-    {
-      double lat, lon;
-      self->coordsLL(&lat, &lon);
-      emit coordsChanged(lat, lon);
-    }
-    return true;
-  }
-  if (orm == ORM_LMRELEASE)
-  {
-    if (qel->isValid() && qel->elapsed() < 400)
-    {
-      double lat, lon;
-      self->coordsLL(&lat, &lon);
-      emit clicked(ct->fx_pix, ct->fy_pix, lat, lon);
-      return true;
-    }
-  }
-  else if (orm == ORM_LMDOUBLE)
-  {
-    emit doubleclicked(ct->fx_pix, ct->fy_pix);
-    return true;
-  }
   
-  
-  if (orm == ORM_RMPRESS)
+  if (orm == ORM_LMDOUBLE)
   {
+    emit doubleclicked(x, y);
   }
-  return false;
+  else if (orm == ORM_LMPRESS || orm == ORM_LMMOVE || orm == ORM_LMRELEASE)
+  {
+    if (orm == ORM_LMPRESS || orm == ORM_LMMOVE)
+    {
+      if (orm == ORM_LMPRESS)
+      {
+        qel->start();
+      }
+      if (orm == ORM_LMMOVE)
+      {
+        qel->invalidate();
+        self->viewToMMRel((lx - x)*self->metersInPixel(), (ly - y)*self->metersInPixel());
+      }
+      lx = x;
+      ly = y;
+      if (orm == ORM_LMMOVE)
+      {
+        double lat, lon;
+        self->coordsLL(&lat, &lon);
+        emit coordsChanged(lat, lon);
+      }
+    }
+    else
+    {
+      if (qel->isValid() && qel->elapsed() < 400)
+      {
+  //      double lat, lon;
+  //      self->coordsLL(&lat, &lon);
+        emit clickedLM(ct->fx_pix, ct->fy_pix/*, lat, lon*/);
+      }
+    }
+  }
+  else if (orm == ORM_RMPRESS || orm == ORM_RMMOVE || orm == ORM_RMRELEASE)
+  {
+//    qDebug()<<(orm == ORM_RMPRESS ? "p" : orm == ORM_RMMOVE ? "m" : "r");
+    emit actionRM(orm == ORM_RMRELEASE, ct->fx_pix, draw->height() - 1 - ct->fy_pix);
+  }
+  return true;
 }
 
 

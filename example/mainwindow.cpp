@@ -1110,6 +1110,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //          pdraw->tftDisableDynamicClosestMode();
           
         pdraw->tftPushDynamicFA(i*360/TOT, CR_RELATIVE, 0.3f*sin(pr), 0.3f*cos(pr), ovl_visir);
+        pdraw->tftOpacity(i, 0.8f*i/float(TOT-1));
       }
       
       QTimer* tm = new QTimer();

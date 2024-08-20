@@ -666,7 +666,7 @@ struct tftslot_t
 {
   COORDINATION      cr;
   float             fx,fy;
-  float             scale;
+  float             opacity;
   float             rotate;
 };
 

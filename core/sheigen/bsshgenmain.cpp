@@ -763,7 +763,7 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft, GROUPING gp
                                                 SHGP "tft_rec[0] = %d;" SHNL
                                                 SHGP "tft_slot[0] = vec4(%F, %F, %F, %F);" SHNL, 
                                                       tft.frag->recordid/* / tft.limitrows*/,
-                                                      tft.frag->slotdata.fx, tft.frag->slotdata.fy, tft.frag->slotdata.scale, tft.frag->slotdata.rotate);
+                                                      tft.frag->slotdata.fx, tft.frag->slotdata.fy, tft.frag->slotdata.opacity, tft.frag->slotdata.rotate);
       if (tft.frag->slotdata.rotate > -0.0001f && tft.frag->slotdata.rotate < 0.0001f)
         gorotate = false;
     }
@@ -873,7 +873,7 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft, GROUPING gp
     }
 #endif
       m_offset += msprintf(&m_to[m_offset],     SHG2 "vec4  ttc = texture(tftholding_%d, tcoords).rgba;" SHNL
-                                                SHG2 "result = mix(result, ttc.rgb, ttc.a*step(0.0, pc)*step(pc, 1.0));" SHNL,
+                                                SHG2 "result = mix(result, ttc.rgb, ttc.a*step(0.0, pc)*step(pc, 1.0)*(1.0-tft_slot[i][2]));" SHNL,
                                                     tft.texid);
 #ifdef TFT_OPTIMISE
       m_offset += msprintf(&m_to[m_offset],     SHG2 "}" SHNL);

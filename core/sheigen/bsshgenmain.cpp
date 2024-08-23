@@ -762,7 +762,7 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft, GROUPING gp
       m_offset += msprintf(&m_to[m_offset],     
                                                 SHGP "tft_rec[0] = %d;" SHNL
                                                 SHGP "tft_slot[0] = vec4(%F, %F, %F, %F);" SHNL, 
-                                                      tft.frag->recordid/* / tft.limitrows*/,
+                                                      tft.frag->designid/* / tft.limitrows*/,
                                                       tft.frag->slotdata.fx, tft.frag->slotdata.fy, tft.frag->slotdata.opacity, tft.frag->slotdata.rotate);
       if (tft.frag->slotdata.rotate > -0.0001f && tft.frag->slotdata.rotate < 0.0001f)
         gorotate = false;
@@ -905,7 +905,7 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft)
       m_offset += msprintf(&m_to[m_offset],     
                                                 SHGP "int  tft_rec = %d;" SHNL
                                                 SHGP "vec4 tft_slot = vec4(%F, %F, %F, %F);" SHNL, 
-                                                      tft.recordid/* / tft.limitrows*/,
+                                                      tft.designid/* / tft.limitrows*/,
                                                       tft.frag->slotdata.fx, tft.frag->slotdata.fy, tft.frag->slotdata.scale, tft.frag->slotdata.rotate);
       if (tft.frag->slotdata.rotate > -0.0001f && tft.frag->slotdata.rotate < 0.0001f)
         gorotate = false;

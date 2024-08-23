@@ -1081,24 +1081,41 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       fnt.setPointSize(12);
       fnt.setItalic(true);
       pdraw->tftHoldingRegister(fnt, 32, 1);  // 1. Register holding
-      pdraw->tftAddRecord("Hello world!");    // 2. Add record
-      pdraw->tftAddRecord("Click me");
+      pdraw->tftAddDesign("Hello world!");    // 2. Add record
+      pdraw->tftAddDesign("Click me");
       pdraw->tftPushStatic(0, CR_RELATIVE, 0.48f, 0.52f);   // 3. Deploy title
       pdraw->tftPushStatic(1, CR_RELATIVE, 0.47f, 0.47f);
     }
     
     { /// Dynamic records
-      QFont fnt(this->font());
-      fnt.setPointSize(10);
-      fnt.setBold(true);
-      pdraw->tftHoldingRegister(fnt, 6, 8);   // auto switching on new holding
       
       ovl_visir = pdraw->ovlPushBack(new OActiveCursor(CR_RELATIVE, 0.5f, 0.5f));
-      char buffer[32];
-      for (int i=0; i<360; i++)
+      
       {
-        sprintf(buffer, "%d°", i);
-        pdraw->tftAddRecord(buffer);
+#if 0
+        QFont fnt(this->font());
+        fnt.setPointSize(10);
+        fnt.setBold(true);
+        pdraw->tftHoldingRegister(fnt, 6, 8);   // auto switching on new holding
+        char buffer[32];
+        for (int i=0; i<360; i++)
+        {
+          sprintf(buffer, "%d°", i);
+          pdraw->tftAddDesign(buffer);
+        }
+#else
+        QFont fnt(this->font());
+        fnt.setPointSize(10);
+        fnt.setBold(true);
+        char buffer[32];
+        tftgeterbook_t* gb = tftgeterbook_alloc(fnt, 6, 8);
+        for (int i=0; i<360; i++)
+        {
+          sprintf(buffer, "%d°", i);
+          tftgeterbook_addtext(gb, buffer);
+        }
+        pdraw->tftHoldingRegister(gb, true);
+#endif
       }
       int TOT = 12*4;
       for (int i=0; i<TOT; i++)
@@ -1119,7 +1136,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       QObject::connect(tm, &QTimer::timeout, [=]()
       { 
         for (int j=0; j<pdraw->tftDynamicsCount(); j++)
-          pdraw->tftSwitchTo(j, (pdraw->tftRecordIndex(j) + 1) % pdraw->tftRecordsCount());
+          pdraw->tftSwitchTo(j, (pdraw->tftDesignIndex(j) + 1) % pdraw->tftDesignsCount());
         
 //        for (int j=0; j<pdraw->tftDynamicsCount(); j++)
 //          pdraw->tftMove(j, 0.0f - 0.1f + 0.2f*rand()/float(RAND_MAX), 0.0f + -0.1f + 0.2f*rand()/float(RAND_MAX));
@@ -1162,7 +1179,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       for (int i=0; i<TOT; i++)
       {
         buffer[0] = alphabet[i];
-        pdraw->tftAddRecord(buffer);
+        pdraw->tftAddDesign(buffer);
       }
       
       static tftdynamic_t   g_dyns[TOT];
@@ -1256,7 +1273,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       for (int i=0; i<101; i++)
       {
         sprintf(buffer, "%d%%", i);
-        pdraw->tftAddRecord(buffer);
+        pdraw->tftAddDesign(buffer);
       }
       static tftdynamic_t   g_dyns[101];
       static tftdynamic_t   g_dynact;
@@ -5049,8 +5066,8 @@ void  MainWindow::changeFeatures(int id)
         {
           int s1 = rand()/float(RAND_MAX)*(draws[i]->tftDynamicsCount()-1);
           int s2 = rand()/float(RAND_MAX)*(draws[i]->tftDynamicsCount()-1);
-          int r1 = draws[i]->tftRecordIndex(draws[i]->tftGet(0, s2));
-          int r2 = draws[i]->tftRecordIndex(draws[i]->tftGet(0, s1));
+          int r1 = draws[i]->tftDesignIndex(draws[i]->tftGet(0, s2));
+          int r2 = draws[i]->tftDesignIndex(draws[i]->tftGet(0, s1));
           qDebug()<<"Switching: "<<s1<<s2<<r1<<r2;
           draws[i]->tftSwitchTo(0, s1, r1);
           draws[i]->tftSwitchTo(0, s2, r2);

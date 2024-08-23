@@ -64,6 +64,7 @@ public:
   void    detach(){ pdraw = nullptr; }
   
   tftdynamic_t(const tftdynamic_t& cpy): pdraw(cpy.pdraw), hoid(cpy.hoid), sloid(cpy.sloid) {}
+  tftdynamic_t& operator=(const tftdynamic_t& cpy){ pdraw = cpy.pdraw; hoid = cpy.hoid; sloid = cpy.sloid; return *this; }
   bool    move(float fx, float fy);
   bool    move_x(float fx);
   bool    move_y(float fy);
@@ -106,10 +107,6 @@ class DrawQWidget:  public QOpenGLWidget,
     _SF_COUNT
   };
   enum  {   MAX_OPTIONALS=32,  MAX_TEXTURES=96 };
-//    SF_DOMAIN, SF_GROUND=SF_DOMAIN, SF_PORTIONSIZE, 
-//    SF_VIEW_TURN,
-//    _SF_COUNT
-//                   };
 protected:
   bool                    m_compileOnInitializeGL; /// true by default
   char*                   m_vshmem, *m_fshmem;
@@ -138,7 +135,6 @@ protected:
   float                   m_viewAlignVert;
   float                   m_viewTurn;
 protected:
-//  enum  { TT_SINGLE, TT_2DARRAY };
   unsigned int            m_textures[MAX_TEXTURES];
   unsigned int            m_texturesCount;
 public:

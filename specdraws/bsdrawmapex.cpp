@@ -619,6 +619,54 @@ float DrawMapEx::depthByPIX(float xpix, float ypix, bool* valid) const
   return pImpl->data[y*pImpl->LIMIT_WIDTH + x].depth + zeroLevel();
 }
 
+//enum { MEF_SIDE=2 };
+//struct MapExFastcalc
+//{
+//  float dy[MEF_SIDE];
+//  float dx;
+//};
+
+
+//float DrawMapEx::depthByPIXfast(bool* valid) const
+//{
+//  MapExFastcalc result;
+//  float ptc[2] = { pImpl->center.ex, pImpl->center.ey };
+//  float vertsize = pImpl->MAP_Y_SIZE;
+//  const float ee2rad = 1/60.0*M_PI/180.0;
+//  const float ea=6378000;
+//  const float eb=6357000;
+  
+//  const float yside[] = { -1, 1 };
+//  for (int s=0; s<MEF_SIDE; s++)
+//  {
+//    float latM = (ptc[1] + yside[s]/2 - vertsize/2.0)*ee2rad;
+//    float cosM = cos(latM);  float sinM = sin(latM);
+//    float mympart = sqrt((ea*cosM)*(ea*cosM) + (eb*sinM)*(eb*sinM));
+//    float MyM=(ea*eb)*(ea*eb)/(mympart*mympart*mympart);
+//    result.dy[s] = MyM*ee2rad;
+//  }
+  
+//  float latT = (ptc[1] + yd - vertsize/2.0)*ee2rad;
+//  float cosT = cos(latT);  float sinT = sin(latT);
+//  float Ny=(ea*ea)/sqrt((ea*cosT)*(ea*cosT) + (eb*sinT)*(eb*sinT));
+//  float tgtdist = abs(xy[0] - 0.5)*pImpl->range();
+//  float dx = Ny*cos((pImpl->center.ey-vertsize/2.0)*ee2rad)*ee2rad;
+//  float xd = tgtdist/dx*(xy[0] < 0.5f ? -1 : xy[0] > 0.5f ? 1 : 0);
+  
+//  int x = pImpl->LIMIT_WIDTH/2 + xd + pImpl->mdx/dx;
+//  int y = pImpl->LIMIT_HEIGHT/2 + yd + pImpl->mdy/dy;
+  
+  
+//  bool inside = true; 
+//  if (x < 0){ x = 0; inside = false; }
+//  if (x >= pImpl->LIMIT_WIDTH){ x = pImpl->LIMIT_WIDTH-1; inside = false; }
+//  if (y < 0){ y = 0; inside = false; }
+//  if (y >= pImpl->LIMIT_HEIGHT){ y = pImpl->LIMIT_HEIGHT-1; inside = false; }
+  
+//  if (valid)  *valid = inside;
+//  return pImpl->data[y*pImpl->LIMIT_WIDTH + x].depth + zeroLevel();
+//}
+
 void      DrawMapEx::coordsOOByPix(float px, float py, float* pdx, float* pdy) const
 {
   float w = this->sizeHorz(), h = this->sizeVert();

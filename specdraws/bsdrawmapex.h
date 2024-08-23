@@ -58,6 +58,7 @@ public:
   void        relpos(float* x01, float* y01) const;
 public:
   float       depthByPIX(float xpix, float ypix, bool* valid=nullptr) const;
+//  float       depthByPIXfast(bool* valid=nullptr) const;
 public:
   void        coordsOOByPix(float px, float py, float* pdx, float* pdy) const;    // OO - own, own
   float       distanceOO(float x1, float y1, float x2, float y2) const;    // OO - own, own

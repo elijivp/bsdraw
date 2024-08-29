@@ -356,8 +356,9 @@ private:
   tftholding_t*   m_tfths[TFT_HOLDERS];
   int             _tft_holding_alloc(tftgeterbook_t* th, bool isowner);
   bool            _tft_holding_release(int idx);
-  int             _tft_design_text(tftholding_t*  holding, const char* text);
-  int             _tft_design_text(tftholding_t*  holding, int count, const char* texts[]);
+  int             _tft_holding_design(tftholding_t*  holding, const char* text);
+  int             _tft_holding_design(tftholding_t*  holding, int count, const char* texts[]);
+private:
   int             _tft_add_writing(int type, const tftwriting_t&);
 public:
   int             tftHoldingRegister(tftgeterbook_t* th, bool isowner);

@@ -52,7 +52,7 @@ struct  tftgeterbook_t
 {
   QFont                     font;
   int                       maxtextlen;
-  BSQSetup*                 ctx_setup;
+  BSQSetup                  ctx_setup;
   
   int                       design_width;
   int                       design_height, design_ht, design_hb, design_ld;
@@ -66,6 +66,8 @@ struct  tftgeterbook_t
 #else
   tftdesignedimage_t        designedbook;
 #endif
+  
+  tftgeterbook_t(const QFont& fnt): font(fnt), ctx_setup(fnt){}
 };
 
 
@@ -79,18 +81,17 @@ inline QImage* _tftgeterbook_allocimage(int width, int height)
 
 tftgeterbook_t*  tftgeterbook_alloc(QFont font, int maxtextlen, int limitcolumns)
 {
-  tftgeterbook_t* result = new tftgeterbook_t;
+  tftgeterbook_t* result = new tftgeterbook_t(font);
   result->font = font;
   result->maxtextlen = maxtextlen < TFT_TEXTMAXLEN ? maxtextlen : TFT_TEXTMAXLEN;
-  result->ctx_setup = new BSQSetup(font);
-  result->ctx_setup->brush = QBrush(QColor(0,0,0));
-  result->ctx_setup->pen = QPen(QColor(0,0,0));
+  result->ctx_setup.brush = QBrush(QColor(0,0,0));
+  result->ctx_setup.pen = QPen(QColor(0,0,0));
   
-  result->design_width = result->ctx_setup->fm.averageCharWidth() * result->maxtextlen + 2;
-  result->design_ht = result->ctx_setup->fm.ascent();
-  result->design_hb = result->ctx_setup->fm.descent();
-  result->design_ld = result->ctx_setup->fm.leading();
-  result->design_height = result->ctx_setup->fm.height() + result->ctx_setup->fm.leading() + 2;
+  result->design_width = result->ctx_setup.fm.averageCharWidth() * result->maxtextlen + 2;
+  result->design_ht = result->ctx_setup.fm.ascent();
+  result->design_hb = result->ctx_setup.fm.descent();
+  result->design_ld = result->ctx_setup.fm.leading();
+  result->design_height = result->ctx_setup.fm.height() + result->ctx_setup.fm.leading() + 2;
   
   result->limcols = limitcolumns;
   result->limrows = 1080 / result->design_height;
@@ -115,58 +116,77 @@ tftgeterbook_t*  tftgeterbook_alloc(QFont font, int maxtextlen, int limitcolumns
 
 int tftgeterbook_addtext(tftgeterbook_t* th, const char* text)
 {
-#ifndef BSGLSLOLD
-  if (th->designedbook[th->designedbookpages-1].designscount >= th->c_total)
+  const char* texts[] = {text};
+  return tftgeterbook_addtexts(th, 1, texts);
+}
+
+int tftgeterbook_addtexts(tftgeterbook_t* th, int count, const char* texts[])
+{
+  QImage* imgprev = nullptr;
+  int     result_rid = -1;
+  for (int i=0; i<count; i++)
   {
-    if (th->designedbookpages >= TFT_MAXPAGES)
-      return -1;
-    th->designedbook[th->designedbookpages].image = _tftgeterbook_allocimage(th->design_width*th->limcols, th->design_height*th->limrows);
-    th->designedbook[th->designedbookpages].designs = new tftdesignedimage_t::design_t[th->c_total];
-    th->designedbook[th->designedbookpages].designscount = 0;
-    th->designedbookpages++;
-  }
-  tftdesignedimage_t* tftar = &th->designedbook[th->designedbookpages-1];
+#ifndef BSGLSLOLD
+    if (th->designedbook[th->designedbookpages-1].designscount >= th->c_total)
+    {
+      if (th->designedbookpages >= TFT_MAXPAGES)
+        return -1;
+      th->designedbook[th->designedbookpages].image = _tftgeterbook_allocimage(th->design_width*th->limcols, th->design_height*th->limrows);
+      th->designedbook[th->designedbookpages].designs = new tftdesignedimage_t::design_t[th->c_total];
+      th->designedbook[th->designedbookpages].designscount = 0;
+      th->designedbookpages++;
+    }
+    tftdesignedimage_t* tftar = &th->designedbook[th->designedbookpages-1];
 #else
-  if (th->designedbook.recordscount >= th->c_total)
-    return -1;
-  tftdesignedimage_t* tftar = &th->designedbook;
+    if (th->designedbook.recordscount >= th->c_total)
+      return -1;
+    tftdesignedimage_t* tftar = &th->designedbook;
 #endif
   
-  int rid_loc = tftar->designscount++;
-  tftdesignedimage_t::design_t* design = &tftar->designs[rid_loc];
-  strncpy(design->text, text, th->maxtextlen+1);
-  QFontMetrics qfm(th->font);
-  design->width = th->ctx_setup->fm.horizontalAdvance(design->text);
-  
-  th->ctx_setup->painter.begin(tftar->image);
-  {
-    th->ctx_setup->painter.setBrush(th->ctx_setup->brush);
-    th->ctx_setup->painter.setPen(th->ctx_setup->pen);
-    th->ctx_setup->painter.setFont(th->font);
+    int rid_loc = tftar->designscount++;
+#ifndef BSGLSLOLD
+    if (result_rid == -1)
+      result_rid = (th->designedbookpages-1)*(th->c_total) + rid_loc;
+#else  
+    if (result_rid == -1)
+      result_rid = rid_loc;
+#endif
+    tftdesignedimage_t::design_t* design = &tftar->designs[rid_loc];
+    strncpy(design->text, texts[i], th->maxtextlen+1);
+    design->width = th->ctx_setup.fm.horizontalAdvance(design->text);
+    
+    if (imgprev != tftar->image)
+    {
+      if (imgprev != nullptr)
+        th->ctx_setup.painter.end();
+      
+      th->ctx_setup.painter.begin(tftar->image);
+      th->ctx_setup.painter.setBrush(th->ctx_setup.brush);
+      th->ctx_setup.painter.setPen(th->ctx_setup.pen);
+      th->ctx_setup.painter.setFont(th->font);
+      imgprev = tftar->image;
+    }
     
     int row = rid_loc % th->limrows;
     int col = rid_loc / th->limrows;
-//    th->ctx_setup->painter.drawText(
+//    th->ctx_setup.painter.drawText(
 //          1 + col*(th->design_width), 
 //          th->design_height*th->limrows - row*th->design_height - th->design_hb, 
 //          text);
-    th->ctx_setup->painter.drawText(
+    th->ctx_setup.painter.drawText(
           1 + col*(th->design_width) + th->design_width/2 - design->width/2, 
           th->design_height*th->limrows - row*th->design_height - th->design_hb, 
-          text);
-  }
-  th->ctx_setup->painter.end();
-#ifndef BSGLSLOLD
-  return (th->designedbookpages-1)*(th->c_total) + rid_loc;
-#else  
-  return rid_loc;
-#endif
+          texts[i]);
+  } // for
+  if (count > 0)
+    th->ctx_setup.painter.end();
+  return result_rid;
 }
 
 void  tftgeterbook_setup(tftgeterbook_t* th, const QColor& clr)
 {
-  th->ctx_setup->brush = QBrush(clr);
-  th->ctx_setup->pen = QPen(clr);
+  th->ctx_setup.brush = QBrush(clr);
+  th->ctx_setup.pen = QPen(clr);
 }
 inline int  tftgeterbook_designscount(tftgeterbook_t* th)
 {
@@ -201,14 +221,7 @@ void  tftgeterbook_release(tftgeterbook_t* th)
   delete th->designedbook.image;
   delete []th->designedbook.records;
 #endif
-  delete th->ctx_setup;
   delete th;
-}
-
-
-BSQSetup* tftgeterbook_ctxsetup(tftgeterbook_t* th)
-{
-  return th->ctx_setup;
 }
 
 
@@ -283,6 +296,14 @@ DrawQWidget::~DrawQWidget()
     delete []m_vshmem;
   if (m_fshalloc)
     delete []m_fshmem;
+  
+  for (unsigned int t=0; t<TFT_HOLDERS; t++)
+    if (m_tfths[t] != nullptr)
+    {
+      if (m_tfths[t]->geterbookowner)
+        tftgeterbook_release(m_tfths[t]->geterbook);
+      delete m_tfths[t];
+    }
 }
 
 void DrawQWidget::compileShaderNow()
@@ -1874,13 +1895,11 @@ QLabel* g_lbl = nullptr;
 int     g_ctr = 0;
 #endif
 
-int DrawQWidget::_tft_design_text(DrawQWidget::tftholding_t* holding, const char* text)
+int DrawQWidget::_tft_holding_design(DrawQWidget::tftholding_t* holding, const char* text)
 {
   int rid_loc = tftgeterbook_addtext(holding->geterbook, text);
   holding->pinger += 1;
-  {
-    m_bitmaskPendingChanges |= PC_TFT_TEXTURE;
-  }
+  m_bitmaskPendingChanges |= PC_TFT_TEXTURE;
 #ifdef DBGLABELSHOW
   if (g_lbl == nullptr || g_ctr != holding->designedbook.size())
   {
@@ -1893,9 +1912,12 @@ int DrawQWidget::_tft_design_text(DrawQWidget::tftholding_t* holding, const char
   return rid_loc;
 }
 
-int DrawQWidget::_tft_design_text(DrawQWidget::tftholding_t* holding, int count, const char* texts[])
+int DrawQWidget::_tft_holding_design(DrawQWidget::tftholding_t* holding, int count, const char* texts[])
 {
-  
+  int rid_loc = tftgeterbook_addtexts(holding->geterbook, count, texts);
+  holding->pinger += 1;
+  m_bitmaskPendingChanges |= PC_TFT_TEXTURE;
+  return rid_loc;
 }
 
 
@@ -1985,21 +2007,15 @@ int DrawQWidget::tftAddDesign(const char* text)
 {
   if (m_tfth_current == -1)
     m_tfth_current = _tft_holding_alloc(tftgeterbook_alloc(font()), true);
-  int dsgid = _tft_design_text(m_tfths[m_tfth_current], text);
+  int dsgid = _tft_holding_design(m_tfths[m_tfth_current], text);
   return dsgid;
 }
 
-int DrawQWidget::tftAddDesigns(int count, const char* text[])
+int DrawQWidget::tftAddDesigns(int count, const char* texts[])
 {
   if (m_tfth_current == -1)
     m_tfth_current = _tft_holding_alloc(tftgeterbook_alloc(font()), true);
-  int dsgid=-1;
-  for (int i=0; i<count; i++)
-  {
-    int id = _tft_design_text(m_tfths[m_tfth_current], text[i]);
-    if (dsgid == -1)
-      dsgid = id;
-  }
+  int dsgid = _tft_holding_design(m_tfths[m_tfth_current], count, texts);
   return dsgid;
 }
 
@@ -2017,7 +2033,7 @@ tftdynamic_t DrawQWidget::tftPushDynamicFA(const char* text, COORDINATION cr, fl
 {
   if (m_tfth_current == -1)
     m_tfth_current = _tft_holding_alloc(tftgeterbook_alloc(font()), true);
-  int dsgid = _tft_design_text(m_tfths[m_tfth_current], text);
+  int dsgid = _tft_holding_design(m_tfths[m_tfth_current], text);
   return tftPushDynamicFA(dsgid, cr, fx, fy);
 }
 
@@ -2032,7 +2048,7 @@ tftdynamic_t DrawQWidget::tftPushDynamicFA(const char* text, COORDINATION cr, fl
 {
   if (m_tfth_current == -1)
     m_tfth_current = _tft_holding_alloc(tftgeterbook_alloc(font()), true);
-  int dsgid = _tft_design_text(m_tfths[m_tfth_current], text);
+  int dsgid = _tft_holding_design(m_tfths[m_tfth_current], text);
   return tftPushDynamicFA(dsgid, cr, fx, fy, ovlroot);
 }
 
@@ -2047,7 +2063,7 @@ tftdynamic_t DrawQWidget::tftPushDynamicDA(const char* text, COORDINATION cr, fl
 {
   if (m_tfth_current == -1)
     m_tfth_current = _tft_holding_alloc(tftgeterbook_alloc(font()), true);
-  int dsgid = _tft_design_text(m_tfths[m_tfth_current], text);
+  int dsgid = _tft_holding_design(m_tfths[m_tfth_current], text);
   return tftPushDynamicDA(dsgid, cr, fx, fy, rotate);
 }
 
@@ -2062,7 +2078,7 @@ tftdynamic_t DrawQWidget::tftPushDynamicDA(const char* text, COORDINATION cr, fl
 {
   if (m_tfth_current == -1)
     m_tfth_current = _tft_holding_alloc(tftgeterbook_alloc(font()), true);
-  int dsgid = _tft_design_text(m_tfths[m_tfth_current], text);
+  int dsgid = _tft_holding_design(m_tfths[m_tfth_current], text);
   return tftPushDynamicDA(dsgid, cr, fx, fy, rotate, ovlroot);
 }
 
@@ -2089,7 +2105,7 @@ tftstatic_t DrawQWidget::tftPushStatic(const char* text, COORDINATION cr, float 
 {
   if (m_tfth_current == -1)
     m_tfth_current = _tft_holding_alloc(tftgeterbook_alloc(font()), true);
-  int dsgid = _tft_design_text(m_tfths[m_tfth_current], text);
+  int dsgid = _tft_holding_design(m_tfths[m_tfth_current], text);
   return tftPushStatic(dsgid, cr, fx, fy, rotate);
 }
 
@@ -2104,7 +2120,7 @@ tftstatic_t DrawQWidget::tftPushStatic(const char* text, COORDINATION cr, float 
 {
   if (m_tfth_current == -1)
     m_tfth_current = _tft_holding_alloc(tftgeterbook_alloc(font()), true);
-  int dsgid = _tft_design_text(m_tfths[m_tfth_current], text);
+  int dsgid = _tft_holding_design(m_tfths[m_tfth_current], text);
   return tftPushStatic(dsgid, cr, fx, fy, rotate, ovlroot);
 }
 

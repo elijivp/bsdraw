@@ -80,7 +80,7 @@ protected:
   virtual int fshColor(int overlay, char *to) const;
 };
 
-/// Shader takes outsideline, path position and mixwell from fshOVCoords result: in_variant[0..4] = [ols path - mixwell]
+/// Shader takes only mixwell from fshOVCoords result: in_variant[0..4] = [- - - mixwell]
 class Ovldraw_ColorMixback: public Ovldraw
 {
 public:

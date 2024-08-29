@@ -1103,7 +1103,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           sprintf(buffer, "%d°", i);
           pdraw->tftAddDesign(buffer);
         }
-#else
+#elif 0
         QFont fnt(this->font());
         fnt.setPointSize(10);
         fnt.setBold(true);
@@ -1114,6 +1114,20 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
           sprintf(buffer, "%d°", i);
           tftgeterbook_addtext(gb, buffer);
         }
+        pdraw->tftHoldingRegister(gb, true);
+#else
+        QFont fnt(this->font());
+        fnt.setPointSize(10);
+        fnt.setBold(true);
+        char buffer[360][32];
+        const char* bfs[360];
+        for (int i=0; i<360; i++)
+        {
+          sprintf(buffer[i], "%d°", i);
+          bfs[i] = buffer[i];
+        }
+        tftgeterbook_t* gb = tftgeterbook_alloc(fnt, 6, 8);
+        tftgeterbook_addtexts(gb, 360, bfs);
         pdraw->tftHoldingRegister(gb, true);
 #endif
       }

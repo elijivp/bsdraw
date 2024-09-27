@@ -449,9 +449,33 @@ void DrawMapEx::coordsLL(double* plat, double* plon) const
   *plon = pImpl->center.lon;
 }
 
-void DrawMapEx::coordsLL(float x, float y, double* plat, double* plon) const
+void DrawMapEx::coordsLL(float xrelranged, float yrelranged, double* plat, double* plon) const
 {
-  Q_ASSERT(false);
+  float xy[2] = { xrelranged, yrelranged };
+  float ptc[2] = { pImpl->center.ex, pImpl->center.ey };
+  float vertsize = pImpl->MAP_Y_SIZE;
+  const float ee2rad = 1/60.0*M_PI/180.0;
+  
+  float dvert = float(sizeVert())/float(sizeHorz());
+  const float ea=6378000;
+  const float eb=6357000;
+  float yside = xy[1] < 0.5f? -1 : 1;
+  float latM = (ptc[1] + yside/2 - vertsize/2.0)*ee2rad;
+  float cosM = cos(latM);  float sinM = sin(latM);
+  float mympart = sqrt((ea*cosM)*(ea*cosM) + (eb*sinM)*(eb*sinM));
+  float MyM=(ea*eb)*(ea*eb)/(mympart*mympart*mympart);
+  float dy = MyM*ee2rad;
+  float yd = (xy[1] - 0.5)*pImpl->range()*dvert / dy;  // /1855
+  
+  float latT = (ptc[1] + yd - vertsize/2.0)*ee2rad;
+  float cosT = cos(latT);  float sinT = sin(latT);
+  float Ny=(ea*ea)/sqrt((ea*cosT)*(ea*cosT) + (eb*sinT)*(eb*sinT));
+  float tgtdist = abs(xy[0] - 0.5)*pImpl->range();
+  float dx = Ny*cos((pImpl->center.ey-vertsize/2.0)*ee2rad)*ee2rad;
+  float xd = tgtdist/dx*(xy[0] < 0.5f ? -1 : xy[0] > 0.5f ? 1 : 0);
+  
+  *plat = -(((pImpl->center.ey + yd)*180.0)/pImpl->MAP_Y_SIZE - 90.0);
+  *plon = ((pImpl->center.ex - xd)*360.0/pImpl->MAP_X_SIZE) - 180.0;
 }
 
 #ifdef DMETERS
@@ -477,6 +501,12 @@ void DrawMapEx::viewToMM(float x, float y)
 void DrawMapEx::viewToMMRel(float dx, float dy)
 {
   viewToMM(pImpl->mdx + dx, pImpl->mdy + dy);
+}
+
+void DrawMapEx::coordsOfViewCenter(float* px, float* py) const
+{
+  *px = pImpl->mdx;
+  *py = pImpl->mdy;
 }
 
 void DrawMapEx::relpos(float* x01, float* y01) const
@@ -529,7 +559,7 @@ void      DrawMapEx::viewToRel(float dx, float dy, bool update)
 void      DrawMapEx::coordsLLOfViewCenter(double* plat, double* plon) const
 {
   *plat = -(((pImpl->center.ey + pImpl->view_dy)*180.0)/pImpl->MAP_Y_SIZE - 90.0);
-  *plon = ((pImpl->center.ex + pImpl->view_dx)*360.0/pImpl->MAP_X_SIZE) - 180.0;
+  *plon = ((pImpl->center.ex + -------- pImpl->view_dx)*360.0/pImpl->MAP_X_SIZE) - 180.0;
 }
 void      DrawMapEx::coordsEEOfViewCenter(float* px, float* py) const
 {
@@ -544,7 +574,7 @@ void      DrawMapEx::coordsOfViewCenter(float* px, float* py) const
 #endif
 
 float DrawMapEx::depthByPIX(float xpix, float ypix, bool* valid) const
-{ 
+{
   float xy[2] = { xpix/sizeHorz(), ypix/sizeVert() };
 #ifdef DMETERS
   float ptc[2] = { pImpl->center.ex, pImpl->center.ey };

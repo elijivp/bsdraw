@@ -40,7 +40,7 @@ public:
 public:
   float       metersInPixel() const;
   void        coordsLL(double* plat, double* plon) const;
-  void        coordsLL(float x, float y, double* plat, double* plon) const;
+  void        coordsLL(float xrelranged, float yrelranged, double* plat, double* plon) const;
   void        viewToMM(float x, float y);
   void        viewToMMRel(float dx, float dy);
   

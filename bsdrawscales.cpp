@@ -453,6 +453,7 @@ public:
   virtual ~MarginCallback();
   int cachedRTexttype() const { return c_rtexttype; }
   const relatedopts_t& cachedRdata() const { return c_rdata; }
+  float cachedReloffset() const { return c_reloffset; }
 public:
   bool bdContentUpdate(bool forcedupdate=true)
   {
@@ -1020,13 +1021,15 @@ class MarginSingle: public MarginElementCached, public MarginCallback
 protected:
   bool            bounded;
   float           c_LL, c_HL, c_MOD;
+//  float           c_LLof, c_HLof;
+  const void*     c_param;
   memark_t        mark;
   float           pos_origin;
   float           pos_mark;
 public:
   MarginSingle(int rounding, int _marklen, float pos, bool _bounded):
     round(rounding), mlenmaxi(_marklen), mwid(_marklen? 1 : 0), mlengap(3), 
-    bounded(_bounded), c_LL(0.0f), c_HL(1.0f), c_MOD(0.0f),
+    bounded(_bounded), c_LL(0.0f), c_HL(1.0f), c_MOD(0.0f), /*c_LLof(0.0f), c_HLof(1.0f), */c_param(nullptr),
     pos_origin(pos)
   {
     _update_single_pos();
@@ -1141,8 +1144,9 @@ protected:
         _update_single_area(current_area());
     }
   }
-  virtual void  bdContentUpdateTaps(QString& /*base*/, ontap_qstring_fn /*tapfn*/, const void* /*param*/, float /*relatedoffset*/, const tapcontent_t& /*tctt*/)
+  virtual void  bdContentUpdateTaps(QString& /*base*/, ontap_qstring_fn /*tapfn*/, const void* param, float relatedoffset, const tapcontent_t& /*tctt*/)
   {
+    c_param = param;
   }
   virtual void  bdContentUpdateEnumerate(int from, int count, int /*recycle*/, float /*relatedoffset*/)
   {
@@ -1264,9 +1268,26 @@ public:
         float pos01_ = v ? 1.0f - pos01 : pos01;
         MarginSingle::setPosition(pos01_);
       }
-      assignText(&pointer, redact(_update_pointer_pos(pos01)));
+      if (cachedRTexttype() != RF_SETTAPS)
+        assignText(&pointer, redact(_update_pointer_pos(pos01)));
+      else
+        _update_pointer_text_tap(pos01);
       _update_pointer_area(current_area(), true);
     }
+  }
+protected:
+  void  _update_pointer_text_std(float pos01)
+  {
+    assignText(&pointer, redact(_update_pointer_pos(pos01)));
+  }
+  void  _update_pointer_text_tap(float pos01)
+  {
+//    float LLof = c_LL + (c_HL-c_LL)*relatedoffset;
+//    float HLof = c_HL + (c_HL-c_LL)*relatedoffset;
+//    tapfn(0, tctt.lmardimm, tctt.lmoffset + int(LLof + pos_mark*(HLof-LLof)), param, base);
+//    assignText(&pointer, redact(_update_pointer_pos(pos01)));
+    QString sstr(cachedRdata().rel_tap_qstring.slen, Qt::Uninitialized);
+    bdContentUpdateTaps(sstr, cachedRdata().rel_tap_qstring.tapfn, cachedRdata().rel_tap_qstring.param, cachedReloffset(), tapctt);
   }
 protected:
   float _update_pointer_pos(float p)
@@ -1288,13 +1309,14 @@ protected:
     }
     else
       assignText(&pointer, redact(_update_pointer_pos(pos_mark)));
-  }
+  }  
   virtual void  bdContentUpdateTaps(QString& base, ontap_qstring_fn tapfn, const void* param, float relatedoffset, const tapcontent_t& tctt)
   {
+//    MarginSingle::bdContentUpdateTaps(base, tapfn, param, relatedoffset, tctt);
+//    tapfn(0, tctt.lmardimm, tctt.lmoffset + int(c_LLof + pos_mark*(c_HLof-c_LLof)), param, base);
+//    assignText(&pointer, redact(base));
     MarginSingle::bdContentUpdateTaps(base, tapfn, param, relatedoffset, tctt);
-    float LLof = c_LL + (c_HL-c_LL)*relatedoffset;
-    float HLof = c_HL + (c_HL-c_LL)*relatedoffset;
-    tapfn(0, tctt.lmardimm, tctt.lmoffset + int(LLof + pos_mark*(HLof-LLof)), param, base);
+    tapfn(qRound(relatedoffset + pos_mark*current_area().segm_main), tctt.lmardimm, tctt.lmoffset, param, base);
     assignText(&pointer, redact(base));
   }
   virtual void  bdContentUpdateEnumerate(int from, int count, int recycle, float relatedoffset)

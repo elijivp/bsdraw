@@ -373,6 +373,10 @@ public:
   int             tftAddDesign(const char* text);
   int             tftAddDesigns(int count, const char* text[]);   // convert texts into records, returns first record id
 public:
+  QSize           tftHoldingDesignSize() const;
+  int             tftHoldingDesignWidth() const;
+  int             tftHoldingDesignHeight() const;
+public:
                   /// FA - fixed angle, DA - rotateable
   tftdynamic_t    tftPushDynamicFA(int dsgid, COORDINATION cr, float fx, float fy);   // horizontal, unrotateable, more fast
   tftdynamic_t    tftPushDynamicFA(const char* text, COORDINATION cr, float fx, float fy);

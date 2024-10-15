@@ -555,7 +555,7 @@ void DrawQWidget::initCollectAndCompileShader()
 //    qDebug()<<ovlshaderbuf;
     
 #ifdef BSSHADER_DUMP
-    fout.write((const char*)ovlshaderbuf);
+    fout.write((const char*)m_fshmem);
     fout.write((const char*)"\n\n\n\n");
 #endif
     
@@ -568,7 +568,7 @@ void DrawQWidget::initCollectAndCompileShader()
 //    qDebug()<<ovlshaderbuf;
         
 #ifdef BSSHADER_DUMP
-    fout.write((const char*)ovlshaderbuf);
+    fout.write((const char*)m_fshmem);
     fout.write((const char*)"\n\n\n\n");
 #endif
   }
@@ -1002,9 +1002,14 @@ void DrawQWidget::paintGL()
       {
         
         if ((loc = ovl._location) != -1)
-          m_ShaderProgram.setUniformValue(loc, QVector4D(ovl.povl->isVisible()? ovl.povl->getOpacity() : 1.0f, 
+        {
+//          m_ShaderProgram.setUniformValue(loc, QVector4D(ovl.povl->isVisible()? ovl.povl->getOpacity() : 1.0f, 
+//                                                         ovl.povl->getThickness(), 
+//                                                         ovl.povl->getSliceLL(), ovl.povl->getSliceHL()));
+          m_ShaderProgram.setUniformValue(loc, ovl.povl->isVisible()? ovl.povl->getOpacity() : 1.0f, 
                                                          ovl.povl->getThickness(), 
-                                                         ovl.povl->getSliceLL(), ovl.povl->getSliceHL()));
+                                                         ovl.povl->getSliceLL(), ovl.povl->getSliceHL());
+        }
         
         for (unsigned int i=0; i<ovl.uf_count; i++)
         {
@@ -2017,6 +2022,29 @@ int DrawQWidget::tftAddDesigns(int count, const char* texts[])
     m_tfth_current = _tft_holding_alloc(tftgeterbook_alloc(font()), true);
   int dsgid = _tft_holding_design(m_tfths[m_tfth_current], count, texts);
   return dsgid;
+}
+
+
+
+QSize DrawQWidget::tftHoldingDesignSize() const
+{
+  if (m_tfth_current == -1)
+    return QSize();
+  return QSize(m_tfths[m_tfth_current]->geterbook->design_width, m_tfths[m_tfth_current]->geterbook->design_height);
+}
+
+int DrawQWidget::tftHoldingDesignWidth() const
+{
+  if (m_tfth_current == -1)
+    return 0;
+  return m_tfths[m_tfth_current]->geterbook->design_width;
+}
+
+int DrawQWidget::tftHoldingDesignHeight() const
+{
+  if (m_tfth_current == -1)
+    return 0;
+  return m_tfths[m_tfth_current]->geterbook->design_height;
 }
 
 

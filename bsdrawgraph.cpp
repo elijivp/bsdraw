@@ -275,7 +275,8 @@ public:
         if (graphopts.dotsize == 0)
           fdc.push( 
 //                      "float mixwellp = step(distance(fcoords_noscaled, vec2(fcoords_noscaled.x, bv_datasc[1])), 0.0);" SHNL // ??? 0.0?
-                      "float mixwellp = step(bself_datasc, bv_datasc[1])*step(bv_datasc[1], bself_datasc);" SHNL // ??? 0.0?
+//                      "float mixwellp = step(bself_datasc, bv_datasc[1])*step(bv_datasc[1], bself_datasc);" SHNL // ??? 0.0?
+                      "float mixwellp = step(floor(bself_datasc), bv_datasc[1])*step(bv_datasc[1], floor(bself_datasc));" SHNL // ??? 0.0?
                       "post_mask[0] = post_mask[0]*(1.0 - mixwellp) + mixwellp;" SHNL
                     );
         else

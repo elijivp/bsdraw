@@ -21,8 +21,14 @@ public:
     fdc.push( fdc.splits() == SP_NONE? "for (int i=0; i<dataportions; i++)" : "int i = explicitPortion;" );
     fdc.push("{");
     {
-      fdc.value2D("float value");
-      fdc.push("dvalue = max(dvalue, value);");
+      if ( fdc.splits() == SP_NONE )
+      {
+        fdc.value2D("float value");
+        fdc.push("dvalue = max(dvalue, value);");
+      }
+      else
+        fdc.value2D("dvalue");
+      
       /// result=vec3(0) by DrawCore constructor and m_emptycolor=0
       if ( fdc.splits() == SP_NONE )
       {

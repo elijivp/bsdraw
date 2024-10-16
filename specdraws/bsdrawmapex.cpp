@@ -43,7 +43,9 @@ public:
   
   char                  mappath[1024];
   scpoint_t*            sctex;
+  bool                  dataswitched;
   mappoint_t*           data;
+  mappoint_t            dataemptyreplacer;
   int                   datamin_x, datamin_y;
   int                   datamax_x, datamax_y;
   bool                  autolim_min, autolim_max;
@@ -190,7 +192,11 @@ DrawMapEx::DrawMapEx(const char* mappath, int map_x_size, int map_y_size, unsign
     pImpl->sctex[j].sin_ = sin(j*dlt*M_PI/180.0);
   }
   
+  pImpl->dataswitched = false;
   pImpl->data = new mappoint_t[pImpl->LIMIT_WIDTH*pImpl->LIMIT_HEIGHT];
+  {
+    pImpl->dataemptyreplacer.depth = 0.0f;
+  }
   pImpl->datamin_x = pImpl->datamin_y = pImpl->datamax_x = pImpl->datamax_y = 0;
   pImpl->autolim_min = true;
   pImpl->autolim_max = true;
@@ -230,6 +236,25 @@ DrawMapEx::~DrawMapEx()
   delete []pImpl->sctex;
   delete []pImpl->data;
   delete pImpl;
+}
+
+void DrawMapEx::mapSetVisible(bool v)
+{
+  if (pImpl->dataswitched != !v)
+  {
+    pImpl->dataswitched = !v;
+    DrawQWidget::vmanUpSec(BIT_SET_ON(UP_MAP));
+  }
+}
+
+void DrawMapEx::mapShow()
+{
+  mapSetVisible(true);
+}
+
+void DrawMapEx::mapHide()
+{
+  mapSetVisible(false);
 }
 
 void DrawMapEx::setPaletteBounds(float pblow, float pbgaplow, float pbgaphigh, float pbhigh, bool update)
@@ -727,6 +752,11 @@ float DrawMapEx::distanceByVert() const
   return pImpl->range()*rectangularityVH();
 }
 
+void DrawMapEx::setDataEmptyReplacerDepth(float m)
+{
+  pImpl->dataemptyreplacer.depth = m;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////
@@ -764,8 +794,11 @@ void DrawMapEx::processGlLocation(int secidx, int secflags, int loc, int TEX)
     if (BIT_CHECK_OFF(UP_MAP))
       return;
     
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, pImpl->linsmooth ? GL_LINEAR : GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, pImpl->linsmooth ? GL_LINEAR : GL_NEAREST);
+    GLint mf = pImpl->dataswitched || !pImpl->linsmooth ? GL_NEAREST : GL_LINEAR;
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, pImpl->linsmooth ? GL_LINEAR : GL_NEAREST);
+//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, pImpl->linsmooth ? GL_LINEAR : GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mf);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mf);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
@@ -779,7 +812,10 @@ void DrawMapEx::processGlLocation(int secidx, int secflags, int loc, int TEX)
     GLint   gl_internalFormat = GL_RGB32F;
     GLenum  gl_format = GL_RGB;
     GLenum  gl_texture_type = GL_FLOAT;
-    glTexImage2D(  GL_TEXTURE_2D, 0, gl_internalFormat, pImpl->LIMIT_WIDTH, pImpl->LIMIT_HEIGHT, 0, gl_format, gl_texture_type, pImpl->data);
+    if (pImpl->dataswitched == false)
+      glTexImage2D(  GL_TEXTURE_2D, 0, gl_internalFormat, pImpl->LIMIT_WIDTH, pImpl->LIMIT_HEIGHT, 0, gl_format, gl_texture_type, pImpl->data);
+    else
+      glTexImage2D(  GL_TEXTURE_2D, 0, gl_internalFormat, 1,1, 0, gl_format, gl_texture_type, &pImpl->dataemptyreplacer);
     
     m_ShaderProgram.setUniformValue(loc, TEX);
   }
@@ -787,7 +823,10 @@ void DrawMapEx::processGlLocation(int secidx, int secflags, int loc, int TEX)
   {
     if (BIT_CHECK_OFF(UP_MAP))
       return;
-    m_ShaderProgram.setUniformValue(loc, secidx == SDT_MAPBOUND1 ? pImpl->LIMIT_WIDTH : pImpl->LIMIT_HEIGHT);
+    if (pImpl->dataswitched == false)
+      m_ShaderProgram.setUniformValue(loc, secidx == SDT_MAPBOUND1 ? pImpl->LIMIT_WIDTH : pImpl->LIMIT_HEIGHT);
+    else
+      m_ShaderProgram.setUniformValue(loc, 1);
   }
   else if (secidx == SDT_RANGE)
   {

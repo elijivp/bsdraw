@@ -13,6 +13,10 @@ public:
   DrawMapEx(const char* mappath, int map_x_size, int map_y_size, 
           unsigned int samplesA, unsigned int samplesB, ORIENTATION orient=OR_LRBT, SPLITPORTIONS splitPortions=SP_NONE);
   virtual     ~DrawMapEx();
+public slots:
+  void        mapSetVisible(bool);
+  void        mapShow();
+  void        mapHide();
 public:
   void        setPaletteBounds(float pblow, float pbgaplow, float pbgaphigh, float pbhigh, bool update=true);
   void        paletteBounds(float* pblow, float* pbgaplow, float* pbgaphigh, float* pbhigh) const;
@@ -65,6 +69,8 @@ public:
   float       distanceByTop() const;
   float       distanceByBottom() const;
   float       distanceByVert() const;
+public:
+  void        setDataEmptyReplacerDepth(float m);
 protected:
   virtual void            processGlLocation(int secidx, int secflags, int loc, int TEX);
   virtual void            sizeAndScaleHint(int sizeA, int sizeB, unsigned int* matrixDimmA, unsigned int* matrixDimmB, unsigned int* scalingA, unsigned int* scalingB) const;

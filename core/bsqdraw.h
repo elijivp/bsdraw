@@ -80,6 +80,10 @@ public:
   bool    switchto(int dsgid);
   bool    setup(int dsgid, float fx, float fy, float opacity=0);
 public:
+  int     width() const;
+  int     height() const;
+  QSize   size() const;
+public:
   bool operator == (const tftdynamic_t& d2){ return pdraw == d2.pdraw && hoid == d2.hoid && sloid == d2.sloid; }
   bool operator != (const tftdynamic_t& d2){ return !(*this == d2); }
 };
@@ -373,9 +377,9 @@ public:
   int             tftAddDesign(const char* text);
   int             tftAddDesigns(int count, const char* text[]);   // convert texts into records, returns first record id
 public:
-  QSize           tftHoldingDesignSize() const;
-  int             tftHoldingDesignWidth() const;
-  int             tftHoldingDesignHeight() const;
+  QSize           tftHoldingDesignMaxSize() const;
+  int             tftHoldingDesignMaxWidth() const;
+  int             tftHoldingDesignMaxHeight() const;
 public:
                   /// FA - fixed angle, DA - rotateable
   tftdynamic_t    tftPushDynamicFA(int dsgid, COORDINATION cr, float fx, float fy);   // horizontal, unrotateable, more fast
@@ -386,7 +390,7 @@ public:
   tftdynamic_t    tftPushDynamicDA(const char* text, COORDINATION cr, float fx, float fy, float rotate);
   tftdynamic_t    tftPushDynamicDA(int dsgid, COORDINATION cr, float fx, float fy, float rotate, int ovlroot);  // rotateable
   tftdynamic_t    tftPushDynamicDA(const char* text, COORDINATION cr, float fx, float fy, float rotate, int ovlroot);
-  void            tftEnableDynamicClosestMode();
+  void            tftEnableDynamicClosestMode();    // special mode for fast draw for only 2 intersepting designs
   void            tftDisableDynamicClosestMode();
   
   tftstatic_t     tftPushStatic(int dsgid, COORDINATION cr, float fx, float fy, float rotate=0.0f);
@@ -420,6 +424,13 @@ public:
   bool            tftSwitchTo(int hoid, int sloid, int dsgid);
   bool            tftSetup(int hoid, int sloid, int dsgid, float fx, float fy, float opacity=0.0f);
 public:
+  int             tftGetDesignWidth(int hoid, int dsgid) const;
+  int             tftGetDesignHeight(int hoid, int dsgid) const;
+  QSize           tftGetDesignSize(int hoid, int dsgid) const;
+  
+  int             tftGetDynamicWidth(int hoid, int sloid) const;
+  int             tftGetDynamicHeight(int hoid, int sloid) const;
+  QSize           tftGetDynamicSize(int hoid, int sloid) const;
 };
 
 class BSQClickerXY: public QObject, public DrawEventReactor

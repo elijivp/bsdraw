@@ -2026,21 +2026,21 @@ int DrawQWidget::tftAddDesigns(int count, const char* texts[])
 
 
 
-QSize DrawQWidget::tftHoldingDesignSize() const
+QSize DrawQWidget::tftHoldingDesignMaxSize() const
 {
   if (m_tfth_current == -1)
     return QSize();
   return QSize(m_tfths[m_tfth_current]->geterbook->design_width, m_tfths[m_tfth_current]->geterbook->design_height);
 }
 
-int DrawQWidget::tftHoldingDesignWidth() const
+int DrawQWidget::tftHoldingDesignMaxWidth() const
 {
   if (m_tfth_current == -1)
     return 0;
   return m_tfths[m_tfth_current]->geterbook->design_width;
 }
 
-int DrawQWidget::tftHoldingDesignHeight() const
+int DrawQWidget::tftHoldingDesignMaxHeight() const
 {
   if (m_tfth_current == -1)
     return 0;
@@ -2184,15 +2184,17 @@ int DrawQWidget::tftDynamicsCount() const
 //  return tftgeterbook_designsperarea(m_tfths[m_tfth_current]->geterbook);
 //}
 
+#define TFT_CHECK_HOID(hoid, badret)      if (hoid < 0 || hoid >= TFT_HOLDERS) return badret;
 
 #define TFT_CHECK_SHORT(hoid, badret)     if (hoid == -1) return badret; \
                                           if (sloid >= int(m_tfths[hoid]->writingscount[TFT_DYNAMIC])) \
                                             return badret;
-#define TFT_CHECK_FULL(hoid) \
-                                Q_ASSERT(hoid >= 0 && hoid < TFT_HOLDERS); \
-                                if (m_tfths[hoid] == nullptr) return false; \
-                                if (sloid >= int(m_tfths[hoid]->writingscount[TFT_DYNAMIC])) \
-                                  return false;
+
+#define TFT_CHECK_FULL(hoid, badret) \
+                                          Q_ASSERT(hoid >= 0 && hoid < TFT_HOLDERS); \
+                                          if (m_tfths[hoid] == nullptr) return badret; \
+                                          if (sloid >= int(m_tfths[hoid]->writingscount[TFT_DYNAMIC])) \
+                                            return badret;
 
 
 tftdynamic_t DrawQWidget::tftGet(int sloid)
@@ -2295,7 +2297,7 @@ tftdynamic_t DrawQWidget::tftGet(int hoid, int sloid)
 
 bool DrawQWidget::tftMove(int hoid, int sloid, float fx, float fy)
 {
-  TFT_CHECK_FULL(hoid)
+  TFT_CHECK_FULL(hoid, false)
   m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].frag.slotdata.fx = fx;
   m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].frag.slotdata.fy = fy;
   TFT_GOTO_SLOT_PINGUP(hoid)
@@ -2303,47 +2305,85 @@ bool DrawQWidget::tftMove(int hoid, int sloid, float fx, float fy)
 
 bool DrawQWidget::tftMoveX(int hoid, int sloid, float fx)
 {
-  TFT_CHECK_FULL(hoid)
+  TFT_CHECK_FULL(hoid, false)
   m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].frag.slotdata.fx = fx;
   TFT_GOTO_SLOT_PINGUP(hoid)
 }
 
 bool DrawQWidget::tftMoveY(int hoid, int sloid, float fy)
 {
-  TFT_CHECK_FULL(hoid)
+  TFT_CHECK_FULL(hoid, false)
   m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].frag.slotdata.fy = fy;
   TFT_GOTO_SLOT_PINGUP(hoid)
 }
 
 bool DrawQWidget::tftRotate(int hoid, int sloid, float anglerad)
 {
-  TFT_CHECK_FULL(hoid)
+  TFT_CHECK_FULL(hoid, false)
   m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].frag.slotdata.rotate = anglerad;
   TFT_GOTO_SLOT_PINGUP(hoid)
 }
 
 bool DrawQWidget::tftOpacity(int hoid, int sloid, float opacity)
 {
-  TFT_CHECK_FULL(hoid)
+  TFT_CHECK_FULL(hoid, false)
   m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].frag.slotdata.opacity = opacity;
   TFT_GOTO_SLOT_PINGUP(hoid)
 }
 
 bool DrawQWidget::tftSwitchTo(int hoid, int sloid, int dsgid)
 {
-  TFT_CHECK_FULL(hoid)
+  TFT_CHECK_FULL(hoid, false)
   m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].frag.designid = dsgid;
   TFT_GOTO_SLOT_PINGUP(hoid)
 }
 
 bool DrawQWidget::tftSetup(int hoid, int sloid, int dsgid, float fx, float fy, float opacity)
 {
-  TFT_CHECK_FULL(hoid)
+  TFT_CHECK_FULL(hoid, false)
   m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].frag.designid = dsgid;
   m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].frag.slotdata.fx = fx;
   m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].frag.slotdata.fy = fy;
   m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].frag.slotdata.opacity = opacity;
   TFT_GOTO_SLOT_PINGUP(hoid)
+}
+
+int DrawQWidget::tftGetDesignWidth(int hoid, int dsgid) const
+{
+  TFT_CHECK_HOID(hoid, 0)
+  int c_total = m_tfths[hoid]->geterbook->c_total;
+  int dsgid_short = dsgid % c_total;
+  int areaid =  dsgid / c_total;
+  return m_tfths[hoid]->geterbook->designedbook[areaid].designs[dsgid_short].width;
+}
+
+int DrawQWidget::tftGetDesignHeight(int hoid, int /*dsgid*/) const
+{
+  TFT_CHECK_HOID(hoid, 0)
+  return m_tfths[hoid]->geterbook->design_height;
+}
+
+QSize DrawQWidget::tftGetDesignSize(int hoid, int dsgid) const
+{
+  return QSize(tftGetDesignWidth(hoid, dsgid), tftGetDesignHeight(hoid, dsgid));
+}
+
+int DrawQWidget::tftGetDynamicWidth(int hoid, int sloid) const
+{
+  TFT_CHECK_FULL(hoid, 0)
+  return tftGetDesignWidth(hoid, m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].frag.designid);
+}
+
+int DrawQWidget::tftGetDynamicHeight(int hoid, int sloid) const
+{
+  TFT_CHECK_FULL(hoid, 0)
+  return tftGetDesignHeight(hoid, m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].frag.designid);
+}
+
+QSize DrawQWidget::tftGetDynamicSize(int hoid, int sloid) const
+{
+  TFT_CHECK_FULL(hoid, QSize(0,0))
+  return tftGetDesignSize(hoid, m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].frag.designid);
 }
 
 
@@ -2354,6 +2394,9 @@ bool tftdynamic_t::rotate(float anglerad){ return pdraw->tftRotate(hoid, sloid, 
 bool tftdynamic_t::opacity(float opacity){ return pdraw->tftOpacity(hoid, sloid, opacity); }
 bool tftdynamic_t::switchto(int dsgid){ return pdraw->tftSwitchTo(hoid, sloid, dsgid); }
 bool tftdynamic_t::setup(int dsgid, float fx, float fy, float opacity){ return pdraw->tftSetup(hoid, sloid, dsgid, fx, fy, opacity); }
+int tftdynamic_t::width() const { return pdraw->tftGetDynamicWidth(hoid, sloid); }
+int tftdynamic_t::height() const { return pdraw->tftGetDynamicHeight(hoid, sloid); }
+QSize tftdynamic_t::size() const { return pdraw->tftGetDynamicSize(hoid, sloid); }
 
 ////////////////////////////////////////////////////////////////////////////////
 

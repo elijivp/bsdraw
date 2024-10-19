@@ -50,12 +50,12 @@ int msprintf(char* to, const char* format, ...)
         *t++ = (char)va_arg(vl, int);
         break;
       }
-      case 'd': case 'f': case 'D': case 'F':
+      case 'd': case 'f': case 'D': case 'F': case 'r':
       {
         int numscount=0;
         int nums[3];
                 
-        if (*fp == 'd' || *fp == 'D')
+        if (*fp == 'd' || *fp == 'D' || *fp == 'r')
         {
            nums[0] = va_arg(vl, int);
            if (nums[0] < 0)
@@ -64,14 +64,22 @@ int msprintf(char* to, const char* format, ...)
              nums[0] = -nums[0];
            }
            
-           if (*fp == 'D')
+           if (*fp == 'd' || *fp == 'D')
            {
-             int arrsizes[] = {  100, 10, 0 };
-             for (nums[2]=0; nums[2]<int(sizeof(arrsizes)/sizeof(int)); nums[2]++)
-               if (arrsizes[nums[2]] <= nums[0])
-                 break;
+             if (*fp == 'D')
+             {
+               int arrsizes[] = {  100, 10, 0 };
+               for (nums[2]=0; nums[2]<int(sizeof(arrsizes)/sizeof(int)); nums[2]++)
+                 if (arrsizes[nums[2]] <= nums[0])
+                   break;
+             }
+             numscount = 1;
            }
-           numscount = 1;
+           else if (*fp == 'r')
+           {
+             nums[1] = nums[2] = 0;
+             numscount = 2;
+           }
         }
         else if (*fp == 'f' || *fp == 'F')
         {
@@ -333,8 +341,8 @@ void FshDrawComposer::value2D(const char* varname, const char* coordsname, const
                                             ");" SHNL, igclamp, lv0clamp, igclamp, lv1clamp);
     }
     
-    m_offset += msprintf(&m_to[m_offset], "%s = submeshgrad[0] - step(%F, float(imrect[2]+1))*(loc_vv.x + loc_vv.y);" SHNL, 
-                                                                  varname, double(m_datasubmesh.count));
+    m_offset += msprintf(&m_to[m_offset], "%s = submeshgrad[0] - step(%r, float(imrect[2]+1))*(loc_vv.x + loc_vv.y);" SHNL, 
+                                                                  varname, m_datasubmesh.count);
 
   }
   
@@ -762,7 +770,7 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft, GROUPING gp
       m_offset += msprintf(&m_to[m_offset],     
                                                 SHGP "tft_rec[0] = %d;" SHNL
                                                 SHGP "tft_slot[0] = vec4(%F, %F, %F, %F);" SHNL, 
-                                                      tft.frag->designid/* / tft.limitrows*/,
+                                                      tft.frag->designid,
                                                       tft.frag->slotdata.fx, tft.frag->slotdata.fy, tft.frag->slotdata.opacity, tft.frag->slotdata.rotate);
       if (tft.frag->slotdata.rotate > -0.0001f && tft.frag->slotdata.rotate < 0.0001f)
         gorotate = false;
@@ -833,24 +841,39 @@ void FshDrawMain::generic_main_process_tft(const tftfraginfo_t& tft, GROUPING gp
       
       float oneroww = 1.0f / tft.limitcols;
       float onerowh = 1.0f / tft.limitrows;
-      m_offset += msprintf(&m_to[m_offset],       SHG2 "float pc = tft_slot[i].y/%f + 0.5;" SHNL,  float(tft.recordheight));
+      m_offset += msprintf(&m_to[m_offset],       SHG2 "int   rc = int(mod(float(tft_rec[i]),%r));" SHNL
+                                                  SHG2 "float pc = tft_slot[i].y/%r + 0.5;" SHNL,  
+                                                          limit, tft.recordheight);
 #ifndef BSGLSLOLD
       if (tft.limitcols == 1)
       {
-        m_offset += msprintf(&m_to[m_offset],     SHG2 "vec3  tcoords = vec3( tft_slot[i].x/%f + 0.5, "
-                                                                               "1.0 - (mod(mod(tft_rec[i],%d),%d) + pc)*%f, "
-                                                                               "float(tft_rec[i]/%d)/%f);" SHNL,
-                                                      float(tft.recordwidth),
-                                                      limit, tft.limitrows, onerowh, 
-                                                      limit, float(tft.texcount == 1? 1 : tft.texcount-1));
+//        m_offset += msprintf(&m_to[m_offset],     SHG2 "vec3  tcoords = vec3( tft_slot[i].x/%f + 0.5, "
+//                                                                               "1.0 - (mod(mod(tft_rec[i],%d),%d) + pc)*%f, "
+//                                                                               "float(tft_rec[i]/%d)/%f);" SHNL,
+//                                                      float(tft.recordwidth),
+//                                                      limit, tft.limitrows, onerowh, 
+//                                                      limit, float(tft.texcount == 1? 1 : tft.texcount-1));
+        m_offset += msprintf(&m_to[m_offset],     SHG2 "vec3  tcoords = vec3( tft_slot[i].x/%r + 0.5, "
+                                                                               "1.0 - (mod(rc,%d) + pc)*%f, "
+                                                                               "float(tft_rec[i]/%d)/%r);" SHNL,
+                                                      tft.recordwidth,
+                                                      tft.limitrows, onerowh, 
+                                                      limit, tft.texcount == 1? 1 : tft.texcount-1);
       }
       else
       {
-        m_offset += msprintf(&m_to[m_offset],     SHG2 "vec3  tcoords = vec3((int(mod(tft_rec[i],%d))/%d + (tft_slot[i].x/%f + 0.5))*%f, "
-                                                                               "1.0 - (mod(mod(tft_rec[i],%d),%d) + pc)*%f, "
-                                                                               "float(tft_rec[i]/%d));" SHNL, // MEOW!!
-                                                      limit, tft.limitrows, float(tft.recordwidth), oneroww,
-                                                      limit, tft.limitrows, onerowh, 
+//        m_offset += msprintf(&m_to[m_offset],     SHG2 "vec3  tcoords = vec3((int(mod(tft_rec[i],%d))/%d + (tft_slot[i].x/%f + 0.5))*%f, "
+//                                                                               "1.0 - (mod(mod(tft_rec[i],%d),%d) + pc)*%f, "
+//                                                                               "float(tft_rec[i]/%d));" SHNL, // MEOW!!
+//                                                      limit, tft.limitrows, float(tft.recordwidth), oneroww,
+//                                                      limit, tft.limitrows, onerowh, 
+//                                                      limit);
+        
+        m_offset += msprintf(&m_to[m_offset],     SHG2 "vec3  tcoords = vec3((rc/%d + (tft_slot[i].x/%r + 0.5))*%f, "
+                                                                               "1.0 - (mod(rc,%d) + pc)*%f, "
+                                                                               "tft_rec[i]/%d);" SHNL, // MEOW!!
+                                                      tft.limitrows, tft.recordwidth, oneroww,
+                                                      tft.limitrows, onerowh, 
                                                       limit);
       }
 #else

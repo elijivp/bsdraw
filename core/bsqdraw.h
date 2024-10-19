@@ -42,12 +42,26 @@ inline QColor bsqcolor(unsigned int v){ return QColor((v)&0xFF, (v>>8)&0xFF, (v>
 
 ////////////
 
+struct tftgetermetrics_t
+{
+  int     maxtextlen;
+  int     design_width;     // every desing max width by QFontMetrics, for maxtextlen' symbols
+  int     design_height;    // every desing height by QFontMetrics
+  int     design_ht;        // QFontMetrics::accent
+  int     design_hb;        // QFontMetrics::descent
+  int     design_ld;        // QFontMetrics::leading
+};
+
 enum { TFT_TEXTMAXLEN=64 };
 struct tftgeterbook_t;
-tftgeterbook_t*   tftgeterbook_alloc(QFont font, int maxtextlen=TFT_TEXTMAXLEN, int limitcolumns=1);
+tftgeterbook_t*   tftgeterbook_alloc(QFont font, int maxtextlen=TFT_TEXTMAXLEN, int limitcolumns=1, QColor color=QColor(0,0,0));
 int               tftgeterbook_addtext(tftgeterbook_t* th, const char* text);
 int               tftgeterbook_addtexts(tftgeterbook_t* th, int count, const char* texts[]);
 void              tftgeterbook_release(tftgeterbook_t* th);
+
+tftgetermetrics_t tftgeterbook_metrics(const tftgeterbook_t* th);
+QFont             tftgeterbook_font(const tftgeterbook_t* th);
+
 
 class   tftstatic_t
 {
@@ -366,7 +380,7 @@ private:
   int             _tft_add_writing(int type, const tftwriting_t&);
 public:
   int             tftHoldingRegister(tftgeterbook_t* th, bool isowner);
-  int             tftHoldingRegister(const QFont& font, int maxtextlen=TFT_TEXTMAXLEN, int limitcolumns=1);
+  int             tftHoldingRegister(const QFont& font, int maxtextlen=TFT_TEXTMAXLEN, int limitcolumns=1, QColor color=QColor(0,0,0));
   tftgeterbook_t* tftHoldingGetbook(int hoid);
   bool            tftHoldingGetbookOwner(int hoid);
   bool            tftHoldingSwitch(int hoid);

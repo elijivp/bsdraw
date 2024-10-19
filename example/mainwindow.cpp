@@ -1270,8 +1270,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     SAMPLES = 100;
     PORTIONS = 1;
     
+//    DrawQWidget* pdraw = new DrawGraph(SAMPLES, PORTIONS, 
+//                                        graphopts_t::goInterp(0.25f, DE_LINTERP_SCALINGCENTER), 
+//                                        coloropts_t::copts(CP_MONO, 0.25f, 0.25f, 0x00FFFFFF));
     DrawQWidget* pdraw = new DrawGraph(SAMPLES, PORTIONS, 
-                                        graphopts_t::goInterp(0.25f, DE_LINTERP_SCALINGCENTER), 
+                                        graphopts_t::goInterpD(0.15f, 0.0f), 
                                         coloropts_t::copts(CP_MONO, 0.25f, 0.25f, 0x00FFFFFF));
     BSQTrackerXY* tracker = new BSQTrackerXY;
     pdraw->setProactive(tracker);

@@ -48,14 +48,10 @@ public:
 
 enum  { TFT_MAXPAGES=256 };
 
-struct  tftgeterbook_t
+struct  tftgeterbook_t: tftgetermetrics_t
 {
   QFont                     font;
-  int                       maxtextlen;
   BSQSetup                  ctx_setup;
-  
-  int                       design_width;
-  int                       design_height, design_ht, design_hb, design_ld;
   
   int                       limrows;   // by font
   int                       limcols;
@@ -79,13 +75,13 @@ inline QImage* _tftgeterbook_allocimage(int width, int height)
 }
 
 
-tftgeterbook_t*  tftgeterbook_alloc(QFont font, int maxtextlen, int limitcolumns)
+tftgeterbook_t*  tftgeterbook_alloc(QFont font, int maxtextlen, int limitcolumns, QColor color)
 {
   tftgeterbook_t* result = new tftgeterbook_t(font);
   result->font = font;
   result->maxtextlen = maxtextlen < TFT_TEXTMAXLEN ? maxtextlen : TFT_TEXTMAXLEN;
-  result->ctx_setup.brush = QBrush(QColor(0,0,0));
-  result->ctx_setup.pen = QPen(QColor(0,0,0));
+  result->ctx_setup.brush = QBrush(color);
+  result->ctx_setup.pen = QPen(color);
   
   result->design_width = result->ctx_setup.fm.averageCharWidth() * result->maxtextlen + 2;
   result->design_ht = result->ctx_setup.fm.ascent();
@@ -223,6 +219,18 @@ void  tftgeterbook_release(tftgeterbook_t* th)
 #endif
   delete th;
 }
+
+
+tftgetermetrics_t tftgeterbook_metrics(const tftgeterbook_t* th)
+{
+  return *(tftgetermetrics_t*)th;
+}
+
+QFont tftgeterbook_font(const tftgeterbook_t* th)
+{
+  return th->font;
+}
+
 
 
 extern int msprintf(char* to, const char* format, ...);
@@ -1892,12 +1900,15 @@ bool DrawQWidget::_tft_holding_release(int idx)
   return true;
 }
 
-//#define DBGLABELSHOW
+//#define DBGLABELSHOW_1
+//#define DBGLABELSHOW_2
 
-#ifdef DBGLABELSHOW
+#if defined DBGLABELSHOW_1 || defined DBGLABELSHOW_2
 #include <QLabel>
+#ifdef DBGLABELSHOW_1
 QLabel* g_lbl = nullptr;
 int     g_ctr = 0;
+#endif
 #endif
 
 int DrawQWidget::_tft_holding_design(DrawQWidget::tftholding_t* holding, const char* text)
@@ -1905,13 +1916,13 @@ int DrawQWidget::_tft_holding_design(DrawQWidget::tftholding_t* holding, const c
   int rid_loc = tftgeterbook_addtext(holding->geterbook, text);
   holding->pinger += 1;
   m_bitmaskPendingChanges |= PC_TFT_TEXTURE;
-#ifdef DBGLABELSHOW
-  if (g_lbl == nullptr || g_ctr != holding->designedbook.size())
+#ifdef DBGLABELSHOW_1
+  if (g_lbl == nullptr || g_ctr != holding->geterbook->designedbookpages)
   {
     g_lbl = new QLabel;
-    g_ctr = holding->designedbook.size();
+    g_ctr = holding->geterbook->designedbookpages;
   }
-  g_lbl->setPixmap(QPixmap::fromImage(*tftar->image));
+  g_lbl->setPixmap(QPixmap::fromImage(*holding->geterbook->designedbook[g_ctr-1].image));
   g_lbl->show();
 #endif
   return rid_loc;
@@ -1922,6 +1933,15 @@ int DrawQWidget::_tft_holding_design(DrawQWidget::tftholding_t* holding, int cou
   int rid_loc = tftgeterbook_addtexts(holding->geterbook, count, texts);
   holding->pinger += 1;
   m_bitmaskPendingChanges |= PC_TFT_TEXTURE;
+#ifdef DBGLABELSHOW_1
+  if (g_lbl == nullptr || g_ctr != holding->geterbook->designedbookpages)
+  {
+    g_lbl = new QLabel;
+    g_ctr = holding->geterbook->designedbookpages;
+  }
+  g_lbl->setPixmap(QPixmap::fromImage(*holding->geterbook->designedbook[g_ctr-1].image));
+  g_lbl->show();
+#endif
   return rid_loc;
 }
 
@@ -1949,12 +1969,20 @@ int DrawQWidget::tftHoldingRegister(tftgeterbook_t* th, bool isowner)
   {
     m_tfth_current = next_holding;
   }
+#ifdef DBGLABELSHOW_2
+  for (int i=0; i<th->designedbookpages; i++)
+  {
+    QLabel* lbl = new QLabel;
+    lbl->setPixmap(QPixmap::fromImage(*th->designedbook[i].image));
+    lbl->show();
+  }
+#endif
   return next_holding;
 }
 
-int DrawQWidget::tftHoldingRegister(const QFont& font, int maxtextlen, int limitcolumns)
+int DrawQWidget::tftHoldingRegister(const QFont& font, int maxtextlen, int limitcolumns, QColor color)
 {
-  return tftHoldingRegister(tftgeterbook_alloc(font, maxtextlen, limitcolumns), true);
+  return tftHoldingRegister(tftgeterbook_alloc(font, maxtextlen, limitcolumns, color), true);
 }
 
 tftgeterbook_t* DrawQWidget::tftHoldingGetbook(int hoid)
@@ -2828,3 +2856,4 @@ bool BSQTrackerXY::reactionTracking(DrawQWidget*, const coordstriumv_t* ct, bool
   emit tracked(ct->fx_0n1, ct->fy_0n1, ct->fx_pix, ct->fy_pix);
   return false; 
 }
+

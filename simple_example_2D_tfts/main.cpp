@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
   tftgeterbook_addtexts(g_tftnumbers, NUMCOUNT, g_numbers);
   tftgetermetrics_t  METRICS = tftgeterbook_metrics(g_tftnumbers);
   
-  const unsigned int NUMHORZ = 16;
+  const unsigned int NUMHORZ = 20;
   const unsigned int NUMVERT = 20;
   
   /// Data generation

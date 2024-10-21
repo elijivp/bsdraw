@@ -270,7 +270,7 @@ DrawQWidget::DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int
     m_locationPrimary[i] = -1;
   
   m_tfth_current = -1;
-  for (int i=0; i<TFT_HOLDERS; i++)
+  for (int i=0; i<TFT_HOLDINGS; i++)
     m_tfths[i] = nullptr;
   
   m_portionMeshType = splitPortions == SP_NONE? m_pcsh->portionMeshType() : ISheiGenerator::PMT_FORCE1D;  // ntf: strange, non-intuitive
@@ -305,7 +305,7 @@ DrawQWidget::~DrawQWidget()
   if (m_fshalloc)
     delete []m_fshmem;
   
-  for (unsigned int t=0; t<TFT_HOLDERS; t++)
+  for (unsigned int t=0; t<TFT_HOLDINGS; t++)
     if (m_tfths[t] != nullptr)
     {
       if (m_tfths[t]->geterbookowner)
@@ -402,12 +402,11 @@ void DrawQWidget::initCollectAndCompileShader()
     return;
   }
   
-  
   /// 2. Fragment shader
   /// mem alloc
   unsigned int fshps = m_pcsh->shfragment_pendingSize();
   fshps +=  FshDrawMain::basePendingSize(m_datasubmesh, m_overlaysCount);
-  for (unsigned int t=0; t<TFT_HOLDERS; t++)
+  for (unsigned int t=0; t<TFT_HOLDINGS; t++)
     if (m_tfths[t] != nullptr)
     {
       fshps += m_tfths[t]->writingscount[TFT_STATIC]*1024;
@@ -415,7 +414,7 @@ void DrawQWidget::initCollectAndCompileShader()
     }
   if (fshps < 32768)
     fshps = 32768;
-        
+
   if (m_fshalloc < fshps)
   {
     if (m_fshalloc)  delete []m_fshmem;
@@ -436,15 +435,14 @@ void DrawQWidget::initCollectAndCompileShader()
   }
   bool havetft = false;
   {
-    for (unsigned int t=0; t<TFT_HOLDERS; t++)
+    for (unsigned int t=0; t<TFT_HOLDINGS; t++)
     {
       if (m_tfths[t] == nullptr)  continue;
-      m_tfths[t]->_location = -1;
-      fdm.generic_decls_add_tft_area(t, m_tfths[t]->_varname);
-      m_tfths[t]->_location_i = -1;
-      m_tfths[t]->_location_c = -1;
+      m_tfths[t]->_location_h = -1;
+      fdm.generic_decls_add_tft_area(t, m_tfths[t]->_varname_h);
+      m_tfths[t]->_location_d = -1;
       if (m_tfths[t]->writingscount[TFT_DYNAMIC] > 0)
-        fdm.generic_decls_add_tft_dslots(t, m_tfths[t]->writingscount[TFT_DYNAMIC], m_tfths[t]->_varname_i, m_tfths[t]->_varname_c);
+        fdm.generic_decls_add_tft_dslots(t, m_tfths[t]->_varname_d);
       havetft |= m_tfths[t]->writingscount[TFT_STATIC] > 0 || m_tfths[t]->writingscount[TFT_DYNAMIC] > 0;
     }
   }
@@ -488,11 +486,12 @@ void DrawQWidget::initCollectAndCompileShader()
   if (havetft)
   {
     fdm.generic_main_prepare_tft();
-    for (unsigned int t=0; t<TFT_HOLDERS; t++)
+    for (unsigned int t=0; t<TFT_HOLDINGS; t++)
     {
       if (m_tfths[t] == nullptr)
         continue;
       int c_total = tftgeterbook_designsperarea(m_tfths[t]->geterbook);
+      float c_div = 1.0f/float(TFT_SLOTLIMIT_DYNAMIC-1);
       for (int s=0; s<_TFT_COUNT; s++)
       {
         for (unsigned int i=0; i<m_tfths[t]->writingscount[s]; i++)
@@ -504,13 +503,13 @@ void DrawQWidget::initCollectAndCompileShader()
                                  m_tfths[t]->geterbook->limrows, m_tfths[t]->geterbook->limcols, 
                                  m_tfths[t]->geterbook->design_width, m_tfths[t]->geterbook->design_height, 
                                    m_tfths[t]->geterbook->designedbook[areaid].designs[dsgid_short].width, 
-                                 s == TFT_STATIC, int(i), &m_tfths[t]->writings[s][i].frag
+                                 s == TFT_STATIC, i*c_div, &m_tfths[t]->writings[s][i].frag
           };
 #else
           tftfraginfo_t tfi = {  int(t), 1,
                                  m_tfths[t]->limrows, m_tfths[t]->limcols, 
                                  m_tfths[t]->design_width, m_tfths[t]->design_height, m_tfths[t]->designedbook.records[dsgid_short].width, 
-                                 s == TFT_STATIC, int(i), &writings[i].frag
+                                 s == TFT_STATIC, i*c_div, &writings[i].frag
           };
 #endif
           FshDrawMain::GROUPING gpmode = FshDrawMain::GP_OFF;
@@ -560,8 +559,6 @@ void DrawQWidget::initCollectAndCompileShader()
     else
       m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment, m_fshmem);
     
-//    qDebug()<<ovlshaderbuf;
-    
 #ifdef BSSHADER_DUMP
     fout.write((const char*)m_fshmem);
     fout.write((const char*)"\n\n\n\n");
@@ -572,8 +569,6 @@ void DrawQWidget::initCollectAndCompileShader()
       qDebug()<<Q_FUNC_INFO<<"OVL fshColor failure!";
     else
       m_ShaderProgram.addShaderFromSourceCode(QOpenGLShader::Fragment,  m_fshmem);
-    
-//    qDebug()<<ovlshaderbuf;
         
 #ifdef BSSHADER_DUMP
     fout.write((const char*)m_fshmem);
@@ -615,22 +610,28 @@ void DrawQWidget::initCollectAndCompileShader()
     
     /// 3. Init tft locations and textures
     {
-      for (unsigned int t=0; t<TFT_HOLDERS; t++)
+      /// 3.1. Textures for designs
+      for (unsigned int t=0; t<TFT_HOLDINGS; t++)
+      {
+        if (m_tfths[t] == nullptr)  continue;
+        glGenTextures(1, &m_textures[m_texturesCount++]);
+        m_tfths[t]->_location_h = m_ShaderProgram.uniformLocation(m_tfths[t]->_varname_h);
+        m_tfths[t]->ponger_h = 0;
+      }
+      
+      /// 3.2. Variables and textures for writings
+      for (unsigned int t=0; t<TFT_HOLDINGS; t++)
       {
         if (m_tfths[t] == nullptr)  continue;
         
-        glGenTextures(1, &m_textures[m_texturesCount++]);
-        
-        m_tfths[t]->_location = m_ShaderProgram.uniformLocation(m_tfths[t]->_varname);
-        m_tfths[t]->ponger = 0;
-        
-        if (m_tfths[t]->writingscount[TFT_DYNAMIC] > 0)
+        if (m_tfths[t]->writingscount[TFT_DYNAMIC] == 0)
+          m_tfths[t]->_location_d = -1;
+        else
         {
-          m_tfths[t]->_location_i = m_ShaderProgram.uniformLocation(m_tfths[t]->_varname_i);
-          m_tfths[t]->_location_c = m_ShaderProgram.uniformLocation(m_tfths[t]->_varname_c);
+          glGenTextures(1, &m_textures[m_texturesCount++]);
+          m_tfths[t]->_location_d = m_ShaderProgram.uniformLocation(m_tfths[t]->_varname_d);
         }
-        for (unsigned int i=0; i<m_tfths[t]->writingscount[TFT_DYNAMIC]; i++)
-          m_tfths[t]->writings[TFT_DYNAMIC][i].ponger = 0;
+        m_tfths[t]->ponger_d = 0;
       }
     }
     
@@ -732,7 +733,26 @@ void DrawQWidget::paintGL()
 //    glDisable(GL_MULTISAMPLE);
 //#endif
 //  }
+  
+#if 0     /// glReadPixel Only??
   {
+    glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
+    glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
+    
+    glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
+    glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+    
+    glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
+    glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
+    glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
+#if QT_VERSION >= 0x050000
+    glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+    glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
+#endif
+  }
+#endif
+  
+  {  
 //    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 //    glEnable(GL_TEXTURE_2D);
 //    glDisable(GL_BLEND);
@@ -854,139 +874,100 @@ void DrawQWidget::paintGL()
     }
   }
   
-  for (unsigned int t=0; t<TFT_HOLDERS; t++)
+  for (unsigned int t=0; t<TFT_HOLDINGS; t++)
   {
     if (m_tfths[t] == nullptr)
       continue;
-    
-    if ((loc = m_tfths[t]->_location) != -1)
-    {
+    loc = m_tfths[t]->_location_h;
 #ifndef BSGLSLOLD
-      glActiveTexture(GL_TEXTURE0 + CORR_TEX);
-      glBindTexture(GL_TEXTURE_2D_ARRAY, m_textures[CORR_TEX]);
+    glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, m_textures[CORR_TEX]);
 #else
-      glActiveTexture(GL_TEXTURE0 + CORR_TEX);
-      glBindTexture(GL_TEXTURE, m_textures[CORR_TEX]);
+    glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+    glBindTexture(GL_TEXTURE, m_textures[CORR_TEX]);
 #endif
-    
-      if (havePendOn(PC_TFT_TEXTURE, bitmaskPendingChanges))
-      {
-        const GLint   gl_internalFormat = GL_RGBA8;
-        const GLenum  gl_format = GL_RGBA;
-        const GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
-        int width = m_tfths[t]->geterbook->design_width * m_tfths[t]->geterbook->limcols;
-        int height = m_tfths[t]->geterbook->design_height * m_tfths[t]->geterbook->limrows;
+  
+    if (havePendOn(PC_TFT_TEXTURE, bitmaskPendingChanges) && m_tfths[t]->ponger_h != m_tfths[t]->pinger_h)
+    {
+      const GLint   gl_internalFormat = GL_RGBA8;
+      const GLenum  gl_format = GL_RGBA;
+      const GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
 //        qDebug()<<m_tfths[t]->ponger<<m_tfths[t]->pinger<<m_tfths[t]->_location;
 #ifndef BSGLSLOLD
-        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, m_textures[CORR_TEX]);
-        bool  subPendOn = forceSubPendOn || (m_tfths[t]->ponger != m_tfths[t]->pinger);
-        if (subPendOn)
-        {
-          int LAY = m_tfths[t]->geterbook->designedbookpages;
-          glTexStorage3D(  GL_TEXTURE_2D_ARRAY, /*LAY*/1, gl_internalFormat, width, height, LAY);
-          for (int r=0; r<LAY; r++)
-          {
-            const tftdesignedimage_t&  area = m_tfths[t]->geterbook->designedbook[r];
-            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, r, width, height, 1, gl_format, gl_texture_type, area.image->constBits());
-          }
-          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-          
-          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BASE_LEVEL, 0);
-          glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, /*LAY*/1);
-          
-          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-          
-          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-  #if QT_VERSION >= 0x050000
-          glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-          glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
-  #endif
-//          glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
-          
-          m_tfths[t]->ponger = m_tfths[t]->pinger;
-        }
+      int width = m_tfths[t]->geterbook->design_width * m_tfths[t]->geterbook->limcols;
+      int height = m_tfths[t]->geterbook->design_height * m_tfths[t]->geterbook->limrows;
+      int LAY = m_tfths[t]->geterbook->designedbookpages;
+      glTexStorage3D(  GL_TEXTURE_2D_ARRAY, /*LAY*/1, gl_internalFormat, width, height, LAY);
+      for (int r=0; r<LAY; r++)
+      {
+        const tftdesignedimage_t&  area = m_tfths[t]->geterbook->designedbook[r];
+        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, r, width, height, 1, gl_format, gl_texture_type, area.image->constBits());
+      }
+      glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+      glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+      
+      glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BASE_LEVEL, 0);
+      glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, /*LAY*/1);
 #else
-        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
-        glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
-        bool  subPendOn = forceSubPendOn || (m_tfths[t]->ponger != m_tfths[t]->pinger);
-        if (subPendOn)
-        {
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-          glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-          glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-          glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-          
-          glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-          glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-          glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-          glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-          
-  #if QT_VERSION >= 0x050000
-          glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-          glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
-  #endif
-          const tftdesignedimage_t&  area = m_tfths[t]->designedbook;
-          glTexImage2D(GL_TEXTURE_2D, 0, gl_internalFormat, width, height, 0, gl_format, gl_texture_type, area.image->constBits());
-          
-          m_tfths[t]->ponger = m_tfths[t]->pinger;
-        }
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+      const tftdesignedimage_t&  area = m_tfths[t]->designedbook;
+      glTexImage2D(GL_TEXTURE_2D, 0, gl_internalFormat, width, height, 0, gl_format, gl_texture_type, area.image->constBits());
 #endif
-        m_ShaderProgram.setUniformValue(loc, CORR_TEX);
-      } // if loc
+      m_ShaderProgram.setUniformValue(loc, CORR_TEX);
+      
+      m_tfths[t]->ponger_h = m_tfths[t]->pinger_h;
     } // if havePend
     CORR_TEX++;
-  }
+  } // for TFT
   
-  if (havePendOn(PC_TFT_PARAMS, bitmaskPendingChanges))
+
+  float   _memory_d[2][TFT_SLOTLIMIT_DYNAMIC][4];
+  for (unsigned int t=0; t<TFT_HOLDINGS; t++)
   {
-    for (unsigned int t=0; t<TFT_HOLDERS; t++)
+    if (m_tfths[t] == nullptr)
+      continue;
+    if ((loc = m_tfths[t]->_location_d) != -1)
     {
-      if (m_tfths[t] == nullptr)
-        continue;
-      int         arr_i[TFT_SLOTLIMIT_DYNAMIC];
-      QVector4D   arr_c[TFT_SLOTLIMIT_DYNAMIC];
+      glActiveTexture(GL_TEXTURE0 + CORR_TEX);
+      glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
       
-      if (m_tfths[t]->writingscount[TFT_DYNAMIC] > 0)
+      if (havePendOn(PC_TFT_PARAMS, bitmaskPendingChanges) && m_tfths[t]->ponger_d != m_tfths[t]->pinger_d)
       {
-        bool ppp = forceSubPendOn;
         for (unsigned int i=0; i<m_tfths[t]->writingscount[TFT_DYNAMIC]; i++)
         {
-          ppp |= m_tfths[t]->writings[TFT_DYNAMIC][i].ponger != m_tfths[t]->writings[TFT_DYNAMIC][i].pinger;
-          arr_i[i] = m_tfths[t]->writings[TFT_DYNAMIC][i].frag.designid;
-          arr_c[i] = QVector4D(   m_tfths[t]->writings[TFT_DYNAMIC][i].frag.slotdata.fx, m_tfths[t]->writings[TFT_DYNAMIC][i].frag.slotdata.fy, 
-                                  m_tfths[t]->writings[TFT_DYNAMIC][i].frag.slotdata.opacity, m_tfths[t]->writings[TFT_DYNAMIC][i].frag.slotdata.rotate );
-          m_tfths[t]->writings[TFT_DYNAMIC][i].ponger = m_tfths[t]->writings[TFT_DYNAMIC][i].pinger;
+          _memory_d[0][i][0] = m_tfths[t]->writings[TFT_DYNAMIC][i].frag.designid;
+          _memory_d[0][i][1] = _memory_d[0][i][2] = _memory_d[0][i][3] = 0;
+      
+          _memory_d[1][i][0] = m_tfths[t]->writings[TFT_DYNAMIC][i].frag.slotdata.fx;
+          _memory_d[1][i][1] = m_tfths[t]->writings[TFT_DYNAMIC][i].frag.slotdata.fy;
+          _memory_d[1][i][2] = m_tfths[t]->writings[TFT_DYNAMIC][i].frag.slotdata.opacity;
+          _memory_d[1][i][3] = m_tfths[t]->writings[TFT_DYNAMIC][i].frag.slotdata.rotate;
         }
-        if (ppp)
-        {
-          m_ShaderProgram.setUniformValueArray(m_tfths[t]->_location_i, arr_i, m_tfths[t]->writingscount[TFT_DYNAMIC]);
-          m_ShaderProgram.setUniformValueArray(m_tfths[t]->_location_c, arr_c, m_tfths[t]->writingscount[TFT_DYNAMIC]);
-        }
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        GLint   gl_internalFormat = GL_RGBA32F;
+        GLenum  gl_format = GL_RGBA;
+        GLenum  gl_texture_type = GL_FLOAT;
+        glTexImage2D(GL_TEXTURE_2D, 0, gl_internalFormat, TFT_SLOTLIMIT_DYNAMIC, 2, 0, gl_format, gl_texture_type, _memory_d);
+        m_tfths[t]->ponger_d = m_tfths[t]->pinger_d;
       }
-    } // for
-  }
+      m_ShaderProgram.setUniformValue(loc, CORR_TEX);
+      CORR_TEX++;
+    } // if loc
+  } // for
   
   
   if (!havePendOn(PC_PARAMSOVL, bitmaskPendingChanges))
   {
     for (unsigned int o=0; o<m_overlaysCount; o++)
     {
-//      for (unsigned int i=0; i<m_overlays[o].texcount; i++)
-//      {
-//        glActiveTexture(GL_TEXTURE0 + CORR_TEX);
-//        glBindTexture(GL_TEXTURE_2D, m_textures[CORR_TEX]);
-//        CORR_TEX++;
-//      }
       overlay_t& ovl = m_overlays[o];
       for (unsigned int i=0; i<ovl.uf_count; i++)
       {
@@ -1071,14 +1052,6 @@ void DrawQWidget::paintGL()
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, pimage->linsmooth ? GL_LINEAR : GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-                glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-                
-                glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-                glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-                glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-                glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-                
                 GLint   gl_internalFormat = GL_RGB32F;
                 GLenum  gl_format = GL_RGB;
                 GLenum  gl_texture_type = GL_FLOAT;
@@ -1093,21 +1066,10 @@ void DrawQWidget::paintGL()
                   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
                   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                  glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-                  glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-                  
-                  glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-                  glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-                  glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-                  glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-                  
                   GLint   gl_internalFormat;
                   GLenum  gl_format;
                   GLenum  gl_texture_type = GL_UNSIGNED_BYTE;
-                  
   #if QT_VERSION >= 0x050000
-                  glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-                  glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
                   if (pimage->type == dmtype_image_t::RGB)            {    gl_internalFormat = GL_RGB;    gl_format = GL_RGB;   }
                   else if (pimage->type == dmtype_image_t::RGBA)      {    gl_internalFormat = GL_RGBA8;   gl_format = GL_RGBA;   }
                   else if (pimage->type == dmtype_image_t::FASTALPHA) {    gl_internalFormat = GL_ALPHA8;   gl_format = GL_ALPHA;   }
@@ -1156,20 +1118,6 @@ void DrawQWidget::paintGL()
                 
                 glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
                 glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-                glPixelStorei(GL_UNPACK_SWAP_BYTES,   GL_FALSE);
-                glPixelStorei(GL_UNPACK_LSB_FIRST,    GL_FALSE);
-                
-                glPixelStorei(GL_UNPACK_ROW_LENGTH,   0);
-                glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-                
-                glPixelStorei(GL_UNPACK_SKIP_ROWS,    0);
-                glPixelStorei(GL_UNPACK_SKIP_PIXELS,  0);
-                glPixelStorei(GL_UNPACK_ALIGNMENT,    4);
-#if QT_VERSION >= 0x050000
-                glPixelStorei(GL_UNPACK_SKIP_IMAGES,  0);
-#endif
-//                if (psmparr->generatemipmapdafuq)
-//                  glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
               }
               
               m_ShaderProgram.setUniformValue(loc, CORR_TEX);
@@ -1863,7 +1811,7 @@ void DrawQWidget::scrollDataToAbs(int)
 
 int DrawQWidget::_tft_holding_alloc(tftgeterbook_t* th, bool isowner)
 {
-  for (int i=0; i<TFT_HOLDERS; i++)
+  for (int i=0; i<TFT_HOLDINGS; i++)
     if (m_tfths[i] == nullptr)
     {
       m_tfths[i] = new tftholding_t;
@@ -1878,11 +1826,9 @@ int DrawQWidget::_tft_holding_alloc(tftgeterbook_t* th, bool isowner)
         m_tfths[i]->writingsGrouping[j] = true;
       }
       
-      m_tfths[i]->ponger = 0;
-      m_tfths[i]->pinger = 1;
-      m_tfths[i]->_location = -1;
-      m_tfths[i]->_location_i = -1;
-      m_tfths[i]->_location_c = -1;
+      m_tfths[i]->pinger_h = m_tfths[i]->pinger_d = 1;
+      m_tfths[i]->ponger_h = m_tfths[i]->ponger_d = 0;
+      m_tfths[i]->_location_h = m_tfths[i]->_location_d = -1;
       return i;
     }
   return -1;
@@ -1914,7 +1860,7 @@ int     g_ctr = 0;
 int DrawQWidget::_tft_holding_design(DrawQWidget::tftholding_t* holding, const char* text)
 {
   int rid_loc = tftgeterbook_addtext(holding->geterbook, text);
-  holding->pinger += 1;
+  holding->pinger_h += 1;
   m_bitmaskPendingChanges |= PC_TFT_TEXTURE;
 #ifdef DBGLABELSHOW_1
   if (g_lbl == nullptr || g_ctr != holding->geterbook->designedbookpages)
@@ -1931,7 +1877,7 @@ int DrawQWidget::_tft_holding_design(DrawQWidget::tftholding_t* holding, const c
 int DrawQWidget::_tft_holding_design(DrawQWidget::tftholding_t* holding, int count, const char* texts[])
 {
   int rid_loc = tftgeterbook_addtexts(holding->geterbook, count, texts);
-  holding->pinger += 1;
+  holding->pinger_h += 1;
   m_bitmaskPendingChanges |= PC_TFT_TEXTURE;
 #ifdef DBGLABELSHOW_1
   if (g_lbl == nullptr || g_ctr != holding->geterbook->designedbookpages)
@@ -1948,13 +1894,17 @@ int DrawQWidget::_tft_holding_design(DrawQWidget::tftholding_t* holding, int cou
 
 int  DrawQWidget::_tft_add_writing(int type, const DrawQWidget::tftwriting_t& ts)
 {
+  if ((type == TFT_STATIC && m_tfths[m_tfth_current]->writingscount[type] >= TFT_SLOTLIMIT_STATIC) || 
+      (type == TFT_DYNAMIC && m_tfths[m_tfth_current]->writingscount[type] >= TFT_SLOTLIMIT_DYNAMIC))
+    return -1;
   m_tfths[m_tfth_current]->writings[type][m_tfths[m_tfth_current]->writingscount[type]] = ts;
   m_tfths[m_tfth_current]->writings[type][m_tfths[m_tfth_current]->writingscount[type]].grouped = 
                                     m_tfths[m_tfth_current]->writingsGrouping[type];
   int sid = m_tfths[m_tfth_current]->writingscount[type]++;
+  m_tfths[m_tfth_current]->pinger_d += 1;
   if (ts.frag.designid != -1)
   {
-    m_bitmaskPendingChanges |= PC_INIT | PC_TFT_TEXTURE | PC_TFT_PARAMS;
+    m_bitmaskPendingChanges |= PC_INIT | PC_TFT_PARAMS; //PC_TFT_TEXTURE | 
     if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate();
   }
   return sid;
@@ -1987,7 +1937,7 @@ int DrawQWidget::tftHoldingRegister(const QFont& font, int maxtextlen, int limit
 
 tftgeterbook_t* DrawQWidget::tftHoldingGetbook(int hoid)
 {
-  if (hoid < 0 || hoid >= TFT_HOLDERS)
+  if (hoid < 0 || hoid >= TFT_HOLDINGS)
     return nullptr;
   if (m_tfths[hoid] == nullptr)
     return nullptr;
@@ -1996,7 +1946,7 @@ tftgeterbook_t* DrawQWidget::tftHoldingGetbook(int hoid)
 
 bool DrawQWidget::tftHoldingGetbookOwner(int hoid)
 {
-  if (hoid < 0 || hoid >= TFT_HOLDERS)
+  if (hoid < 0 || hoid >= TFT_HOLDINGS)
     return true;
   if (m_tfths[hoid] == nullptr)
     return true;
@@ -2005,7 +1955,7 @@ bool DrawQWidget::tftHoldingGetbookOwner(int hoid)
 
 bool DrawQWidget::tftHoldingSwitch(int hoid)
 {
-  if (hoid < 0 || hoid >= TFT_HOLDERS)
+  if (hoid < 0 || hoid >= TFT_HOLDINGS)
     return false;
   if (m_tfths[hoid] == nullptr)
     return false;
@@ -2017,9 +1967,9 @@ int DrawQWidget::tftHoldingRelease()
 {
   if (_tft_holding_release(m_tfth_current) == true)
   {
-    for (int i=0; i<TFT_HOLDERS; i++)
+    for (int i=0; i<TFT_HOLDINGS; i++)
     {
-      int nidx = (m_tfth_current + i) % TFT_HOLDERS;
+      int nidx = (m_tfth_current + i) % TFT_HOLDINGS;
       if (m_tfths[nidx] != nullptr)
         m_tfth_current = nidx;
     }
@@ -2080,7 +2030,7 @@ int DrawQWidget::tftHoldingDesignMaxHeight() const
 
 tftdynamic_t DrawQWidget::tftPushDynamicFA(int dsgid, COORDINATION cr, float fx, float fy)
 {
-  tftwriting_t ts = { { dsgid, { cr, fx, fy, 0.0f, 0.0f }, true, -1 }, false, 1, 0 };
+  tftwriting_t ts = { { dsgid, { cr, fx, fy, 0.0f, 0.0f }, true, -1 }, false };
   int rsid = _tft_add_writing(TFT_DYNAMIC, ts);
   return tftdynamic_t(this, m_tfth_current, rsid);
 }
@@ -2095,7 +2045,7 @@ tftdynamic_t DrawQWidget::tftPushDynamicFA(const char* text, COORDINATION cr, fl
 
 tftdynamic_t DrawQWidget::tftPushDynamicFA(int dsgid, COORDINATION cr, float fx, float fy, int ovlroot)
 {
-  tftwriting_t ts = { { dsgid, { cr, fx, fy, 0.0f, 0.0f }, true, ovlroot }, false, 1, 0 };
+  tftwriting_t ts = { { dsgid, { cr, fx, fy, 0.0f, 0.0f }, true, ovlroot }, false };
   int rsid = _tft_add_writing(TFT_DYNAMIC, ts);
   return tftdynamic_t(this, m_tfth_current, rsid);
 }
@@ -2110,7 +2060,7 @@ tftdynamic_t DrawQWidget::tftPushDynamicFA(const char* text, COORDINATION cr, fl
 
 tftdynamic_t DrawQWidget::tftPushDynamicDA(int dsgid, COORDINATION cr, float fx, float fy, float rotate)
 {
-  tftwriting_t ts = { { dsgid, { cr, fx, fy, 0.0f, rotate }, false, -1 }, false, 1, 0 };
+  tftwriting_t ts = { { dsgid, { cr, fx, fy, 0.0f, rotate }, false, -1 }, false };
   int rsid = _tft_add_writing(TFT_DYNAMIC, ts);
   return tftdynamic_t(this, m_tfth_current, rsid);
 }
@@ -2125,7 +2075,7 @@ tftdynamic_t DrawQWidget::tftPushDynamicDA(const char* text, COORDINATION cr, fl
 
 tftdynamic_t DrawQWidget::tftPushDynamicDA(int dsgid, COORDINATION cr, float fx, float fy, float rotate, int ovlroot)
 {
-  tftwriting_t ts = { { dsgid, { cr, fx, fy, 0.0f, rotate }, false, ovlroot }, false, 1, 0 };
+  tftwriting_t ts = { { dsgid, { cr, fx, fy, 0.0f, rotate }, false, ovlroot }, false };
   int rsid = _tft_add_writing(TFT_DYNAMIC, ts);
   return tftdynamic_t(this, m_tfth_current, rsid);
 }
@@ -2152,7 +2102,7 @@ void DrawQWidget::tftDisableDynamicClosestMode()
 
 tftstatic_t DrawQWidget::tftPushStatic(int dsgid, COORDINATION cr, float fx, float fy, float rotate)
 {
-  tftwriting_t ts = { { dsgid, { cr, fx, fy, 0.0f, rotate }, false, -1 }, false, 1, 0 };
+  tftwriting_t ts = { { dsgid, { cr, fx, fy, 0.0f, rotate }, false, -1 }, false };
   _tft_add_writing(TFT_STATIC, ts);
   return tftstatic_t(m_tfth_current, dsgid);
 }
@@ -2167,7 +2117,7 @@ tftstatic_t DrawQWidget::tftPushStatic(const char* text, COORDINATION cr, float 
 
 tftstatic_t DrawQWidget::tftPushStatic(int dsgid, COORDINATION cr, float fx, float fy, float rotate, int ovlroot)
 {
-  tftwriting_t ts = { { dsgid, { cr, fx, fy, 0.0f, rotate }, false, ovlroot }, false, 1, 0 };
+  tftwriting_t ts = { { dsgid, { cr, fx, fy, 0.0f, rotate }, false, ovlroot }, false };
   _tft_add_writing(TFT_STATIC, ts);
   return tftstatic_t(m_tfth_current, dsgid);
 }
@@ -2212,14 +2162,14 @@ int DrawQWidget::tftDynamicsCount() const
 //  return tftgeterbook_designsperarea(m_tfths[m_tfth_current]->geterbook);
 //}
 
-#define TFT_CHECK_HOID(hoid, badret)      if (hoid < 0 || hoid >= TFT_HOLDERS) return badret;
+#define TFT_CHECK_HOID(hoid, badret)      if (hoid < 0 || hoid >= TFT_HOLDINGS) return badret;
 
 #define TFT_CHECK_SHORT(hoid, badret)     if (hoid == -1) return badret; \
                                           if (sloid >= int(m_tfths[hoid]->writingscount[TFT_DYNAMIC])) \
                                             return badret;
 
 #define TFT_CHECK_FULL(hoid, badret) \
-                                          Q_ASSERT(hoid >= 0 && hoid < TFT_HOLDERS); \
+                                          Q_ASSERT(hoid >= 0 && hoid < TFT_HOLDINGS); \
                                           if (m_tfths[hoid] == nullptr) return badret; \
                                           if (sloid >= int(m_tfths[hoid]->writingscount[TFT_DYNAMIC])) \
                                             return badret;
@@ -2260,7 +2210,7 @@ const char* DrawQWidget::tftText(int sloid) const
 
 //int DrawQWidget::tftRecordForSlot(int hoid, int sloid) const
 //{
-//  Q_ASSERT(hoid < TFT_HOLDERS);
+//  Q_ASSERT(hoid < TFT_HOLDINGS);
 //  if (m_tfths[hoid] == nullptr)
 //    return -1;
 //  if (sloid >= m_tfths[hoid]->tftslots.size())
@@ -2269,8 +2219,8 @@ const char* DrawQWidget::tftText(int sloid) const
 //}
 
 #define TFT_GOTO_SLOT_PINGUP(hoid)  \
+                                m_tfths[hoid]->pinger_d += 1; \
                                 { \
-                                  m_tfths[hoid]->writings[TFT_DYNAMIC][sloid].pinger += 1; \
                                   m_bitmaskPendingChanges |= PC_TFT_PARAMS; \
                                   if (!autoUpdateBanned(RD_BYSETTINGS)) callWidgetUpdate(); \
                                 } \

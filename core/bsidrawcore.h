@@ -690,7 +690,7 @@ struct tftfraginfo_t
   int               textwidth;
   
   bool              isstatic;
-  int               varid;
+  float             varpos;
   const tftfrag_t*  frag;
 };
 

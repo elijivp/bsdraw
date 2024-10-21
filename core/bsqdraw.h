@@ -333,7 +333,7 @@ protected:
     float*        rawData() { return m_extendeddataarr; }
   };
 public:
-  enum  { TFT_HOLDERS=16, TFT_MAXAREA=32, 
+  enum  { TFT_HOLDINGS=16, TFT_MAXAREA=32, 
           TFT_SLOTLIMIT_STATIC=512,
           TFT_SLOTLIMIT_DYNAMIC=1024,
     TFT_STATIC=0,
@@ -345,8 +345,6 @@ public:
   {
     tftfrag_t     frag;
     bool          grouped;
-    int           pinger;   // only for dynamic
-    int           ponger;   // only for dynamic
   };
   
   struct  tftholding_t
@@ -360,18 +358,16 @@ public:
     unsigned int              writingscount[_TFT_COUNT];
     bool                      writingsGrouping[_TFT_COUNT];
       
-    int                       pinger;
-    int                       ponger;
+    int                       _location_h, _location_d;
+    char                      _varname_h[64], _varname_d[64];
     
-    int                       _location;
-    char                      _varname[64];
-    int                       _location_i, _location_c;
-    char                      _varname_i[64], _varname_c[64];
+    int                       pinger_h, pinger_d;
+    int                       ponger_h, ponger_d;
   };
   
 private:
   int             m_tfth_current;
-  tftholding_t*   m_tfths[TFT_HOLDERS];
+  tftholding_t*   m_tfths[TFT_HOLDINGS];
   int             _tft_holding_alloc(tftgeterbook_t* th, bool isowner);
   bool            _tft_holding_release(int idx);
   int             _tft_holding_design(tftholding_t*  holding, const char* text);

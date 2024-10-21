@@ -72,7 +72,7 @@ public:
   void          generic_decls_add(DTYPE, const char* name);
   void          generic_decls_add(DTYPE, const char* name, int count);
   void          generic_decls_add_tft_area(int texid, char* result);
-  void          generic_decls_add_tft_dslots(int texid, int count, char* result_i, char* result_c);
+  void          generic_decls_add_tft_dslots(int texid, char* result);
   void          generic_decls_add_ovl_input(int ovlid, char* result);
   void          generic_decls_add_ovl_nameonly(int ovlid, int ovlparamid, DTYPE type, char* result);
   

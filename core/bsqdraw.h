@@ -72,25 +72,31 @@ class   tftstatic_t
 public:
   tftstatic_t(const tftstatic_t& cpy): hoid(cpy.hoid), dsgid(cpy.dsgid) {}
 };
+
+#ifndef TFT_DEFAULT_ALLOW_DYNAMIC_RT
+#define TFT_DEFAULT_ALLOW_DYNAMIC_RT true
+#endif
+
 class   tftdynamic_t
 {
   DrawQWidget*  pdraw;
   int           hoid;
+  int           wriid;
   int           sloid;
   friend class  DrawQWidget;
-  tftdynamic_t(DrawQWidget* _pdraw, int hid, int sid): pdraw(_pdraw), hoid(hid), sloid(sid){}
+  tftdynamic_t(DrawQWidget* _pdraw, int hid, int wid, int sid): pdraw(_pdraw), hoid(hid), wriid(wid), sloid(sid){}
 public:
-  tftdynamic_t(): pdraw(nullptr), hoid(-1), sloid(-1) {}
+  tftdynamic_t(): pdraw(nullptr), hoid(-1), wriid(-1), sloid(-1) {}
   bool    attached() const { return pdraw != nullptr; }
   void    detach(){ pdraw = nullptr; }
   
-  tftdynamic_t(const tftdynamic_t& cpy): pdraw(cpy.pdraw), hoid(cpy.hoid), sloid(cpy.sloid) {}
-  tftdynamic_t& operator=(const tftdynamic_t& cpy){ pdraw = cpy.pdraw; hoid = cpy.hoid; sloid = cpy.sloid; return *this; }
+  tftdynamic_t(const tftdynamic_t& cpy): pdraw(cpy.pdraw), hoid(cpy.hoid), wriid(cpy.wriid), sloid(cpy.sloid) {}
+  tftdynamic_t& operator=(const tftdynamic_t& cpy){ pdraw = cpy.pdraw; hoid = cpy.hoid; wriid = cpy.wriid; sloid = cpy.sloid; return *this; }
   bool    move(float fx, float fy);
   bool    move_x(float fx);
   bool    move_y(float fy);
   bool    rotate(float anglerad);
-  bool    opacity(float opacity);
+  bool    setopacity(float opacity);
   bool    switchto(int dsgid);
   bool    setup(int dsgid, float fx, float fy, float opacity=0);
 public:
@@ -98,7 +104,7 @@ public:
   int     height() const;
   QSize   size() const;
 public:
-  bool operator == (const tftdynamic_t& d2){ return pdraw == d2.pdraw && hoid == d2.hoid && sloid == d2.sloid; }
+  bool operator == (const tftdynamic_t& d2){ return pdraw == d2.pdraw && hoid == d2.hoid && wriid == d2.wriid && sloid == d2.sloid; }
   bool operator != (const tftdynamic_t& d2){ return !(*this == d2); }
 };
 ////////////////
@@ -335,12 +341,10 @@ protected:
 public:
   enum  { TFT_HOLDINGS=16, TFT_MAXAREA=32, 
           TFT_SLOTLIMIT_STATIC=512,
-          TFT_SLOTLIMIT_DYNAMIC=1024,
-    TFT_STATIC=0,
-    TFT_DYNAMIC=1,
-    _TFT_COUNT
-  };
-  
+          TFT_SLOTLIMIT_DYNAMIC_CT=1024,
+          TFT_SLOTLIMIT_DYNAMIC_RT=1024
+        };
+    
   struct  tftwriting_t
   {
     tftfrag_t     frag;
@@ -352,31 +356,45 @@ public:
     tftgeterbook_t*           geterbook;
     bool                      geterbookowner;
     
-    tftwriting_t              wristatics[TFT_SLOTLIMIT_STATIC];
-    tftwriting_t              wridynamics[TFT_SLOTLIMIT_DYNAMIC];
-    tftwriting_t*             writings[_TFT_COUNT];
-    unsigned int              writingscount[_TFT_COUNT];
-    bool                      writingsGrouping[_TFT_COUNT];
-      
-    int                       _location_h, _location_d;
-    char                      _varname_h[64], _varname_d[64];
+    int                       _location_h;
+    char                      _varname_h[64];
+    int                       pinger_h, ponger_h;
     
-    int                       pinger_h, pinger_d;
-    int                       ponger_h, ponger_d;
+    tftwriting_t              wri_statics_buffer[TFT_SLOTLIMIT_STATIC];     //  adding new static writing causes shader recompilation
+    tftwriting_t              wri_dynamics_ct_buffer[TFT_SLOTLIMIT_DYNAMIC_CT];   //  adding new dynamic writing causes shader recompilation
+    tftwriting_t              wri_dynamics_rt_buffer[TFT_SLOTLIMIT_DYNAMIC_RT];   //  adding new dynamic DONT causes shader recompilation
+    
+    struct wrilink_t
+    {
+      tftwriting_t*           array;
+      unsigned int            count;
+      unsigned int            limit;
+    }                         wri_statics, wri_dynamics[_TFTD_COUNT];
+    
+    bool                      wri_grouping[_TFTR_COUNT];
+    bool                      wri_enable_dynamic_RT;
+      
+    int                       _location_dt[_TFTD_COUNT], _location_ts;
+    char                      _varname_dt[_TFTD_COUNT][64], _varname_ts[64];
+    int                       pinger_dt[_TFTD_COUNT];
+    int                       ponger_dt[_TFTD_COUNT];
+    
+    COORDINATION              wri_dynamic_rt_coordination;
+    float                     wri_dynamic_rt_rotateangle;
   };
   
 private:
   int             m_tfth_current;
   tftholding_t*   m_tfths[TFT_HOLDINGS];
-  int             _tft_holding_alloc(tftgeterbook_t* th, bool isowner);
+  int             _tft_holding_alloc(tftgeterbook_t* th, bool isowner, bool enableDynamicRT);
   bool            _tft_holding_release(int idx);
   int             _tft_holding_design(tftholding_t*  holding, const char* text);
   int             _tft_holding_design(tftholding_t*  holding, int count, const char* texts[]);
 private:
-  int             _tft_add_writing(int type, const tftwriting_t&);
+  int             _tft_add_writing(tftholding_t::wrilink_t*, const tftwriting_t&, bool grouped);
 public:
-  int             tftHoldingRegister(tftgeterbook_t* th, bool isowner);
-  int             tftHoldingRegister(const QFont& font, int maxtextlen=TFT_TEXTMAXLEN, int limitcolumns=1, QColor color=QColor(0,0,0));
+  int             tftHoldingRegister(tftgeterbook_t* th, bool isowner, bool enableDynamicRT=TFT_DEFAULT_ALLOW_DYNAMIC_RT);
+  int             tftHoldingRegister(const QFont& font, int maxtextlen=TFT_TEXTMAXLEN, int limitcolumns=1, QColor color=QColor(0,0,0), bool enableDynamicRT=TFT_DEFAULT_ALLOW_DYNAMIC_RT);
   tftgeterbook_t* tftHoldingGetbook(int hoid);
   bool            tftHoldingGetbookOwner(int hoid);
   bool            tftHoldingSwitch(int hoid);
@@ -391,56 +409,89 @@ public:
   int             tftHoldingDesignMaxWidth() const;
   int             tftHoldingDesignMaxHeight() const;
 public:
-                  /// FA - fixed angle, DA - rotateable
-  tftdynamic_t    tftPushDynamicFA(int dsgid, COORDINATION cr, float fx, float fy);   // horizontal, unrotateable, more fast
-  tftdynamic_t    tftPushDynamicFA(const char* text, COORDINATION cr, float fx, float fy);
-  tftdynamic_t    tftPushDynamicFA(int dsgid, COORDINATION cr, float fx, float fy, int ovlroot);   // horizontal, unrotateable, more fast
-  tftdynamic_t    tftPushDynamicFA(const char* text, COORDINATION cr, float fx, float fy, int ovlroot);
-  tftdynamic_t    tftPushDynamicDA(int dsgid, COORDINATION cr, float fx, float fy, float rotate);  // rotateable
-  tftdynamic_t    tftPushDynamicDA(const char* text, COORDINATION cr, float fx, float fy, float rotate);
-  tftdynamic_t    tftPushDynamicDA(int dsgid, COORDINATION cr, float fx, float fy, float rotate, int ovlroot);  // rotateable
-  tftdynamic_t    tftPushDynamicDA(const char* text, COORDINATION cr, float fx, float fy, float rotate, int ovlroot);
-  void            tftEnableDynamicClosestMode();    // special mode for fast draw for only 2 intersepting designs
-  void            tftDisableDynamicClosestMode();
-  
+  ///  pushing new static writing causes shader recompilation
   tftstatic_t     tftPushStatic(int dsgid, COORDINATION cr, float fx, float fy, float rotate=0.0f);
   tftstatic_t     tftPushStatic(const char* text, COORDINATION cr, float fx, float fy, float rotate=0.0f);
-  tftstatic_t     tftPushStatic(int dsgid, COORDINATION cr, float fx, float fy, float rotate, int ovlroot);
-  tftstatic_t     tftPushStatic(const char* text, COORDINATION cr, float fx, float fy, float rotate, int ovlroot);
+  tftstatic_t     tftPushStatic(int dsgid, int ovlroot, COORDINATION cr, float fx, float fy, float rotate=0.0f);
+  tftstatic_t     tftPushStatic(const char* text, int ovlroot, COORDINATION cr, float fx, float fy, float rotate);
   void            tftEnableStaticClosestMode();
   void            tftDisableStaticClosestMode();
   
-  int             tftDesignsCount() const;
-  int             tftDynamicsCount() const;
+  ///  pushing new dynamic writing causes shader recompilation
+                  /// FA - fixed angle, DA - rotateable
+  tftdynamic_t    tftPushDynamicFA(int dsgid, COORDINATION cr, float fx, float fy);   // horizontal, unrotateable, more fast
+  tftdynamic_t    tftPushDynamicFA(const char* text, COORDINATION cr, float fx, float fy);
+  tftdynamic_t    tftPushDynamicFA(int dsgid, int ovlroot, COORDINATION cr, float fx, float fy);   // horizontal, unrotateable, more fast
+  tftdynamic_t    tftPushDynamicFA(const char* text, int ovlroot, COORDINATION cr, float fx, float fy);
+  tftdynamic_t    tftPushDynamicDA(int dsgid, COORDINATION cr, float fx, float fy, float rotate);  // rotateable
+  tftdynamic_t    tftPushDynamicDA(const char* text, COORDINATION cr, float fx, float fy, float rotate);
+  tftdynamic_t    tftPushDynamicDA(int dsgid, int ovlroot, COORDINATION cr, float fx, float fy, float rotate);  // rotateable
+  tftdynamic_t    tftPushDynamicDA(const char* text, int ovlroot, COORDINATION cr, float fx, float fy, float rotate);
+  void            tftEnableDynamicClosestMode();    // special mode for fast draw for only 2 intersepting designs
+  void            tftDisableDynamicClosestMode();
   
-  tftdynamic_t    tftGet(int sloid);
+  ///  pushing new dynamic writings DONT causes shader recompilation
+  void            tftSetHoldingDynamicRTCoordination(COORDINATION cr);
+  COORDINATION    tftGetHoldingDynamicRTCoordination() const;
+  void            tftSetHoldingDynamicRTRotateAngle(float angle);
+  float           tfGetHoldingDynamicRTRotateAngle() const;
+  tftdynamic_t    tftPushDynamicRT(int dsgid, float fx, float fy, float opacity=0.0f);
+  tftdynamic_t    tftPushDynamicRT(const char* text, float fx, float fy, float opacity=0.0f);
+  
+  int             tftDesignsCount() const;
+  int             tftDynamicsCTCount() const;
+  int             tftDynamicsRTCount() const;
+  
+  tftdynamic_t    tftGetDynamicCT(int sloid);
+  tftdynamic_t    tftGetDynamicRT(int sloid);
   int             tftDesignIndex(const tftdynamic_t&) const;
   int             tftDesignIndex(int sloid) const;
   const char*     tftText(const tftdynamic_t&) const;
   const char*     tftText(int sloid) const;
-public: // tft operations
-  bool            tftMove(int sloid, float fx, float fy);
-  bool            tftRotate(int sloid, float anglerad);
-  bool            tftOpacity(int sloid, float opacity);
-  bool            tftSwitchTo(int sloid, int dsgid);
-  bool            tftSetup(int sloid, int dsgid, float fx, float fy, float opacity=0.0f);
 public:
-  tftdynamic_t    tftGet(int hoid, int sloid);
-  bool            tftMove(int hoid, int sloid, float fx, float fy);
-  bool            tftMoveX(int hoid, int sloid, float fx);
-  bool            tftMoveY(int hoid, int sloid, float fy);
-  bool            tftRotate(int hoid, int sloid, float anglerad);
-  bool            tftOpacity(int hoid, int sloid, float opacity);
-  bool            tftSwitchTo(int hoid, int sloid, int dsgid);
-  bool            tftSetup(int hoid, int sloid, int dsgid, float fx, float fy, float opacity=0.0f);
+  tftdynamic_t    tftDCT(int sloid);
+  tftdynamic_t    tftDynamicCT(int sloid);
+  bool            tftDynamicCTMove(int sloid, float fx, float fy);
+  bool            tftDynamicCTMoveX(int sloid, float fx);
+  bool            tftDynamicCTMoveY(int sloid, float fy);
+  bool            tftDynamicCTRotate(int sloid, float anglerad);
+  bool            tftDynamicCTOpacity(int sloid, float opacity);
+  bool            tftDynamicCTSwitchTo(int sloid, int dsgid);
+  bool            tftDynamicCTSetup(int sloid, int dsgid, float fx, float fy, float opacity=0.0f);
 public:
-  int             tftGetDesignWidth(int hoid, int dsgid) const;
-  int             tftGetDesignHeight(int hoid, int dsgid) const;
-  QSize           tftGetDesignSize(int hoid, int dsgid) const;
+  tftdynamic_t    tftDRT(int sloid);
+  tftdynamic_t    tftDynamicRT(int sloid);
+  bool            tftDynamicRTMove(int sloid, float fx, float fy);
+  bool            tftDynamicRTMoveX(int sloid, float fx);
+  bool            tftDynamicRTMoveY(int sloid, float fy);
+//  bool            tftDynamicRTRotate(int sloid, float anglerad);
+  bool            tftDynamicRTOpacity(int sloid, float opacity);
+  bool            tftDynamicRTSwitchTo(int sloid, int dsgid);
+  bool            tftDynamicRTSetup(int sloid, int dsgid, float fx, float fy, float opacity=0.0f);
+public:
+  int             tftGetDesignWidth(int dsgid) const;
+  int             tftGetDesignHeight(int dsgid) const;
+  QSize           tftGetDesignSize(int dsgid) const;
   
-  int             tftGetDynamicWidth(int hoid, int sloid) const;
-  int             tftGetDynamicHeight(int hoid, int sloid) const;
-  QSize           tftGetDynamicSize(int hoid, int sloid) const;
+  int             tftGetDynamicWidth(int sloid) const;
+  int             tftGetDynamicHeight(int sloid) const;
+  QSize           tftGetDynamicSize(int sloid) const;
+  
+  int             tftGetDynamicRTWidth(int sloid) const;
+  int             tftGetDynamicRTHeight(int sloid) const;
+  QSize           tftGetDynamicRTSize(int sloid) const;
+public: // tft operations
+  bool            tftMove(const tftdynamic_t& d, float fx, float fy);
+  bool            tftMoveX(const tftdynamic_t& d, float fx);
+  bool            tftMoveY(const tftdynamic_t& d, float fy);
+  bool            tftRotate(const tftdynamic_t& d, float anglerad);
+  bool            tftSetOpacity(const tftdynamic_t& d, float opacity);
+  bool            tftSwitchTo(const tftdynamic_t& d, int dsgid);
+  bool            tftSetup(const tftdynamic_t& d, int dsgid, float fx, float fy, float opacity=0.0f);
+public:
+  int             tftGetWidth(const tftdynamic_t& d) const;
+  int             tftGetHeight(const tftdynamic_t& d) const;
+  QSize           tftGetSize(const tftdynamic_t& d) const;
 };
 
 class BSQClickerXY: public QObject, public DrawEventReactor

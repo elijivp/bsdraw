@@ -1080,6 +1080,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       QFont fnt(this->font());
       fnt.setPointSize(12);
       fnt.setItalic(true);
+      fnt.setBold(true);
       pdraw->tftHoldingRegister(fnt, 32, 1);  // 1. Register holding
       pdraw->tftAddDesign("Hello world!");    // 2. Add record
       pdraw->tftAddDesign("Click me");
@@ -1140,8 +1141,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
 //        else if (i == TOT*2/3)
 //          pdraw->tftDisableDynamicClosestMode();
           
-        pdraw->tftPushDynamicFA(i*360/TOT, CR_RELATIVE, 0.3f*sin(pr), 0.3f*cos(pr), ovl_visir);
-        pdraw->tftOpacity(i, 0.8f*i/float(TOT-1));
+        pdraw->tftPushDynamicFA(i*360/TOT, ovl_visir, CR_RELATIVE, 0.3f*sin(pr), 0.3f*cos(pr));
+        pdraw->tftDCT(i).setopacity(0.8f*i/float(TOT-1));
       }
       
       QTimer* tm = new QTimer();
@@ -1149,11 +1150,8 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
       tm->setInterval(30);
       QObject::connect(tm, &QTimer::timeout, [=]()
       { 
-        for (int j=0; j<pdraw->tftDynamicsCount(); j++)
-          pdraw->tftSwitchTo(j, (pdraw->tftDesignIndex(j) + 1) % pdraw->tftDesignsCount());
-        
-//        for (int j=0; j<pdraw->tftDynamicsCount(); j++)
-//          pdraw->tftMove(j, 0.0f - 0.1f + 0.2f*rand()/float(RAND_MAX), 0.0f + -0.1f + 0.2f*rand()/float(RAND_MAX));
+        for (int j=0; j<pdraw->tftDynamicsCTCount(); j++)
+          pdraw->tftDCT(j).switchto((pdraw->tftDesignIndex(j) + 1) % pdraw->tftDesignsCount());
       } );
       QTimer::singleShot(2000, tm, SLOT(start()));
     }
@@ -1183,7 +1181,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     {
       QFont fnt(this->font());
       fnt.setPointSize(12);
+#ifdef __unix__
       fnt.setItalic(true);
+#else
+      fnt.setBold(true);
+#endif
       pdraw->tftHoldingRegister(fnt, 4, 8);
     }
     {
@@ -1270,9 +1272,6 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     SAMPLES = 100;
     PORTIONS = 1;
     
-//    DrawQWidget* pdraw = new DrawGraph(SAMPLES, PORTIONS, 
-//                                        graphopts_t::goInterp(0.25f, DE_LINTERP_SCALINGCENTER), 
-//                                        coloropts_t::copts(CP_MONO, 0.25f, 0.25f, 0x00FFFFFF));
     DrawQWidget* pdraw = new DrawGraph(SAMPLES, PORTIONS, 
                                         graphopts_t::goInterpD(0.15f, 0.0f), 
                                         coloropts_t::copts(CP_MONO, 0.25f, 0.25f, 0x00FFFFFF));
@@ -1292,10 +1291,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         sprintf(buffer, "%d%%", i);
         pdraw->tftAddDesign(buffer);
       }
-      static tftdynamic_t   g_dyns[101];
-      static tftdynamic_t   g_dynact;
-      for (int i=0; i<101; i++)
-        g_dyns[i] = pdraw->tftPushDynamicFA(i, CR_RELATIVE, -1.0f, -1.0f);
+      static tftdynamic_t   g_dynact = pdraw->tftPushDynamicFA(-1, CR_RELATIVE, -1.0f, -1.0f);
       
       QObject::connect(tracker, &BSQTrackerXY::tracked, [=](float x, float y, float, float)
       {
@@ -1308,21 +1304,13 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
         else if (validx >= SAMPLES) validx = SAMPLES - 1;
         
         float y1 = (datacur[validx] - pdraw->boundLow())/(pdraw->boundHigh() - pdraw->boundLow()) + 12.0f/pdraw->height();
-        
         int lvl = (datacur[validx] / pdraw->boundHigh())*100;
-        if (lvl > 100)
+        if (lvl < 0 || lvl > 100)
         {
           if (g_dynact.attached())
             g_dynact.move(-1,-1);
         }
-        tftdynamic_t dynext = g_dyns[lvl];
-        if (g_dynact != dynext)
-        {
-          if (g_dynact.attached())
-            g_dynact.move(-1,-1);
-          g_dynact = dynext;
-        }
-        g_dynact.move(x, y1);
+        g_dynact.setup(lvl, x, y1);
       } );
     }
     
@@ -5078,20 +5066,20 @@ void  MainWindow::changeFeatures(int id)
       {
         draws[i]->setMinimumWidth(800);
       }
-      else if (MW_TEST == OVERVIEW_BARS_3)
-      {
-        {
-          int s1 = rand()/float(RAND_MAX)*(draws[i]->tftDynamicsCount()-1);
-          int s2 = rand()/float(RAND_MAX)*(draws[i]->tftDynamicsCount()-1);
-          int r1 = draws[i]->tftDesignIndex(draws[i]->tftGet(0, s2));
-          int r2 = draws[i]->tftDesignIndex(draws[i]->tftGet(0, s1));
-          qDebug()<<"Switching: "<<s1<<s2<<r1<<r2;
-          draws[i]->tftSwitchTo(0, s1, r1);
-          draws[i]->tftSwitchTo(0, s2, r2);
-        }
+//      else if (MW_TEST == OVERVIEW_BARS_3)
+//      {
+//        {
+//          int s1 = rand()/float(RAND_MAX)*(draws[i]->tftDynamicsCTCount()-1);
+//          int s2 = rand()/float(RAND_MAX)*(draws[i]->tftDynamicsCTCount()-1);
+//          int r1 = draws[i]->tftDesignIndex(draws[i]->tftDCT(s2));
+//          int r2 = draws[i]->tftDesignIndex(draws[i]->tftDCT(s1));
+//          qDebug()<<"Switching: "<<s1<<s2<<r1<<r2;
+//          draws[i]->tftSwitchTo(draws[i]->tftDCT(s1), r1);
+//          draws[i]->tftSwitchTo(draws[i]->tftDCT(s2), r2);
+//        }
         
-        draws[i]->tftMove(0, 0, rand()/float(RAND_MAX)*0.8f, 0.5f);
-      }
+//        draws[i]->tftMove(draws[i]->tftDCT(0), rand()/float(RAND_MAX)*0.8f, 0.5f);
+//      }
     }
     else if (id == BTF_UPDATEGEOMETRY)
     {

@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
       for (int j=0; j<NUMVERT; j++)
       {
         pDraw->tftPushDynamicFA(BASIC + i*NUMVERT + j, CR_ABSOLUTE_NOSCALED, i*METRICS.design_width + METRICS.design_width/2, j*METRICS.design_height + METRICS.design_height/2);
+//        pDraw->tftPushDynamicRT(BASIC + i*NUMVERT + j, i*METRICS.design_width + METRICS.design_width/2, j*METRICS.design_height + METRICS.design_height/2);
       }
     }
   }
@@ -69,37 +70,3 @@ int main(int argc, char *argv[])
   return a.exec();
 }
 
-
-
-/*
-static tftgeterbook_t*   g_tftnumbers = nullptr;
-
-int   fillTFT(DrawQWidget* pdraw, const QFont& font)
-{
-#if 1
-  bool owner = false;
-  if (g_tftnumbers == nullptr)
-  {
-    owner = true;
-    g_tftnumbers = tftgeterbook_alloc(font, 6, 12);
-    tftgeterbook_addtexts(g_tftnumbers, sizeof(g_numbers)/sizeof(const char*), g_numbers);
-  }
-  int result = pdraw->tftHoldingRegister(g_tftnumbers, owner);
-  return result;
-#else
-  int result = pdraw->tftHoldingRegister(font, 6, 12);
-  pdraw->tftAddDesigns(sizeof(g_numbers)/sizeof(const char*), g_numbers);
-  return result;
-#endif
-}
-
-int   fillTFT(DrawQWidget* pdraw, int pointsize)
-{
-  QFont fntValues(QApplication::font());
-  fntValues.setPointSize(pointsize);
-  fntValues.setBold(true);
-  fntValues.setItalic(false);
-  return fillTFT(pdraw, fntValues);
-}
-
-*/

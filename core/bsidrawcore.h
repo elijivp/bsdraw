@@ -662,6 +662,9 @@ struct shuniformdesc_t
   DTYPE             type;
 };
 
+enum { TFTR_STATIC, TFTR_DYNAMIC, _TFTR_COUNT };    // recompiling
+enum { TFTD_COMT, TFTD_RUNT, _TFTD_COUNT };   // dynamic params
+
 struct tftslot_t
 {
   COORDINATION      cr;
@@ -678,6 +681,17 @@ struct tftfrag_t
   int               driven_id;
 };
 
+struct tftbookinfo_t
+{
+  int               texid;
+//  int               texcount;
+  
+  int               limitrows;
+  int               limitcols;
+  int               recordwidth;
+  int               recordheight;
+};
+
 struct tftfraginfo_t
 {
   int               texid;
@@ -689,7 +703,6 @@ struct tftfraginfo_t
   int               recordheight;
   int               textwidth;
   
-  bool              isstatic;
   float             varpos;
   const tftfrag_t*  frag;
 };

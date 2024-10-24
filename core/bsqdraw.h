@@ -89,6 +89,7 @@ public:
   tftdynamic_t(): pdraw(nullptr), hoid(-1), wriid(-1), sloid(-1) {}
   bool    attached() const { return pdraw != nullptr; }
   void    detach(){ pdraw = nullptr; }
+  bool    valid() const { return pdraw != nullptr && sloid != -1; }
   
   tftdynamic_t(const tftdynamic_t& cpy): pdraw(cpy.pdraw), hoid(cpy.hoid), wriid(cpy.wriid), sloid(cpy.sloid) {}
   tftdynamic_t& operator=(const tftdynamic_t& cpy){ pdraw = cpy.pdraw; hoid = cpy.hoid; wriid = cpy.wriid; sloid = cpy.sloid; return *this; }

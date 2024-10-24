@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
     {
       for (int j=0; j<NUMVERT; j++)
       {
-        pDraw->tftPushDynamicFA(BASIC + i*NUMVERT + j, CR_ABSOLUTE_NOSCALED, i*METRICS.design_width + METRICS.design_width/2, j*METRICS.design_height + METRICS.design_height/2);
-//        pDraw->tftPushDynamicRT(BASIC + i*NUMVERT + j, i*METRICS.design_width + METRICS.design_width/2, j*METRICS.design_height + METRICS.design_height/2);
+//        pDraw->tftPushDynamicFA(BASIC + i*NUMVERT + j, CR_ABSOLUTE_NOSCALED, i*METRICS.design_width + METRICS.design_width/2, j*METRICS.design_height + METRICS.design_height/2);
+        pDraw->tftPushDynamicRT(BASIC + i*NUMVERT + j, i*METRICS.design_width + METRICS.design_width/2, j*METRICS.design_height + METRICS.design_height/2);
       }
     }
   }

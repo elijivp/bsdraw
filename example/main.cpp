@@ -19,10 +19,10 @@
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)18
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)24
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)29
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)39
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)37
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)58
 
-//#define ONLY_OVERVIEWS
+#define ONLY_OVERVIEWS
 
 
 #ifndef MW_TEST_NOCHOOSE_DEFAULT
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
   
 
 #ifdef ONLY_OVERVIEWS
-  const int tstart = 1, tstop = 21;
+  const int tstart = 1, tstop = 22;
 #else
   const int tstart = 0, tstop = sizeof(testnames)/sizeof(const char*);
 #endif

@@ -736,7 +736,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     AFTERCREATE_DRAW2D
     sigtype = ST_RAMP;
   }
-  else if (MW_TEST == EXTRA_SMOOTH)
+  else if (MW_TEST == EXTRA_SMOOTH_B)
   {
     LINES = 1;
     SAMPLES = 280;
@@ -744,7 +744,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     const int countROWS = 3, countCOLUMNS = 3;
     DrawQWidget* pdraws[countROWS][countCOLUMNS];
-    float smoothtest[countROWS][countCOLUMNS] = 
+    float smoothcoef[countROWS][countCOLUMNS] = 
           { 
             { -1.0f, -0.3f, 0.0f },
             { 0.2f,  0.3f,  0.4f },
@@ -754,10 +754,32 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     for (unsigned int r=0; r<countROWS; r++)
       for (unsigned int c=0; c<countCOLUMNS; c++)
       {
-        pdraws[r][c] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(smoothtest[r][c], DE_LINTERP));
-//        pdraws[r][c] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterpD(smoothtest[r][c], 0.0f, 0));
+        pdraws[r][c] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterp(smoothcoef[r][c], DE_LINTERP));
         {
-          QString gname = QString("smooth ") + QString::number(smoothtest[r][c]);
+          QString gname = QString("smooth ") + QString::number(smoothcoef[r][c]);
+          pdraws[r][c]->ovlPushBack(new OTextColored(gname.toUtf8().data(), CR_RELATIVE, 0.65f, 0.05f, 12, 0x00000000, 0x44FFFFFF, 0x00000000));
+        }
+      }
+    AFTERCREATE_DRAW2D
+        
+    sigtype = ST_HIPERB;
+  }
+  else if (MW_TEST == EXTRA_SMOOTH_D)
+  {
+    LINES = 1;
+    SAMPLES = 280;
+    PORTIONS = 3;
+    
+    const int countROWS = 3, countCOLUMNS = 3;
+    DrawQWidget* pdraws[countROWS][countCOLUMNS];
+    float smoothcoef_R[countROWS] = { -0.5f, 0.0f, 1.0f };
+    float smoothcoef_C[countCOLUMNS] = { -0.5f, 0.0f, 1.0f };
+    for (unsigned int r=0; r<countROWS; r++)
+      for (unsigned int c=0; c<countCOLUMNS; c++)
+      {
+        pdraws[r][c] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goInterpD(smoothcoef_R[r], smoothcoef_C[c]));
+        {
+          QString gname = QString("smooth ") + QString::number(smoothcoef_R[r]) + "," + QString::number(smoothcoef_C[c]);
           pdraws[r][c]->ovlPushBack(new OTextColored(gname.toUtf8().data(), CR_RELATIVE, 0.55f, 0.05f, 12, 0x00000000, 0x44FFFFFF, 0x00000000));
         }
       }

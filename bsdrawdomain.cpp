@@ -38,7 +38,10 @@ public:
       else
         fdc.push("float value = texture(datasampler, vec2(domain, 0.0)).r * (1-step(domain, 0.0));");    // /float(dmnlen-1)
       
-      fdc.push(  "dvalue = max(dvalue, value);");
+      if ( fdc.splits() == SP_NONE )
+        fdc.push("dvalue = mix(value, max(dvalue, value), sign(i));");
+      else
+        fdc.push("dvalue = value;");
       
       if ( fdc.splits() == SP_NONE )
         fdc.push("result = result + texture(paletsampler, vec2(value, float(i)/(allocatedPortions-1) )).rgb;" );
@@ -48,9 +51,10 @@ public:
       else
         fdc.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" );
       
-      fdc.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" );
     }
     fdc.push( "}" );
+    
+    fdc.push( "post_mask[0] = mix(1.0, post_mask[0], step(dvalue, post_mask[1]));" );
   }
 };
 

@@ -21,13 +21,12 @@ public:
     fdc.push( fdc.splits() == SP_NONE? "for (int i=0; i<dataportions; i++)" SHNL : "int i = explicitPortion;" SHNL );
     fdc.push("{");
     {
+      fdc.value2D("float value");
       if ( fdc.splits() == SP_NONE )
-      {
-        fdc.value2D("float value");
-        fdc.push("dvalue = max(dvalue, value);");
-      }
+//        fdc.push("dvalue = max(dvalue, value);");
+        fdc.push("dvalue = mix(value, max(dvalue, value), sign(i));");
       else
-        fdc.value2D("dvalue");
+        fdc.push("dvalue = value;");
       
       /// result=vec3(0) by DrawCore constructor and m_emptycolor=0
       if ( fdc.splits() == SP_NONE )
@@ -47,9 +46,10 @@ public:
       else
         fdc.push("result.rgb = mix(texture(paletsampler, vec2(value, 0.0)).rgb, result.rgb, step(dataportions, float(explicitPortion)));" SHNL);
       
-      fdc.push( "post_mask[0] = mix(1.0, post_mask[0], step(value, post_mask[1]));" SHNL);
     }
     fdc.push("}");
+    
+    fdc.push( "post_mask[0] = mix(1.0, post_mask[0], step(dvalue, post_mask[1]));" SHNL);
   }
 };
 

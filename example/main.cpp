@@ -22,7 +22,7 @@
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)37
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)58
 
-#define ONLY_OVERVIEWS
+//#define ONLY_OVERVIEWS
 
 
 #ifndef MW_TEST_NOCHOOSE_DEFAULT

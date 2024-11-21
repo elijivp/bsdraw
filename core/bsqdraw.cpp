@@ -748,8 +748,16 @@ void DrawQWidget::initializeGL()
   }
 }
 
+#ifdef CHECK_TIME
+#include <QElapsedTimer>
+#endif
+
 void DrawQWidget::paintGL()
 { 
+#ifdef CHECK_TIME
+  QElapsedTimer qel;
+  qel.start();
+#endif
 //  qDebug("blublublu %04x", m_bitmaskPendingChanges);
 
 //  glDisable(GL_DEPTH_TEST);
@@ -970,6 +978,7 @@ void DrawQWidget::paintGL()
       
       for (unsigned int l=0; l<_TFTD_COUNT; l++)
       {
+        bool updatedDT = false;
         if ((loc = m_tfths[t]->_location_dt[l]) != -1)
         {
           glActiveTexture(GL_TEXTURE0 + CORR_TEX);
@@ -989,7 +998,7 @@ void DrawQWidget::paintGL()
               _memory[offset1 + i][1] = wri_dt->array[i].frag.slotdata.fy;
               _memory[offset1 + i][2] = wri_dt->array[i].frag.slotdata.opacity;
               _memory[offset1 + i][3] = wri_dt->array[i].frag.slotdata.rotate;
-            }
+            } // for
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -999,11 +1008,12 @@ void DrawQWidget::paintGL()
             GLenum  gl_texture_type = GL_FLOAT;
             glTexImage2D(GL_TEXTURE_2D, 0, gl_internalFormat, wri_dt->limit, 2, 0, gl_format, gl_texture_type, _memory);
             m_tfths[t]->ponger_dt[l] = m_tfths[t]->pinger_dt[l];
-          }
-          m_ShaderProgram.setUniformValue(loc, CORR_TEX);
+            updatedDT = true;
+            m_ShaderProgram.setUniformValue(loc, CORR_TEX);
+          } // if          
           CORR_TEX++;
         } // if loc
-        if (l == TFTD_RUNT)
+        if (l == TFTD_RUNT && updatedDT)
         {
           if ((loc = m_tfths[t]->_location_ts) != -1)
           {
@@ -1041,7 +1051,6 @@ void DrawQWidget::paintGL()
       bool  subPendOn = forceSubPendOn || (ovl.ponger_reinit < ovl.povl->pingerReinit()) || (ovl.ponger_update < ovl.povl->pingerUpdate());
       if (subPendOn)
       {
-        
         if ((loc = ovl._location) != -1)
         {
 //          m_ShaderProgram.setUniformValue(loc, QVector4D(ovl.povl->isVisible()? ovl.povl->getOpacity() : 1.0f, 
@@ -1222,6 +1231,11 @@ void DrawQWidget::paintGL()
 //    unpendAll();
   for (unsigned int i=0; i<m_texturesCount; i++)
     glBindTexture(GL_TEXTURE_2D, 0);
+  
+#ifdef CHECK_TIME
+//  if (this->objectName() == "MAP")
+    qDebug()<<"paintGL elapsedTimer: "<<qel.nsecsElapsed()/1e+6f;
+#endif
 }
 
 void DrawQWidget::resizeGL(int w, int h)

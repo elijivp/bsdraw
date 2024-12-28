@@ -134,10 +134,16 @@ protected:
   float                 m_overpatternOpacity;
 public:
                     /// Redraw control. Which actions will cause repaint
-  enum  REDRAWBY        { RD_BYDATA, RD_BYSETTINGS, RD_BYOVL_ADDREMOVE, RD_BYINPUTEVENTS };   // special now used on overlays removing
-  void                  banAutoUpdate(REDRAWBY rb, bool ban){ if (ban) m_bitmaskUpdateBan |= (1 << (int)rb); else m_bitmaskUpdateBan &= ~(1 << (int)rb); }
-  void                  banAutoUpdate(bool ban){ m_bitmaskUpdateBan = ban? 0xFF : 0; }
-  bool                  autoUpdateBanned(REDRAWBY rdb) const {  return ((1 << (int)rdb) & m_bitmaskUpdateBan) != 0;  }
+  enum  REDRAWBY        { RD_BYDATA           =0x1, 
+                          RD_BYSETTINGS       =0x2, 
+                          RD_BYOVL_ADDREMOVE  =0x4, 
+                          RD_BYINPUTEVENTS    =0x8,         // special now used on overlays removing
+                          _RD_FULL            =0x0FFFFFFF,
+                          _RD_INITITIAL       =0xFFFFFFFF }; 
+  void                  banAutoUpdate(REDRAWBY rdb, bool ban){  if (m_bitmaskUpdateBan == (int)_RD_INITITIAL) m_bitmaskUpdateBan = 0;
+                                                                if (ban) m_bitmaskUpdateBan |= rdb; else m_bitmaskUpdateBan &= ~rdb; }
+  void                  banAutoUpdate(bool ban){ m_bitmaskUpdateBan = ban? _RD_FULL : 0; }
+  bool                  autoUpdateBanned(REDRAWBY rdb) const {  return (rdb & m_bitmaskUpdateBan)!=0;  }
 protected:
   /// inner. Pending changes bitmask
   enum                  PCBM  { PC_INIT=0x1, PC_DATA=0x2, PC_DATADIMMS=0x4, PC_DATAPORTS=0x8, PC_DATARANGE=0x10,
@@ -233,7 +239,7 @@ public:
                                                         m_paletptr(nullptr), m_paletdiscretise(false), m_paletdiscretiseforced(false),
                                                         m_emptycolor(emptycolor),
                                                         m_doclearbackground(true), m_clearsource(CS_WIDGET),
-                                                        m_bitmaskUpdateBan(0), m_bitmaskPendingChanges(PC_INIT), 
+                                                        m_bitmaskUpdateBan(_RD_INITITIAL), m_bitmaskPendingChanges(PC_INIT), 
                                                         m_overpattern(overpattern_off()), m_overpatternOpacity(0.0f), 
                                                         m_overlaysCount(0), m_proactive(nullptr), m_proactiveOwner(true)
   {

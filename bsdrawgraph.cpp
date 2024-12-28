@@ -499,70 +499,37 @@ public:
       else if (isHistogram)
       {
         fdc.push(                               
-//                  "float fmix_max = max(bv_datasc[0], bv_datasc[2]); " SHNL
-//                  "float bv_addit = (fmix_max - bv_datasc[1])*ab_iscaler.y;" SHNL
-//                  "bv_addit = bv_addit*step(0.0, bv_addit);" SHNL
-//                  "fmix_max = fmix_max + 1.0 - step(fmix_max, bv_datasc[1]);" SHNL      /// adding 1 outside pixel for future shading
-//                  "fmix_max = (fmix_max - bself_datasc)/(fmix_max-bv_datasc[1]);" SHNL
-//                  "fmix_max = fmix_max*step(0.0, fmix_max)*(1.0 - step(1.0, fmix_max));" SHNL   /// ???????????????? shot is not in (->0)
-//                  "fmix_max = mix(fmix_max, 0.2, (1.0-step(fmix_max, 0.0))*step(fmix_max, 0.2));" SHNL    /// ???????????????? 0.2 level for all 0..0.2
-//                  "fmix_max = mix(fmix_max, 1.0, step(1.0, fmix_max));" SHNL
-
-#if 0
-        "float fmix_max = max(bv_datasc[0], bv_datasc[2]); " SHNL
-        "fmix_max = fmix_max + 1.0 - step(fmix_max, bv_datasc[1]);" SHNL      /// adding 1 outside pixel for future shading
-        "fmix_max = (fmix_max - bself_datasc)/(fmix_max-bv_datasc[1]);" SHNL
-        "fmix_max = fmix_max*step(0.0, fmix_max)*(1.0 - step(1.0, fmix_max));" SHNL   /// shot is not in (->0)
-        "fmix_max = mix(fmix_max, 0.2, (1.0-step(fmix_max, 0.0))*step(fmix_max, 0.2));" SHNL    /// 0.2 level for all 0..0.2
-        "fmix_max = mix(fmix_max, 1.0, step(1.0, fmix_max));" SHNL
-              
-                  "float fmix_self = bself_datasc - bv_datasc[1];" SHNL
-                  "vec3 fhit = vec3(step(fmix_self, 0.0), 0.0, 0.0);" SHNL
-                  "fhit.y = fhit.x*step(0.0, fmix_self);" SHNL
-//                  "fhit.z = (1.0 - fhit.x)*step(fmix_self, 1.0)*(0.25+specsmooth*0.375);" SHNL
-                  "float mixwellp =  max(fhit.y, specopc*(max(fhit.x, fmix_max)) );" SHNL
-          
-                  "float bv_addit = (max(bv_datasc[0], bv_datasc[2]) - bv_datasc[1])*ab_iscaler.y;" SHNL
-                  "float fneiprec = bv_viewsc[1] + 0*bv_addit*step(0.0, bv_addit);" SHNL
-#else
                   "float fmix_self = bself_datasc - bv_datasc[1];" SHNL   // floor - floor
                   "vec3 fhit = vec3(step(fmix_self, 0.0), 0.0, 0.0);" SHNL
                   "fhit.y = fhit.x*step(0.0, fmix_self);" SHNL
+//                  "fhit.z = (1.0 - fhit.x)*step(fmix_self, 1.0)*(0.25+specsmooth*0.375);" SHNL    FHIT.Z reserved! for future smooth
                   "float mixwellp =  max(fhit.y, specopc*fhit.x);" SHNL
                   "float fneiprec = floor(bv_datasc[1]);" SHNL
-#endif
                   );
         
         if (graphopts.postrect == PR_VALUEAROUND || graphopts.postrect == PR_SUMMARY)
-//          fdc.push("ivec2 fhit_rect = ivec2(0, int(bv_datasc[1])*(ab_iscaler.y) + ab_iscaler.y - 1);" SHNL);
           fdc.push("ivec2 fhit_rect = ivec2(ab_iscaler.y, int(bv_datasc[1])*(ab_iscaler.y) + ab_iscaler.y - 1);" SHNL); // ab_iscaler.y compensates (0,1]
-//          fdc.push("ivec2 fhit_rect = ivec2(0, int(bv_datasc[1]*(ab_iscaler.y+1) + 0.5)-1);" SHNL);
         
         if (graphopts.graphtype == GT_HISTOGRAM_MESH)
-          fdc.push( 
-//                    "mixwellp = mix(mixwellp*0.8, mix(mixwellp, 0.5*mixwellp, step(bself_viewsc, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
-//                    "mixwellp = mix(mixwellp*0.6, mix(mixwellp, 0.4*mixwellp, step(bself_viewsc, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
-//                    "mixwellp = mix(mixwellp*0.6, mix(mixwellp, 0.4*mixwellp, step(bself_viewsc, neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
-                    "mixwellp = mix(mixwellp*0.6, mix(mixwellp, 0.4*mixwellp, step(bv_datasc[1], neib[0])), 1.0 - step(fneiprec, neib[0]));" SHNL
+          fdc.push( "mixwellp = mixwellp*mix(0.4, mix(0.6, 1.0, step(neib[0], bself_datasc)), step(neib[0], fneiprec));" SHNL
                     "neib[0] = mix(neib[0], fneiprec, step(neib[0], fneiprec));" SHNL
-//                    "fhit = fhit*step(neib[0], fneiprec);" SHNL
                     );
         else if (graphopts.graphtype == GT_HISTOGRAM_CROSSMAX)
-            fdc.push( "neib[1] = max(neib[1], fneiprec);" SHNL
-                      "fneiprec = step(neib[1], fneiprec);" SHNL  /// reassign!!
-                      "mixwellp = mixwellp*fneiprec;" SHNL
-                      "fhit = fhit*fneiprec;" SHNL
-                      );
+          fdc.push( "neib[0] = max(neib[0], fneiprec);" SHNL
+                    "fneiprec = step(neib[0], fneiprec);" SHNL  /// reassign!!
+                    "mixwellp = mixwellp*fneiprec;" SHNL
+                    "fhit = fhit*fneiprec;" SHNL
+                    );
         else if (graphopts.graphtype == GT_HISTOGRAM_CROSSMIN)
-            fdc.push( 
-                      "neib[0] = mix(neib[0], fneiprec, step(neib[0], fneiprec)*(1.0 - fhit.x));" SHNL
-                      "neib[1] = mix(fneiprec, neib[1], neib[2]*(1.0 - step(fneiprec, neib[1])*fhit.x));" SHNL
-                      "neib[2] = mix(fhit.x, 1.0, neib[2]);" SHNL   /// + 0.0*fhit.z
-  
-                      "fneiprec = (fhit.z + neib[2])*step(neib[0], fneiprec)*step(floor(fneiprec), neib[1]);" SHNL  /// reassign!!
-                      "mixwellp = mixwellp*fneiprec;" SHNL
-                      "fhit = fhit*fneiprec;" SHNL
-                      );
+          fdc.push( 
+                    "neib[0] = mix(neib[0], fneiprec, step(neib[0], fneiprec)*(1.0 - fhit.x));" SHNL
+                    "neib[1] = mix(fneiprec, neib[1], neib[2]*(1.0 - step(fneiprec, neib[1])*fhit.x));" SHNL
+                    "neib[2] = mix(fhit.x, 1.0, neib[2]);" SHNL   /// + 0.0*fhit.z
+
+                    "fneiprec = (fhit.z + neib[2])*step(neib[0], fneiprec)*step(floor(fneiprec), neib[1]);" SHNL  /// reassign!!
+                    "mixwellp = mixwellp*fneiprec;" SHNL
+                    "fhit = fhit*fneiprec;" SHNL
+                    );
           
         if (coloropts.cpolicy != CP_REPAINTED)
           fdc.push("float VALCLR = clamp(bself_datasc/bv_datasc[1], 0.0, 1.0);" SHNL);

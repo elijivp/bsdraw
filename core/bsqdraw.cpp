@@ -703,7 +703,10 @@ void DrawQWidget::initCollectAndCompileShader()
 }
 
 void DrawQWidget::initializeGL()
-{  
+{
+  if (m_bitmaskUpdateBan == (int)_RD_INITITIAL)
+    m_bitmaskUpdateBan = 0;
+  
   m_SurfaceVertex[0] = -1.0f; m_SurfaceVertex[1] = -1.0f;
   m_SurfaceVertex[2] =  1.0f; m_SurfaceVertex[3] = -1.0f;
   m_SurfaceVertex[4] = -1.0f; m_SurfaceVertex[5] =  1.0f;

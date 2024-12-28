@@ -1664,11 +1664,13 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     LINES = 1;
     PORTIONS = 2;
     PRECREATE(3, 3);
-    BSGRAPHTYPE     gts[] = { GT_HISTOGRAM_CROSSMAX, GT_LINTERP_B, GT_DOTS };
+//    BSGRAPHTYPE     gts[] = { GT_HISTOGRAM_CROSSMAX, GT_LINTERP_B, GT_DOTS };
+    BSGRAPHTYPE     gts[] = { GT_HISTOGRAM_CROSSMAX, GT_HISTOGRAM_MESH, GT_DOTS };
     BSCOLORPOLICY   dclr[] = { CP_MONO, CP_MONO, CP_REPAINTED };
     for (unsigned int c=0; c<dccount; c++)
       for (unsigned int i=0; i<drcount; i++)
       {
+#if 1
         graphopts_t  gopts = {      gts[i],  DE_NONE,
                                     i == 0? c == dccount-1? 0.4f : 0.3f : 0.0f,
                                     i != 2? 0 : 2, 
@@ -1678,6 +1680,17 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
                            };
 //        gopts.smooth = 0.0f;
         coloropts_t copts = {   dclr[c], 0.0f, 1.0f, c == 1? 0xFFFFFFFF : 0x00999999 };
+#else
+        graphopts_t  gopts = {      gts[i],  DE_NONE,
+                                    0.3f,
+                                    0, 
+                                    0.5f,
+                                    0.4f,
+                                    PR_STANDARD
+                           };
+//        gopts.smooth = 0.0f;
+        coloropts_t copts = {   dclr[c], 0.0f, 1.0f, c == 1? 0xFFFFFFFF : 0x00999999 };
+#endif
         draws[c*drcount + i] = new DrawGraph(SAMPLES, PORTIONS, gopts, copts);
       }
   

@@ -14,7 +14,7 @@
 
 
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)2
-//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)5
+//#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)4
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)9
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)18
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)24
@@ -22,7 +22,7 @@
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)30
 //#define MW_TEST_NOCHOOSE_DEFAULT (tests_t)58
 
-//#define ONLY_OVERVIEWS
+#define ONLY_OVERVIEWS
 
 
 #ifndef MW_TEST_NOCHOOSE_DEFAULT

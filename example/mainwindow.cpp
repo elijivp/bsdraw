@@ -529,7 +529,10 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     pdraws[3]->setOverpattern(overpattern_thrs_plus(OP_LINELEFTTOP, 0.0f, color3f(0.3f,0.3f,0.3f)));
     pdraws[3]->setScalingLimitsSynced(10); // 1 point now is 10x10 pixels (minimum)
     
-    pdraws[4] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogramLastBack(PR_VALUEAROUND));
+//    pdraws[4] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogramLastBack(PR_VALUEAROUND));
+//    pdraws[4]->setOverpattern(overpattern_any(OP_LINELEFT, 0.0f));
+//    pdraws[4]->setScalingLimitsSynced(10); // 1 point now is 10x10 pixels (minimum)
+    pdraws[4] = new DrawGraph(SAMPLES, PORTIONS, graphopts_t::goHistogramLastBack(0.0f, DE_CENTER));
     pdraws[4]->setOverpattern(overpattern_any(OP_LINELEFT, 0.0f));
     pdraws[4]->setScalingLimitsSynced(10); // 1 point now is 10x10 pixels (minimum)
 
@@ -1707,7 +1710,7 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     overpattern_t fsp[] = {   overpattern_thrs_plus(OP_LINELEFTTOP, 0.0f, color3f(0.3f,0.3f,0.3f)), 
                               overpattern_thrs_plus(OP_LINELEFTTOP, 0.0f, color3f(0.3f,0.3f,0.3f)), 
                               overpattern_thrs_plus(OP_LINELEFTTOP, 0.0f, color3f(0.3f,0.3f,0.3f)), 
-                              overpattern_any(OPF_CIRCLE, color3f(0.1f,0.1f,0.1f))
+                              overpattern_any(OPF_CIRCLE, color3f(0.1f,0.1f,0.1f), 0.9f, 0.9f)
                                };
     
     const char* gnames[] = { "Histogram (cross over)", "Histogram (cross min)", "Histogram (cross max)", "Linterp + pseudocircle" };
@@ -1715,15 +1718,11 @@ MainWindow::MainWindow(tests_t testnumber, QWidget *parent):  QMainWindow(parent
     
     for (unsigned int i=0; i<drawscount; i++)
     {
-//      gts[i].descaling = DE_LINTERP;
-      if (i < 3)
+      if (i+1 < drawscount)
         gts[i].postrect = PR_VALUEAROUND;
       else
-      {
-        gts[i].opacity = 0.8f;
         gts[i].smooth = -1.0f;
-      }
-      draws[i] = new DrawGraph(SAMPLES, PORTIONS, gts[i]);
+      draws[i] = new DrawGraph(SAMPLES, i+1 < drawscount ? PORTIONS : 1, gts[i]);
       draws[i]->setOverpattern(fsp[i]);
       
       draws[i]->ovlPushBack(new OTextColored(gnames[i], CR_XABS_YREL_NOSCALED_SCALED, 10.0f, 0.85f, 12, 0x00000000, 0x33FFFFFF, 0x00000000));
@@ -4261,7 +4260,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::resizeEvent(QResizeEvent* ev)
 {
-  qDebug()<<"Resizing to: "<<ev->size();
+//  qDebug()<<"Resizing to: "<<ev->size();
   QMainWindow::resizeEvent(ev);
 }
 

@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
   DrawQWidget* pDraw = new DrawIntensity(COUNT_SAMPLES, COUNT_ROWS, 1, OR_LRBT);  // LRBT - left-to-right, bottom-to-top
   pDraw->setDataPalette(&paletteBkBlWh);  // dont forget to set palette. default palette is null.
   pDraw->setScalingLimitsSynced(4); // each sample is now 4 pixels
+  pDraw->setViewAlign(0.5f, 0.5f); // now draw content is centered
   pDraw->setData(arr_random);     // default draw bounds are 0..1. default data is 0.
   pDraw->show();
   

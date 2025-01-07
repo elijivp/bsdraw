@@ -84,8 +84,8 @@ tftgeterbook_t*  tftgeterbook_alloc(QFont font, int maxtextlen, int limitcolumns
   result->ctx_setup.pen = QPen(color);
   
   result->design_width = result->ctx_setup.fm.averageCharWidth() * result->maxtextlen + 2;
-  result->design_ht = result->ctx_setup.fm.ascent();
-  result->design_hb = result->ctx_setup.fm.descent();
+  result->design_asc = result->ctx_setup.fm.ascent();
+  result->design_des = result->ctx_setup.fm.descent();
   result->design_ld = result->ctx_setup.fm.leading();
   result->design_height = result->ctx_setup.fm.height() + result->ctx_setup.fm.leading() + 2;
   
@@ -165,13 +165,9 @@ int tftgeterbook_addtexts(tftgeterbook_t* th, int count, const char* texts[])
     
     int row = rid_loc % th->limrows;
     int col = rid_loc / th->limrows;
-//    th->ctx_setup.painter.drawText(
-//          1 + col*(th->design_width), 
-//          th->design_height*th->limrows - row*th->design_height - th->design_hb, 
-//          text);
     th->ctx_setup.painter.drawText(
           1 + col*(th->design_width) + th->design_width/2 - design->width/2, 
-          th->design_height*th->limrows - row*th->design_height - th->design_hb, 
+          th->design_height*th->limrows - row*th->design_height - th->design_des - 1,
           texts[i]);
   } // for
   if (count > 0)
@@ -260,7 +256,7 @@ DrawQWidget::DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int
   m_matrixLmSize(0), m_sbStatic(false), 
   m_cttrLeft(0), m_cttrTop(0), m_cttrRight(0), m_cttrBottom(0), c_width(0), c_height(0), 
   m_viewAlignHorz(0.0f), m_viewAlignVert(0.0f), 
-  m_viewTurn(0),
+  m_viewTurn(0), m_c_clickValidChecker(0),
   m_texturesCount(0)
 {
   m_paletptr = &palette_creature;
@@ -292,6 +288,8 @@ DrawQWidget::DrawQWidget(DATAASTEXTURE datex, ISheiGenerator* pcsh, unsigned int
   c_dpr = 1.0f;
 #endif
   c_dpr_inv = 1.0f / c_dpr;
+  
+  m_ormOutsideAreaMode[0] = m_ormOutsideAreaMode[1] = OROM_DEFAULT;
 //  setMouseTracking(true);
 }
 
@@ -1246,86 +1244,30 @@ void DrawQWidget::resizeGL(int w, int h)
   c_width = w = /*qRound*/(w * c_dpr);
   c_height = h = /*qRound*/(h * c_dpr);
   
-#if 1
   QMargins ms(contentsMargins());
   if (ms.left() != m_cttrLeft || ms.top() != m_cttrTop || ms.right() != m_cttrRight || ms.bottom() != m_cttrBottom)
   {
     m_cttrLeft = ms.left();  m_cttrRight = ms.right();  m_cttrTop = ms.top();  m_cttrBottom = ms.bottom();
     updateGeometry();
-    return;   /// ?????????
+//    return;   /// ?????????     dont uncomment before test on simple_example_coords
   }
-#elif 0
-  int ml, mt, mr, mb;
-  getContentsMargins(&ml, &mt, &mr, &mb);
-  if (ml != m_cttrLeft || mt != m_cttrTop || mr != m_cttrRight || mb != m_cttrBottom)
-  {
-    m_cttrLeft = ml;  m_cttrRight = mr;  m_cttrTop = mt;  m_cttrBottom = mb;
-    updateGeometry();
-    return;   /// ?????????
-  }
-#else
-  getContentsMargins(&m_cttrLeft, &m_cttrTop, &m_cttrRight, &m_cttrBottom);
-#endif
   w -= m_cttrLeft + m_cttrRight;
   h -= m_cttrTop + m_cttrBottom;
   
-//  if (objectName() == "AAA")
-//    qDebug()<<"DrawQWidget PRE resizeEv: "<<QSize(w,h)<<m_dataDimmA<<m_dataDimmB<<m_scalingA<<m_scalingB;
   if (m_dataDimmSwitchAB)
     adjustSizeAndScale(h, w);
   else
     adjustSizeAndScale(w, h);
-//  if (objectName() == "AAA")
-//    qDebug()<<"DrawQWidget resizeEv: "<<m_dataDimmA<<m_dataDimmB<<m_scalingA<<m_scalingB;
   
   if (m_rawResizeModeNoScaled)
   {
     dcgeometry_t dch = this->geometryHorz();
     dcgeometry_t dcv = this->geometryVert();
     glViewport( dch.cttr_pre + dch.viewalign_pre, c_height - (dcv.cttr_pre + dcv.viewalign_pre + dcv.length), dch.length, dcv.length);
-    
-//    if (m_dataDimmSwitchAB)
-//      glViewport(0 + m_cttrLeft + m_viewAlignHorz*(c_width - m_cttrLeft - m_cttrRight - (int)sizeB()), 
-//                              c_height - (int)sizeA() - m_cttrTop, 
-//                              (int)sizeB(), (int)sizeA());
-//    else
-//      glViewport(0 + m_cttrLeft + m_viewAlignHorz*(c_width - m_cttrLeft - m_cttrRight - (int)sizeA()), 
-//                              c_height - (int)sizeB() - m_cttrTop, 
-//                              (int)sizeA(), (int)sizeB());
   }
   m_doclearbackground = true;
   pendResize(false);
 }
-
-
-//void DrawQWidget::fitSize(int width_in, int height_in, int* actualwidth, int* actualheight) const
-//{
-//  width_in -= m_cttrLeft + m_cttrRight;
-//  height_in -= m_cttrTop + m_cttrBottom;
-  
-//  int wsizeA = m_dataDimmSwitchAB? height_in : width_in;
-//  int wsizeB = m_dataDimmSwitchAB? width_in : height_in;
-  
-//  unsigned int dimmA, dimmB, scalingA, scalingB;
-//  sizeAndScaleHint(wsizeA/m_splitterA, wsizeB/m_splitterB, &dimmA, &dimmB, &scalingA, &scalingB);
-//  if (m_dataDimmSwitchAB)
-//  {
-//    *actualwidth = dimmB*scalingB*m_splitterB;
-//    *actualheight = dimmA*scalingA*m_splitterA;
-//  }
-//  else
-//  {
-//    *actualwidth = dimmA*scalingA*m_splitterA;
-//    *actualheight = dimmB*scalingB*m_splitterB;
-//  }
-////  unsigned int dimmA, dimmB, scalingA, scalingB;
-////  if (m_dataDimmSwitchAB)
-////    sizeAndScaleHint(height_in, width_in, &dimmB, &dimmA, &scalingB, &scalingA);
-////  else
-////    sizeAndScaleHint(width_in, height_in, &dimmA, &dimmB, &scalingA, &scalingB);
-////  *actualwidth = dimmA*scalingA;
-////  *actualheight = dimmB*scalingB;
-//}
 
 void DrawQWidget::fitSize(int width_in, int height_in, dcsizecd_t* sz_horz, dcsizecd_t* sz_vert, dcgeometry_t* gm_horz, dcgeometry_t* gm_vert) const
 {
@@ -1418,9 +1360,6 @@ void DrawQWidget::innerRescale()
 
 void DrawQWidget::innerUpdateGeometry()
 {
-//  int sizeA = m_scalingA * m_dataDimmA * m_splitterA * c_dpr_inv;       if (sizeA < 1)  sizeA = 1;
-//  int sizeB = m_scalingB * (m_datex == DATEX_1D? 1 : m_dataDimmB) * m_splitterB * c_dpr_inv;      if (sizeB < 1)  sizeB = 1;
-//  this->resize(sizeA, sizeB);
   this->updateGeometry();
 }
 
@@ -1446,75 +1385,50 @@ QSize DrawQWidget::sizeHint() const
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static const bool isPress[] = { true, false, false, true, true, false, true };
+static const bool g_isMousePressed[] = { true, false, false, true, true, false, false };
+static const bool g_isMouseReleased[] = { false, false, true, false, false, false, true };
+static const int  g_isMouseLRindex[] = { 0,0,0,0, 1,1,1 };
 
 void  DrawQWidget::_applyMouseEvents(OVL_REACTION_MOUSE oreact, int x, int y)
 {
   dcgeometry_t dch = this->geometryHorz();
   dcgeometry_t dcv = this->geometryVert();
-  
-  float singleDimmWidth = dch.length;
-  float singleDimmHeight = dcv.length;
-  float totalDimmWidth = singleDimmWidth * (m_dataDimmSwitchAB? m_splitterB : m_splitterA);
-  float totalDimmHeight = singleDimmHeight * (m_dataDimmSwitchAB? m_splitterA : m_splitterB);
-  
+  const int   totalUsefulWidth = dch.length;
+  const int   totalUsefulHeight = dcv.length;
+    
   float fx = (x*c_dpr - (dch.cttr_pre + dch.viewalign_pre));
   float fy = (y*c_dpr - (dcv.cttr_pre + dcv.viewalign_pre));
   
-  if (isPress[oreact] == false)
+#if 0
+  if (g_isMousePressed[oreact] == false)
   {
-    if (fx < 0)  fx = 0; else if (fx >= totalDimmWidth) fx = totalDimmWidth - 1;
-    if (fy < 0)  fy = 0; else if (fy >= totalDimmHeight) fy = totalDimmHeight - 1;
+    if (fx < 0)  fx = 0; else if (fx >= totalUsefulWidth) fx = totalUsefulWidth - 1;
+    if (fy < 0)  fy = 0; else if (fy >= totalUsefulHeight) fy = totalUsefulHeight - 1;
   }
-  else if (fx >= totalDimmWidth || fy >= totalDimmHeight)
+  else if (fx < 0 || fy < 0 || fx >= totalUsefulWidth || fy >= totalUsefulHeight)
     return;
+#else
+  {
+    const int oamidx = g_isMouseLRindex[oreact];
+    if ((fx < 0 || fx >= totalUsefulWidth) && m_ormOutsideAreaMode[oamidx] != OROM_OUTSIDER)
+    {
+      if (g_isMousePressed[oreact] || (m_ormOutsideAreaMode[oamidx] == OROM_ECO && !g_isMouseReleased[oreact])) return;
+      if (fx < 0) fx = 0;
+      else fx = totalUsefulWidth - 1;
+    }
+    if ((fy < 0 || fy >= totalUsefulHeight) && m_ormOutsideAreaMode[oamidx] != OROM_OUTSIDER)
+    {
+      if (g_isMousePressed[oreact] || (m_ormOutsideAreaMode[oamidx] == OROM_ECO && !g_isMouseReleased[oreact])) return;
+      if (fy < 0) fy = 0;
+      else fy = totalUsefulHeight - 1;
+    }
+    
+    if (g_isMousePressed[oreact])
+      m_c_clickValidChecker |= 1 << g_isMouseLRindex[oreact];
+  }
+#endif
 
-//  coordstriumv_t ct;
-//  ct.fx_pix = fx;
-//  ct.fy_pix = fy;
-//  if (orientationTransposed(m_orient))
-//  {
-//    ct.fx_01 = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
-//    ct.fy_01 = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
-//    ct.fx_01 = singleDimmHeight <=1 ? 0 : (ct.fx_01 - int(ct.fx_01/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
-//    ct.fy_01 = singleDimmWidth <= 1? 0 : (ct.fy_01 - int(ct.fy_01/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
-//    ct.fx_01 = ct.fx_01;
-//    ct.fy_01 = ct.fy_01;
-//  }
-//  else
-//  {
-//    ct.fx_01 = (orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx);
-//    ct.fy_01 = (!orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy);
-//    ct.fx_01 = singleDimmWidth <= 1? 0 : (ct.fx_01 - int(ct.fx_01/singleDimmWidth)*singleDimmWidth) / (singleDimmWidth - 1);
-//    ct.fy_01 = singleDimmHeight <= 1? 0 : (ct.fy_01 - int(ct.fy_01/singleDimmHeight)*singleDimmHeight) / (singleDimmHeight - 1);
-//    ct.fx_01 = ct.fx_01;
-//    ct.fy_01 = ct.fy_01;
-//  }
-  coordstriumv_t ct;
-  ct.fx_pix = fx;
-  ct.fy_pix = fy;
-  if (orientationTransposed(m_orient))
-  {
-    float tx = !orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy;
-    tx = tx - int(tx/singleDimmHeight)*singleDimmHeight;
-    float ty = orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx;
-    ty = ty - int(ty/singleDimmWidth)*singleDimmWidth;
-    ct.fx_01  = singleDimmHeight <=1 ? 0 : tx / (singleDimmHeight - 1);
-    ct.fy_01  = singleDimmWidth <= 1 ? 0 : ty / (singleDimmWidth - 1);
-    ct.fx_0n1 = singleDimmHeight <=1 ? 0 : tx / singleDimmHeight;
-    ct.fy_0n1 = singleDimmHeight <=1 ? 0 : ty / singleDimmWidth;
-  }
-  else
-  {
-    float tx = orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx;
-    tx = tx - int(tx/singleDimmWidth)*singleDimmWidth;
-    float ty = !orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy;
-    ty = ty - int(ty/singleDimmHeight)*singleDimmHeight;
-    ct.fx_01  = singleDimmWidth <= 1? 0 : tx / (singleDimmWidth - 1);
-    ct.fy_01  = singleDimmHeight <= 1? 0 : ty / (singleDimmHeight - 1);
-    ct.fx_0n1 = singleDimmWidth <= 1? 0 : tx / singleDimmWidth;
-    ct.fy_0n1 = singleDimmHeight <= 1? 0 : ty / singleDimmHeight;
-  }
+  coordstriumv_t ct = _fillTriumv(fx, fy, totalUsefulWidth, totalUsefulHeight);
   
   bool doStop = false, doUpdate = false;
   if (m_proactive)
@@ -1544,53 +1458,41 @@ void  DrawQWidget::_applyMouseTracking(int x, int y)
   dcgeometry_t dch = this->geometryHorz();
   dcgeometry_t dcv = this->geometryVert();
   
-  float singleDimmWidth = dch.length;
-  float singleDimmHeight = dcv.length;
-  float totalDimmWidth = singleDimmWidth * (m_dataDimmSwitchAB? m_splitterB : m_splitterA);
-  float totalDimmHeight = singleDimmHeight * (m_dataDimmSwitchAB? m_splitterA : m_splitterB);
+  const int   totalUsefulWidth = dch.length;
+  const int   totalUsefulHeight = dcv.length;
   
   float fx = (x*c_dpr - (dch.cttr_pre + dch.viewalign_pre));
   float fy = (y*c_dpr - (dcv.cttr_pre + dcv.viewalign_pre));
   
 #if 0
-  if (isPress[oreact] == false)
+  if (g_isMousePressed[oreact] == false)
   {
     if (fx < 0)  fx = 0; else if (fx >= totalDimmWidth) fx = totalDimmWidth - 1;
     if (fy < 0)  fy = 0; else if (fy >= totalDimmHeight) fy = totalDimmHeight - 1;
   }
   else if (fx >= totalDimmWidth || fy >= totalDimmHeight)
     return;
-#else
-  if (fx >= totalDimmWidth || fy >= totalDimmHeight)
+#elif 0
+  if (fx < 0 || fy < 0 || fx >= totalDimmWidth || fy >= totalDimmHeight)
     return;
+#else
+  {
+    const int oamidx = g_isMouseLRindex[ORM_LMMOVE];
+    if ((fx < 0 || fx >= totalUsefulWidth) && m_ormOutsideAreaMode[oamidx] != OROM_OUTSIDER)
+    {
+      if (fx < 0) fx = 0;
+      else fx = totalUsefulWidth - 1;
+    }
+    if ((fy < 0 || fy >= totalUsefulHeight) && m_ormOutsideAreaMode[oamidx] != OROM_OUTSIDER)
+    {
+      if (fy < 0) fy = 0;
+      else fy = totalUsefulHeight - 1;
+    }
+  }
 #endif
 
-  coordstriumv_t ct;
-  ct.fx_pix = fx;
-  ct.fy_pix = fy;
-  if (orientationTransposed(m_orient))
-  {
-    float tx = !orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy;
-    tx = tx - int(tx/singleDimmHeight)*singleDimmHeight;
-    float ty = orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx;
-    ty = ty - int(ty/singleDimmWidth)*singleDimmWidth;
-    ct.fx_01  = singleDimmHeight <=1 ? 0 : tx / (singleDimmHeight - 1);
-    ct.fy_01  = singleDimmWidth <= 1 ? 0 : ty / (singleDimmWidth - 1);
-    ct.fx_0n1 = singleDimmHeight <=1 ? 0 : tx / singleDimmHeight;
-    ct.fy_0n1 = singleDimmHeight <=1 ? 0 : ty / singleDimmWidth;
-  }
-  else
-  {
-    float tx = orientationMirroredHorz(m_orient)? totalDimmWidth - 1 - fx : fx;
-    tx = tx - int(tx/singleDimmWidth)*singleDimmWidth;
-    float ty = !orientationMirroredVert(m_orient)? totalDimmHeight - 1 - fy : fy;
-    ty = ty - int(ty/singleDimmHeight)*singleDimmHeight;
-    ct.fx_01  = singleDimmWidth <= 1? 0 : tx / (singleDimmWidth - 1);
-    ct.fy_01  = singleDimmHeight <= 1? 0 : ty / (singleDimmHeight - 1);
-    ct.fx_0n1 = singleDimmWidth <= 1? 0 : tx / singleDimmWidth;
-    ct.fy_0n1 = singleDimmHeight <= 1? 0 : ty / singleDimmHeight;
-  }
-  
+  coordstriumv_t ct = _fillTriumv(fx, fy, totalUsefulWidth, totalUsefulHeight);
+
   bool doStop;
   bool doUpdate = m_proactive->reactionTracking(this, &ct, &doStop);
   if (doUpdate)
@@ -1601,40 +1503,87 @@ void  DrawQWidget::_applyMouseTracking(int x, int y)
   }
 }
 
+coordstriumv_t  DrawQWidget::_fillTriumv(float fx, float fy, int totalUsefulWidth, int totalUsefulHeight) const
+{
+  coordstriumv_t ct;
+  ct.fx_pix = fx;
+  ct.fy_pix = fy;
+  {
+    float tx, ty;
+    if (m_dataDimmSwitchAB)
+    {
+      tx = !orientationMirroredVert(m_orient)? totalUsefulHeight - 1 - fy : fy;
+      ty = orientationMirroredHorz(m_orient)? totalUsefulWidth - 1 - fx : fx;
+    }
+    else
+    {
+      tx = orientationMirroredHorz(m_orient)? totalUsefulWidth - 1 - fx : fx;
+      ty = !orientationMirroredVert(m_orient)? totalUsefulHeight - 1 - fy : fy;
+    }
+    
+    const int sdx = m_dataDimmSwitchAB ? totalUsefulHeight/m_splitterB : totalUsefulWidth/m_splitterA;
+    const int sdy = m_dataDimmSwitchAB ? totalUsefulWidth/m_splitterA : totalUsefulHeight/m_splitterB;
+    const int spx = m_dataDimmSwitchAB ? m_splitterB : m_splitterA;
+    const int spy = m_dataDimmSwitchAB ? m_splitterA : m_splitterB;
+    if (spx > 1)
+    {
+      int ovp = int(tx/sdx);
+      if (ovp >= spx)
+        ovp = spx - 1;
+      tx = tx - ovp*sdx;
+    }
+    if (spy > 1)
+    {
+      int ovp = int(ty/sdy);
+      if (ovp >= spy)
+        ovp = spy - 1;
+      ty = ty - ovp*sdy;
+    }
+    
+    ct.fx_01  = sdx <= 1 ? 0 : tx / (sdx - 1);
+    ct.fy_01  = sdy <= 1 ? 0 : ty / (sdy - 1);
+    ct.fx_0n1 = sdx <= 1 ? 0 : tx / sdx;
+    ct.fy_0n1 = sdy <= 1 ? 0 : ty / sdy;
+  }
+  return ct;
+}
 
 
-#define BUTTONCHECK_DOGSHIT(action) Qt::MouseButton btn = event->button(); \
+#define BUTTONCHECK_DEF(action)     Qt::MouseButton btn = event->button(); \
                                     QPoint pos = event->pos(); \
-                                    if (btn == Qt::LeftButton)        _applyMouseEvents(ORM_LM##action, pos.x(), pos.y()); \
-                                    else if (btn == Qt::RightButton)  _applyMouseEvents(ORM_RM##action, pos.x(), pos.y());
+                                    const bool isLB = btn == Qt::LeftButton, isRB = btn == Qt::RightButton; \
+                                    OVL_REACTION_MOUSE  orm; \
+                                    if (isLB) orm = ORM_LM##action; else if (isRB) orm = ORM_RM##action;
+                                    
 
 
 void DrawQWidget::mousePressEvent(QMouseEvent *event)
 {
-  BUTTONCHECK_DOGSHIT(PRESS)
-//  if (event->button() == Qt::LeftButton)  _applyMouseEvents(ORM_LMPRESS, event->pos().x(), event->pos().y());
-//  else if (event->button() == Qt::RightButton)  _applyMouseEvents(ORM_RMPRESS, event->pos().x(), event->pos().y());
+  BUTTONCHECK_DEF(PRESS)
+  else { QOpenGLWidget::mousePressEvent(event); return; }
+  _applyMouseEvents(orm, pos.x(), pos.y());
 }
 
 void DrawQWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-  BUTTONCHECK_DOGSHIT(RELEASE)
-//  if (event->button() == Qt::LeftButton)  _applyMouseEvents(ORM_LMRELEASE, event->pos().x(), event->pos().y());
+  BUTTONCHECK_DEF(RELEASE)
+  else { QOpenGLWidget::mouseReleaseEvent(event); return; }
+  if (m_c_clickValidChecker & (1 << g_isMouseLRindex[orm]))
+  {
+    _applyMouseEvents(orm, pos.x(), pos.y());
+    m_c_clickValidChecker &= ~(1 << g_isMouseLRindex[orm]);
+  }
 }
 
 void DrawQWidget::mouseMoveEvent(QMouseEvent *event)
 {
   Qt::MouseButtons btn = event->buttons();
   QPoint pos = event->pos();
-  if (btn & Qt::LeftButton)        _applyMouseEvents(ORM_LMMOVE, pos.x(), pos.y());
-  else if (btn & Qt::RightButton)  _applyMouseEvents(ORM_RMMOVE, pos.x(), pos.y());
+  if (btn & Qt::LeftButton && m_c_clickValidChecker & (1 << g_isMouseLRindex[ORM_LMPRESS]))        _applyMouseEvents(ORM_LMMOVE, pos.x(), pos.y());
+  else if (btn & Qt::RightButton && m_c_clickValidChecker & (1 << g_isMouseLRindex[ORM_RMPRESS]))  _applyMouseEvents(ORM_RMMOVE, pos.x(), pos.y());
   else if (btn == Qt::NoButton && m_proactive != nullptr)
     if (hasMouseTracking())
       _applyMouseTracking(pos.x(), pos.y());
-  
-//  if (event->buttons() & Qt::LeftButton)  _applyMouseEvents(ORM_LMMOVE, event->pos().x(), event->pos().y());
-//  _applyMouseEvents(ORM_LMMOVE, event->pos().x(), event->pos().y());
-  //  setMouseTracking(tru!!);
 }
 
 void DrawQWidget::mouseDoubleClickEvent(QMouseEvent* event)

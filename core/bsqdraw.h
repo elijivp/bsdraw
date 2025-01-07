@@ -47,8 +47,8 @@ struct tftgetermetrics_t
   int     maxtextlen;
   int     design_width;     // every desing max width by QFontMetrics, for maxtextlen' symbols
   int     design_height;    // every desing height by QFontMetrics
-  int     design_ht;        // QFontMetrics::accent
-  int     design_hb;        // QFontMetrics::descent
+  int     design_asc;       // QFontMetrics::ascent
+  int     design_des;       // QFontMetrics::descent
   int     design_ld;        // QFontMetrics::leading
 };
 
@@ -166,6 +166,15 @@ protected:
   float                   m_viewAlignHorz;
   float                   m_viewAlignVert;
   float                   m_viewTurn;
+public:
+  enum  OVL_RM_OUTSIDE_MODE
+        {   OROM_DEFAULT,   ///  PRESS outside disabled, MOVE/RELEASE stick to borders when outside
+            OROM_ECO,       ///  PRESS outside disabled, MOVE/RELEASE outside disabled
+            OROM_OUTSIDER   ///  PRESS outside enabled, MOVE/RELEASE outside enabled
+          };
+protected:
+  int                     m_c_clickValidChecker;
+  OVL_RM_OUTSIDE_MODE     m_ormOutsideAreaMode[2];
 protected:
   unsigned int            m_textures[MAX_TEXTURES];
   unsigned int            m_texturesCount;
@@ -185,6 +194,11 @@ public:
   float   viewAlignHorz() const {  return m_viewAlignHorz; }
   void    setViewAlignVert(float dva){  m_viewAlignVert = dva; callWidgetUpdate(); }
   float   viewAlignVert() const {  return m_viewAlignVert; }
+public:
+  void    setOutsideAreaModeLM(OVL_RM_OUTSIDE_MODE v){ m_ormOutsideAreaMode[0] = v; }
+  OVL_RM_OUTSIDE_MODE  outsideAreaModeLM() const { return m_ormOutsideAreaMode[0]; }
+  void    setOutsideAreaModeRM(OVL_RM_OUTSIDE_MODE v){ m_ormOutsideAreaMode[1] = v; }
+  OVL_RM_OUTSIDE_MODE  outsideAreaModeRM() const { return m_ormOutsideAreaMode[1]; }
 public slots:
   void    slot_compileShader();
   void    slot_setScalingA(int);
@@ -266,6 +280,7 @@ protected:
 private:
   void  _applyMouseEvents(OVL_REACTION_MOUSE oreact, int x, int y);
   void  _applyMouseTracking(int x, int y);
+  coordstriumv_t  _fillTriumv(float fx, float fy, int totalUsefulWidth, int totalUsefulHeight) const;
 public:
   virtual  int    scrollValue() const;
   unsigned int    lmSize() const;

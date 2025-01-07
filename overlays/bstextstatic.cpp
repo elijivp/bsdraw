@@ -78,7 +78,7 @@ void  OITextStatic::innerSetText(const otextopts_t& ot, const QFont &font)
 
   QFontMetrics fm(font);
   QSize sz = fm.size(0, ot.text, 0);
-  int width = ot.mnLeft + ot.mnRight + sz.width();
+  int width = ot.mnLeft + 1 + ot.mnRight + sz.width();
   int height = ot.mnTop + ot.mnBottom + sz.height();
   {
     m_pImage = new QImage(width, height, QTCOMPAT_FORMAT);
@@ -86,7 +86,7 @@ void  OITextStatic::innerSetText(const otextopts_t& ot, const QFont &font)
       m_pImage->fill(0);
       QPainter ptr(m_pImage);
       ptr.setFont(font);
-      ptr.drawText(QRect(ot.mnLeft, ot.mnTop, sz.width(), sz.height()), ot.flags, ot.text);
+      ptr.drawText(QRect(ot.mnLeft + 1, ot.mnTop, sz.width(), sz.height()), ot.flags, ot.text);
     }
   }
   
